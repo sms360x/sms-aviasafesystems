@@ -1,4 +1,10 @@
 <!--
+ARCHIVED — this procedure no longer applies in-place.
+The _hold folder is now at _archive/historical/_hold/.
+See _archive/INDEX.md for context.
+-->
+
+<!--
 ARCHIVED.
 Original path: public/_hold/README.md
 Archived: 2026-10-07

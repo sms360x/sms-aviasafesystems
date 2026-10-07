@@ -1,6 +1,25 @@
 # Step 1 Work Plan — Audit Readiness
 
 Status: For SME confirmation. No code written. Work starts only after this plan is confirmed.
+
+## 0.1 Ground-truth facts from HANDOFF_GUIDE.md (2026-10-08)
+
+The following facts from HANDOFF_GUIDE.md materially affect this plan and are now binding context:
+
+- Role names in the code are:
+    TENANT_ADMIN, DEPT_ADMIN, OFFICER (SAFETY_OFFICER shimmed), ACCOUNTABLE_EXECUTIVE, CAAN_SMD, SUPER_ADMIN.
+  Step 1 tests must use these names or the constants the code defines. Do NOT use "CAAN" as a role name; the role is CAAN_SMD.
+- RLS is largely bypassed on the app path. The backend connects as the Supabase owner (rls_forced = false), and live policies read Supabase JWT, not Firebase claims. Enabling RLS on a table does NOT currently enforce isolation on the app path.
+- 10 tables have RLS enabled with zero policies: audit_dispatches, dead_letter_queue, feedback, hazard_assessments, hazard_capas, hazard_rca_entries, hazard_rca_factors, invites, psoe_findings, sms_dispatches.
+- ~12 live RLS policies have no repo source.
+- `/api/v1/dashboard*` is not in the RBAC middleware map (rbac_middleware.py ENDPOINT_MODULE_MAP). The four dashboard hubs render module-tagged data without a module-gate check. This is a pre-existing gap, now in scope for 1A.4.
+- Two pre-existing test failures are known:
+    1. test_v1_router_includes_all_sub_routers
+    2. test_nav_config.js::test_ae_narrow_menu
+  Both pre-date Step 1. Neither should be reported as a new failure.
+- Authenticated frontend changes cannot be verified on localhost. App Check is domain-bound. Verification is only on the deployed site.
+- The SAFETY_OFFICER -> OFFICER shim exists. Do NOT remove either role name in Step 1.
+
 Date: 2026-10-07
 Project: Finish AviaSAFE First — Step 1 of 4
 Working dir: `D:\Projects\aviasafesms` · Branch to create: `step1-audit-readiness` (not yet created)
@@ -38,27 +57,17 @@ Consequence: Phase 1A is primarily **verification with regression tests**, not n
 
 **Business decision needed (1A.4):** Is a cross-tenant (CAAN) role allowed to select which operator tenants it reads via a query parameter? Step 0 adopted OIP-only as the long-term regulator model; Step 1 must not entrench direct browsing. Proposed Step 1 position: allow CAAN scope selection to continue (it is the current working behaviour) but require it to be explicit and audited; Step 2 replaces it with the membership/oversight model. Confirm before implementing.
 
+**Also in scope (1A.4) — module-gate leak on `/api/v1/dashboard*`.** The RBAC middleware gates only paths whose prefix is in `rbac_middleware.py` `ENDPOINT_MODULE_MAP`; `/api/v1/dashboard*` is absent, so the four dashboard hubs render module-tagged data without a module gate. Current state: not in the map. Action: add `/api/v1/dashboard` to the map so the four dashboard hubs are gated. If adding it would break a live dashboard that has not been tested against the module gate, document that as a stop condition and report instead of forcing the change.
+
 ---
 
-## 2. Phase 1B — RLS gaps and schema hygiene
+## 2. Phase 1B — RLS gaps, module boundary, and schema hygiene
 
-### 1B.1–1B.2 The RLS-disabled tables
-
-`DB_VERIFICATION.md` (2026-09-16) listed **6** disabled: `caan_reports`, `sms_maturity`, `state_risk_categories`, `dead_letter_queue`, `sms_dispatches`, `audit_dispatches`. Later DDL adds RLS to three of them:
-- `sms_maturity` — `supabase/migrations/20260917090000_sms_maturity_rls.sql`
-- `caan_reports` — `backend/app/db/schema_init.py:886-899`
-- `state_risk_categories` — `backend/app/db/schema_init.py:901-912`
-
-Likely remaining disabled (to be confirmed against the live catalog by the new test): `dead_letter_queue`, `sms_dispatches`, `audit_dispatches`. These three are **platform-wide, not tenant-owned** tables, so the likely outcome is a documented exemption rather than RLS.
-
-| Item | Action | Files to touch | Test |
-|---|---|---|---|
-| 1B.1 | Confirm the exact current disabled set from `pg_tables` | (evidence only) `docs/step1/` | catalog query result recorded |
-| 1B.2 | For each remaining table: enable RLS, or record a written exemption with justification (platform tables are candidates for exemption) | `scripts/supabase_rls.sql` or new migration; `backend/app/db/schema_init.py`; `docs/step1/rls_exemptions.md` (new) | cross-tenant read denied (or exemption justified) |
-| 1B.3 | Test that fails if any tenant-owned table lacks RLS and lacks a recorded exemption | `backend/tests/test_rls_coverage.py` (new) + exemption list | test fails on an unguarded tenant table |
-| 1B.4 | Add additive `barrier_register.srm_date` (CAAN SRM Manual §2.3.4 "SRM Date") | new `supabase/migrations/<ts>_barrier_register_srm_date.sql`; `backend/app/db/schema_init.py`; `backend/app/db/db_models.py` (Barrier register model ~`:1567`) | column exists; nullable round-trip (table empty) |
-
-**Business decision needed (1B.2):** whether `dead_letter_queue`, `sms_dispatches`, `audit_dispatches` are exempted as platform-wide tables or given RLS. Proposed: exempt with written justification (they are not tenant-owned operational registers). Confirm.
+1B.1  Confirm current RLS state on all 6 originally-listed tables plus the 10 zero-policy tables from HANDOFF_GUIDE. Record the full list with RLS status and policy count.
+1B.2  For each table with no RLS: enable RLS, or record a written exemption with justification. Platform-wide tables (dead_letter_queue, sms_dispatches, audit_dispatches) are exempted.
+1B.3  Coverage test: assert that each tenant-owned table has RLS AND that the app path enforces it. Where enforcement is bypassed by the owner connection (a known pre-existing condition), the test must skip with a reason and a reference to docs/step1/rls_bypass_finding.md. Do not silently pass.
+1B.4  Additive hygiene: add missing barrier_register.srm_date column (CAAN SRM Manual §2.3.4).
+1B.5  Document the RLS bypass finding in docs/step1/rls_bypass_finding.md. This is a finding for Step 2 to fix, not Step 1. Step 1's job is to make it visible.
 
 ---
 
