@@ -257,8 +257,10 @@ def test_state_path_is_in_middleware_module_map():
     assert get_module_for_path("/api/v1/spi/state/values") == "module5"
 
 
-def test_tenant_path_is_not_in_middleware_module_map():
-    """`/api/v1/spi/tenant` is NOT in ENDPOINT_MODULE_MAP; protection is
-    route-level (`get_current_user` + `require_tenant_access`) only. Recorded
-    as a finding; no middleware entry is added without SME approval."""
-    assert get_module_for_path("/api/v1/spi/tenant/fixedwing/values") == ""
+def test_tenant_path_is_in_middleware_module_map_as_module2():
+    """`/api/v1/spi/tenant` IS in ENDPOINT_MODULE_MAP as module2.
+
+    Updated by 1A.4 (2026-10-08) when the path was added to the map; the
+    earlier assertion (not mapped) recorded the pre-1A.4 state. Route-level
+    auth (`get_current_user` + `require_tenant_access`) still applies."""
+    assert get_module_for_path("/api/v1/spi/tenant/fixedwing/values") == "module2"

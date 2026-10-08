@@ -25,6 +25,10 @@ ENDPOINT_MODULE_MAP = {
     "/api/v1/psoe": "module5",
     "/api/v1/spi/state": "module5",
     "/api/v1/nhrc/state": "module5",
+    # 1A.4: paths previously absent from the map (module-gate leaks).
+    "/api/v1/dashboard/caan": "module5",
+    "/api/v1/spi/tenant": "module2",
+    "/api/v1/nhrc/tenant": "module2",
 }
 
 # Canonical module -> tenant module-flag keys. The roadmap flags the naming as

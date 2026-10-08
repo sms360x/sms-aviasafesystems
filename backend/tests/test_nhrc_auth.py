@@ -233,8 +233,8 @@ def test_nhrc_state_path_is_in_middleware_module_map():
     assert get_module_for_path("/api/v1/nhrc/state/kpis") == "module5"
 
 
-def test_nhrc_tenant_path_is_not_in_middleware_module_map():
-    # /api/v1/nhrc/tenant is NOT in ENDPOINT_MODULE_MAP; protection is
-    # route-level (get_current_user + require_tenant_access) only. Same class
-    # as the /api/v1/spi/tenant and /api/v1/dashboard* gaps (item 1A.4).
-    assert get_module_for_path("/api/v1/nhrc/tenant/fixedwing/kpis") == ""
+def test_nhrc_tenant_path_is_in_middleware_module_map_as_module2():
+    # Updated by 1A.4 (2026-10-08): /api/v1/nhrc/tenant is now in
+    # ENDPOINT_MODULE_MAP as module2. Route-level auth (get_current_user +
+    # require_tenant_access) still applies.
+    assert get_module_for_path("/api/v1/nhrc/tenant/fixedwing/kpis") == "module2"
