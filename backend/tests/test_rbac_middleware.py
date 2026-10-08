@@ -6,8 +6,11 @@ import asyncio
 
 from starlette.requests import Request
 
+from app.main import app
 from app.middleware import rbac_middleware as mw
+from app.middleware.auth import get_current_user
 from app.middleware.rbac_middleware import RBACMiddleware, get_module_for_path
+from app.services import sms_maturity_service
 
 
 def _request(path, *, user=None, query=None):
@@ -106,3 +109,58 @@ def test_unauthenticated_passthrough(monkeypatch):
 def test_has_permission_for_user_helper():
     assert mw.has_permission_for_user({"role": "TENANT_ADMIN"}, "module2") is True
     assert mw.has_permission_for_user({"role": "STAFF"}, "module5") is False
+
+
+# ============================================================================
+# Integration tests — real FastAPI app + real mapped route (module1).
+# These complement the unit tests above, which use an internal sentinel.
+# Route: GET /api/v1/sms-maturity/{tenant_id}/cache (ENDPOINT_MODULE_MAP:
+# "/api/v1/sms-maturity" -> module1).
+# ============================================================================
+
+_MAPPED_ROUTE = "/api/v1/sms-maturity/air1/cache"
+
+
+def _override_route_user(role="TENANT_ADMIN", tenant_id="air1"):
+    app.dependency_overrides[get_current_user] = lambda: {
+        "uid": "uid1",
+        "email": "admin@air1.com",
+        "role": role,
+        "tenant_id": tenant_id,
+        "department": None,
+        "claims": {"role": role, "tenant_id": tenant_id},
+    }
+
+
+def test_integration_valid_own_tenant_returns_200(monkeypatch, client):
+    """Real route, valid own-tenant TENANT_ADMIN, module enabled -> 200."""
+    monkeypatch.setattr(mw, "verify_firebase_token", lambda token: {
+        "uid": "uid1", "email": "admin@air1.com",
+        "role": "TENANT_ADMIN", "tenant_id": "air1",
+    })
+    monkeypatch.setattr(mw, "_tenant_module_enabled", lambda t, m: True)
+    monkeypatch.setattr(
+        sms_maturity_service, "read_sms_maturity",
+        lambda tid: {"overall_sms_maturity": 3.5},
+    )
+    _override_route_user()
+
+    resp = client.get(_MAPPED_ROUTE, headers={"Authorization": "Bearer test-token"})
+
+    assert resp.status_code == 200
+    assert resp.status_code != 403
+    assert resp.json()["tenant_id"] == "air1"
+
+
+def test_integration_module_disabled_returns_403(monkeypatch, client):
+    """Real route, valid TENANT_ADMIN, tenant module flag off -> 403."""
+    monkeypatch.setattr(mw, "verify_firebase_token", lambda token: {
+        "uid": "uid1", "email": "admin@air1.com",
+        "role": "TENANT_ADMIN", "tenant_id": "air1",
+    })
+    monkeypatch.setattr(mw, "_tenant_module_enabled", lambda t, m: False)
+    _override_route_user()
+
+    resp = client.get(_MAPPED_ROUTE, headers={"Authorization": "Bearer test-token"})
+
+    assert resp.status_code == 403

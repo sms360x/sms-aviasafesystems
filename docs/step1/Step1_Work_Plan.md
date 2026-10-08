@@ -8,17 +8,67 @@ The following facts from HANDOFF_GUIDE.md materially affect this plan and are no
 
 - Role names in the code are:
     TENANT_ADMIN, DEPT_ADMIN, OFFICER (SAFETY_OFFICER shimmed), ACCOUNTABLE_EXECUTIVE, CAAN_SMD, SUPER_ADMIN.
-  Step 1 tests must use these names or the constants the code defines. Do NOT use "CAAN" as a role name; the role is CAAN_SMD.
+  Step 1 tests must use these names or the constants the code defines. Do NOT use "CAAN" as a role name. Regulator roles: STATE_SMD (canonical) and CAAN_SMD (legacy alias, still emitted by current code).
 - RLS is largely bypassed on the app path. The backend connects as the Supabase owner (rls_forced = false), and live policies read Supabase JWT, not Firebase claims. Enabling RLS on a table does NOT currently enforce isolation on the app path.
 - 10 tables have RLS enabled with zero policies: audit_dispatches, dead_letter_queue, feedback, hazard_assessments, hazard_capas, hazard_rca_entries, hazard_rca_factors, invites, psoe_findings, sms_dispatches.
 - ~12 live RLS policies have no repo source.
 - `/api/v1/dashboard*` is not in the RBAC middleware map (rbac_middleware.py ENDPOINT_MODULE_MAP). The four dashboard hubs render module-tagged data without a module-gate check. This is a pre-existing gap, now in scope for 1A.4.
-- Two pre-existing test failures are known:
-    1. test_v1_router_includes_all_sub_routers
-    2. test_nav_config.js::test_ae_narrow_menu
-  Both pre-date Step 1. Neither should be reported as a new failure.
+- Known test failures: see §0.3 (known-failures-only gate). Only failures listed there are acceptable; any new failure stops the item.
 - Authenticated frontend changes cannot be verified on localhost. App Check is domain-bound. Verification is only on the deployed site.
 - The SAFETY_OFFICER -> OFFICER shim exists. Do NOT remove either role name in Step 1.
+- Role list (authoritative for Step 1): SUPER_ADMIN, STATE_SMD, TENANT_ADMIN, DEPT_ADMIN, ACCOUNTABLE_EXECUTIVE, SAFETY_OFFICER (OFFICER is the canonical rename via the shim).
+- Role canonical direction: STATE_SMD is canonical; CAAN_SMD is a legacy alias to retire. Current code normalises STATE_SMD inward to CAAN_SMD (`backend/app/middleware/auth.py:57`). Step 2 refactor. Step 1 records. Step 1 tests use whichever name the code emits.
+- Role naming rule: role names encode function, not department. OFFICER + department field replaces SAFETY_OFFICER.
+- Regulator slug pattern: authority-specific acronym, lowercased, no separators (`caan`, `caam`, `dgcai`).
+- Slug visibility policy: admin tooling shows both display name and slug; end-user surfaces show display name only; audit evidence and API responses include both. Rule: never expose a slug to an end user.
+- Tenant model: one tenant object. Both state regulators and airlines are tenants; role and tenant kind distinguish them.
+- Module 3 governance: login path determines governance; the user's tenant and role separate state-audit from airline-self-assessment. A state regulator tenant must exist before any airline tenant. The reporting relationship is set at airline-tenant creation.
+- Multi-state: architecturally supported (slugs `caan`, `caam`, `dgcai`); not yet provisioned; live data is Nepal-only.
+
+## 0.2 Live data state (2026-10-08)
+
+Regulators (2):
+    caan — Civil Aviation Authority of Nepal, Module 3 active
+    test-regulator — Test Regulator, Module 3 active
+
+Tenants (5):
+    sita-air, air-dynasty, saurya-airlines — real for Nepal
+    hzcons-5542802ee5, trirev-e770db8407 — scheduled for removal
+
+Users (19): see production-setup.html User Management.
+    One SUPER_ADMIN; two STATE_SMD; one TENANT_ADMIN;
+    three ACCOUNTABLE_EXECUTIVE; three SAFETY_OFFICER;
+    the remainder are DEPT_ADMIN per tenant department.
+
+See docs/step1/live_data_findings.md for L1–L10.
+
+## 0.3 Known test failures
+
+The "certify deterministic" gate is redefined as
+"known-failures-only". Every run must list failures by name and
+classify each as known or new. A new failure stops the item.
+
+Pytest environmental failures (live-DB state dependent):
+    tests/test_hazard_enrichment.py::
+        test_enrichment_adds_and_records_before_after
+
+Pytest pre-existing failures (from HANDOFF_GUIDE):
+    tests/test_tenant_sms.py::TestV1RouterRegistration::
+        test_v1_router_includes_all_sub_routers
+    (may or may not appear in a given run)
+
+Node test failures (separate suite, not collected by pytest):
+    frontend-tests/test_nav_config.js::
+        test_ae_narrow_menu
+
+Rules:
+    - A failure on the known list is reported but does not block.
+    - A failure not on the list stops the item and is investigated.
+    - The list is updated only when the SME confirms a new
+      environmental failure.
+
+Note: the node test path is frontend-tests/test_nav_config.js, not
+public/frontend-tests/test_nav_config.js.
 
 Date: 2026-10-07
 Project: Finish AviaSAFE First — Step 1 of 4
@@ -54,6 +104,7 @@ Consequence: Phase 1A is primarily **verification with regression tests**, not n
 | 1A.3 H1 N-HRC auth | Auth present (`nhrc.py`) | Add regression test asserting 401 without token on all N-HRC routes | `backend/tests/` (new test) | unauth 401; own-tenant 200 |
 | 1A.4 H2 caller `tenant_ids` | `regulator_dashboard.py` gated; `_default_tenant_ids` defaults to 3 tenants when query absent | Enforce: non-cross-tenant roles cannot supply `tenant_ids`; cross-tenant (CAAN) scope selection allowed but explicit. Review sibling routes (`api/v1/state_risk.py`, `api/v1/tenant_reports.py`) for the same pattern | `backend/app/routes/regulator_dashboard.py`; any sibling with caller tenant ids | non-CAAN supplying foreign `tenant_ids` → 403 |
 | 1A.5 M1 revocation | `check_revoked=True` (`firebase.py:105`) | Verify + regression test | (test only) `backend/tests/` (new test) | revoked token → 401 |
+| 1A.6 Create User dropdown duplicate regulator option | Two options set the same effective role | Remove or relabel the stale "CAAN SMD (Regulator)" option at `public/admin/setup/step3-manage.html:235-236` (and `:299-300`); keep State SMD. Fix scheduled after 1A.5. Do NOT implement in the current item | `public/admin/setup/step3-manage.html` | manual: exactly one regulator option |
 
 **Business decision needed (1A.4):** Is a cross-tenant (CAAN) role allowed to select which operator tenants it reads via a query parameter? Step 0 adopted OIP-only as the long-term regulator model; Step 1 must not entrench direct browsing. Proposed Step 1 position: allow CAAN scope selection to continue (it is the current working behaviour) but require it to be explicit and audited; Step 2 replaces it with the membership/oversight model. Confirm before implementing.
 

@@ -572,13 +572,40 @@ class TestTenantReportWorker:
         call_args = mock_update_status.call_args
         assert call_args[1].get("status") == "delivered" or call_args[0][2] == "delivered"
 
+    @patch("app.workers.tenant_scheduler.record_tenant_dispatch_intent")
+    @patch("app.workers.tenant_scheduler.update_tenant_dispatch_status")
+    @patch("app.workers.tenant_scheduler.send_regulatory_report", return_value={"sent": True})
     @patch("app.workers.tenant_scheduler.get_db")
-    def test_run_monthly_dispatch_with_no_tenants(self, mock_get_db):
-        mock_get_db.return_value = _make_worker_db(active_tenants=[])
+    def test_run_monthly_dispatch_with_seeded_tenants(
+        self, mock_get_db, mock_send, mock_update_status, mock_record_intent
+    ):
+        # The product is intentionally multi-tenant with seed data; an
+        # empty-tenant state never occurs in production. Seed a known number
+        # of tenants into the worker's isolated mock (no production data, no
+        # DB writes) and assert the worker dispatches exactly that many.
+        seeded_tenants = [
+            {
+                "tenant_id": f"seeded-air-{i}",
+                "operator_name": f"Seeded Air {i}",
+                "aoc_number": f"NPL-{i:03d}",
+                "safety_manager": {"email": f"sm@seeded-{i}.com.np"},
+                "status": "active",
+            }
+            for i in range(1, 4)
+        ]
+        mock_get_db.return_value = _make_worker_db(active_tenants=seeded_tenants)
+
         worker = TenantReportWorker()
         result = worker.run_monthly_tenant_dispatch()
-        assert result["dispatched"] == 0
-        assert result["total"] == 0
+
+        expected = len(seeded_tenants)
+        assert result["total"] == expected
+        assert result["dispatched"] == expected
+        assert len(result["results"]) == expected
+        assert all(r["success"] is True for r in result["results"])
+        assert {r["tenant_id"] for r in result["results"]} == {
+            t["tenant_id"] for t in seeded_tenants
+        }
 
     @patch("app.workers.tenant_scheduler.record_tenant_dispatch_intent")
     @patch("app.workers.tenant_scheduler.update_tenant_dispatch_status")
