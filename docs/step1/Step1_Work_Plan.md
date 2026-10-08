@@ -29,6 +29,7 @@ The following facts from HANDOFF_GUIDE.md materially affect this plan and are no
     Internal registers (hazard, risk, barrier, findings, CAPs): the state sees the operator's OUTCOME (which hazard, category, evaluated risk, barriers, acceptance status), not the operator's PROCESS (who did what, internal comments, assignment history, workflow, personnel names).
     Drill-down is the state's regulatory right, purpose-bound to a specific oversight action and audited; VSR anonymity is preserved even under drill-down.
     OIP is a commercial mechanism for aggregate intelligence, not a legal constraint on the state's right to know.
+- Department-workspace empty states are expected when the department has no assigned items. Demo data does not seed CAMO or QA items. Not a bug.
 
 ## 0.2 Live data state (2026-10-08)
 

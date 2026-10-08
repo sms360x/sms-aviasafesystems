@@ -101,3 +101,13 @@ Pages that render a mix:
 
 Pages with no data blocks:
 - `state-safety-trends.html` (navigation hub).
+
+---
+
+## Empty department registers — expected in demo
+
+Department-scoped pages (`public/dashboard/my-tasks.html`, `public/can_cap/caps.html`, `public/can_cap/cans.html`) show empty registers when the current user's department has no assigned items. This is correct behaviour, not a scoping bug.
+
+The demo environment does not currently seed CAMO-assigned or QA-assigned items. An auditor viewing these pages in the demo environment should be told this before the session.
+
+The MOR form (`public/report/mor.html`) is correctly placed on the CAMO workspace: MORs are derived from the aircraft technical log, and the CAMO officer transcribes the log into the MOR form. The "Reporter Details" fields are the filing officer's details, not the witness's. This is standard practice under ICAO Doc 9859 and Annex 13.
