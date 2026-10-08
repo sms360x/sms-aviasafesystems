@@ -24,6 +24,11 @@ The following facts from HANDOFF_GUIDE.md materially affect this plan and are no
 - Tenant model: one tenant object. Both state regulators and airlines are tenants; role and tenant kind distinguish them.
 - Module 3 governance: login path determines governance; the user's tenant and role separate state-audit from airline-self-assessment. A state regulator tenant must exist before any airline tenant. The reporting relationship is set at airline-tenant creation.
 - Multi-state: architecturally supported (slugs `caan`, `caam`, `dgcai`); not yet provisioned; live data is Nepal-only.
+- Confidentiality / state visibility (corrected model, 2026-10-08 — see §0.4):
+    SDCPS sources carry different state-visibility rules: VSR is anonymous by design (state sees aggregate intelligence only); MOR, audit reports, and accident/investigation reports are named and delivered to the state.
+    Internal registers (hazard, risk, barrier, findings, CAPs): the state sees the operator's OUTCOME (which hazard, category, evaluated risk, barriers, acceptance status), not the operator's PROCESS (who did what, internal comments, assignment history, workflow, personnel names).
+    Drill-down is the state's regulatory right, purpose-bound to a specific oversight action and audited; VSR anonymity is preserved even under drill-down.
+    OIP is a commercial mechanism for aggregate intelligence, not a legal constraint on the state's right to know.
 
 ## 0.2 Live data state (2026-10-08)
 
@@ -69,6 +74,12 @@ Rules:
 
 Note: the node test path is frontend-tests/test_nav_config.js, not
 public/frontend-tests/test_nav_config.js.
+
+## 0.4 Confidentiality is a classification problem
+
+The Boundary Charter's original OIP-only wording was too strict. The correct rule reflects ICAO Annex 19 and Doc 9859: SDCPS sources (VSR, MOR, audit, accident investigation) have different state-visibility rules; internal registers are visible to the state as OUTCOME, not PROCESS; drill-down is a state right, purpose-bound and audited; VSRs are anonymous by design and reach the state only as aggregate intelligence.
+
+See docs/step1/1D_nhrc_and_confidentiality.md and the corrected exposure table (docs/step1/1D_confidentiality_exposure_table.md).
 
 Date: 2026-10-07
 Project: Finish AviaSAFE First — Step 1 of 4
@@ -127,6 +138,7 @@ Consequence: Phase 1A is primarily **verification with regression tests**, not n
 | Item | Current state | Action | Files to touch | Test |
 |---|---|---|---|---|
 | 1C.1 Confidential / voluntary reporting + `VSR_VISIBILITY_RULE=A` | Schema + service exist: `reports.is_confidential`/`confidential_custodian_id` (`schema_init.py:869-884`); `backend/app/services/confidential_reporting_service.py`; ingestion wiring deferred (Phase-2 P2-25 note) | Enforce exactly: Safety Manager → raw report; AE → aggregate counts only; no other role → raw. Any override logged + audited | `backend/app/services/confidential_reporting_service.py`; `backend/app/routes/reporting.py` / `backend/app/api/v1/tenant_reports.py`; audit writer | SM 200 raw; AE aggregate-only (no narrative); other roles 403; override writes `audit_logs` |
+| 1C.1b Confidential reporting service wiring | `confidential_reporting_service.py` exists but is not wired into the report submission path | (a) Redact the reporter's identity before report content enters any register; (b) isolate reporter contact details so only the airline's Safety Department sees them; (c) preserve any self-identified names in the report body as report content, not reporter metadata. Wire the service, or document the schema gap that prevents wiring | `backend/app/services/confidential_reporting_service.py`; report submission path; `docs/step1/1D_reporter_redaction_check.md` | redaction check; contact-isolation check |
 | 1C.2 AE non-delegability (`CAAN §2.3.3`) | Partial: authority-tier in `sram_service.accept_risk` (`backend/app/services/sram_service.py:542`); process/two-signature `process_sign_acceptance` (`:515`); CAP AE decision in `can_cap_service` | Enforce that the AE signature cannot be delegated/substituted; reject non-AE signer; immutable after signature | `backend/app/services/sram_service.py`; `backend/app/services/can_cap_service.py`; `backend/app/api/v1/endpoints/sram.py:242`; `backend/app/routes/verification.py` | non-AE signer rejected; AE signature immutable; one AE per tenant |
 | 1C.3 Predictive analysis | **No code** (Doc 10159 AL-3 missing) | Minimum viable documented forward-looking function over existing registers (no new data sources, no new external services) | existing service (e.g. `backend/app/services/aggregation_service.py` or `state_risk_service.py`) + doc `docs/step1/` | function returns forward-looking output; unit test |
 | 1C.4 Prescriptive analysis | **No code** (Doc 10159 AL-4 missing) | Minimum viable documented recommended-action function over existing registers | existing service + doc | function returns recommendations; unit test |
@@ -143,6 +155,10 @@ Consequence: Phase 1A is primarily **verification with regression tests**, not n
 | 1D.1 | Table `state_safety_performance_targets` exists (`schema_init.py:752-765`); `backend/app/services/state_spt_service.py` persists SPT; state SPI inputs may be computed (cache) | Ensure State SPI values/trends are persisted durably (not cache-only) | `backend/app/services/spi_service.py`; `backend/app/services/state_spt_service.py`; `module_c_aggregates` reuse | persist then read back without recompute |
 | 1D.2 | — | Add RLS + tenant-boundary tests for the state tables | new test; `scripts/supabase_rls.sql` as needed | CAAN-only national rows; cross-tenant denied |
 | 1D.3 | — | Document that this was a **Partial** compliance row, not one of the 7 Missing | `docs/step1/` | note present |
+| 1D.7 Confidentiality classification table | Corrected ICAO model (§0.4) | Produce the SDCPS / internal-register / drill-down classification table and apply it to the traced endpoints | `docs/step1/1D_confidentiality_exposure_table.md` | table present; each row classified |
+| 1D.8 Escalation persistence | Escalations are in-memory (`regulator_dashboard.py:_ESCALATIONS`) | Persist drill-down/oversight grants durably; bind to the oversight action; purge on expiry | `backend/app/routes/regulator_dashboard.py` (Step 2 work) | grant survives restart; expiry enforced |
+| 1D.9 Fabricated fallback values | Synthetic values exist (SPI `_culture_fallback`; safety demo charts; SPI/N-HRC placeholder trends; AE "Decision Required" literal) | Remove or explicitly label every fabricated/placeholder value | `docs/step1/1D_fabricated_fallbacks_table.md` | no unlabeled synthetic value rendered |
+| 1D.10 Drill-down audit coverage | Only `/api/v1/regulator/*` writes CAAN read audits; `/api/v1/state-risk/*` and `/api/v1/nhrc/*` do not | Extend purpose-bound, audited drill-down/read coverage to all state read surfaces | `docs/step1/1D_drilldown_audit_coverage.md` | every state read/drill-down audited |
 
 ---
 
