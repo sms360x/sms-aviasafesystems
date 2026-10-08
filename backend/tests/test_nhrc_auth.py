@@ -21,7 +21,10 @@ Covers:
 from fastapi.testclient import TestClient
 
 from app.main import app
+from app.middleware import auth as auth_mw
+from app.middleware import rbac_middleware as mw
 from app.middleware.auth import get_current_user
+from app.middleware.rbac_middleware import get_module_for_path
 from app.services.nhrc_service import NHRCService
 
 
@@ -206,3 +209,32 @@ def test_contributing_factors_allow_authenticated_user():
         app.dependency_overrides.clear()
     assert resp.status_code == 200
     assert len(resp.json()) > 0
+
+
+# ---------------------------------------------------------------------------
+# Invalid token — rejected (exercises real token verification, not an override)
+# ---------------------------------------------------------------------------
+
+def test_nhrc_routes_reject_invalid_token(monkeypatch):
+    monkeypatch.setattr(auth_mw, "verify_firebase_token", lambda token: None)
+    monkeypatch.setattr(mw, "verify_firebase_token", lambda token: None)
+    c = TestClient(app)
+    for url in ("/api/v1/nhrc/state/kpis", "/api/v1/nhrc/tenant/fixedwing/kpis"):
+        resp = c.get(url, headers={"Authorization": "Bearer invalid-token"})
+        assert resp.status_code in (401, 403), (url, resp.status_code)
+
+
+# ---------------------------------------------------------------------------
+# RBAC middleware module map (documented, not altered)
+# ---------------------------------------------------------------------------
+
+def test_nhrc_state_path_is_in_middleware_module_map():
+    # /api/v1/nhrc/state is module-gated by the RBAC middleware (module5).
+    assert get_module_for_path("/api/v1/nhrc/state/kpis") == "module5"
+
+
+def test_nhrc_tenant_path_is_not_in_middleware_module_map():
+    # /api/v1/nhrc/tenant is NOT in ENDPOINT_MODULE_MAP; protection is
+    # route-level (get_current_user + require_tenant_access) only. Same class
+    # as the /api/v1/spi/tenant and /api/v1/dashboard* gaps (item 1A.4).
+    assert get_module_for_path("/api/v1/nhrc/tenant/fixedwing/kpis") == ""
