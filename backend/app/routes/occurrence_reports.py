@@ -364,6 +364,10 @@ async def confirm_risk_assessment(
         notes=assessment.notes,
     )
 
+    if updated is None:
+        # Cross-tenant VSR: do not confirm existence or return content.
+        raise HTTPException(status_code=404, detail="Report not found")
+
     return _to_report_response(updated)
 
 

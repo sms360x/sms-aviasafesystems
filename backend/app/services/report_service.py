@@ -247,6 +247,10 @@ async def _confirm_risk_assessment_async(
         ).scalars().first()
         if not row:
             raise ValueError("Report not found")
+        # VSR is never cross-tenant visible: reject before any write so the
+        # cross-tenant caller neither reads nor mutates a voluntary report.
+        if cross_tenant and (row.report_type or "") == "voluntary":
+            return None
 
         report_slug = tenant_slug(row.tenant_id)
         risk_index = compute_risk_index(severity, probability)

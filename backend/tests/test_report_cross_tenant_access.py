@@ -18,8 +18,9 @@ from app.services.report_service import ReportService
 
 
 class _Row:
-    def __init__(self, report_type=None):
+    def __init__(self, report_type=None, tenant_id=None):
         self.report_type = report_type
+        self.tenant_id = tenant_id
 
 
 class _FakeResult:
@@ -44,6 +45,9 @@ class _FakeSession:
     async def execute(self, stmt):
         self.statements.append(stmt)
         return _FakeResult(self._rows)
+
+    async def flush(self):
+        return None
 
 
 class _FakeCtx:
@@ -131,3 +135,34 @@ def test_safety_department_same_tenant_can_read_vsr(monkeypatch):
     )
     assert out is not None
     assert out["report_type"] == "voluntary"
+
+
+# T7 — PUT risk-assessment (backing method) for a cross-tenant caller on a VSR
+#      returns None (the route yields 404), and no write/response content occurs.
+def test_cross_tenant_put_risk_assessment_vsr_returns_none(monkeypatch):
+    _install_fake_session(
+        monkeypatch, rows=[_Row(report_type="voluntary", tenant_id=uuid.uuid4())]
+    )
+    out = asyncio.run(
+        rs._confirm_risk_assessment_async(
+            _svc(), uuid.uuid4(), 3, 2,
+            {"role": "STATE_SMD", "uid": "u1", "tenant_id": None}, "note",
+        )
+    )
+    assert out is None
+
+
+# T8 — same-tenant caller calling PUT risk-assessment on their own VSR is
+#      unaffected (no regression).
+def test_same_tenant_put_risk_assessment_vsr_returns_report(monkeypatch):
+    _install_fake_session(
+        monkeypatch, rows=[_Row(report_type="voluntary", tenant_id=uuid.uuid4())]
+    )
+    monkeypatch.setattr(rs, "_report_to_dict", lambda row: {"report_type": row.report_type})
+    out = asyncio.run(
+        rs._confirm_risk_assessment_async(
+            _svc(), uuid.uuid4(), 3, 2,
+            {"role": "TENANT_ADMIN", "uid": "u1", "tenant_id": "sita-air"}, "note",
+        )
+    )
+    assert out == {"report_type": "voluntary"}
