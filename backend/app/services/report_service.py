@@ -116,7 +116,10 @@ async def _get_reports_async(self, cross_tenant: bool, tenant_uuid_value: uuid.U
         .order_by(Report.created_at.desc())
     )
     if cross_tenant:
-        stmt = stmt.limit(settings.REPO_QUERY_LIMIT)
+        # VSR (voluntary) is never cross-tenant visible: a VSR is the source of
+        # a hazard, and only the hazard is state-facing. MOR/other types remain
+        # cross-tenant visible.
+        stmt = stmt.where(Report.report_type != "voluntary").limit(settings.REPO_QUERY_LIMIT)
     else:
         stmt = stmt.where(Report.tenant_id == tenant_uuid_value)
     async with session_scope() as session:
@@ -124,12 +127,16 @@ async def _get_reports_async(self, cross_tenant: bool, tenant_uuid_value: uuid.U
         return [_report_to_dict(r) for r in rows]
 
 
-async def _get_report_async(self, tenant_uuid_value: Optional[uuid.UUID], report_uuid: uuid.UUID):
+async def _get_report_async(self, tenant_uuid_value: Optional[uuid.UUID], report_uuid: uuid.UUID, cross_tenant: bool = False):
     async with session_scope() as session:
         row = (
             await session.execute(_report_lookup_stmt(tenant_uuid_value, report_uuid))
         ).scalars().first()
         if not row:
+            return None
+        # VSR is never cross-tenant visible: return None so the route yields 404
+        # (do not confirm existence). Same-tenant callers are unaffected.
+        if cross_tenant and (row.report_type or "") == "voluntary":
             return None
         return _report_to_dict(row)
 
@@ -369,7 +376,7 @@ class ReportService:
             tid = None
             if not cross_tenant:
                 tid = register_tenant(self.tenant_id)
-            return run(_get_report_async(self, tid, report_uuid))
+            return run(_get_report_async(self, tid, report_uuid, cross_tenant))
         except Exception as e:
             logger.error(f"Failed to retrieve report {report_id}: {e}")
             raise
