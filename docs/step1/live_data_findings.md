@@ -88,6 +88,17 @@ Note on STATE_SMD scope:
     is the Safety Management Division; another state may have a
     Safety Management Department.
 
+### L4 evidence — user-visible consequence (2026-10-09)
+
+Item 1A.6 removed the redundant CAAN_SMD option from the Edit User
+and Create User dropdowns. The residual is that existing accounts
+stored with role CAAN_SMD open blank in the Edit modal's role select
+until re-selected.
+
+This confirms that the L4 mismatch is not only a naming preference:
+the stored value and the UI value disagree, and the disagreement has
+a user-visible effect. The Step 2 refactor is required to resolve it.
+
 ---
 
 ## L5 — Both state and airline are tenants; role distinguishes them
