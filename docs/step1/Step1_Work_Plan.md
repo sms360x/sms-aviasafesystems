@@ -57,6 +57,9 @@ classify each as known or new. A new failure stops the item.
 Pytest environmental failures (live-DB state dependent):
     tests/test_hazard_enrichment.py::
         test_enrichment_adds_and_records_before_after
+    tests/test_risk_matrix.py::
+        test_hazard_create_honours_risk_index_without_classifying
+    (intermittent, live-DB socket timeout; passes in isolation)
 
 Pytest pre-existing failures (from HANDOFF_GUIDE):
     tests/test_tenant_sms.py::TestV1RouterRegistration::
@@ -135,7 +138,7 @@ Consequence: Phase 1A is primarily **verification with regression tests**, not n
 ## 2. Phase 1B — RLS gaps, module boundary, and schema hygiene
 
 1B.1  Confirm current RLS state on all 6 originally-listed tables plus the 10 zero-policy tables from HANDOFF_GUIDE. Record the full list with RLS status and policy count.
-1B.2  For each table with no RLS: enable RLS, or record a written exemption with justification. Platform-wide tables (dead_letter_queue, sms_dispatches, audit_dispatches) are exempted.
+1B.2  For each table with no RLS: enable RLS, or record a written exemption with justification. Platform-wide tables (dead_letter_queue, sms_dispatches, audit_dispatches) are exempted. — COMPLETE (2026-10-09). SME ruling: platform exemptions are dead_letter_queue + sms_dispatches only; audit_dispatches is tenant-owned (has tenant_id and a tenant-facing read at GET /api/v1/tenants/sms/audit-logs) and is deferred with the 7 other tenant-owned zero-policy tables to Step 2 (8 deferred total). No policies written now (owner bypass + Firebase vs GoTrue mismatch would make them non-enforcing). Evidence: docs/step1/1B.2_rls_exemptions.md.
 1B.3  Coverage test: assert that each tenant-owned table has RLS AND that the app path enforces it. Where enforcement is bypassed by the owner connection (a known pre-existing condition), the test must skip with a reason and a reference to docs/step1/rls_bypass_finding.md. Do not silently pass.
 1B.4  Additive hygiene: add missing barrier_register.srm_date column (CAAN SRM Manual §2.3.4).
 1B.5  Document the RLS bypass finding in docs/step1/rls_bypass_finding.md. This is a finding for Step 2 to fix, not Step 1. Step 1's job is to make it visible.
