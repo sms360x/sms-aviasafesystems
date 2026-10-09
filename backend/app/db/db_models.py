@@ -1588,6 +1588,7 @@ class BarrierRegisterEntry(Base):
     implementation_status: Mapped[str] = mapped_column(Text, nullable=False, default="not_started")
     action_by: Mapped[object] = mapped_column(Text, nullable=True)
     follow_up_date: Mapped[object] = mapped_column(DateTime(timezone=True), nullable=True)
+    srm_date: Mapped[object] = mapped_column(Date, nullable=True)
     notes: Mapped[object] = mapped_column(Text, nullable=True)
     is_demo: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     created_at: Mapped[datetime] = mapped_column(
