@@ -157,7 +157,19 @@ Consequence: Phase 1A is primarily **verification with regression tests**, not n
 | 1C.2 AE non-delegability (`CAAN §2.3.3`) | Partial: authority-tier in `sram_service.accept_risk` (`backend/app/services/sram_service.py:542`); process/two-signature `process_sign_acceptance` (`:515`); CAP AE decision in `can_cap_service` | Enforce that the AE signature cannot be delegated/substituted; reject non-AE signer; immutable after signature | `backend/app/services/sram_service.py`; `backend/app/services/can_cap_service.py`; `backend/app/api/v1/endpoints/sram.py:242`; `backend/app/routes/verification.py` | non-AE signer rejected; AE signature immutable; one AE per tenant |
 | 1C.3 Predictive analysis | **No code** (Doc 10159 AL-3 missing) | Minimum viable documented forward-looking function over existing registers (no new data sources, no new external services) | existing service (e.g. `backend/app/services/aggregation_service.py` or `state_risk_service.py`) + doc `docs/step1/` | function returns forward-looking output; unit test |
 | 1C.4 Prescriptive analysis | **No code** (Doc 10159 AL-4 missing) | Minimum viable documented recommended-action function over existing registers | existing service + doc | function returns recommendations; unit test |
-| 1C.5 Data governance | Code exists: `backend/app/services/data_governance.py` | Produce the written governance record (owner / retention / access rule) | `docs/step1/data_governance_record.md` (new) | document present; references the code |
+| 1C.5 Data governance | Code exists: `backend/app/services/data_governance.py` | Produce the written governance record (owner / retention / access rule) | `docs/step1/1C.5_data_governance.md` (new) | document present; references the code |
+
+### Phase 1C item status (2026-10-10)
+
+    1C.1             closed
+    1C.1 correction  closed
+    1C.1b-i          closed as deferred
+    1C.1b-ii         deferred to Step 2 (schema + custodian)
+    1C.1b-iii        deferred to Step 4 (AE aggregate view)
+    1C.2             closed
+    1C.3             closed
+    1C.4             closed
+    1C.5             closed
 
 **Business decision needed (1C.3/1C.4):** the minimum viable definition (in-scope/size of the predictive and prescriptive functions). The Phase-7 item (P7-4) defers vendor-vs-in-house; Step 1 proposes an in-house, documented, register-derived function only. Confirm the acceptance bar.
 
