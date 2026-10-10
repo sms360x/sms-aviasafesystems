@@ -4,14 +4,68 @@ Status: Finding, documented for Step 2. Not fixed in Step 1.
 Date: 2026-10-08
 Source: HANDOFF_GUIDE.md (2026-10-01 / 2026-10-03)
 
-## What the finding is
+## What the bypass is
 
-Row-Level Security is effectively bypassed on the application path:
+The database layer does not enforce RLS on the app path.
+Tenant isolation is enforced by application code only.
 
-1. The backend connects to Supabase as the **owner** role, and `rls_forced = false` everywhere. Postgres RLS does not apply to the table owner unless the table is set `FORCE ROW LEVEL SECURITY`.
-2. The live RLS policies read **Supabase JWT** claims (`auth.jwt()`), but the application authenticates with **Firebase** ID tokens. The policies therefore evaluate against claims that the app path never presents.
+## Why (two reasons, both present)
 
-Consequence: enabling RLS on a table does **not**, by itself, enforce tenant isolation for requests served by the backend.
+1. Owner connection.
+   The backend connects as the table owner (postgres /
+   postgres.bftnwljnpnpniksmalnk via the Supabase pooler).
+   PostgreSQL skips RLS for the table owner unless
+   FORCE ROW LEVEL SECURITY is set. rls_forced is false on
+   every table.
+
+2. Identity mismatch.
+   The live RLS policies read Supabase GoTrue claims
+   (auth.jwt(), auth.uid(), app.current_tenant). The app
+   path uses Firebase Auth and does not present GoTrue
+   claims. Even if the connection were not the owner, the
+   policies would not match.
+
+## Effect
+
+- RLS is enabled on all 58 public tables.
+- It does not gate any query on the app path.
+- Tenant isolation currently relies on application-layer
+  query filters (WHERE tenant_id = <session tenant>).
+- Evidence items 1A.2, 1A.3, 1A.7, 1A.8 verified that the
+  application-layer isolation works correctly.
+
+## What is exempted or deferred
+
+- Platform exemptions (2): dead_letter_queue, sms_dispatches.
+- Deferred tenant-owned zero-policy tables (8):
+  audit_dispatches, feedback, hazard_assessments,
+  hazard_capas, hazard_rca_entries, hazard_rca_factors,
+  invites, psoe_findings.
+See docs/step1/1B.2_rls_exemptions.md for the reasoning.
+
+## What an auditor should be told
+
+- RLS is enabled but not enforced on the app path.
+- Application-layer isolation is enforced and tested.
+- The database-layer fix requires resolving the identity
+  mismatch, which is Step 2 work (membership model).
+- No cross-tenant exposure has been identified on the app
+  path.
+
+## Step 2 scope
+
+- Decide the RLS identity model (Firebase claim path).
+- Rewrite the ~12 live policies against that model.
+- Write the 8 deferred tenant-owned policies.
+- Decide whether FORCE ROW LEVEL SECURITY should be set.
+
+## Related items
+
+- 1B.1 RLS inventory: docs/step1/1B.1_rls_inventory.md
+- 1B.2 exemptions and deferral:
+  docs/step1/1B.2_rls_exemptions.md
+- 1B.3 coverage test:
+  docs/step1/1B.3_rls_coverage_test.md
 
 ## Evidence
 
@@ -20,18 +74,6 @@ Consequence: enabling RLS on a table does **not**, by itself, enforce tenant iso
 - `HANDOFF_GUIDE.md:1323-1329` (Deferred item B): ~12 live RLS policies have no repo source.
 - 10 `public` tables have RLS enabled with **zero policies** (default-deny for any non-owner role): `audit_dispatches`, `dead_letter_queue`, `feedback`, `hazard_assessments`, `hazard_capas`, `hazard_rca_entries`, `hazard_rca_factors`, `invites`, `psoe_findings`, `sms_dispatches` (`HANDOFF_GUIDE.md:1314-1317`).
 
-## Effect
-
-Tenant isolation on the app path is currently enforced by **application code** (per-route dependencies + the RBAC middleware and its tenant-param checks), not by the database. Any table whose app-path query omits a tenant filter is not protected by RLS. This is why Step 1's 1B work must not claim isolation merely because a table "has RLS".
-
 ## Why it is not fixed in Step 1
 
 RLS enforcement is coupled to the Step 2 decisions: the membership/oversight model and the single tenant-key scheme. Reworking RLS to read Firebase-derived authorization (or to force RLS for the owner) is a Step 2 change. Step 1's job is to make the finding **visible and documented**, not to fix it.
-
-## What an auditor should be told
-
-This is a **known, documented, scheduled** finding:
-
-- Tenant isolation is presently enforced in application code, with RLS present but non-enforcing on the app path.
-- The gap is recorded here and in `HANDOFF_GUIDE.md`, and scheduled for Step 2 (membership model + tenant key) where RLS enforcement is restored.
-- It is not being hidden, and 1B.3's coverage test will explicitly skip-with-reason (never silently pass) where the owner connection bypasses enforcement, pointing back to this document.
