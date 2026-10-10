@@ -60,6 +60,9 @@ Pytest environmental failures (live-DB state dependent):
     tests/test_risk_matrix.py::
         test_hazard_create_honours_risk_index_without_classifying
     (intermittent, live-DB socket timeout; passes in isolation)
+    tests/test_hazard_triage.py::test_rejected_closes_hazard
+    (order-dependent; passes in isolation; test defect to fix
+    in Step 2 test cleanup)
 
 Pytest pre-existing failures (from HANDOFF_GUIDE):
     tests/test_tenant_sms.py::TestV1RouterRegistration::
@@ -197,6 +200,18 @@ Consequence: Phase 1A is primarily **verification with regression tests**, not n
 4. **1C.1** — confirm the exact "aggregate counts only" shape the AE may see (which fields), since the rule forbids raw narrative.
 
 Everything else in this plan is implementable within the stated constraints (AviaSAFE-only, no auth-provider change, no tenant-key change, no schema migration beyond 1B.4 and 1D).
+
+---
+
+## Step 2 items
+
+Test-suite cleanup — test_hazard_triage.py
+
+The test seeds a non-unique hazard_id="TRI-001" and queries
+without a tenant filter, making it order-dependent. Fix:
+seed a unique hazard_id per test, or scope the query by
+tenant. Related: test_hazard_enrichment.py has a similar
+live-DB dependency. Not Step 1 work.
 
 ---
 
