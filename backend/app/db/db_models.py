@@ -2420,3 +2420,85 @@ class DeadLetterEntry(Base):
         Index("ix_dead_letter_queue_created", "created_at"),
         Index("ix_dead_letter_queue_status", "status"),
     )
+
+
+# ============================================================================
+# MEMBERSHIPS + OVERSIGHT RELATIONSHIPS (Step 2, W1 — item 2A.2, additive)
+#
+# Created by supabase/migrations/20261010120000_memberships_and_oversight.sql.
+# Inert until Phase 2A.3 backfills them — nothing reads them yet. RLS is
+# ENABLED (no policies) per the Step 1 deferral; FORCE RLS is Phase 2C.
+# ============================================================================
+
+
+class Membership(Base):
+    __tablename__ = "memberships"
+
+    id: Mapped[object] = _uuid_pk()
+    user_id: Mapped[object] = mapped_column(
+        Uuid(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    )
+    tenant_id: Mapped[object] = mapped_column(
+        Uuid(as_uuid=True), ForeignKey("tenants.id", ondelete="CASCADE"), nullable=True
+    )
+    role: Mapped[str] = mapped_column(Text, nullable=False)
+    effective_from: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )
+    effective_to: Mapped[object] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    is_active: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=True, server_default=text("true")
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+
+    __table_args__ = (
+        Index("memberships_user_effective", "user_id",
+              text("effective_from DESC")),
+        Index(
+            "memberships_active_unique",
+            "user_id", "tenant_id", "role",
+            unique=True,
+            postgresql_where=text("is_active AND effective_to IS NULL"),
+        ),
+    )
+
+
+class OversightRelationship(Base):
+    __tablename__ = "oversight_relationships"
+
+    id: Mapped[object] = _uuid_pk()
+    regulator_tenant_id: Mapped[object] = mapped_column(
+        Uuid(as_uuid=True), ForeignKey("tenants.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    operator_tenant_id: Mapped[object] = mapped_column(
+        Uuid(as_uuid=True), ForeignKey("tenants.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    effective_from: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )
+    effective_to: Mapped[object] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+
+    __table_args__ = (
+        Index(
+            "oversight_relationships_active_unique",
+            "regulator_tenant_id", "operator_tenant_id",
+            unique=True,
+            postgresql_where=text("effective_to IS NULL"),
+        ),
+        Index("oversight_relationships_regulator", "regulator_tenant_id"),
+        Index("oversight_relationships_operator", "operator_tenant_id"),
+    )
