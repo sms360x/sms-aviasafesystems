@@ -458,3 +458,24 @@ Step 2 is complete when:
 - Whether the app can present a non-owner Postgres role under the current
   Supabase pooler setup is unverified; `backend/app/db/session.py` and the
   Supabase pooler configuration would settle it.
+
+---
+
+## Planning finding (2026-10-10)
+
+The Step 2 planning pass assumed regulators and operators both live in the
+`tenants` table. The live schema has them in two tables (`tenants`,
+`regulators`).
+
+Unification is split across three items:
+- **2A.3b** — schema additions (phase 1). Adds `kind` and the regulator-only
+  columns to `tenants`; inserts the regulator rows; leaves the `regulators`
+  table in place. No code change. The app keeps working.
+- **2A.3b-code** — SQLAlchemy single-table inheritance. `Tenant` base class
+  with a `kind` discriminator; `Regulator` and `Operator` subclasses. All code
+  reads/writes go through `Tenant`.
+- **2A.3b-cleanup** — rename `regulators` to `regulators_old`; verify no
+  readers remain; drop when confirmed.
+
+Also: the Step 1 admin form field "Operator Tenant IDs" is a legacy artifact;
+it is removed in 2A.3c.
