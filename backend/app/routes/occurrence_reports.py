@@ -249,6 +249,12 @@ async def get_reports(
     """
     if not user.get("tenant_id") and user.get("role") not in settings.CROSS_TENANT_ROLES:
         raise HTTPException(status_code=403, detail="User does not have tenant access")
+    # VSR_VISIBILITY_RULE=A: within a tenant the raw report list is Safety
+    # Manager (TENANT_ADMIN) only. Cross-tenant roles keep their existing view
+    # (1A.7 excludes VSRs for them in the service layer).
+    if (user.get("role") not in settings.CROSS_TENANT_ROLES
+            and user.get("role") not in settings.TENANT_ADMIN_ROLES):
+        raise HTTPException(status_code=403, detail="Safety Manager role required")
     service = ReportService(user.get("tenant_id", "default"))
 
     docs = service.get_reports(user)
@@ -268,6 +274,16 @@ async def get_report(
     doc = service.get_report_by_id(report_id, user)
     if not doc:
         raise HTTPException(status_code=404, detail="Report not found")
+
+    # VSR_VISIBILITY_RULE=A: raw VSR (narrative + reporter metadata) is Safety
+    # Manager (TENANT_ADMIN) only. Cross-tenant callers never reach here for a
+    # VSR (the service returns None -> 404, 1A.7). MOR and other report types
+    # are unchanged.
+    if (doc.get("report_type") == "voluntary"
+            and user.get("role") not in settings.CROSS_TENANT_ROLES
+            and user.get("role") not in settings.TENANT_ADMIN_ROLES):
+        raise HTTPException(status_code=403,
+                            detail="Safety Manager role required for voluntary reports")
 
     return _to_report_response(doc)
 
