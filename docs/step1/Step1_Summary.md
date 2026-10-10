@@ -1,15 +1,14 @@
 # Step 1 — What Was Achieved and What Remains
 
-*(Draft for SME review.)*
-
 ## What Step 1 Did
 
 Step 1 checked whether the safety platform's security, data
 visibility, and compliance claims actually hold in the running
 software — and then fixed or recorded every gap we found. We read
 the code, ran the tests, and produced a written evidence document
-for each item. Nothing was deployed; every change is a separate,
-reversible commit.
+for each item. Nothing was deployed as part of Step 1; every
+change is a separate, reversible commit on a working branch, not
+on production.
 
 ## Verified (the boundaries that hold)
 
@@ -27,12 +26,13 @@ stay correct:
 ## Closed (the specific gaps fixed)
 
 - Cross-tenant exposure of Voluntary Safety Reports (VSRs) is closed.
-- Raw VSRs are now limited to the owning tenant's Safety Manager and
-  Safety Department officer.
+- Raw VSRs are now limited to the owning tenant's Safety Manager
+  (TENANT_ADMIN) and Safety Department officer (SAFETY_OFFICER).
 - The Accountable Executive's risk-acceptance signature cannot be
   delegated.
-- The unauthenticated hazard-analysis write path now requires a login
-  and uses the session's tenant.
+- A dormant hazard-analysis endpoint was authenticated before it
+  could be wired into the running application; it now requires a
+  login and uses the session's tenant.
 - A stale duplicate regulator option was removed from the admin user
   screen.
 - Two small, documented analysis functions were added: one that
@@ -42,8 +42,8 @@ stay correct:
 
 ## Documented (findings recorded, not fixed)
 
-Some issues are real but need decisions or schema work beyond Step 1.
-They are written down with a target phase:
+Five findings are recorded with a target phase. Some need decisions
+or schema work beyond Step 1:
 
 - **Row-Level Security is switched on but does not actually gate
   queries** because the app connects as the database owner and the
@@ -90,11 +90,11 @@ was done, what was tested, and what remains open.
 
 ## What You Would Tell CAAN
 
-"We audited the platform against the ISO/Annex-19 expectations. The
-access controls on our reporting endpoints are enforced and tested;
-voluntary safety reports are protected and no longer visible across
-organisations; the Accountable Executive's risk acceptance is
-non-delegable as required. We also documented, with target dates,
-the areas still to complete — chiefly enforcing the database-level
-access rules and isolating reporter contact details — and we can show
-the evidence for each finding."
+"We audited the platform against ICAO Annex 19 and Doc 9859
+expectations. The access controls on our reporting endpoints are
+enforced and tested; voluntary safety reports are protected and no
+longer visible across organisations; the Accountable Executive's
+risk acceptance is non-delegable as required. We also documented,
+with target phases, the areas still to complete — chiefly enforcing
+the database-level access rules and isolating reporter contact
+details — and we can show the evidence for each finding."
