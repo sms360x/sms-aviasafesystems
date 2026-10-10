@@ -34,6 +34,13 @@ from app.middleware.rate_limit import rate_limit
 
 router = APIRouter()
 
+# VSR_VISIBILITY_RULE="A": raw VSR access is limited to the Safety Manager
+# (TENANT_ADMIN / AIRLINE_ADMIN) and the Safety Department officer
+# (SAFETY_OFFICER). Cross-tenant roles are handled separately (1A.7). The
+# officer role is keyed on the literal `SAFETY_OFFICER` (not the dual-accept
+# `SAFETY_OFFICER_ROLES`); see docs/step1/1C.1_vsr_visibility.md.
+_RAW_VSR_ROLES = set(settings.TENANT_ADMIN_ROLES) | {settings.ROLE_SAFETY_OFFICER}
+
 
 def can_submit_mor(user: Dict[str, Any]) -> bool:
     """Check if user has permission to submit MOR (CAMO/QA restricted)."""
@@ -250,10 +257,11 @@ async def get_reports(
     if not user.get("tenant_id") and user.get("role") not in settings.CROSS_TENANT_ROLES:
         raise HTTPException(status_code=403, detail="User does not have tenant access")
     # VSR_VISIBILITY_RULE=A: within a tenant the raw report list is Safety
-    # Manager (TENANT_ADMIN) only. Cross-tenant roles keep their existing view
-    # (1A.7 excludes VSRs for them in the service layer).
+    # Manager (TENANT_ADMIN/AIRLINE_ADMIN) or the Safety Department officer
+    # (SAFETY_OFFICER) only. Cross-tenant roles keep their existing view (1A.7
+    # excludes VSRs for them in the service layer).
     if (user.get("role") not in settings.CROSS_TENANT_ROLES
-            and user.get("role") not in settings.TENANT_ADMIN_ROLES):
+            and user.get("role") not in _RAW_VSR_ROLES):
         raise HTTPException(status_code=403, detail="Safety Manager role required")
     service = ReportService(user.get("tenant_id", "default"))
 
@@ -276,12 +284,13 @@ async def get_report(
         raise HTTPException(status_code=404, detail="Report not found")
 
     # VSR_VISIBILITY_RULE=A: raw VSR (narrative + reporter metadata) is Safety
-    # Manager (TENANT_ADMIN) only. Cross-tenant callers never reach here for a
-    # VSR (the service returns None -> 404, 1A.7). MOR and other report types
-    # are unchanged.
+    # Manager (TENANT_ADMIN/AIRLINE_ADMIN) or the Safety Department officer
+    # (SAFETY_OFFICER) only. Cross-tenant callers never reach here for a VSR
+    # (the service returns None -> 404, 1A.7). MOR and other report types are
+    # unchanged.
     if (doc.get("report_type") == "voluntary"
             and user.get("role") not in settings.CROSS_TENANT_ROLES
-            and user.get("role") not in settings.TENANT_ADMIN_ROLES):
+            and user.get("role") not in _RAW_VSR_ROLES):
         raise HTTPException(status_code=403,
                             detail="Safety Manager role required for voluntary reports")
 

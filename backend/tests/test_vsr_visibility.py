@@ -2,9 +2,13 @@
 # 1C.1 — VSR visibility rule (VSR_VISIBILITY_RULE = "A").
 #
 # Raw VSR (narrative + reporter metadata) is visible only to the owning
-# tenant's Safety Manager (TENANT_ADMIN). Any other same-tenant role is denied
-# at the route layer. Cross-tenant callers stay denied (1A.7). MOR/other report
+# tenant's Safety Manager (TENANT_ADMIN / AIRLINE_ADMIN) and the Safety
+# Department officer (SAFETY_OFFICER). Any other same-tenant role is denied at
+# the route layer. Cross-tenant callers stay denied (1A.7). MOR/other report
 # types are unchanged.
+#
+# Corrected 2026-10-10: SAFETY_OFFICER added to the allowed list (SME ruling);
+# the literal `SAFETY_OFFICER` is keyed, not the dual-accept OFFICER alias.
 #
 # Deterministic (no live DB): the route layer is exercised through FastAPI's
 # TestClient with the auth dependency overridden and ReportService methods
@@ -79,7 +83,17 @@ def _patch_list(monkeypatch, rows):
                         lambda self, user: rows)
 
 
-# T1 — TENANT_ADMIN of the owning tenant receives the raw VSR detail.
+def _list_row():
+    now = datetime.now(timezone.utc)
+    return {
+        "id": str(uuid.uuid4()), "tenant_id": TENANT, "report_type": "voluntary",
+        "status": "NEW", "ai_status": "PENDING", "location": "KTM",
+        "occurrence_date": now, "created_by": "u1", "created_at": now,
+        "is_anonymous": False,
+    }
+
+
+# T1 — TENANT_ADMIN (Safety Manager) of the owning tenant sees the raw VSR.
 def test_tenant_admin_receives_raw_vsr(monkeypatch):
     _patch_detail(monkeypatch, _report("voluntary"))
     _override("TENANT_ADMIN")
@@ -95,7 +109,22 @@ def test_tenant_admin_receives_raw_vsr(monkeypatch):
         _clear()
 
 
-# T2 — ACCOUNTABLE_EXECUTIVE of the owning tenant is denied the raw VSR detail.
+# T2 — SAFETY_OFFICER (Safety Department officer) of the owning tenant sees the
+#      raw VSR.
+def test_safety_officer_receives_raw_vsr(monkeypatch):
+    _patch_detail(monkeypatch, _report("voluntary"))
+    _override("SAFETY_OFFICER")
+    try:
+        r = client.get(f"/api/v1/reports/{uuid.uuid4()}")
+        assert r.status_code == 200, r.text
+        body = r.json()
+        assert body["narrative"] == "raw narrative text"
+        assert body["reporter_name"] == "Jane Reporter"
+    finally:
+        _clear()
+
+
+# T3 — ACCOUNTABLE_EXECUTIVE of the owning tenant is denied the raw VSR.
 def test_accountable_executive_denied_raw_vsr(monkeypatch):
     _patch_detail(monkeypatch, _report("voluntary"))
     _override("ACCOUNTABLE_EXECUTIVE")
@@ -108,9 +137,32 @@ def test_accountable_executive_denied_raw_vsr(monkeypatch):
         _clear()
 
 
-# T3 — Other same-tenant roles are denied the raw VSR detail.
-@pytest.mark.parametrize("role", ["DEPT_ADMIN", "OFFICER", "SAFETY_OFFICER"])
-def test_other_roles_denied_raw_vsr(monkeypatch, role):
+# T4 — DEPT_ADMIN is denied the raw VSR.
+def test_dept_admin_denied_raw_vsr(monkeypatch):
+    _patch_detail(monkeypatch, _report("voluntary"))
+    _override("DEPT_ADMIN")
+    try:
+        r = client.get(f"/api/v1/reports/{uuid.uuid4()}")
+        assert r.status_code == 403, r.text
+    finally:
+        _clear()
+
+
+# T5 — OFFICER (the dual-accept rename, not the Safety Department literal) is
+#      denied raw VSR: the rule keys on the literal `SAFETY_OFFICER`.
+def test_officer_denied_raw_vsr(monkeypatch):
+    _patch_detail(monkeypatch, _report("voluntary"))
+    _override("OFFICER")
+    try:
+        r = client.get(f"/api/v1/reports/{uuid.uuid4()}")
+        assert r.status_code == 403, r.text
+    finally:
+        _clear()
+
+
+# T6 — USER / STAFF are denied the raw VSR.
+@pytest.mark.parametrize("role", ["USER", "STAFF"])
+def test_staff_denied_raw_vsr(monkeypatch, role):
     _patch_detail(monkeypatch, _report("voluntary"))
     _override(role)
     try:
@@ -120,7 +172,7 @@ def test_other_roles_denied_raw_vsr(monkeypatch, role):
         _clear()
 
 
-# T4 — Cross-tenant callers still get 404 for a VSR (regression of 1A.7).
+# T7 — Cross-tenant callers still get 404 for a VSR (regression of 1A.7).
 def test_cross_tenant_vsr_returns_404(monkeypatch):
     _patch_detail(monkeypatch, None)
     _override("CAAN_SMD", tenant_id=None)
@@ -131,16 +183,11 @@ def test_cross_tenant_vsr_returns_404(monkeypatch):
         _clear()
 
 
-# T5 — List endpoint: TENANT_ADMIN allowed; other same-tenant roles 403.
-def test_list_allowed_for_tenant_admin(monkeypatch):
-    now = datetime.now(timezone.utc)
-    _patch_list(monkeypatch, [{
-        "id": str(uuid.uuid4()), "tenant_id": TENANT, "report_type": "voluntary",
-        "status": "NEW", "ai_status": "PENDING", "location": "KTM",
-        "occurrence_date": now, "created_by": "u1", "created_at": now,
-        "is_anonymous": False,
-    }])
-    _override("TENANT_ADMIN")
+# List endpoint: allowed roles are the Safety Manager aliases + SAFETY_OFFICER.
+@pytest.mark.parametrize("role", ["TENANT_ADMIN", "AIRLINE_ADMIN", "SAFETY_OFFICER"])
+def test_list_allowed_for_raw_vsr_roles(monkeypatch, role):
+    _patch_list(monkeypatch, [_list_row()])
+    _override(role)
     try:
         r = client.get("/api/v1/reports/")
         assert r.status_code == 200, r.text
@@ -154,10 +201,11 @@ def test_list_allowed_for_tenant_admin(monkeypatch):
         _clear()
 
 
+# List endpoint: every other same-tenant role is denied.
 @pytest.mark.parametrize("role", [
-    "ACCOUNTABLE_EXECUTIVE", "DEPT_ADMIN", "OFFICER", "SAFETY_OFFICER", "USER",
+    "ACCOUNTABLE_EXECUTIVE", "DEPT_ADMIN", "OFFICER", "USER", "STAFF",
 ])
-def test_list_denied_for_non_admin(monkeypatch, role):
+def test_list_denied_for_non_raw_vsr_roles(monkeypatch, role):
     _override(role)
     try:
         r = client.get("/api/v1/reports/")
@@ -166,7 +214,7 @@ def test_list_denied_for_non_admin(monkeypatch, role):
         _clear()
 
 
-# T6 — A non-VSR report (MOR) is unaffected: normal same-tenant access applies.
+# A non-VSR report (MOR) is unaffected: normal same-tenant access applies.
 def test_mor_detail_unaffected_for_non_admin(monkeypatch):
     _patch_detail(monkeypatch, _report("mandatory"))
     _override("DEPT_ADMIN")
