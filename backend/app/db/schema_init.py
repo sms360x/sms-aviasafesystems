@@ -169,18 +169,15 @@ _DOMAIN_DDL = [
     # (idempotent for fresh DBs where they are already TEXT).
     "ALTER TABLE tenants ALTER COLUMN regulator_id TYPE TEXT USING regulator_id::text;",
     "ALTER TABLE tenants ALTER COLUMN contact_id TYPE TEXT USING contact_id::text;",
+    # 2A.3b-cleanup: `regulators` is superseded by `tenants`
+    # (kind = 'regulator'). It is no longer created on fresh installs; on live
+    # it is retained only as `regulators_old` for one rollback cycle (dropped in
+    # a later item). The former CREATE is kept below as an inline comment for
+    # history; the trailing SELECT 1 keeps this list entry a valid, executable
+    # no-op.
     """
-    CREATE TABLE IF NOT EXISTS regulators (
-        id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-        slug                TEXT NOT NULL UNIQUE,
-        name                TEXT,
-        regulator_type      TEXT,
-        display_name        TEXT,
-        operator_tenant_ids JSONB NOT NULL DEFAULT '[]'::jsonb,
-        data                JSONB NOT NULL DEFAULT '{}'::jsonb,
-        created_at          TIMESTAMPTZ NOT NULL DEFAULT now(),
-        updated_at          TIMESTAMPTZ NOT NULL DEFAULT now()
-    );
+    -- CREATE TABLE IF NOT EXISTS regulators (superseded by tenants.kind='regulator')
+    SELECT 1;
     """,
     """
     CREATE TABLE IF NOT EXISTS users (

@@ -499,3 +499,20 @@ A NEW failure (not on this list) stops the item.
         test_materialize_all_and_invalidate
         (new 2026-10-11; closed asyncpg connection in cleanup;
          fails with the change reverted; assertions pass)
+    tests/test_aggregation_materializer.py::
+        test_event_trigger_refreshes_metrics
+        (new 2026-10-11; same closed asyncpg connection class as
+         test_materialize_all_and_invalidate; fails in isolation;
+         the materializer path does not touch regulators or
+         tenants, so the rename in 2A.3b-cleanup is not the cause)
+
+---
+
+## Test hygiene notes
+
+- `test_aggregation_materializer.py` creates ~24 `mat-*` tenants per run and
+  does not clean them up. Effect: `Tenant.all()` counts include test residue.
+  Fix: add a teardown that deletes created tenants. Deferred to a Step 2.5 /
+  Step 3 test-cleanup item.
+- `regulators_old` (renamed from `regulators` in 2A.3b-cleanup) is retained for
+  one cycle pending a future drop item.

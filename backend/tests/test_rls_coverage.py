@@ -51,7 +51,8 @@ REFERENCE_TABLES = {
     "icao_adrep_taxonomies",
     "metric_definitions",
     "psoe_questions",
-    "regulators",
+    # "regulators" removed 2A.3b-cleanup: regulators are now rows in `tenants`
+    # (kind = 'regulator'), not a separate reference table.
     "state_risk_categories",
     "taxonomy_mappings",
 }
