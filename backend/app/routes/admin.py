@@ -464,6 +464,7 @@ class TenantCreate(BaseModel):
     contact_email: Optional[str] = None
     contact_phone: Optional[str] = None
     contact_title: Optional[str] = None
+    kind: Optional[str] = None
 
 
 class TenantBulkRequest(BaseModel):
@@ -493,6 +494,7 @@ class TenantUpdate(BaseModel):
     contact_phone: Optional[str] = None
     contact_title: Optional[str] = None
     regulator_id: Optional[str] = None
+    kind: Optional[str] = None
 
 
 class RegulatorUpdate(BaseModel):
@@ -603,6 +605,18 @@ async def _seed_new_tenant_hazards(tenant_data: Dict[str, Any], result: Dict[str
         return 0
 
 
+@router.get("/tenant-kinds", status_code=status.HTTP_200_OK)
+async def admin_tenant_kinds(
+    user: Dict[str, Any] = Depends(get_admin_user),
+):
+    """Service-provider tenant kinds for the creation dropdown (SUPER_ADMIN).
+
+    2A.3c: excludes the reserved kinds 'regulator' (created via its own admin
+    step) and 'platform' (created outside the UI).
+    """
+    return {"success": True, "kinds": settings.TENANT_KINDS_SERVICE_PROVIDER}
+
+
 @router.post("/tenants", status_code=status.HTTP_200_OK)
 async def admin_create_tenant(
     req: TenantSetupRequest,
@@ -616,6 +630,14 @@ async def admin_create_tenant(
     """
     _verify_admin_setup(req.setup_key)
     data = req.tenant.model_dump()
+    # 2A.3c — validate the tenant kind; default to 'operator' (back-compat).
+    kind = str(data.get("kind") or "operator").strip().lower()
+    if kind not in settings.TENANT_KINDS:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid tenant kind '{kind}'. Must be one of {settings.TENANT_KINDS}",
+        )
+    data["kind"] = kind
     from app.services.production_seed import create_tenant
     try:
         doc = create_tenant(data, user)
@@ -697,6 +719,15 @@ async def admin_update_tenant(
     fields = {k: v for k, v in req.model_dump().items() if k != "setup_key" and v is not None}
     if not fields:
         raise HTTPException(status_code=422, detail="No updatable fields provided")
+    # 2A.3c — validate the kind when supplied; otherwise leave it unchanged.
+    if "kind" in fields:
+        kind = str(fields["kind"]).strip().lower()
+        if kind not in settings.TENANT_KINDS:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid tenant kind '{kind}'. Must be one of {settings.TENANT_KINDS}",
+            )
+        fields["kind"] = kind
     merged = pg.update(Tenant, "slug", tenant_id, fields)
     if merged is None:
         raise HTTPException(status_code=404, detail=f"Unknown tenant: {tenant_id}")

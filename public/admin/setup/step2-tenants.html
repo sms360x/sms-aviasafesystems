@@ -1,7 +1,7 @@
 <!-- ============================================================================
 FILE: step2-tenants.html
 PATH: public/admin/setup/step2-tenants.html
-PURPOSE: Step 2 of the Production Setup suite — create operator tenants
+PURPOSE: Step 2 of the Production Setup suite — create service-provider tenants
          individually (data-driven, regulator assigned here), or paste a CSV /
          JSON list and use Bulk Import. For full onboarding (Auth user
          provisioning with generated passwords) use the Detailed Wizard.
@@ -14,7 +14,7 @@ AUTHOR: AviaSAFE Systems
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Step 2: Add Operator Tenants — AviaSAFE Admin</title>
+    <title>Step 2: Add Service Provider Tenants — AviaSAFE Admin</title>
     <link rel="stylesheet" href="/css/variables.css">
     <link rel="stylesheet" href="/css/admin.css">
     <link rel="stylesheet" href="/css/admin-setup.css">
@@ -38,7 +38,7 @@ AUTHOR: AviaSAFE Systems
         <div class="tb-left">
             <a href="/admin/production-setup.html" class="back-link"><i class="fas fa-arrow-left"></i> Back to Setup</a>
             <span class="tb-brand"><i class="fas fa-plane"></i> AviaSAFE Admin</span>
-            <span class="page-title">Step 2 — Add Operator Tenants</span>
+            <span class="page-title">Step 2 — Add Service Provider Tenants</span>
         </div>
         <div class="tb-actions" id="topNav">
             <a href="/admin/production-setup.html" class="nav-link" style="color:#cbd5e1; text-decoration:none; font-size:.82rem; padding:6px 12px; border-radius:8px;"><i class="fas fa-cogs" style="color:#4fc3f7;"></i> Production Setup</a>
@@ -50,26 +50,33 @@ AUTHOR: AviaSAFE Systems
 
     <div class="content-area">
         <div class="page-head">
-            <h1><i class="fas fa-building" style="color:var(--color-brand-600);"></i> Step 2 — Add Operator Tenants</h1>
-            <div class="sub">Create the operator tenants that the Step-1 regulator oversees. Assign the regulator, oversight level and contact details, or bulk-import from CSV / JSON.</div>
+            <h1><i class="fas fa-building" style="color:var(--color-brand-600);"></i> Step 2 — Add Service Provider Tenants</h1>
+            <div class="sub">Create the service-provider tenants that the Step-1 regulator oversees. Assign the regulator, oversight level and contact details, or bulk-import from CSV / JSON.</div>
         </div>
 
         <div class="grid">
             <div class="admin-card">
                 <div class="card-head"><span class="step-badge">Step 2</span></div>
-                <h2>Add Operator Tenants</h2>
-                <p class="card-sub">Create operator tenants individually (data-driven, regulator assigned here), or paste a CSV / JSON list and use Bulk Import. For full onboarding &mdash; Auth user provisioning with generated passwords &mdash; use the detailed wizard.</p>
+                <h2>Add Service Provider Tenants</h2>
+                <p class="card-sub">Create service-provider tenants individually (data-driven, regulator assigned here), or paste a CSV / JSON list and use Bulk Import. For full onboarding &mdash; Auth user provisioning with generated passwords &mdash; use the detailed wizard.</p>
                 <div class="btn-row" style="margin-bottom:14px;">
                     <a href="/admin/tenant-credentials.html" class="btn btn-outline"><i class="fas fa-user-plus"></i> Detailed Onboarding Wizard</a>
                 </div>
                 <form onsubmit="createTenant(event)">
                     <div class="form-row">
-                        <div class="form-group"><label>Tenant ID *</label><input type="text" id="tenantId" placeholder="sita-air" required pattern="[a-z0-9-]+"></div>
-                        <div class="form-group"><label>Organization Name *</label><input type="text" id="tenantName" placeholder="Sita Air" required></div>
-                        <div class="form-group"><label>ICAO</label><input type="text" id="tenantIcao" placeholder="STA" maxlength="3"></div>
+                        <div class="form-group"><label>Tenant ID *</label><input type="text" id="tenantId" placeholder="operator-slug" required pattern="[a-z0-9-]+"></div>
+                        <div class="form-group"><label>Organization Name *</label><input type="text" id="tenantName" placeholder="Operator Name" required></div>
+                        <div class="form-group"><label>ICAO</label><input type="text" id="tenantIcao" placeholder="XXX" maxlength="3"></div>
                     </div>
                     <div class="form-row">
-                        <div class="form-group"><label>Country</label><input type="text" id="tenantCountry" placeholder="Nepal" value="Nepal"></div>
+                        <div class="form-group">
+                            <label>Service Provider Kind *</label>
+                            <select id="tenantKind" required><option value="operator" selected>operator</option></select>
+                            <small style="color:#94a3b8;font-size:.72rem;">Reserved kinds (regulator, platform) are not offered here.</small>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group"><label>Country</label><input type="text" id="tenantCountry" placeholder="Country Name"></div>
                         <div class="form-group"><label>Regulator (State Regulator from Step 1) *</label><select id="tenantRegulator" required><option value="">— select regulator —</option></select></div>
                     </div>
                     <div class="form-row">
@@ -124,8 +131,8 @@ AUTHOR: AviaSAFE Systems
                 </form>
                 <textarea id="bulkTextarea" placeholder="CSV (paste below), e.g.:
 tenant_id,name,icao,country,regulator_id
-nepal-airlines,Nepal Airlines,NAL,Nepal,caan
-shree-airlines,Shree Airlines,SHA,Nepal,caan" style="display:none;margin-top:14px;width:100%;min-height:110px;padding:10px;border:1px solid #cbd5e1;border-radius:8px;font-size:.82rem;box-sizing:border-box;"></textarea>
+operator-slug,Operator Name,XXX,Country Name,regulator-slug
+operator-slug-2,Operator Name Two,XXX,Country Name,regulator-slug" style="display:none;margin-top:14px;width:100%;min-height:110px;padding:10px;border:1px solid #cbd5e1;border-radius:8px;font-size:.82rem;box-sizing:border-box;"></textarea>
             </div>
         </div>
 
@@ -146,6 +153,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     currentUser = user;
     document.getElementById('userDisplay').textContent = user.email;
     populateRegulatorDropdown();
+    populateTenantKindDropdown();
 });
 
 // ============================================================================
@@ -171,6 +179,25 @@ async function populateRegulatorDropdown() {
 // STEP 2 — CREATE / BULK IMPORT TENANTS
 // ============================================================================
 
+// 2A.3c — service-provider kinds. Fetched from the backend; local fallback so
+// the form is never unusable if the fetch fails.
+var SERVICE_PROVIDER_KINDS_FALLBACK = ['operator', 'airport', 'amo', 'ato', 'ans'];
+async function populateTenantKindDropdown() {
+    var sel = document.getElementById('tenantKind');
+    if (!sel) return;
+    var kinds = SERVICE_PROVIDER_KINDS_FALLBACK;
+    try {
+        var resp = await AdminUI.apiGet('/api/v1/admin/tenant-kinds');
+        if (resp && Array.isArray(resp.kinds) && resp.kinds.length) kinds = resp.kinds;
+    } catch (err) { /* fall back to the local constant */ }
+    var prev = sel.value;
+    sel.innerHTML = kinds.map(function (k) {
+        return '<option value="' + k + '">' + k + '</option>';
+    }).join('');
+    if (prev && kinds.indexOf(prev) !== -1) sel.value = prev;
+    else sel.value = kinds.indexOf('operator') !== -1 ? 'operator' : kinds[0];
+}
+
 async function createTenant(e) {
     e.preventDefault();
     var regulatorId = document.getElementById('tenantRegulator').value.trim();
@@ -184,7 +211,8 @@ async function createTenant(e) {
             tenant_id: document.getElementById('tenantId').value.trim().toLowerCase(),
             name: document.getElementById('tenantName').value.trim(),
             icao: document.getElementById('tenantIcao').value.trim().toUpperCase(),
-            country: document.getElementById('tenantCountry').value.trim() || 'Nepal',
+            country: document.getElementById('tenantCountry').value.trim() || '',
+            kind: (document.getElementById('tenantKind') || {}).value || 'operator',
             regulator_id: regulatorId,
             is_demo: document.getElementById('tenantIsDemo').checked,
             oversight_level: document.getElementById('tenantOversightLevel').value,

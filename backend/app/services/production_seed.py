@@ -355,6 +355,8 @@ def create_tenant(data: Dict[str, Any], actor: Dict[str, Any]) -> Dict[str, Any]
         "country": (data.get("country") or "Nepal").strip(),
         "category": (data.get("category") or "CONTRACTED").upper(),
         "status": (data.get("status") or "ACTIVE").upper(),
+        # 2A.3c — tenant kind; validated at the endpoint, defaulted here.
+        "kind": str(data.get("kind") or "operator").strip().lower(),
         "trial_expires_at": data.get("trial_expires_at"),
         "active": bool(data.get("active", True)),
         "is_demo": bool(data.get("is_demo", True)),

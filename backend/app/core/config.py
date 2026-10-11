@@ -210,6 +210,28 @@ class Settings(BaseSettings):
     # Roles permitted to act across the whole tenant (tenant admins + cross-tenant).
     TENANT_WIDE_ROLES: List[str] = ["AIRLINE_ADMIN", "TENANT_ADMIN", "CAAN_SMD", "SUPER_ADMIN"]
 
+    # ── Tenant kinds (2A.3c) ──
+    # Canonical tenant/service-provider kinds. Not a DB CHECK constraint; the
+    # list is expected to grow. 'regulator' is created via its own admin step;
+    # 'platform' is created outside the UI.
+    TENANT_KINDS: List[str] = [
+        "regulator",   # state authority
+        "operator",    # airline
+        "airport",     # aerodrome operator
+        "amo",         # approved maintenance organisation
+        "ato",         # approved training organisation
+        "ans",         # air navigation service provider
+        "platform",    # the vendor's own tenant
+    ]
+    # Subset exposed to the service-provider creation UI.
+    TENANT_KINDS_SERVICE_PROVIDER: List[str] = [
+        "operator",
+        "airport",
+        "amo",
+        "ato",
+        "ans",
+    ]
+
     # ── Upstash Redis (enabled when REDIS_URL is non-empty) ──
     REDIS_URL: str = ""
     REDIS_ENABLED: bool = True

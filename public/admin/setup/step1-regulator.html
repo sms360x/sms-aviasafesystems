@@ -2,8 +2,8 @@
 FILE: step1-regulator.html
 PATH: public/admin/setup/step1-regulator.html
 PURPOSE: Step 1 of the Production Setup suite — create the state civil-aviation
-         authority (e.g. CAAN for Nepal, DGCA for India) that oversees the
-         operator tenants. Part of the modular menu under /admin/production-setup.html.
+         authority (the national aviation regulator) that oversees the
+         service-provider tenants. Part of the modular menu under /admin/production-setup.html.
          SUPER_ADMIN only; mutations require the admin setup key.
 AUTHOR: AviaSAFE Systems
 ============================================================================ -->
@@ -50,27 +50,25 @@ AUTHOR: AviaSAFE Systems
     <div class="content-area">
         <div class="page-head">
             <h1><i class="fas fa-landmark" style="color:var(--color-brand-600);"></i> Step 1 — Create State Regulator</h1>
-            <div class="sub">The state civil-aviation authority (e.g. CAAN for Nepal, DGCA for India) that oversees the operator tenants.</div>
+            <div class="sub">The state civil-aviation authority (the national aviation regulator) that oversees the service-provider tenants.</div>
         </div>
 
         <div class="grid">
             <div class="admin-card">
                 <div class="card-head"><span class="step-badge">Step 1</span></div>
                 <h2>Create State Regulator</h2>
-                <p class="card-sub">The state civil-aviation authority (e.g. CAAN for Nepal, DGCA for India) that oversees the operator tenants.</p>
+                <p class="card-sub">The state civil-aviation authority (the national aviation regulator) that oversees the service-provider tenants.</p>
                 <form onsubmit="createRegulator(event)">
                     <div class="form-row">
-                        <div class="form-group"><label>Regulator ID *</label><input type="text" id="regId" placeholder="caan" required pattern="[a-z0-9-]+"><small>Lowercase letters, numbers, hyphens</small></div>
-                        <div class="form-group"><label>Full Name *</label><input type="text" id="regName" placeholder="Civil Aviation Authority of Nepal" required></div>
-                        <div class="form-group"><label>Short Name</label><input type="text" id="regShort" placeholder="CAAN"></div>
+                        <div class="form-group"><label>Regulator ID *</label><input type="text" id="regId" placeholder="regulator-slug" required pattern="[a-z0-9-]+"><small>Lowercase letters, numbers, hyphens</small></div>
+                        <div class="form-group"><label>Full Name *</label><input type="text" id="regName" placeholder="Full Authority Name" required></div>
+                        <div class="form-group"><label>Short Name</label><input type="text" id="regShort" placeholder="AUTHORITY"></div>
                     </div>
                     <div class="form-row">
-                        <div class="form-group"><label>Country Code</label><input type="text" id="regCountry" placeholder="NP" maxlength="2"></div>
-                        <div class="form-group"><label>Country Name</label><input type="text" id="regCountryName" placeholder="Nepal"></div>
-                        <div class="form-group"><label>Domain</label><input type="text" id="regDomain" placeholder="ssp.caanepal.gov.np"></div>
+                        <div class="form-group"><label>Country Code</label><input type="text" id="regCountry" placeholder="XX" maxlength="2"></div>
+                        <div class="form-group"><label>Country Name</label><input type="text" id="regCountryName" placeholder="Country Name"></div>
+                        <div class="form-group"><label>Domain</label><input type="text" id="regDomain" placeholder="authority.gov.xx"></div>
                     </div>
-                    <div class="form-group"><label>Operator Tenant IDs (comma-separated)</label><input type="text" id="regOperators" placeholder="sita-air, yeti-airlines, buddha-air"></div>
-
                     <!-- Subscription Dates -->
                     <div class="form-row">
                         <div class="form-group">
@@ -96,7 +94,7 @@ AUTHOR: AviaSAFE Systems
 
                     <!-- Administrator account (provisioned with the regulator) -->
                     <div class="form-row">
-                        <div class="form-group"><label>Admin Email *</label><input type="email" id="regAdminEmail" placeholder="smd@example.gov" required></div>
+                        <div class="form-group"><label>Admin Email *</label><input type="email" id="regAdminEmail" placeholder="admin@authority.gov" required></div>
                         <div class="form-group"><label>Admin Full Name *</label><input type="text" id="regAdminName" placeholder="Safety Management Department" required></div>
                         <div class="form-group"><label>Admin Department</label><input type="text" id="regAdminDept" placeholder="SMD"></div>
                     </div>
@@ -158,7 +156,6 @@ async function createRegulator(e) {
             country: document.getElementById('regCountry').value.trim().toUpperCase(),
             country_name: document.getElementById('regCountryName').value.trim(),
             domain: document.getElementById('regDomain').value.trim(),
-            operator_tenant_ids: document.getElementById('regOperators').value.split(',').map(function (s) { return s.trim(); }).filter(Boolean),
             is_demo: isDemo,
             subscription_start: document.getElementById('regSubscriptionStart').value || null,
             subscription_end: document.getElementById('regSubscriptionEnd').value || null

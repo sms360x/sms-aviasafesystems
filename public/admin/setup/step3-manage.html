@@ -2,7 +2,7 @@
 FILE: step3-manage.html
 PATH: public/admin/setup/step3-manage.html
 PURPOSE: Step 3 of the Production Setup suite — search and manage existing
-         regulators, operator tenants, and tenant users. Delete actions require
+         regulators, service-provider tenants, and tenant users. Delete actions require
          the setup key. Part of the modular menu under /admin/production-setup.html.
 AUTHOR: AviaSAFE Systems
 ============================================================================ -->
@@ -49,13 +49,13 @@ AUTHOR: AviaSAFE Systems
     <div class="content-area">
         <div class="page-head">
             <h1><i class="fas fa-users-gear" style="color:var(--color-brand-600);"></i> Step 3 — Manage Regulators, Tenants &amp; Users</h1>
-            <div class="sub">Search and manage existing regulators, operator tenants, and tenant users. Delete actions require the setup key.</div>
+            <div class="sub">Search and manage existing regulators, service-provider tenants, and tenant users. Delete actions require the setup key.</div>
         </div>
 
         <div class="admin-card">
             <div class="card-head"><span class="step-badge">Step 3</span></div>
             <h2>Manage Regulators, Tenants &amp; Users</h2>
-            <p class="card-sub">Search and manage existing regulators, operator tenants, and tenant users. Delete actions require the setup key.</p>
+            <p class="card-sub">Search and manage existing regulators, service-provider tenants, and tenant users. Delete actions require the setup key.</p>
 
             <!-- ============ EXISTING REGULATORS ============ -->
             <div class="section-title" style="margin-top:18px;"><i class="fas fa-landmark"></i> Existing Regulators</div>
@@ -160,13 +160,13 @@ AUTHOR: AviaSAFE Systems
         <form id="entityForm">
             <div class="form-group" id="entityIdGroup">
                 <label for="entityId">Slug / ID *</label>
-                <input type="text" id="entityId" placeholder="e.g. sita-air" autocomplete="off"
+                <input type="text" id="entityId"                        placeholder="e.g. operator-slug" autocomplete="off"
                        style="width:100%;padding:9px 11px;border:1px solid #cbd5e1;border-radius:8px;font-size:.86rem;box-sizing:border-box;">
                 <small style="color:#94a3b8;">Lowercase letters, numbers and hyphens only.</small>
             </div>
             <div class="form-group">
                 <label for="entityName">Name *</label>
-                <input type="text" id="entityName" placeholder="e.g. Sita Air" required autocomplete="off"
+                <input type="text" id="entityName" placeholder="e.g. Operator Name" required autocomplete="off"
                        style="width:100%;padding:9px 11px;border:1px solid #cbd5e1;border-radius:8px;font-size:.86rem;box-sizing:border-box;">
             </div>
             <div class="form-group entityTenantOnly">
@@ -175,12 +175,16 @@ AUTHOR: AviaSAFE Systems
                     <option value="">— None —</option>
                 </select>
             </div>
+            <div class="form-group entityTenantOnly">
+                <label for="entityKind">Service Provider Kind</label>
+                <select id="entityKind" style="width:100%;padding:9px 11px;border:1px solid #cbd5e1;border-radius:8px;font-size:.86rem;"></select>
+            </div>
             <div class="form-row">
                 <div class="form-group"><label for="entityCountry">Country</label>
-                    <input type="text" id="entityCountry" placeholder="Nepal" autocomplete="off"
+                    <input type="text" id="entityCountry" placeholder="Country Name" autocomplete="off"
                            style="width:100%;padding:9px 11px;border:1px solid #cbd5e1;border-radius:8px;font-size:.86rem;box-sizing:border-box;"></div>
                 <div class="form-group entityTenantOnly"><label for="entityIcao">ICAO</label>
-                    <input type="text" id="entityIcao" placeholder="e.g. SIA" autocomplete="off"
+                    <input type="text" id="entityIcao" placeholder="e.g. XXX" autocomplete="off"
                            style="width:100%;padding:9px 11px;border:1px solid #cbd5e1;border-radius:8px;font-size:.86rem;box-sizing:border-box;"></div>
             </div>
             <div class="entityTenantOnly form-row">
@@ -193,7 +197,7 @@ AUTHOR: AviaSAFE Systems
             </div>
             <div class="form-group entityRegOnly">
                 <label for="entityDomain">Regulator Email Domain</label>
-                <input type="text" id="entityDomain" placeholder="e.g. caan.gov.np" autocomplete="off"
+                <input type="text" id="entityDomain" placeholder="e.g. authority.gov.xx" autocomplete="off"
                        style="width:100%;padding:9px 11px;border:1px solid #cbd5e1;border-radius:8px;font-size:.86rem;box-sizing:border-box;">
             </div>
             <div class="form-group">
@@ -745,6 +749,36 @@ async function ensureRegulatorsLoaded() {
 
 // First arg: 'tenant' | 'regulator'. Second arg (optional): existing id —
 // opens the modal in edit mode when the id resolves in the cached lists.
+// 2A.3c — service-provider kinds for the New/Edit Tenant modal.
+var SERVICE_PROVIDER_KINDS_FALLBACK = ['operator', 'airport', 'amo', 'ato', 'ans'];
+var _entityKinds = null;
+async function loadEntityKinds() {
+    if (_entityKinds) return _entityKinds;
+    try {
+        var resp = await AdminUI.apiGet('/api/v1/admin/tenant-kinds');
+        if (resp && Array.isArray(resp.kinds) && resp.kinds.length) {
+            _entityKinds = resp.kinds;
+            return _entityKinds;
+        }
+    } catch (err) { /* fall back to the local constant */ }
+    _entityKinds = SERVICE_PROVIDER_KINDS_FALLBACK.slice();
+    return _entityKinds;
+}
+async function populateEntityKindDropdown(currentKind, disabled) {
+    var sel = entityField('entityKind');
+    if (!sel) return;
+    var kinds = await loadEntityKinds();
+    sel.innerHTML = kinds.map(function (k) {
+        return '<option value="' + k + '">' + k + '</option>';
+    }).join('');
+    var val = currentKind || 'operator';
+    if (kinds.indexOf(val) === -1) {
+        sel.innerHTML += '<option value="' + val + '">' + val + '</option>';
+    }
+    sel.value = val;
+    sel.disabled = !!disabled;
+}
+
 async function openEntityModal(type, idle) {
     pendingEntity = { type: type, id: idle || null };
     try {
@@ -791,7 +825,7 @@ async function openEntityModal(type, idle) {
     entityField('entityName').value = record ? (record.name || '') : '';
     entityField('entityCountry').value = isReg
         ? (record ? (record.country_name || record.country || '') : '')
-        : (record ? (record.country || '') : 'Nepal');
+        : (record ? (record.country || '') : '');
     if (!isReg) {
         entityField('entityIcao').value = record ? (record.icao || '') : '';
         entityField('entityContactName').value = record
@@ -799,6 +833,7 @@ async function openEntityModal(type, idle) {
         entityField('entityContactEmail').value = record
             ? (record.contact_email || (record.contact && record.contact.email) || '') : '';
         populateEntityRegulatorDropdown(record ? (record.regulator_id || '') : '');
+        await populateEntityKindDropdown(record ? (record.kind || 'operator') : 'operator', isEdit);
         var keyInput = entityField('entitySetupKey');
         if (keyInput) { try { keyInput.value = AdminUI.getSetupKey() || ''; } catch (e) { keyInput.value = ''; } }
     } else {
@@ -873,11 +908,12 @@ entityField('entityForm').addEventListener('submit', async function (e) {
     } else {
         var tid = (entityField('entityId') || {}).value.trim() || '';
         if (!tid) { errEl.textContent = 'Tenant slug is required.'; errEl.style.display = 'block'; return; }
-        var country = (entityField('entityCountry') || {}).value.trim() || 'Nepal';
+        var country = (entityField('entityCountry') || {}).value.trim() || '';
         var icao = (entityField('entityIcao') || {}).value.trim() || '';
         var regId = (entityField('entityRegulator') || {}).value || '';
         var contactName = (entityField('entityContactName') || {}).value.trim() || '';
         var contactEmail = (entityField('entityContactEmail') || {}).value.trim() || '';
+        var kind = (entityField('entityKind') || {}).value || '';
         if (isEdit) {
             body.name = name;
             if (country) body.country = country;
@@ -885,12 +921,14 @@ entityField('entityForm').addEventListener('submit', async function (e) {
             if (regId) body.regulator_id = regId;
             if (contactName) body.contact_name = contactName;
             if (contactEmail) body.contact_email = contactEmail;
+            if (kind) body.kind = kind;
         } else {
             payload.tenant_id = tid;
             payload.name = name;
             payload.country = country;
             if (icao) payload.icao = icao;
             if (regId) payload.regulator_id = regId;
+            payload.kind = kind || 'operator';
             payload.is_demo = true;
             if (contactName || contactEmail) {
                 payload.contact = {};
