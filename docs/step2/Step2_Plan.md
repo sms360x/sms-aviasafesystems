@@ -479,3 +479,23 @@ Unification is split across three items:
 
 Also: the Step 1 admin form field "Operator Tenant IDs" is a legacy artifact;
 it is removed in 2A.3c.
+
+---
+
+## Known environmental failures
+
+These fail intermittently or in specific orderings. They do NOT block an item.
+A NEW failure (not on this list) stops the item.
+
+    tests/test_tenant_sms.py::TestV1RouterRegistration::
+        test_v1_router_includes_all_sub_routers
+    tests/test_hazard_enrichment.py::
+        test_enrichment_adds_and_records_before_after
+    tests/test_risk_matrix.py::
+        test_hazard_create_honours_risk_index_without_classifying
+    tests/test_hazard_triage.py::
+        test_rejected_closes_hazard
+    tests/test_aggregation_materializer.py::
+        test_materialize_all_and_invalidate
+        (new 2026-10-11; closed asyncpg connection in cleanup;
+         fails with the change reverted; assertions pass)
