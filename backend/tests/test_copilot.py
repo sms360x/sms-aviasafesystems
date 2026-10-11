@@ -12,10 +12,19 @@ Covers:
 
 import sys
 
+import pytest
 from fastapi.testclient import TestClient
 
 from app.main import app
 from app.services import groq_copilot
+from auth_override import use_user
+
+
+@pytest.fixture(autouse=True)
+def _clear_auth_overrides():
+    yield
+    from app.middleware.auth import get_current_user
+    app.dependency_overrides.pop(get_current_user, None)
 
 
 # ============================================================================
@@ -107,15 +116,15 @@ class _FakeGroqModule:
 # ============================================================================
 
 def _patch_env(monkeypatch, db=None, groq=True, api_key="gsk_test_key"):
-    def _fake_verify_firebase_token(token):
-        return {
-            "uid": "u-admin",
-            "email": "admin@yeti.com.np",
-            "role": "AIRLINE_ADMIN",
-            "tenant_id": "yeti-airlines",
-            "department": "safety",
-        }
-    monkeypatch.setattr("app.middleware.auth.verify_firebase_token", _fake_verify_firebase_token)
+    # 2A.4-pre: install the authenticated user via the dependency override.
+    use_user({
+        "uid": "u-admin",
+        "email": "admin@yeti.com.np",
+        "role": "AIRLINE_ADMIN",
+        "tenant_id": "yeti-airlines",
+        "department": "safety",
+        "claims": {},
+    })
     monkeypatch.setattr(groq_copilot.settings, "GROQ_API_KEY", api_key)
     if db is not None:
         monkeypatch.setattr("app.services.groq_copilot.get_db", lambda: db)
@@ -190,7 +199,7 @@ def test_chat_injects_context_into_groq_payload(monkeypatch):
 
 
 def test_chat_unauthorized_returns_401(monkeypatch):
-    _patch_env(monkeypatch, groq=True)
+    # 2A.4-pre: no auth override here — this exercises the unauthenticated path.
     resp = _chat(authorized=False)
     assert resp.status_code in (401, 403)
 

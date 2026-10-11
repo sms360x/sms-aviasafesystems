@@ -7,11 +7,20 @@ tenant-scoped query (list_tenant_users), and GET /api/v1/tenants/{id}/users
 
 from datetime import datetime, timezone
 
+import pytest
 from fastapi.testclient import TestClient
 
 from app.main import app
 from app.services import users
+from auth_override import use_user
 from pg_bridge import patch_pg_through
+
+
+@pytest.fixture(autouse=True)
+def _clear_auth_overrides():
+    yield
+    from app.middleware.auth import get_current_user
+    app.dependency_overrides.pop(get_current_user, None)
 
 
 # ============================================================================
@@ -170,14 +179,9 @@ def _patch_db(monkeypatch, db):
 
 
 def _patch_user(monkeypatch, user):
-    def _fake_verify_firebase_token(token):
-        return {
-            "uid": user["uid"],
-            "email": user["email"],
-            "role": user["role"],
-            "tenant_id": user["tenant_id"],
-        }
-    monkeypatch.setattr("app.middleware.auth.verify_firebase_token", _fake_verify_firebase_token)
+    # 2A.4-pre: install the authenticated user via the dependency override
+    # (a mocked Firebase token no longer yields a role).
+    use_user(user)
 
 
 def _user(role="AIRLINE_ADMIN", tid="tara-air", uid="u-admin", email="admin@taraair.com"):

@@ -9,6 +9,7 @@ from fastapi.testclient import TestClient
 
 from app.main import app
 from app.services import master_register
+from auth_override import use_user
 
 
 def _dt(days_ago=0, hours_ago=0):
@@ -330,18 +331,18 @@ def test_api_route_pagination(monkeypatch):
     }
     with patch("app.services.master_register.build_master_register", return_value=mock_data) as mock_build:
         client = TestClient(app)
-        # Need auth mock
-        import app.middleware.auth as auth_mod
-        orig = auth_mod.verify_firebase_token
-        auth_mod.verify_firebase_token = lambda t: {"uid": "u1", "email": "a@t1.com", "role": "AIRLINE_ADMIN", "tenant_id": "t1"}
-        from app.firebase import get_db
-        # bypass firebase init
-        resp = client.get("/api/v1/dashboard/master-register?page_size=25&cursor=abc", headers={"Authorization": "Bearer test"})
-        # Should be 200 and have called build with page_size 25
-        assert resp.status_code == 200
-        # Check that page_size and cursor were forwarded
-        assert mock_build.called
-        kwargs = mock_build.call_args[1]
-        assert kwargs["page_size"] == 25
-        assert kwargs["cursor"] == "abc"
-        auth_mod.verify_firebase_token = orig
+        # 2A.4-pre: install the authenticated user via the dependency override.
+        from app.middleware.auth import get_current_user
+        use_user({"uid": "u1", "email": "a@t1.com", "role": "AIRLINE_ADMIN",
+                  "tenant_id": "t1", "department": None, "claims": {}})
+        try:
+            resp = client.get("/api/v1/dashboard/master-register?page_size=25&cursor=abc", headers={"Authorization": "Bearer test"})
+            # Should be 200 and have called build with page_size 25
+            assert resp.status_code == 200
+            # Check that page_size and cursor were forwarded
+            assert mock_build.called
+            kwargs = mock_build.call_args[1]
+            assert kwargs["page_size"] == 25
+            assert kwargs["cursor"] == "abc"
+        finally:
+            app.dependency_overrides.pop(get_current_user, None)

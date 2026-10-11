@@ -18,6 +18,7 @@ from unittest.mock import MagicMock
 from uuid import UUID
 
 import pytest
+from fastapi import Request
 from fastapi.testclient import TestClient
 from sqlalchemy import delete, select
 
@@ -27,6 +28,7 @@ from app.db.session import session_scope
 from app.main import app
 from app.core.config import settings
 from app.services import srm_engine
+from auth_override import use_user
 
 
 # ============================================================================
@@ -310,20 +312,25 @@ def mock_firebase_and_auth(monkeypatch):
         lambda tid: {"risk_matrix": {"thresholds": {"low_max": 5, "medium_max": 9, "high_max": 15}}},
     )
 
-    import app.firebase as fb_mod
-    import app.middleware.auth as auth_mod
+    # 2A.4-pre: the auth boundary reads role/tenant from memberships, so install
+    # the authenticated user via the get_current_user override (token-selected)
+    # instead of mocking the Firebase token.
+    from app.middleware.auth import get_current_user
 
-    def fake_verify(token):
+    def _override_from_token(request: Request):
+        auth = request.headers.get("authorization", "")
+        token = auth.split(" ", 1)[1].strip() if auth.lower().startswith("bearer ") else ""
         claims = {"role": "USER", "tenant_id": None}
         if token == "AIRLINE_ADMIN_TOKEN":
             claims = {"role": "AIRLINE_ADMIN", "tenant_id": "test_airline"}
         elif token == "SAFETY_MANAGER_TOKEN":
             claims = {"role": "SAFETY_MANAGER", "tenant_id": "test_airline"}
-        return {"uid": "mock_user", "email": "test@aviasafe.com", **claims}
+        return {"uid": "mock_user", "email": "test@aviasafe.com", "department": None,
+                **claims, "claims": claims}
 
-    monkeypatch.setattr(fb_mod, "verify_firebase_token", fake_verify)
-    monkeypatch.setattr(auth_mod, "verify_firebase_token", fake_verify)
+    use_user(_override_from_token)
     yield fs_client
+    app.dependency_overrides.pop(get_current_user, None)
 
 
 @pytest.fixture
