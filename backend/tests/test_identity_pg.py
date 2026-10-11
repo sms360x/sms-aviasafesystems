@@ -167,10 +167,12 @@ def test_list_regulators_enriches_status_and_count(monkeypatch):
 
 def test_get_regulator_builds_operator_list(monkeypatch):
     def _fake_fetch_by(model, col, value):
-        if model.__tablename__ == "tenants":
-            return {"slug": "fixedwing", "name": "FW", "country": "Nepal",
-                    "regulator_id": "caan", "active": True}
-        return {"slug": "caan", "operator_tenant_ids": ["fixedwing"], "status": "active"}
+        # 2A.3b-code: Regulator and Tenant both map to the `tenants` table
+        # (single-table inheritance); distinguish by the polymorphic identity.
+        if getattr(model.__mapper__, "polymorphic_identity", None) == "regulator":
+            return {"slug": "caan", "operator_tenant_ids": ["fixedwing"], "status": "active"}
+        return {"slug": "fixedwing", "name": "FW", "country": "Nepal",
+                "regulator_id": "caan", "active": True}
 
     monkeypatch.setattr(reg_mod.pg, "fetch_by", _fake_fetch_by)
     monkeypatch.setattr(reg_mod.pg, "fetch_all", lambda model, **kw: [])

@@ -246,7 +246,7 @@ def test_create_regulator_success(monkeypatch):
     assert doc["id"] == "dgca"
     assert doc["display_name"] == "DGCA"
     assert doc["data"]["short_name"] == "DGCA"
-    stored = db._stores["regulators"]["dgca"]
+    stored = db._stores["tenants"]["dgca"]
     assert stored["name"] == "Directorate General of Civil Aviation"
     assert stored["operator_tenant_ids"] == ["ind-air1"]
     logs = db._stores["audit_logs"]
@@ -255,7 +255,7 @@ def test_create_regulator_success(monkeypatch):
 
 def test_create_regulator_duplicate(monkeypatch):
     db = _patch_db(monkeypatch)
-    db._stores["regulators"]["caan"] = {"id": "caan", "name": "CAAN"}
+    db._stores["tenants"]["caan"] = {"id": "caan", "name": "CAAN", "kind": "regulator"}
     from app.services.production_seed import create_regulator
     try:
         create_regulator({"id": "caan", "name": "Civil Aviation Authority of Nepal"}, _admin_user())
@@ -270,7 +270,7 @@ def test_create_regulator_saas_sets_module_access(monkeypatch):
     create_regulator({
         "id": "caan2", "name": "CAAN", "is_saas_customer": True,
     }, _admin_user())
-    stored = db._stores["regulators"]["caan2"]
+    stored = db._stores["tenants"]["caan2"]
     assert stored["module_access"] == {
         "module_1": True, "module_2": True, "module_3": True,
     }
@@ -282,7 +282,7 @@ def test_create_regulator_non_saas_module_access_false(monkeypatch):
     create_regulator({
         "id": "dgca2", "name": "DGCA", "is_demo": True, "is_saas_customer": False,
     }, _admin_user())
-    stored = db._stores["regulators"]["dgca2"]
+    stored = db._stores["tenants"]["dgca2"]
     assert stored["module_access"] == {
         "module_1": False, "module_2": False, "module_3": False,
     }
@@ -357,7 +357,8 @@ def test_create_tenant_success(monkeypatch):
 
 def test_create_tenant_inherits_saas_regulator_modules(monkeypatch):
     db = _patch_db(monkeypatch)
-    db._stores["regulators"]["caan"] = {
+    db._stores["tenants"]["caan"] = {
+        "kind": "regulator",
         "slug": "caan", "name": "CAAN",
         "is_saas_customer": True,
         "module_access": {"module_1": True, "module_2": True, "module_3": True},
@@ -376,7 +377,8 @@ def test_create_tenant_inherits_saas_regulator_data_module_access(monkeypatch):
     # Module flags may live in the data bag (as the SaaS/Module-3 admin routes
     # write) rather than on the top-level row.
     db = _patch_db(monkeypatch)
-    db._stores["regulators"]["caan"] = {
+    db._stores["tenants"]["caan"] = {
+        "kind": "regulator",
         "slug": "caan", "name": "CAAN",
         "is_saas_customer": True,
         "data": {"module_access": {"module_1": True, "module_2": True, "module_3": False}},
@@ -395,7 +397,8 @@ def test_create_tenant_saas_regulator_legacy_all_false_inherits_m1_m3(monkeypatc
     # Regulators created before create_regulator wrote module_access carry the
     # all-false server_default; SaaS customers are still entitled to M1-M3.
     db = _patch_db(monkeypatch)
-    db._stores["regulators"]["caan"] = {
+    db._stores["tenants"]["caan"] = {
+        "kind": "regulator",
         "slug": "caan", "name": "CAAN",
         "is_saas_customer": True,
         "module_access": {"module_1": False, "module_2": False, "module_3": False},
@@ -412,7 +415,8 @@ def test_create_tenant_saas_regulator_legacy_all_false_inherits_m1_m3(monkeypatc
 
 def test_create_tenant_non_saas_regulator_gets_defaults(monkeypatch):
     db = _patch_db(monkeypatch)
-    db._stores["regulators"]["dgca"] = {
+    db._stores["tenants"]["dgca"] = {
+        "kind": "regulator",
         "slug": "dgca", "name": "DGCA",
         "is_saas_customer": False,
         "module_access": {"module_1": True, "module_2": True, "module_3": True},
@@ -540,7 +544,8 @@ def test_admin_toggle_regulator_module3(monkeypatch):
     data bag and legacy modules — and no longer requires is_saas_customer."""
     db = _patch_db(monkeypatch)
     _patch_secret(monkeypatch)
-    db._stores["regulators"]["caan"] = {
+    db._stores["tenants"]["caan"] = {
+        "kind": "regulator",
         "slug": "caan", "id": "caan", "name": "CAAN",
         "is_saas_customer": False,
         "data": {"module_access": {"module_1": False, "module_2": False, "module_3": False}},
@@ -554,7 +559,7 @@ def test_admin_toggle_regulator_module3(monkeypatch):
     body = resp.json()
     assert body["module3"] is True
     assert body["module_access"]["module_3"] is True
-    stored = db._stores["regulators"]["caan"]
+    stored = db._stores["tenants"]["caan"]
     assert stored["module_access"]["module_3"] is True   # canonical column updated
     assert stored["data"]["module_access"]["module_3"] is True  # data bag updated
     assert stored["modules"]["module3"] is True          # legacy modules updated
@@ -564,7 +569,7 @@ def test_admin_toggle_regulator_module3(monkeypatch):
     })
     assert resp2.status_code == 200
     assert resp2.json()["module3"] is False
-    assert db._stores["regulators"]["caan"]["module_access"]["module_3"] is False
+    assert db._stores["tenants"]["caan"]["module_access"]["module_3"] is False
 
 
 def test_admin_seed_logs_route(monkeypatch):

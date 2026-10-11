@@ -1113,7 +1113,12 @@ async def _build_purge_steps(tenant_uuids: Optional[List[uuid.UUID]] = None):
     if is_demo_scope:
         # Regulators carry is_demo but no tenant_id — only the cluster-wide purge
         # removes them; tenant-directed purges skip this table.
-        steps.append(("regulators", delete(Regulator).where(Regulator.is_demo == True)))
+        # 2A.3b-code (R3): Regulator now maps to `tenants` via single-table
+        # inheritance. An ORM bulk delete does not reliably add the polymorphic
+        # discriminator, so filter explicitly to avoid deleting non-regulator
+        # (operator) demo tenants.
+        steps.append(("regulators", delete(Regulator).where(
+            Regulator.kind == "regulator", Regulator.is_demo == True)))
     # Master tenant registry (demo only; regulators/users reference slugs, not rows)
     steps.append(("tenants", delete(Tenant).where(Tenant.is_demo.is_(True))))
     return steps

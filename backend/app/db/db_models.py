@@ -2141,44 +2141,47 @@ class Tenant(Base):
         DateTime(timezone=True), nullable=False, default=datetime.utcnow
     )
 
+    # 2A.3b-code: unified tenant / regulator single-table inheritance. `kind`
+    # is the polymorphic discriminator; the regulator-only columns live on the
+    # base so the shared `tenants` table is fully mapped (Regulator below is a
+    # marker subclass — see docs/step2/2A.3b-code_orm_unification.md).
+    kind: Mapped[str] = mapped_column(Text, nullable=False, default="operator")
+    operator_tenant_ids: Mapped[object] = mapped_column(JSONB, nullable=True)
+    short_name: Mapped[object] = mapped_column(Text, nullable=True)
+    country_code: Mapped[object] = mapped_column(Text, nullable=True)
+    country_name: Mapped[object] = mapped_column(Text, nullable=True)
+    domain: Mapped[object] = mapped_column(Text, nullable=True)
+    is_saas_customer: Mapped[object] = mapped_column(Boolean, nullable=True)
+    subscription_status: Mapped[object] = mapped_column(Text, nullable=True)
+    subscription_start: Mapped[object] = mapped_column(Date, nullable=True)
+    subscription_end: Mapped[object] = mapped_column(Date, nullable=True)
+    regulator_type: Mapped[object] = mapped_column(Text, nullable=True)
+    display_name: Mapped[object] = mapped_column(Text, nullable=True)
+    website: Mapped[object] = mapped_column(Text, nullable=True)
+
+    __mapper_args__ = {
+        "polymorphic_on": kind,
+        "polymorphic_identity": "operator",
+    }
+
     __table_args__ = (
         Index("ix_tenants_status", "status"),
         Index("ix_tenants_demo", "is_demo"),
     )
 
 
-class Regulator(Base):
-    __tablename__ = "regulators"
+class Regulator(Tenant):
+    """State regulator — a tenant with ``kind = 'regulator'``.
 
-    id: Mapped[object] = _uuid_pk()
-    slug: Mapped[str] = mapped_column(Text, nullable=False, unique=True)
-    name: Mapped[object] = mapped_column(Text, nullable=True)
-    regulator_type: Mapped[object] = mapped_column(Text, nullable=True)
-    display_name: Mapped[object] = mapped_column(Text, nullable=True)
-    short_name: Mapped[object] = mapped_column(Text, nullable=True)
-    country_code: Mapped[object] = mapped_column(Text, nullable=True)
-    country_name: Mapped[object] = mapped_column(Text, nullable=True)
-    domain: Mapped[object] = mapped_column(Text, nullable=True)
-    status: Mapped[str] = mapped_column(Text, nullable=False, default="active")
-    contact_email: Mapped[object] = mapped_column(Text, nullable=True)
-    contact_phone: Mapped[object] = mapped_column(Text, nullable=True)
-    website: Mapped[object] = mapped_column(Text, nullable=True)
-    operator_tenant_ids: Mapped[object] = mapped_column(
-        JSONB, server_default=text("'[]'::jsonb")
-    )
-    is_demo: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
-    is_saas_customer: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
-    module_access: Mapped[object] = mapped_column(JSONB, server_default=text("'{\"module_1\":false,\"module_2\":false,\"module_3\":false}'::jsonb"))
-    subscription_status: Mapped[object] = mapped_column(Text, nullable=True, default="inactive")
-    subscription_start: Mapped[object] = mapped_column(Date, nullable=True)
-    subscription_end: Mapped[object] = mapped_column(Date, nullable=True)
-    data: Mapped[object] = mapped_column(JSONB, server_default=DEFAULT_JSONB)
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False, default=datetime.utcnow
-    )
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False, default=datetime.utcnow
-    )
+    Single-table inheritance (2A.3b-code): all columns are declared on the base
+    :class:`Tenant`; this subclass only carries the polymorphic identity, so
+    queries against ``Regulator`` are automatically scoped to
+    ``kind = 'regulator'`` and writes land in the unified ``tenants`` table.
+    The legacy ``regulators`` table is no longer read or written by the ORM
+    (retained for rollback; retired in 2A.3b-cleanup).
+    """
+
+    __mapper_args__ = {"polymorphic_identity": "regulator"}
 
 
 class UserProfile(Base):

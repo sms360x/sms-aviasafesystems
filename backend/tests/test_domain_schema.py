@@ -18,7 +18,6 @@ def _table(name):
     "table,key_col,unique_cols",
     [
         ("tenants", "id", ["slug"]),
-        ("regulators", "id", ["slug"]),
         ("users", "uid", []),
         ("audit_logs", "id", []),
         ("sms_dispatches", "id", []),
@@ -38,11 +37,21 @@ def test_domain_model_registered(table, key_col, unique_cols):
         assert t.columns[col].unique is True
 
 
+def test_regulator_model_uses_tenants_table():
+    """2A.3b-code: Regulator is a Tenant subclass (single-table inheritance) —
+    it maps to the `tenants` table, not a separate `regulators` table."""
+    assert db_models.Regulator.__tablename__ == "tenants"
+    assert db_models.Regulator.__mapper__.polymorphic_identity == "regulator"
+    assert db_models.Tenant.__mapper__.polymorphic_identity == "operator"
+    t = _table("tenants")
+    assert t is not None and "slug" in t.columns
+    assert t.columns["slug"].unique is True
+
+
 @pytest.mark.parametrize(
     "table,jsonb_cols",
     [
         ("tenants", ["safety_manager", "data"]),
-        ("regulators", ["operator_tenant_ids", "data"]),
         # users flatten claims/data into first-class columns; no JSONB bags remain
         ("users", []),
         ("audit_logs", ["metadata_json"]),
@@ -60,6 +69,13 @@ def test_domain_models_capture_json_document(table, jsonb_cols):
     assert t is not None
     for col in jsonb_cols:
         assert col in t.columns, f"{table}.{col} missing"
+
+
+def test_regulator_jsonb_columns_on_tenants():
+    """The Regulator JSONB columns live on the unified `tenants` table."""
+    t = _table("tenants")
+    for col in ("operator_tenant_ids", "data"):
+        assert col in t.columns, f"tenants.{col} missing"
 
 
 @pytest.mark.parametrize(

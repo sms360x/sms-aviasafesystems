@@ -90,13 +90,19 @@ class _FakeTenantQuery:
 def _regulator_db(regulators=None, tenants=None):
     regulators = regulators or {}
     tenants = tenants or {}
+    # 2A.3b-code: Regulator is now a Tenant subclass (single-table inheritance),
+    # so both live in the unified `tenants` collection; regulators carry
+    # kind='regulator' and operators kind='operator'.
+    merged = {slug: {**d, "kind": "regulator"} for slug, d in regulators.items()}
+    for slug, d in tenants.items():
+        merged[slug] = {**d, "kind": d.get("kind", "operator")}
 
     class _DB:
         def collection(self, name):
+            if name == "tenants":
+                return _FakeTenantColl(merged)
             if name == "regulators":
                 return _FakeRegColl(regulators)
-            if name == "tenants":
-                return _FakeTenantColl(tenants)
             raise AssertionError(f"unexpected collection {name}")
 
     return _DB()

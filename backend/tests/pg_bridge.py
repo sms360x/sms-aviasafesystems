@@ -23,6 +23,18 @@ from app.db import pg as pg_mod
 _ID_KEYS = ("slug", "uid", "id", "report_id", "code", "audit_id")
 
 
+def _poly_identity(model):
+    """Polymorphic identity when `model` is a single-table-inheritance subclass.
+
+    Mirrors SQLAlchemy STI: a subclass query is scoped to its discriminator
+    value, and writes stamp it. Returns None for a plain (base) model.
+    """
+    mapper = getattr(model, "__mapper__", None)
+    if mapper is None or getattr(mapper, "inherits", None) is None:
+        return None
+    return getattr(mapper, "polymorphic_identity", None)
+
+
 def _col_name(node):
     name = getattr(node, "name", None)
     if name:
@@ -68,10 +80,14 @@ def _snaps(query):
 
 def _fetch_all(db, model, *, where=None, order_by=None, limit=None):
     coll = db.collection(model.__tablename__)
+    identity = _poly_identity(model)
     conds = []
     for cond in where or []:
         field, value = _simple_eq(cond)
         conds.append((field, value))
+    if identity is not None:
+        # STI: scope a subclass query to its discriminator.
+        conds.append(("kind", identity))
 
     all_simple = all(field is not None for field, _ in conds)
     if all_simple and hasattr(coll, "where"):
@@ -102,6 +118,7 @@ def _fetch_all(db, model, *, where=None, order_by=None, limit=None):
 
 def _fetch_by(db, model, col, value):
     coll = db.collection(model.__tablename__)
+    identity = _poly_identity(model)
     if col in _ID_KEYS:
         snap = coll.document(value).get()
         if getattr(snap, "exists", True) is False:
@@ -109,11 +126,13 @@ def _fetch_by(db, model, col, value):
         data = dict(snap.to_dict())
         if not data:
             return None
+        if identity is not None and data.get("kind") != identity:
+            return None
         data.setdefault("id", getattr(snap, "id", None) or value)
         return data
     for snap in coll.get():
         data = dict(snap.to_dict())
-        if data.get(col) == value:
+        if data.get(col) == value and (identity is None or data.get("kind") == identity):
             data.setdefault("id", getattr(snap, "id", None))
             return data
     return None
@@ -128,6 +147,11 @@ def _set_ref(ref, data, merge=True):
 
 def _upsert(db, model, col, value, data):
     coll = db.collection(model.__tablename__)
+    identity = _poly_identity(model)
+    if identity is not None:
+        # STI: stamp the discriminator on write (mirrors the ORM).
+        data = dict(data or {})
+        data.setdefault("kind", identity)
     _set_ref(coll.document(value), data)
 
 
