@@ -14,6 +14,7 @@ from fastapi.security import HTTPAuthorizationCredentials
 from fastapi.testclient import TestClient
 
 from app.main import app
+from app.middleware import auth as auth_mod
 from app.middleware.auth import get_current_user, SUSPENDED_TENANT_DETAIL
 from pg_bridge import patch_pg_through
 
@@ -250,6 +251,9 @@ class _Creds:
 
 
 def _patch_auth(monkeypatch, db, *, role="AIRLINE_ADMIN", tenant_id="acme-air"):
+    # 2A.4: get_current_user now resolves role/tenant via resolve_user_context
+    # (memberships). These tests exercise the SUSPENDED-tenant gate, so the
+    # resolved context is patched directly; the token decode still runs.
     monkeypatch.setattr(
         "app.middleware.auth.verify_firebase_token",
         lambda token: {
@@ -260,6 +264,8 @@ def _patch_auth(monkeypatch, db, *, role="AIRLINE_ADMIN", tenant_id="acme-air"):
             "department": "safety",
         },
     )
+    monkeypatch.setattr(auth_mod, "resolve_user_context",
+                        lambda email, r, t: {"role": role, "tenant_id": tenant_id})
     patch_pg_through(monkeypatch, lambda: db)
 
 
@@ -301,6 +307,8 @@ def test_suspended_check_fail_open_on_db_error(monkeypatch):
         lambda token: {"uid": "u-1", "email": "safety@acmeair.com",
                        "role": "AIRLINE_ADMIN", "tenant_id": "acme-air"},
     )
+    monkeypatch.setattr(auth_mod, "resolve_user_context",
+                        lambda email, r, t: {"role": "AIRLINE_ADMIN", "tenant_id": "acme-air"})
     monkeypatch.setattr("app.middleware.auth.pg.fetch_by", _boom)
 
     user = asyncio.run(get_current_user(_Creds("token")))

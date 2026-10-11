@@ -7,12 +7,23 @@ endpoint (authz + validation + persistence).
 
 from datetime import datetime, timezone
 
+import pytest
 from fastapi.testclient import TestClient
 
 from app.main import app
 from app.core.config import settings
 from app.middleware import rate_limit as rl
+from app.middleware.auth import get_current_user
+from app.routes.tenants import get_optional_user
+from auth_override import use_user
 from pg_bridge import patch_pg_through
+
+
+@pytest.fixture(autouse=True)
+def _clear_auth_overrides():
+    yield
+    app.dependency_overrides.pop(get_current_user, None)
+    app.dependency_overrides.pop(get_optional_user, None)
 
 
 # ============================================================================
@@ -178,15 +189,14 @@ def _patch_db(monkeypatch, db):
 
 
 def _patch_user(monkeypatch, user):
-    """Make the real get_current_user dependency resolve from a fake token."""
-    def _fake_verify_firebase_token(token):
-        return {
-            "uid": user["uid"],
-            "email": user["email"],
-            "role": user["role"],
-            "tenant_id": user["tenant_id"],
-        }
-    monkeypatch.setattr("app.middleware.auth.verify_firebase_token", _fake_verify_firebase_token)
+    """2A.4-pre: install the authenticated user via dependency overrides.
+
+    GET config resolves via ``get_optional_user`` (which calls
+    ``get_current_user`` directly, bypassing dependency overrides), so both
+    dependencies are overridden.
+    """
+    use_user(user)
+    app.dependency_overrides[get_optional_user] = lambda: user
 
 
 def _admin(tid="tara-air"):

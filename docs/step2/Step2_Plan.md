@@ -516,3 +516,11 @@ A NEW failure (not on this list) stops the item.
   Step 3 test-cleanup item.
 - `regulators_old` (renamed from `regulators` in 2A.3b-cleanup) is retained for
   one cycle pending a future drop item.
+- Filesystem-order-dependent pollution (observed during 2A.4, 2026-10-11): one
+  full-suite run showed failures in `test_psoe_models.py` and setup errors in
+  `test_rbac_claims.py` (`ModuleNotFoundError: seed.users`). Both files pass in
+  isolation and in a stable-order prefix run, and a re-run was clean, so this is
+  pre-existing test hygiene (order-dependent `sys.path`/`sys.modules` or DB
+  state), not a code regression. Fix: harden the `seed.users` monkeypatch target
+  and add teardown for psoe template/assessment state. Deferred to a test-cleanup
+  item.

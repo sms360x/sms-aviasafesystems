@@ -17,7 +17,7 @@ from loguru import logger
 
 from app.core.config import settings
 from app.db import pg
-from app.db.db_models import Tenant
+from app.db.db_models import Membership, Tenant, UserProfile
 from app.firebase import verify_firebase_token
 from app.middleware.tenant_status_cache import get_status, set_status
 from app.services.tenant_service import get_tenant_slug_from_email
@@ -57,33 +57,89 @@ def _lookup_tenant_by_email(email: str) -> Optional[Dict[str, Any]]:
 _ROLE_CLAIM_ALIASES = {"STATE_SMD": "CAAN_SMD"}
 
 
+def _active_membership(user_uuid: Any) -> Optional[Dict[str, Any]]:
+    """The user's active membership (is_active, effective_to NULL).
+
+    Newest ``effective_from`` wins; ties broken deterministically by id.
+    """
+    if user_uuid is None:
+        return None
+    try:
+        rows = pg.fetch_all(
+            Membership,
+            where=[
+                Membership.user_id == user_uuid,
+                Membership.is_active.is_(True),
+                Membership.effective_to.is_(None),
+            ],
+        )
+    except Exception as e:
+        logger.warning(f"Membership lookup failed for user {user_uuid}: {e}")
+        return None
+    if not rows:
+        return None
+    rows.sort(
+        key=lambda r: (str(r.get("effective_from") or ""), str(r.get("id") or "")),
+        reverse=True,
+    )
+    return rows[0]
+
+
+def _membership_tenant_slug(tenant_uuid_value: Any) -> Optional[str]:
+    """Resolve a membership.tenant_id (uuid) to the tenant slug (or None)."""
+    if tenant_uuid_value is None:
+        return None
+    try:
+        rows = pg.fetch_all(Tenant, where=[Tenant.id == tenant_uuid_value])
+        if rows:
+            return rows[0].get("slug") or rows[0].get("id")
+    except Exception as e:
+        logger.warning(f"Tenant slug lookup failed for {tenant_uuid_value}: {e}")
+    from app.db.ids import tenant_slug
+    return tenant_slug(tenant_uuid_value)
+
+
 def resolve_user_context(email: str, role: str, tenant_id: Optional[str]) -> Dict[str, Any]:
-    """Normalize tenant_id and fall back to a tenants-table email lookup when
-    the ID token carries no custom claims (e.g. freshly-linked Google sign-ins)."""
-    role = _ROLE_CLAIM_ALIASES.get(role, role)
-    if tenant_id:
-        normalized = tenant_id.replace('_', '-')
-        if normalized != tenant_id:
-            logger.info(f"Normalized tenant_id for {email}: '{tenant_id}' -> '{normalized}'")
-            tenant_id = normalized
+    """Resolve the request's role and tenant from the user's active membership.
 
-    if role == settings.ROLE_DEFAULT and not tenant_id and email:
-        tenant_info = _lookup_tenant_by_email(email)
-        if tenant_info:
-            role = tenant_info["role"]
-            tenant_id = tenant_info["tenant_id"]
-            logger.info(f"Claims resolved via tenants-table fallback for {email}: role={role}, tenant={tenant_id}")
-        else:
-            # Second fallback: the email domain -> tenant slug map (demo and
-            # prospect domains such as sitaair.com / buddhair.com). Mirrors the
-            # frontend TENANT_SLUG_MAP resolution when custom claims are absent.
-            slug = get_tenant_slug_from_email(email)
-            if slug:
-                role = "AIRLINE_ADMIN"
-                tenant_id = slug
-                logger.info(f"Claims resolved via email-domain map for {email}: tenant={tenant_id}, role={role}")
+    2A.4: the memberships table is the authoritative identity source. The
+    token's role/tenant are ignored — there is no fallback. A user with no
+    active membership gets ``role=None`` / ``tenant_id=None`` and a WARN log;
+    protected endpoints then deny them.
+    """
+    urow = None
+    if email:
+        try:
+            urow = pg.fetch_by(UserProfile, "email", email)
+        except Exception as e:
+            logger.warning(f"User lookup failed for {email}: {e}")
 
-    return {"role": role, "tenant_id": tenant_id}
+    if urow is None:
+        logger.warning(f"No active membership for user (email={email}).")
+        return {"role": None, "tenant_id": None}
+
+    from app.db.runner import run as _run
+    from app.services.actor import resolve_actor_uuid
+
+    try:
+        user_uuid = _run(resolve_actor_uuid(
+            {"uid": urow.get("uid"), "email": email}
+        ))
+    except Exception as e:
+        logger.warning(f"Actor resolution failed for {email}: {e}")
+        user_uuid = None
+
+    mem = _active_membership(user_uuid)
+    if mem is None:
+        logger.warning(
+            f"No active membership for user {urow.get('uid')} ({email})."
+        )
+        return {"role": None, "tenant_id": None}
+
+    return {
+        "role": mem.get("role"),
+        "tenant_id": _membership_tenant_slug(mem.get("tenant_id")),
+    }
 
 
 SUSPENDED_TENANT_DETAIL = (

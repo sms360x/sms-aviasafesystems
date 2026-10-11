@@ -155,6 +155,11 @@ def upsert_user_doc(
     if password_updated_at is not None:
         doc["password_updated_at"] = password_updated_at
     try:
+        _existed = pg.fetch_by(UserProfile, "uid", uid) is not None
+    except Exception:
+        _existed = None
+
+    try:
         pg.upsert(UserProfile, "uid", uid, doc)
     except Exception as e:
         _dlq_user_mirror(uid, str(e))
@@ -166,6 +171,49 @@ def upsert_user_doc(
         _dlq_user_mirror(uid, "row missing after upsert")
         logger.error(f"PG mirror verification failed for {uid}")
         raise RuntimeError(f"User mirror verification failed: {uid}")
+
+    # 2A.4: on genuine creation (the row did not exist before this call), write
+    # the user's active membership so the auth boundary can resolve role/tenant.
+    # Claims refreshes of existing users do not reach this branch.
+    if _existed is False:
+        ensure_membership(uid, tenant_id, role or "USER")
+
+
+def ensure_membership(uid: str, tenant_id: Any, role: str) -> None:
+    """2A.4: write an active membership for a user.
+
+    ``tenant_id`` may be a slug or UUID (resolved to the canonical uuid5); None
+    means a platform / cross-tenant membership. Best-effort (never raises) so a
+    membership write cannot break user creation; keyed by user_id (idempotent).
+    """
+    from app.db.db_models import Membership
+
+    if not uid or not role:
+        return
+    try:
+        urow = pg.fetch_by(UserProfile, "uid", uid)
+    except Exception as e:
+        logger.warning(f"Membership write skipped (user lookup failed) for {uid}: {e}")
+        return
+    if urow is None:
+        logger.warning(f"Membership write skipped: no users row for uid {uid}")
+        return
+    user_id = urow.get("id")
+    if user_id is None:
+        return
+    doc = {
+        "user_id": user_id,
+        "tenant_id": _resolve_tenant_id(tenant_id),
+        "role": role,
+        "effective_from": datetime.now(timezone.utc),
+        "effective_to": None,
+        "is_active": True,
+    }
+    try:
+        pg.upsert(Membership, "user_id", user_id, doc)
+        logger.info(f"Membership written for uid {uid} (role={role})")
+    except Exception as e:
+        logger.warning(f"Membership write failed for uid {uid}: {e}")
 
 
 def backfill_users_from_auth(max_pages: Optional[int] = None) -> int:
