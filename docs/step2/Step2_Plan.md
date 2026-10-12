@@ -402,6 +402,8 @@ leaves the product working.
 - **Phase 2A — Membership model (W1).** New memberships table + auth
   boundary resolving one active context; keep the existing single-role
   behaviour as a compatibility path until 2B. Product keeps working.
+  **Closed 2026-10-12** — the multi-membership resolver was corrected and
+  reverted to read from the `users` row; see the Phase 2A close below.
 - **Phase 2B — Role model unification (W2).** Canonical roles, claim
   migration, closure-path fix. Depends on 2A.
 - **Phase 2C — Database-layer RLS (W3).** Rewrite policies against the
@@ -413,6 +415,33 @@ leaves the product working.
   extend read-audit coverage. Depends on 2A/2B; can run alongside 2D/2C.
 - **Phase 2F — Placeholder removal (W6).** Depends on 2B; can run last or
   in parallel once roles are stable.
+
+### Phase 2A close (2026-10-12)
+
+Phase 2A is **closed**. The close document is
+`docs/step2/2A.6_phase_2A_close.md` (intent, execution, the multi-membership
+design error and its recovery, the invariant set, what is deferred, and the
+Phase 2B handoff).
+
+| Item | Status |
+|---|---|
+| 2A.1 design pass | closed (corrected 2026-10-12) |
+| 2A.2 tables | closed (inert; RLS enabled, not forced) |
+| 2A.3 backfill | closed (18 memberships; 2 `STATE_SMD` orphans reported) |
+| 2A.3b schema unification | closed (regulators into `tenants`, `kind`) |
+| 2A.3b-code ORM unification | closed (single-table inheritance) |
+| 2A.3b-cleanup regulators retired | closed (`regulators_old` retained one cycle) |
+| 2A.3c UI kind selector | closed |
+| 2A.4 auth boundary switch | **superseded** (multi-membership design reverted) |
+| 2A.5 memberships repurposed; auth boundary reverted | closed |
+| 2A.6 close | **CLOSED** (close document) |
+
+Outcome: the auth boundary reads from the `users` row (one user = one tenant =
+one role); the `memberships` table is retained as the Super-Admin reporting
+substrate, in sync on creation and role change. The G9/G12 defects found by the
+2A.5 tests are moot under the corrected model.
+
+**Next: Phase 2B — Role model unification (W2).**
 
 Phase discipline: one item = one commit, full suite after each item, on a
 new Step 2 branch created after this plan is approved.
