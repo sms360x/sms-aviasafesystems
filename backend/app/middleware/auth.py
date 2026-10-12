@@ -17,7 +17,7 @@ from loguru import logger
 
 from app.core.config import settings
 from app.db import pg
-from app.db.db_models import Membership, Tenant, UserProfile
+from app.db.db_models import Tenant, UserProfile
 from app.firebase import verify_firebase_token
 from app.middleware.tenant_status_cache import get_status, set_status
 from app.services.tenant_service import get_tenant_slug_from_email
@@ -57,36 +57,12 @@ def _lookup_tenant_by_email(email: str) -> Optional[Dict[str, Any]]:
 _ROLE_CLAIM_ALIASES = {"STATE_SMD": "CAAN_SMD"}
 
 
-def _active_membership(user_uuid: Any) -> Optional[Dict[str, Any]]:
-    """The user's active membership (is_active, effective_to NULL).
+def _tenant_slug(tenant_uuid_value: Any) -> Optional[str]:
+    """Resolve a users.tenant_id (uuid) to the tenant slug (or None).
 
-    Newest ``effective_from`` wins; ties broken deterministically by id.
+    The users row stores tenant_id as the deterministic uuid5('tenant:'+slug)
+    FK, but the request user dict carries the slug.
     """
-    if user_uuid is None:
-        return None
-    try:
-        rows = pg.fetch_all(
-            Membership,
-            where=[
-                Membership.user_id == user_uuid,
-                Membership.is_active.is_(True),
-                Membership.effective_to.is_(None),
-            ],
-        )
-    except Exception as e:
-        logger.warning(f"Membership lookup failed for user {user_uuid}: {e}")
-        return None
-    if not rows:
-        return None
-    rows.sort(
-        key=lambda r: (str(r.get("effective_from") or ""), str(r.get("id") or "")),
-        reverse=True,
-    )
-    return rows[0]
-
-
-def _membership_tenant_slug(tenant_uuid_value: Any) -> Optional[str]:
-    """Resolve a membership.tenant_id (uuid) to the tenant slug (or None)."""
     if tenant_uuid_value is None:
         return None
     try:
@@ -99,13 +75,15 @@ def _membership_tenant_slug(tenant_uuid_value: Any) -> Optional[str]:
     return tenant_slug(tenant_uuid_value)
 
 
-def resolve_user_context(email: str, role: str, tenant_id: Optional[str]) -> Dict[str, Any]:
-    """Resolve the request's role and tenant from the user's active membership.
+def resolve_user_context(email: str) -> Dict[str, Any]:
+    """Resolve the request's role and tenant from the users row.
 
-    2A.4: the memberships table is the authoritative identity source. The
-    token's role/tenant are ignored — there is no fallback. A user with no
-    active membership gets ``role=None`` / ``tenant_id=None`` and a WARN log;
-    protected endpoints then deny them.
+    2A.5 (SME ruling 2026-10-12): one user = one tenant = one role (ICAO
+    accountability). The ``users`` row is the authoritative identity source.
+    The ``memberships`` table is retained as a Super-Admin reporting
+    substrate only and is NOT read on any operational path. A missing users
+    row yields ``role=None`` / ``tenant_id=None`` and a WARN log; protected
+    endpoints then deny.
     """
     urow = None
     if email:
@@ -115,30 +93,12 @@ def resolve_user_context(email: str, role: str, tenant_id: Optional[str]) -> Dic
             logger.warning(f"User lookup failed for {email}: {e}")
 
     if urow is None:
-        logger.warning(f"No active membership for user (email={email}).")
-        return {"role": None, "tenant_id": None}
-
-    from app.db.runner import run as _run
-    from app.services.actor import resolve_actor_uuid
-
-    try:
-        user_uuid = _run(resolve_actor_uuid(
-            {"uid": urow.get("uid"), "email": email}
-        ))
-    except Exception as e:
-        logger.warning(f"Actor resolution failed for {email}: {e}")
-        user_uuid = None
-
-    mem = _active_membership(user_uuid)
-    if mem is None:
-        logger.warning(
-            f"No active membership for user {urow.get('uid')} ({email})."
-        )
+        logger.warning(f"No users row for user (email={email}).")
         return {"role": None, "tenant_id": None}
 
     return {
-        "role": mem.get("role"),
-        "tenant_id": _membership_tenant_slug(mem.get("tenant_id")),
+        "role": urow.get("role"),
+        "tenant_id": _tenant_slug(urow.get("tenant_id")),
     }
 
 
@@ -191,7 +151,7 @@ async def get_current_user(
     tenant_id = decoded_token.get('tenant_id')
     department = decoded_token.get('department') or None
 
-    resolved = resolve_user_context(email, role, tenant_id)
+    resolved = resolve_user_context(email)
     role = resolved["role"]
     tenant_id = resolved["tenant_id"]
 

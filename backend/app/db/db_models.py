@@ -2470,6 +2470,14 @@ class Membership(Base):
             unique=True,
             postgresql_where=text("is_active AND effective_to IS NULL"),
         ),
+        # 2A.5: one-user/one-tenant/one-role reporting substrate — at most one
+        # active membership row per user.
+        Index(
+            "memberships_one_active_per_user",
+            "user_id",
+            unique=True,
+            postgresql_where=text("is_active"),
+        ),
     )
 
 

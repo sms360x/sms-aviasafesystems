@@ -128,9 +128,7 @@ async def verify_token(request: Request, body: LoginRequest):
     decoded_token = verify_firebase_token(body.id_token)
     if not decoded_token:
         raise HTTPException(status_code=401, detail="Invalid token")
-    role = decoded_token.get('role', settings.ROLE_DEFAULT)
-    tenant_id = decoded_token.get('tenant_id')
-    resolved = resolve_user_context(decoded_token.get('email', ''), role, tenant_id)
+    resolved = resolve_user_context(decoded_token.get('email', ''))
     ip, request_id = request_context(request)
     log_audit(
         action="LOGIN",

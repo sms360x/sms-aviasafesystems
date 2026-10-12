@@ -155,11 +155,6 @@ def upsert_user_doc(
     if password_updated_at is not None:
         doc["password_updated_at"] = password_updated_at
     try:
-        _existed = pg.fetch_by(UserProfile, "uid", uid) is not None
-    except Exception:
-        _existed = None
-
-    try:
         pg.upsert(UserProfile, "uid", uid, doc)
     except Exception as e:
         _dlq_user_mirror(uid, str(e))
@@ -172,19 +167,31 @@ def upsert_user_doc(
         logger.error(f"PG mirror verification failed for {uid}")
         raise RuntimeError(f"User mirror verification failed: {uid}")
 
-    # 2A.4: on genuine creation (the row did not exist before this call), write
-    # the user's active membership so the auth boundary can resolve role/tenant.
-    # Claims refreshes of existing users do not reach this branch.
-    if _existed is False:
-        ensure_membership(uid, tenant_id, role or "USER")
+    # 2A.5: keep the memberships reporting substrate in sync on every user
+    # write — both genuine creation and role/tenant changes. This table is
+    # derived (the Super-Admin dashboard reads it); it is NOT the auth source
+    # of truth (the users row is). Best-effort (never raises).
+    update_membership_role(uid, role or "USER", tenant_id)
+
+
+def update_membership_role(uid: str, role: str, tenant_id: Any = None) -> None:
+    """Sync the reporting-substrate membership row to the user's current role.
+
+    2A.5: called on user creation and on role/tenant change (via
+    ``upsert_user_doc``). Delegates to :func:`ensure_membership`, which maintains
+    exactly one active row per user (one user = one tenant = one role).
+    """
+    ensure_membership(uid, tenant_id, role)
 
 
 def ensure_membership(uid: str, tenant_id: Any, role: str) -> None:
-    """2A.4: write an active membership for a user.
+    """Upsert the user's single active membership row (reporting substrate).
 
-    ``tenant_id`` may be a slug or UUID (resolved to the canonical uuid5); None
-    means a platform / cross-tenant membership. Best-effort (never raises) so a
-    membership write cannot break user creation; keyed by user_id (idempotent).
+    2A.5: under one-user/one-tenant/one-role this writes exactly one active row
+    per user, keyed by ``user_id`` (idempotent), so re-running on a role change
+    updates the existing row. ``tenant_id`` may be a slug or UUID (resolved to
+    the canonical uuid5); None means a platform / cross-tenant row. Best-effort
+    (never raises) so a membership write cannot break user creation/update.
     """
     from app.db.db_models import Membership
 
