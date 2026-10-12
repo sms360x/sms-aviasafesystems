@@ -123,8 +123,21 @@ def test_create_user_service_invokes_validator(monkeypatch):
 # ---------------------------------------------------------------------------
 
 def test_canonical_roles_include_new_literals():
-    assert "ACCOUNTABLE_EXECUTIVE" in settings.CANONICAL_ROLES
-    assert "SAG_MEMBER" in settings.CANONICAL_ROLES
+    # 2B.2: the canonical set is the seven-role model (2B.1 design of record,
+    # SME 2026-10-12). Asserting the exact list makes future drift fail loudly.
+    assert settings.CANONICAL_ROLES == [
+        "SUPER_ADMIN",
+        "STATE_SMD",
+        "TENANT_ADMIN",
+        "DEPT_ADMIN",
+        "OFFICER",
+        "ACCOUNTABLE_EXECUTIVE",
+        "STAFF",
+    ]
+    # Legacy names are retired in 2B.3 and must not be canonical.
+    for legacy in ("CAAN_SMD", "SAFETY_OFFICER", "AIRLINE_ADMIN", "USER",
+                   "SAG_MEMBER"):
+        assert legacy not in settings.CANONICAL_ROLES
     # REGULATORY_LIAISON deliberately folded into SAFETY_OFFICER (RBAC Q-R3).
     assert "REGULATORY_LIAISON" not in settings.CANONICAL_ROLES
 

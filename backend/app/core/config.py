@@ -170,7 +170,7 @@ class Settings(BaseSettings):
     SMS_MATURITY_ANALYSIS_MAX_RETRIES: int = 3
 
     # ── Roles ──
-    ROLE_DEFAULT: str = "USER"
+    ROLE_DEFAULT: str = "STAFF"
     ROLE_DEFAULT_REGISTRATION: str = "AIRLINE_ADMIN"
     CROSS_TENANT_ROLES: List[str] = ["CAAN_SMD", "STATE_SMD", "SUPER_ADMIN"]
     SUPER_ADMIN_ROLES: List[str] = ["SUPER_ADMIN"]
@@ -183,19 +183,18 @@ class Settings(BaseSettings):
     ROLE_STAFF: str = "STAFF"
     ROLE_ACCOUNTABLE_EXECUTIVE: str = "ACCOUNTABLE_EXECUTIVE"
     ROLE_SAG_MEMBER: str = "SAG_MEMBER"
-    # Canonical platform roles (RBAC_MODEL.md §1). REGULATORY_LIAISON is
-    # deliberately absent — folded into SAFETY_OFFICER per RBAC Q-R3.
+    # Canonical roles (2B.1 design of record, SME 2026-10-12): seven roles.
+    # The legacy names (AIRLINE_ADMIN, CAAN_SMD, SAFETY_OFFICER, USER,
+    # SAG_MEMBER, regulator sub-roles) are retired in 2B.3's claim migration;
+    # the other role constants below stay until then.
     CANONICAL_ROLES: List[str] = [
         "SUPER_ADMIN",
-        "CAAN_SMD",
         "STATE_SMD",
         "TENANT_ADMIN",
-        "ACCOUNTABLE_EXECUTIVE",
         "DEPT_ADMIN",
-        "SAFETY_OFFICER",
         "OFFICER",
+        "ACCOUNTABLE_EXECUTIVE",
         "STAFF",
-        "SAG_MEMBER",
     ]
     # Role-alias groups so existing AIRLINE_ADMIN/USER checks recognize the new
     # canonical names (TENANT_ADMIN == AIRLINE_ADMIN, STAFF == USER).

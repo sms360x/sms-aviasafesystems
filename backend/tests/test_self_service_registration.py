@@ -524,12 +524,12 @@ def test_join_team_by_invite_code(monkeypatch):
 
     uid = list(auth.claims)[0]
     assert auth.claims[uid] == {
-        "role": "USER",
+        "role": "STAFF",
         "tenant_id": "yeti-airlines",
         "department": "Flight Operations",
     }
     user_doc = list(db.users.values())[0]
-    assert user_doc["role"] == "USER"
+    assert user_doc["role"] == "STAFF"
     assert user_doc["department"] == "Flight Operations"
     assert db.audit and db.audit[0]["action"] == "TEAM_MEMBER_JOINED"
 

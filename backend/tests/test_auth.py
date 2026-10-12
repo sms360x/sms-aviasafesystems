@@ -312,12 +312,12 @@ def test_join_team_stores_operational_role(monkeypatch):
     assert resp.status_code == 200, resp.text
     uid = list(auth.claims)[0]
     assert auth.claims[uid] == {
-        "role": "USER",
+        "role": "STAFF",
         "tenant_id": "yeti-airlines",
         "department": "Flight Operations",
     }
     user_doc = list(db.users.values())[0]
-    assert user_doc["role"] == "USER"
+    assert user_doc["role"] == "STAFF"
     assert str(user_doc["tenant_id"]) == "0bc08e7f-bb15-5e7a-b07e-27a0ddd19fd0"
     assert user_doc["department"] == "Flight Operations"
 

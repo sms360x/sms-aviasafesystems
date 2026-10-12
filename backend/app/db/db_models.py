@@ -2158,6 +2158,10 @@ class Tenant(Base):
     regulator_type: Mapped[object] = mapped_column(Text, nullable=True)
     display_name: Mapped[object] = mapped_column(Text, nullable=True)
     website: Mapped[object] = mapped_column(Text, nullable=True)
+    # 2B.2: tenant-specific Safety Department name, used by the
+    # department-based raw VSR / custodian rule (Q6). NULL = the tenant has no
+    # department-based VSR access (TENANT_ADMIN only).
+    safety_department_name: Mapped[object] = mapped_column(Text, nullable=True)
 
     __mapper_args__ = {
         "polymorphic_on": kind,

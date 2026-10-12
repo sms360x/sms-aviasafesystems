@@ -477,7 +477,7 @@ def test_join_legacy_tenant_code_still_defaults_to_least_privilege(monkeypatch):
     )
     assert resp.status_code == 200, resp.text
     uid = list(auth.claims)[0]
-    assert auth.claims[uid]["role"] == "USER"
+    assert auth.claims[uid]["role"] == "STAFF"
     assert auth.claims[uid]["department"] == "Flight Operations"
 
 
