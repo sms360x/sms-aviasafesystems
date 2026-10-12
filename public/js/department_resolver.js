@@ -16,22 +16,26 @@
 
     // Generic prefix -> department label (used when no tenant context is
     // available, i.e. the caller passes no tenant id / resolver).
+    // 2B.4a: canonical department labels (single source: app/core/config.py
+    // DEPARTMENT_CODES). The email local-part prefix resolves to the label.
     var DEPARTMENT_BY_PREFIX = {
-        '145': 'Maintenance Department (Part-145)',
-        'maintenance': 'Maintenance Department (Part-145)',
-        'safety': 'Corporate Safety Department',
-        'sms': 'Corporate Safety Department',
-        'qa': 'Quality Assurance Department',
-        'quality': 'Quality Assurance Department',
-        'camo': 'CAMO / Technical Services',
-        'flightops': 'Flight Operations Department',
-        'ops': 'Flight Operations Department',
-        'ground': 'Ground Operations Department',
-        'ramp': 'Ground Operations Department',
-        'cabin': 'Cabin Services Department',
-        'smd': 'CAAN - Safety Management Department (SMD)',
-        'assd': 'CAAN - Aerodrome Safety Standards Dept',
-        'fssd': 'CAAN - Flight Safety Standards Dept',
+        '145': 'Part-145',
+        'maintenance': 'Part-145',
+        'safety': 'Safety',
+        'sms': 'Safety',
+        'qa': 'QA',
+        'quality': 'QA',
+        'camo': 'CAMO',
+        'flightops': 'Flight Operations',
+        'ops': 'Flight Operations',
+        'ground': 'Ground Operations',
+        'ramp': 'Ground Operations',
+        'airside': 'Airside Operations',
+        'apron': 'Airside Operations',
+        'arff': 'ARFF (Rescue & Firefighting)',
+        'smd': 'Safety Management Division',
+        'fssd': 'Flight Safety Standards Division',
+        'assd': 'Aerodrome Safety Standards Division',
     };
 
     // Classification-aware prefix maps. Each classification exposes only the
@@ -44,72 +48,15 @@
     // * Regulator (CAAN directorate): SMD / FSSD / ASSD oversight + safety.
     //
     // safety@ and qa@ stay universal SMS/QA endpoints across every class.
+    // 2B.4a: classification-specific views over the canonical prefix map. The
+    // label vocabulary is canonical (no per-classification spellings).
     var PREFIX_BY_CLASSIFICATION = {
-        AIRLINE_FIXED_WING: {
-            '145': 'Maintenance Department (Part-145)',
-            'maintenance': 'Maintenance Department (Part-145)',
-            'safety': 'Corporate Safety Department',
-            'sms': 'Corporate Safety Department',
-            'qa': 'Quality Assurance Department',
-            'quality': 'Quality Assurance Department',
-            'camo': 'CAMO / Technical Services',
-            'flightops': 'Flight Operations Department',
-            'ops': 'Flight Operations Department',
-            'ground': 'Ground Operations Department',
-            'ramp': 'Ground Operations Department',
-            'cabin': 'Cabin Services Department',
-        },
-        AIRLINE_ROTARY: {
-            '145': 'Maintenance Department (Part-145)',
-            'maintenance': 'Maintenance Department (Part-145)',
-            'safety': 'Corporate Safety Department',
-            'sms': 'Corporate Safety Department',
-            'qa': 'Quality Assurance Department',
-            'quality': 'Quality Assurance Department',
-            'camo': 'CAMO / Technical Services',
-            'flightops': 'Flight Operations Department',
-            'ops': 'Flight Operations Department',
-            'ground': 'Ground Operations Department',
-            'ramp': 'Ground Operations Department',
-            'cabin': 'Cabin Services Department',
-        },
-        AMO: {
-            '145': 'Part-145 Maintenance Department',
-            'maintenance': 'Part-145 Maintenance Department',
-            'safety': 'Corporate Safety Department',
-            'sms': 'Corporate Safety Department',
-            'qa': 'Quality Assurance Department',
-            'quality': 'Quality Assurance Department',
-            'base': 'Base Maintenance Department',
-            'line': 'Line Maintenance Department',
-            'workshop': 'Component Workshop',
-        },
-        AERODROME: {
-            'airside': 'Airside Operations',
-            'safety': 'Aerodrome Safety Office',
-            'sms': 'Aerodrome Safety Office',
-            'qa': 'Quality Assurance Department',
-            'quality': 'Quality Assurance Department',
-            'arff': 'Rescue & Firefighting (ARFF)',
-            'apron': 'Apron Control',
-            'ground': 'Ground Operations',
-            'ramp': 'Ground Operations',
-        },
-        GROUND_HANDLING: {
-            'ground': 'Ground Operations Department',
-            'ramp': 'Ground Operations Department',
-            'safety': 'Ground Safety Office',
-            'sms': 'Ground Safety Office',
-            'qa': 'Quality Assurance Department',
-            'quality': 'Quality Assurance Department',
-        },
-        REGULATOR: {
-            'smd': 'CAAN - Safety Management Department (SMD)',
-            'fssd': 'CAAN - Flight Safety Standards Dept',
-            'assd': 'CAAN - Aerodrome Safety Standards Dept',
-            'safety': 'CAAN - Safety Oversight',
-            'sms': 'CAAN - Safety Oversight',
-        },
+        AIRLINE_FIXED_WING: DEPARTMENT_BY_PREFIX,
+        AIRLINE_ROTARY: DEPARTMENT_BY_PREFIX,
+        AMO: DEPARTMENT_BY_PREFIX,
+        AERODROME: DEPARTMENT_BY_PREFIX,
+        GROUND_HANDLING: DEPARTMENT_BY_PREFIX,
+        REGULATOR: DEPARTMENT_BY_PREFIX,
     };
 
     // ICAO ADREP categories that only apply to AOC-holding airlines.
@@ -120,7 +67,7 @@
         'LOCI', 'PRO', 'RE', 'RI', 'SYS', 'WX', 'OTHER',
     ];
 
-    var DEFAULT_DEPARTMENT = 'Operational Safety Unit';
+    var DEFAULT_DEPARTMENT = 'Safety';
 
     // Resolve the tenant's classification via TenantResolver when present.
     function getClassification(tenantId) {

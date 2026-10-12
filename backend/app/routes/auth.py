@@ -33,8 +33,8 @@ from app.services.users import upsert_user_doc
 from app.services import login_service
 from app.services.invites import create_invite, list_invites
 from app.services.gmail_dispatcher import send_registration_acknowledgment
+from app.core.config import DEPARTMENT_LABELS
 from app.services.tenant_registration import (
-    DEPARTMENT_LABELS,
     DISPOSABLE_EMAIL_MESSAGE,
     DisposableEmailError,
     validate_corporate_email,

@@ -179,6 +179,12 @@ AUTHOR: AviaSAFE Systems
                 <label for="entityKind">Service Provider Kind</label>
                 <select id="entityKind" style="width:100%;padding:9px 11px;border:1px solid #cbd5e1;border-radius:8px;font-size:.86rem;"></select>
             </div>
+            <div class="form-group entityTenantOnly">
+                <label for="entitySafetyDept">Safety Department (code)</label>
+                <select id="entitySafetyDept" style="width:100%;padding:9px 11px;border:1px solid #cbd5e1;border-radius:8px;font-size:.86rem;">
+                    <option value="">— None —</option>
+                </select>
+            </div>
             <div class="form-row">
                 <div class="form-group"><label for="entityCountry">Country</label>
                     <input type="text" id="entityCountry" placeholder="Country Name" autocomplete="off"
@@ -248,8 +254,9 @@ AUTHOR: AviaSAFE Systems
             </div>
             <div class="form-group">
                 <label for="editUserDepartment">Department</label>
-                <input type="text" id="editUserDepartment" placeholder="e.g., Safety, Operations" autocomplete="off"
-                       style="width:100%;padding:9px 11px;border:1px solid #cbd5e1;border-radius:8px;font-size:.86rem;box-sizing:border-box;">
+                <select id="editUserDepartment" style="width:100%;padding:9px 11px;border:1px solid #cbd5e1;border-radius:8px;font-size:.86rem;">
+                    <option value="">— None / not department-scoped —</option>
+                </select>
             </div>
             <div class="form-group">
                 <label for="editUserDisplayName">Display Name</label>
@@ -321,8 +328,10 @@ AUTHOR: AviaSAFE Systems
             <div style="margin-top:12px;">
                 <div class="form-group">
                     <label for="newUserDepartment">Department</label>
-                    <input type="text" id="newUserDepartment" placeholder="e.g., Safety, Operations" autocomplete="off"
-                           style="width:100%;padding:9px 11px;border:1px solid #cbd5e1;border-radius:8px;font-size:.86rem;box-sizing:border-box;">
+                    <select id="newUserDepartment" style="width:100%;padding:9px 11px;border:1px solid #cbd5e1;border-radius:8px;font-size:.86rem;">
+                        <option value="">— None / not department-scoped —</option>
+                    </select>
+                    <small style="color:#94a3b8;">Leave empty for the Accountable Executive or SUPER_ADMIN.</small>
                 </div>
             </div>
             <div style="margin-top:14px;">
@@ -708,6 +717,7 @@ async function openCreateUserModal() {
     }
     var form = document.getElementById('createUserForm');
     if (form) { form.reset(); form.style.display = 'block'; }
+    await populateDepartmentSelect(document.getElementById('newUserDepartment'), '', '— None / not department-scoped —');
     var successEl = document.getElementById('createUserSuccess');
     if (successEl) successEl.style.display = 'none';
     var errEl = document.getElementById('createUserError');
@@ -779,6 +789,47 @@ async function populateEntityKindDropdown(currentKind, disabled) {
     sel.disabled = !!disabled;
 }
 
+// 2B.4a — canonical department list (single source). Populates every department
+// select with code values + labels.
+var _departments = null;
+async function loadDepartments() {
+    if (_departments) return _departments;
+    try {
+        var resp = await AdminUI.apiGet('/api/v1/tenants/departments');
+        if (resp && Array.isArray(resp.departments) && resp.departments.length) {
+            _departments = resp.departments;
+            return _departments;
+        }
+    } catch (err) { /* fall back to the local constant */ }
+    _departments = [
+        { code: 'safety', label: 'Safety' },
+        { code: 'flight_ops', label: 'Flight Operations' },
+        { code: 'camo', label: 'CAMO' },
+        { code: 'maintenance_145', label: 'Part-145' },
+        { code: 'qa', label: 'QA' },
+        { code: 'ground_ops', label: 'Ground Operations' },
+        { code: 'airside_ops', label: 'Airside Operations' },
+        { code: 'arff', label: 'ARFF (Rescue & Firefighting)' },
+        { code: 'smd', label: 'Safety Management Division' },
+        { code: 'fssd', label: 'Flight Safety Standards Division' },
+        { code: 'assd', label: 'Aerodrome Safety Standards Division' }
+    ];
+    return _departments;
+}
+async function populateDepartmentSelect(sel, current, emptyLabel) {
+    if (!sel) return;
+    var depts = await loadDepartments();
+    sel.innerHTML = '<option value="">' + (emptyLabel || '— None / not department-scoped —') + '</option>' +
+        depts.map(function (d) {
+            return '<option value="' + esc(d.code) + '">' + esc(d.label) + '</option>';
+        }).join('');
+    var val = current || '';
+    if (val && !depts.some(function (d) { return d.code === val; })) {
+        sel.innerHTML += '<option value="' + esc(val) + '">' + esc(val) + '</option>';
+    }
+    sel.value = val;
+}
+
 async function openEntityModal(type, idle) {
     pendingEntity = { type: type, id: idle || null };
     try {
@@ -834,6 +885,7 @@ async function openEntityModal(type, idle) {
             ? (record.contact_email || (record.contact && record.contact.email) || '') : '';
         populateEntityRegulatorDropdown(record ? (record.regulator_id || '') : '');
         await populateEntityKindDropdown(record ? (record.kind || 'operator') : 'operator', isEdit);
+        await populateDepartmentSelect(entityField('entitySafetyDept'), record ? (record.safety_department_name || '') : '', '— None —');
         var keyInput = entityField('entitySetupKey');
         if (keyInput) { try { keyInput.value = AdminUI.getSetupKey() || ''; } catch (e) { keyInput.value = ''; } }
     } else {
@@ -914,6 +966,7 @@ entityField('entityForm').addEventListener('submit', async function (e) {
         var contactName = (entityField('entityContactName') || {}).value.trim() || '';
         var contactEmail = (entityField('entityContactEmail') || {}).value.trim() || '';
         var kind = (entityField('entityKind') || {}).value || '';
+        var safetyDept = (entityField('entitySafetyDept') || {}).value || '';
         if (isEdit) {
             body.name = name;
             if (country) body.country = country;
@@ -922,6 +975,7 @@ entityField('entityForm').addEventListener('submit', async function (e) {
             if (contactName) body.contact_name = contactName;
             if (contactEmail) body.contact_email = contactEmail;
             if (kind) body.kind = kind;
+            if (safetyDept) body.safety_department_name = safetyDept;
         } else {
             payload.tenant_id = tid;
             payload.name = name;
@@ -929,6 +983,7 @@ entityField('entityForm').addEventListener('submit', async function (e) {
             if (icao) payload.icao = icao;
             if (regId) payload.regulator_id = regId;
             payload.kind = kind || 'operator';
+            if (safetyDept) payload.safety_department_name = safetyDept;
             payload.is_demo = true;
             if (contactName || contactEmail) {
                 payload.contact = {};
@@ -999,7 +1054,7 @@ async function openEditUserModal(uid, email, role, tenantId, department, display
     entityField('editUserEmailLabel').textContent = 'UID: ' + (uid || '—') + (email ? ' · ' + email : '');
     entityField('editUserRole').value = role || 'OFFICER';
     entityField('editUserTenant').value = tenantId || '';
-    entityField('editUserDepartment').value = department || '';
+    await populateDepartmentSelect(entityField('editUserDepartment'), department || '', '— None / not department-scoped —');
     entityField('editUserDisplayName').value = displayName || '';
     var keyInput = entityField('editUserSetupKey');
     if (keyInput) { try { keyInput.value = AdminUI.getSetupKey() || ''; } catch (e) { keyInput.value = ''; } }

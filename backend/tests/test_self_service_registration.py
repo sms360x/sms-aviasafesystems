@@ -526,11 +526,11 @@ def test_join_team_by_invite_code(monkeypatch):
     assert auth.claims[uid] == {
         "role": "STAFF",
         "tenant_id": "yeti-airlines",
-        "department": "Flight Operations",
+        "department": "flight_ops",
     }
     user_doc = list(db.users.values())[0]
     assert user_doc["role"] == "STAFF"
-    assert user_doc["department"] == "Flight Operations"
+    assert user_doc["department"] == "flight_ops"
     assert db.audit and db.audit[0]["action"] == "TEAM_MEMBER_JOINED"
 
 
@@ -546,7 +546,7 @@ def test_join_team_camo_department_label(monkeypatch):
     )
     assert resp.status_code == 200, resp.text
     uid = list(auth.claims)[0]
-    assert auth.claims[uid]["department"] == "CAMO"
+    assert auth.claims[uid]["department"] == "camo"
 
 
 def test_join_team_part145_department_label(monkeypatch):
@@ -565,7 +565,7 @@ def test_join_team_part145_department_label(monkeypatch):
     )
     assert resp.status_code == 200, resp.text
     uid = list(auth.claims)[0]
-    assert auth.claims[uid]["department"] == "Part-145"
+    assert auth.claims[uid]["department"] == "maintenance_145"
 
 
 def test_join_team_by_tenant_id_without_code(monkeypatch):

@@ -85,7 +85,8 @@ def test_master_register_dept_filter_scoping(monkeypatch):
     try:
         r = client.get("/api/v1/dashboard/master-register?department=Part-145")
         assert r.status_code == 200
-        # A department account's scope is forced to its own department (CAMO).
-        assert captured["department"] == "CAMO"
+        # A department account's scope is forced to its own department (2B.4a
+        # canonical code 'camo').
+        assert captured["department"] == "camo"
     finally:
         app.dependency_overrides.clear()

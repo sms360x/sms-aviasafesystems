@@ -101,7 +101,20 @@
                 </div>
                 <div class="form-group">
                     <label>Department</label>
-                    <input class="form-control" id="fieldDepartment" placeholder="e.g., CAMO, Part-145 (auto-detected if blank)">
+                    <select class="form-control" id="fieldDepartment">
+                        <option value="">— Auto-detect / none —</option>
+                        <option value="safety">Safety</option>
+                        <option value="flight_ops">Flight Operations</option>
+                        <option value="camo">CAMO</option>
+                        <option value="maintenance_145">Part-145</option>
+                        <option value="qa">QA</option>
+                        <option value="ground_ops">Ground Operations</option>
+                        <option value="airside_ops">Airside Operations</option>
+                        <option value="arff">ARFF (Rescue &amp; Firefighting)</option>
+                        <option value="smd">Safety Management Division</option>
+                        <option value="fssd">Flight Safety Standards Division</option>
+                        <option value="assd">Aerodrome Safety Standards Division</option>
+                    </select>
                 </div>
             </div>
 

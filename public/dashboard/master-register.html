@@ -88,8 +88,21 @@
     <div class="filter-bar">
         <label>Status:</label>
         <select id="filterStatus"><option value="">All</option></select>
-        <label>Department:</label>
-        <input type="text" id="filterDepartment" placeholder="e.g. Engineering & Maintenance" style="min-width:180px;">
+<label>Department:</label>
+                <select id="filterDepartment" style="min-width:180px;">
+                    <option value="">All departments</option>
+                    <option value="safety">Safety</option>
+                    <option value="flight_ops">Flight Operations</option>
+                    <option value="camo">CAMO</option>
+                    <option value="maintenance_145">Part-145</option>
+                    <option value="qa">QA</option>
+                    <option value="ground_ops">Ground Operations</option>
+                    <option value="airside_ops">Airside Operations</option>
+                    <option value="arff">ARFF (Rescue &amp; Firefighting)</option>
+                    <option value="smd">Safety Management Division</option>
+                    <option value="fssd">Flight Safety Standards Division</option>
+                    <option value="assd">Aerodrome Safety Standards Division</option>
+                </select>
         <label>Search:</label>
         <input type="text" id="filterSearch" placeholder="Reference or title..." style="flex:1;min-width:150px;">
         <label>Page size:</label>

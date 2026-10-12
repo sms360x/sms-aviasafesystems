@@ -14,7 +14,7 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel, Field
 from loguru import logger
 
-from app.core.config import settings
+from app.core.config import DEPARTMENT_CODES, DEPARTMENT_LABELS, settings
 from app.db import pg
 from app.db.db_models import Tenant
 from app.middleware.auth import get_current_user
@@ -44,6 +44,37 @@ async def get_optional_user(
     return await get_current_user(credentials)
 
 SURVEY_MANAGER_ROLES = ("AIRLINE_ADMIN", "TENANT_ADMIN", "safety")
+
+
+@router.get("/departments", status_code=status.HTTP_200_OK)
+async def tenant_departments(
+    user: Dict[str, Any] = Depends(get_current_user),
+):
+    """Canonical department list for the caller (2B.4a).
+
+    Scoped to the caller's tenant classification when the tenant carries an
+    ``applicable_departments`` list; platform / cross-tenant callers (or tenants
+    without the list) receive the full canonical set. Every department the
+    classification may hold is in the single canonical source
+    (``app.core.config``).
+    """
+    codes = None
+    tid = user.get("tenant_id")
+    if tid:
+        try:
+            row = pg.fetch_by(Tenant, "slug", tid)
+        except Exception:
+            row = None
+        if row:
+            codes = row.get("applicable_departments") or None
+    if not codes:
+        codes = [code for code, _ in DEPARTMENT_CODES]
+    return {
+        "departments": [
+            {"code": code, "label": DEPARTMENT_LABELS.get(code, code)}
+            for code in codes
+        ]
+    }
 
 
 def _envelope(data: Any) -> Dict[str, Any]:

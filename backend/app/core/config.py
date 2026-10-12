@@ -321,3 +321,45 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
+
+
+# ============================================================================
+# Canonical department model (2B.4a)
+#
+# ONE source of truth for department codes + labels. The per-classification
+# scoping (OperationalScope.departments, app/models/tenant_profile.py) is a view
+# over this union. Every department a classification declares is present here.
+# ============================================================================
+DEPARTMENT_CODES = [
+    # Operator departments
+    ("safety", "Safety"),
+    ("flight_ops", "Flight Operations"),
+    ("camo", "CAMO"),
+    ("maintenance_145", "Part-145"),
+    ("qa", "QA"),
+    ("ground_ops", "Ground Operations"),
+    # Aerodrome departments
+    ("airside_ops", "Airside Operations"),
+    ("arff", "ARFF (Rescue & Firefighting)"),
+    # Regulator departments
+    ("smd", "Safety Management Division"),
+    ("fssd", "Flight Safety Standards Division"),
+    ("assd", "Aerodrome Safety Standards Division"),
+]
+
+DEPARTMENT_LABELS = {code: label for code, label in DEPARTMENT_CODES}
+DEPARTMENT_CODES_SET = {code for code, _ in DEPARTMENT_CODES}
+# code-or-label (case/space/underscore-insensitive) -> canonical code.
+_DEPT_LOOKUP = {}
+for _code, _label in DEPARTMENT_CODES:
+    _DEPT_LOOKUP[_code.lower().replace("_", " ")] = _code
+    _DEPT_LOOKUP[_label.lower().replace("_", " ")] = _code
+
+
+def department_code(value):
+    """Resolve a code or label to its canonical department code (or the raw
+    string when unknown/empty)."""
+    raw = str(value or "").strip()
+    if not raw:
+        return ""
+    return _DEPT_LOOKUP.get(raw.lower().replace("_", " "), raw)

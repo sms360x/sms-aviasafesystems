@@ -387,6 +387,10 @@ def create_tenant(data: Dict[str, Any], actor: Dict[str, Any]) -> Dict[str, Any]
             val = str(data.get(field)).strip()
             if val:
                 doc[field] = val
+    # 2B.4a — tenant-specific Safety Department (canonical department code).
+    sdn = (data.get("safety_department_name") or "").strip()
+    if sdn:
+        doc["safety_department_name"] = sdn
     # Also handle nested contact dict for legacy
     contact = data.get("contact")
     if isinstance(contact, dict) and contact:

@@ -96,7 +96,15 @@ AUTHOR: AviaSAFE Systems
                     <div class="form-row">
                         <div class="form-group"><label>Admin Email *</label><input type="email" id="regAdminEmail" placeholder="admin@authority.gov" required></div>
                         <div class="form-group"><label>Admin Full Name *</label><input type="text" id="regAdminName" placeholder="Safety Management Department" required></div>
-                        <div class="form-group"><label>Admin Department</label><input type="text" id="regAdminDept" placeholder="SMD"></div>
+                        <div class="form-group"><label>Admin Department</label>
+    <select id="regAdminDept">
+        <option value="">— None —</option>
+        <option value="safety">Safety</option>
+        <option value="smd">Safety Management Division</option>
+        <option value="fssd">Flight Safety Standards Division</option>
+        <option value="assd">Aerodrome Safety Standards Division</option>
+        <option value="qa">QA</option>
+    </select></div>
                     </div>
                     <div class="btn-row" style="margin-top:12px;">
                         <button type="submit" class="btn btn-success"><i class="fas fa-plus"></i> Create Regulator</button>

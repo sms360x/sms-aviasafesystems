@@ -183,8 +183,21 @@
                         <input class="form-control" id="targetTenantId" placeholder="e.g. buddha-air">
                     </div>
                     <div class="ah-field">
-                        <label>Department</label>
-                        <input class="form-control" id="auditDepartment" placeholder="e.g. Corporate Safety">
+<label>Department</label>
+<select class="form-control" id="auditDepartment">
+    <option value="">— None —</option>
+    <option value="safety">Safety</option>
+    <option value="flight_ops">Flight Operations</option>
+    <option value="camo">CAMO</option>
+    <option value="maintenance_145">Part-145</option>
+    <option value="qa">QA</option>
+    <option value="ground_ops">Ground Operations</option>
+    <option value="airside_ops">Airside Operations</option>
+    <option value="arff">ARFF (Rescue &amp; Firefighting)</option>
+    <option value="smd">Safety Management Division</option>
+    <option value="fssd">Flight Safety Standards Division</option>
+    <option value="assd">Aerodrome Safety Standards Division</option>
+</select>
                     </div>
                     <div class="ah-field">
                         <label>Scope</label>

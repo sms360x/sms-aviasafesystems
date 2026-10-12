@@ -76,19 +76,9 @@ CATEGORY_LABELS = {
     OperationalScope.REGULATOR: "CAAN Directorates",
 }
 
-# Department code -> display label + the custom claim value assigned to a
-# joining postholder. Labels align with the values the frontend already
-# understands (getDepartmentLabel / getRoleDestination in public/js/firebase.js).
-DEPARTMENT_LABELS = {
-    "safety": "Safety",
-    "flight_ops": "Flight Operations",
-    "camo": "CAMO",
-    "maintenance_145": "Part-145",
-    "qa": "QA",
-    "airside_ops": "Airside Operations",
-    "arff": "ARFF (Rescue & Firefighting)",
-    "ground_ops": "Ground Operations",
-}
+# Department labels now come from the single canonical source in config
+# (2B.4a). Imported here for the join/registration flows.
+from app.core.config import DEPARTMENT_LABELS  # noqa: E402
 
 MIN_PASSWORD_LENGTH = 8
 
@@ -613,9 +603,10 @@ def join_team(
         password=password,
         display_name=full_name,
     )
+    # 2B.4a: store the canonical department CODE (labels are display-only).
     auth.set_custom_user_claims(
         user.uid,
-        {"role": assigned_role, "tenant_id": tid, "department": label},
+        {"role": assigned_role, "tenant_id": tid, "department": code},
     )
 
     upsert_user_doc(
@@ -624,7 +615,7 @@ def join_team(
         display_name=full_name,
         role=assigned_role,
         tenant_id=tid,
-        department=label,
+        department=code,
         phone=phone.strip() if phone and phone.strip() else None,
         created_at=now,
     )

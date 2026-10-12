@@ -211,7 +211,21 @@ AUTHOR:  AviaSAFE Systems
         <p id="createTenantHint" style="margin:0 0 14px;color:#64748b;font-size:.85rem;"></p>
         <div class="form-group" style="margin-bottom:10px;"><label>Title *</label><input type="text" id="cTitle" placeholder="CAAN Appendix 10 Surveillance Audit — Operator (2026)"></div>
         <div class="form-row">
-            <div class="form-group"><label>Department</label><input type="text" id="cDepartment" placeholder="Safety"></div>
+            <div class="form-group"><label>Department</label>
+    <select id="cDepartment">
+        <option value="">— None —</option>
+        <option value="safety">Safety</option>
+        <option value="flight_ops">Flight Operations</option>
+        <option value="camo">CAMO</option>
+        <option value="maintenance_145">Part-145</option>
+        <option value="qa">QA</option>
+        <option value="ground_ops">Ground Operations</option>
+        <option value="airside_ops">Airside Operations</option>
+        <option value="arff">ARFF (Rescue &amp; Firefighting)</option>
+        <option value="smd">Safety Management Division</option>
+        <option value="fssd">Flight Safety Standards Division</option>
+        <option value="assd">Aerodrome Safety Standards Division</option>
+    </select></div>
             <div class="form-group"><label>Assessment date</label><input type="date" id="cDate"></div>
         </div>
         <div class="form-row">
@@ -449,7 +463,7 @@ function statusBadge(st) {
 function openCreateModal() {
     if (!currentTenant) { toast('Select a tenant scope first.', 'error'); return; }
     document.getElementById('cTitle').value = '';
-    document.getElementById('cDepartment').value = 'Safety';
+    document.getElementById('cDepartment').value = 'safety';
     document.getElementById('cDate').value = new Date().toISOString().slice(0, 10);
     document.getElementById('cAuditor').value = currentUser ? (currentUser.name || '') : '';
     document.getElementById('cEmail').value = currentUser ? currentUser.email : '';

@@ -76,8 +76,28 @@ AUTHOR: AviaSAFE Systems
                         </div>
                     </div>
                     <div class="form-row">
-                        <div class="form-group"><label>Country</label><input type="text" id="tenantCountry" placeholder="Country Name"></div>
+                        <div class="form-group">
+                            <label>Safety Department</label>
+                            <select id="tenantSafetyDept">
+                                <option value="">— None —</option>
+                                <option value="safety">Safety</option>
+                                <option value="flight_ops">Flight Operations</option>
+                                <option value="camo">CAMO</option>
+                                <option value="maintenance_145">Part-145</option>
+                                <option value="qa">QA</option>
+                                <option value="ground_ops">Ground Operations</option>
+                                <option value="airside_ops">Airside Operations</option>
+                                <option value="arff">ARFF (Rescue &amp; Firefighting)</option>
+                                <option value="smd">Safety Management Division</option>
+                                <option value="fssd">Flight Safety Standards Division</option>
+                                <option value="assd">Aerodrome Safety Standards Division</option>
+                            </select>
+                            <small style="color:#94a3b8;font-size:.72rem;">Canonical department code (2B.4a). Leave None if unset.</small>
+                        </div>
                         <div class="form-group"><label>Regulator (State Regulator from Step 1) *</label><select id="tenantRegulator" required><option value="">— select regulator —</option></select></div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group"><label>Country</label><input type="text" id="tenantCountry" placeholder="Country Name"></div>
                     </div>
                     <div class="form-row">
                         <div class="form-group">
@@ -213,6 +233,7 @@ async function createTenant(e) {
             icao: document.getElementById('tenantIcao').value.trim().toUpperCase(),
             country: document.getElementById('tenantCountry').value.trim() || '',
             kind: (document.getElementById('tenantKind') || {}).value || 'operator',
+            safety_department_name: (document.getElementById('tenantSafetyDept') || {}).value || null,
             regulator_id: regulatorId,
             is_demo: document.getElementById('tenantIsDemo').checked,
             oversight_level: document.getElementById('tenantOversightLevel').value,

@@ -314,12 +314,12 @@ def test_join_team_stores_operational_role(monkeypatch):
     assert auth.claims[uid] == {
         "role": "STAFF",
         "tenant_id": "yeti-airlines",
-        "department": "Flight Operations",
+        "department": "flight_ops",
     }
     user_doc = list(db.users.values())[0]
     assert user_doc["role"] == "STAFF"
     assert str(user_doc["tenant_id"]) == "0bc08e7f-bb15-5e7a-b07e-27a0ddd19fd0"
-    assert user_doc["department"] == "Flight Operations"
+    assert user_doc["department"] == "flight_ops"
 
 
 def test_join_team_weak_password_rejected(monkeypatch):

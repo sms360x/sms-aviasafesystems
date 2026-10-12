@@ -420,11 +420,11 @@ def test_join_with_scoped_invite_binds_department_and_staff_role(monkeypatch):
     assert auth.claims[uid] == {
         "role": "STAFF",
         "tenant_id": "yeti-airlines",
-        "department": "CAMO",
+        "department": "camo",
     }
     user_doc = list(db.users.values())[0]
     assert user_doc["role"] == "STAFF"
-    assert user_doc["department"] == "CAMO"
+    assert user_doc["department"] == "camo"
     assert user_doc["email"] == "ramesh@yetiairlines.com"
 
 
@@ -446,7 +446,7 @@ def test_join_alias_endpoint_binds_dept_admin_role(monkeypatch):
     assert body["role"] == "DEPT_ADMIN"
     uid = list(auth.claims)[0]
     assert auth.claims[uid]["role"] == "DEPT_ADMIN"
-    assert auth.claims[uid]["department"] == "QA"
+    assert auth.claims[uid]["department"] == "qa"
 
 
 def test_join_inactive_scoped_invite_rejected(monkeypatch):
@@ -478,7 +478,7 @@ def test_join_legacy_tenant_code_still_defaults_to_least_privilege(monkeypatch):
     assert resp.status_code == 200, resp.text
     uid = list(auth.claims)[0]
     assert auth.claims[uid]["role"] == "STAFF"
-    assert auth.claims[uid]["department"] == "Flight Operations"
+    assert auth.claims[uid]["department"] == "flight_ops"
 
 
 def test_verify_invite_returns_scoped_department_and_role(monkeypatch):

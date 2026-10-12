@@ -18,7 +18,7 @@ import time
 
 from loguru import logger
 
-from app.core.config import settings
+from app.core.config import department_code, settings
 # A2: local PG-backed query symbols — Firestore was removed from the data
 # plane (A1). These keep the identical names so the stack behaves as before.
 from app.db.pg_query import (
@@ -38,36 +38,15 @@ CAP_SUBCOLLECTION = "caps"
 # dormant (always false in production) and must NOT be used for gating.
 REPORT_VIEWER_ROLES = {"TENANT_ADMIN", "SAFETY_OFFICER", "OFFICER", "SUPER_ADMIN"}
 
-# Department aliases — normalizes the many spellings used across seed data,
-# account claims and UI filters onto canonical queue names.
-_DEPARTMENT_ALIASES = {
-    "part-145": "Part-145", "part 145": "Part-145", "145": "Part-145",
-    "maintenance": "Part-145", "maintenance_145": "Part-145",
-    "engineering": "Part-145", "amo": "Part-145",
-    "engineering & maintenance": "Part-145",
-    "engineering and maintenance": "Part-145",
-    "maintenance & engineering": "Part-145",
-    "maintenance and engineering": "Part-145",
-    "camo": "CAMO", "camo / engineering": "CAMO",
-    "camo-engineering": "CAMO", "continuing airworthiness": "CAMO",
-    "flight operations": "Flight Operations", "flight ops": "Flight Operations",
-    "ops": "Flight Operations", "flight_operations": "Flight Operations",
-    "line crew": "Flight Operations", "line pilot": "Flight Operations",
-    "ground operations": "Ground Operations", "ground ops": "Ground Operations",
-    "ground handling": "Ground Operations", "ground_ops": "Ground Operations",
-    "cabin services": "Cabin Services", "cabin crew": "Cabin Services",
-    "cabin safety": "Cabin Services",
-    "safety": "Safety", "safety & quality": "Safety",
-    "safety and quality": "Safety", "qa": "Safety", "smd": "Safety",
-}
-
-
 def normalize_department(value: Any) -> str:
-    """Canonicalize a department string (e.g. '145' -> 'Part-145')."""
-    raw = str(value or "").strip()
-    if not raw:
-        return ""
-    return _DEPARTMENT_ALIASES.get(raw.lower().replace("_", " "), raw)
+    """Canonicalize a department value (code or label) to its canonical CODE.
+
+    2B.4a: single source — ``app.core.config.department_code`` maps both codes
+    and labels (case/space/underscore-insensitive) to the canonical code. The
+    register stores canonical codes after the 2B.4a migration, so filtering
+    compares code-to-code. The former ad-hoc spelling table is removed.
+    """
+    return department_code(value)
 
 
 def _iso(value: Any) -> Optional[str]:

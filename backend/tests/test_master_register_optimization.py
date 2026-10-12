@@ -166,14 +166,14 @@ def _patch_master(monkeypatch, hazards, cans, caps_group=None):
 
 def test_filter_department_firestore(monkeypatch):
     hazards = [
-        MockDoc("h1", {"hazard_id": "H1", "title": "Ops", "status": "Open", "department": "Flight Operations", "created_at": _dt(1)}),
-        MockDoc("h2", {"hazard_id": "H2", "title": "Maint", "status": "Open", "department": "Part-145", "created_at": _dt(1)}),
+        MockDoc("h1", {"hazard_id": "H1", "title": "Ops", "status": "Open", "department": "flight_ops", "created_at": _dt(1)}),
+        MockDoc("h2", {"hazard_id": "H2", "title": "Maint", "status": "Open", "department": "maintenance_145", "created_at": _dt(1)}),
     ]
     haz_coll, can_coll, db = _patch_master(monkeypatch, hazards, [])
     user = {"role": "AIRLINE_ADMIN", "tenant_id": "t1", "uid": "u1", "email": "a@t1.com"}
-    result = master_register.build_master_register(user, department="Flight Operations")
+    result = master_register.build_master_register(user, department="flight_ops")
     assert len([r for r in result["rows"] if r["type"]=="Hazard"]) == 1
-    assert result["rows"][0]["department"] == "Flight Operations"
+    assert result["rows"][0]["department"] == "flight_ops"
     # Verify Firestore-level where was used
     assert haz_coll.calls["where"] >= 1
 

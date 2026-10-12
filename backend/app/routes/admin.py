@@ -465,6 +465,8 @@ class TenantCreate(BaseModel):
     contact_phone: Optional[str] = None
     contact_title: Optional[str] = None
     kind: Optional[str] = None
+    # 2B.4a: tenant-specific Safety Department (canonical department CODE).
+    safety_department_name: Optional[str] = None
 
 
 class TenantBulkRequest(BaseModel):
@@ -495,6 +497,8 @@ class TenantUpdate(BaseModel):
     contact_title: Optional[str] = None
     regulator_id: Optional[str] = None
     kind: Optional[str] = None
+    # 2B.4a: tenant-specific Safety Department (canonical department CODE).
+    safety_department_name: Optional[str] = None
 
 
 class RegulatorUpdate(BaseModel):
@@ -638,6 +642,11 @@ async def admin_create_tenant(
             detail=f"Invalid tenant kind '{kind}'. Must be one of {settings.TENANT_KINDS}",
         )
     data["kind"] = kind
+    # 2B.4a — optional Safety Department code (free-text, length-validated).
+    sdn = (data.get("safety_department_name") or "").strip()
+    if len(sdn) > 200:
+        raise HTTPException(status_code=400, detail="safety_department_name too long (max 200)")
+    data["safety_department_name"] = sdn or None
     from app.services.production_seed import create_tenant
     try:
         doc = create_tenant(data, user)
@@ -728,6 +737,12 @@ async def admin_update_tenant(
                 detail=f"Invalid tenant kind '{kind}'. Must be one of {settings.TENANT_KINDS}",
             )
         fields["kind"] = kind
+    # 2B.4a — optional Safety Department code (free-text, length-validated).
+    if "safety_department_name" in fields:
+        sdn = str(fields["safety_department_name"] or "").strip()
+        if len(sdn) > 200:
+            raise HTTPException(status_code=400, detail="safety_department_name too long (max 200)")
+        fields["safety_department_name"] = sdn or None
     merged = pg.update(Tenant, "slug", tenant_id, fields)
     if merged is None:
         raise HTTPException(status_code=404, detail=f"Unknown tenant: {tenant_id}")

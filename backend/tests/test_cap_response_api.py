@@ -17,9 +17,9 @@ def _user(role="USER", tenant_id="air1", email="camo@air1.com"):
 
 def test_dept_user_can_update_own_dept_cap(monkeypatch):
     monkeypatch.setattr(CanCapService, "get_cap",
-                        lambda self, cid, user: {"id": cid, "department": "CAMO"})
+                        lambda self, cid, user: {"id": cid, "department": "camo"})
     monkeypatch.setattr(CanCapService, "update_cap",
-                        lambda self, cid, payload, user: {"id": cid, "department": "CAMO",
+                        lambda self, cid, payload, user: {"id": cid, "department": "camo",
                                                           "status": payload.get("status")})
     app.dependency_overrides[get_current_user] = lambda: _user(email="camo@air1.com")
     try:

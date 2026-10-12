@@ -11,6 +11,8 @@ from typing import List, Optional
 
 from pydantic import BaseModel, Field, model_validator
 
+from app.core.config import DEPARTMENT_CODES_SET
+
 
 class OperationalScope(str, Enum):
     """Formal tenant classification governing flight operation scope and the
@@ -56,6 +58,15 @@ class OperationalScope(str, Enum):
             OperationalScope.GROUND_HANDLING: ["safety", "ground_ops", "qa"],
             OperationalScope.REGULATOR: ["safety", "smd", "fssd", "assd"],
         }[self]
+
+
+# 2B.4a: the classification scopes are a view over the single canonical
+# department list (app/core/config.py). Guard against drift at import time.
+_SCOPE_CODES = {c for _scope in OperationalScope for c in _scope.departments}
+assert _SCOPE_CODES <= DEPARTMENT_CODES_SET, (
+    f"OperationalScope declares non-canonical department codes: "
+    f"{sorted(_SCOPE_CODES - DEPARTMENT_CODES_SET)}"
+)
 
 
 class TenantOperationalProfile(BaseModel):

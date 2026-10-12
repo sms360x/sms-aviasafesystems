@@ -29,13 +29,12 @@ from typing import Any, Dict, List, Optional
 
 from loguru import logger
 
-from app.core.config import settings
+from app.core.config import DEPARTMENT_LABELS, settings
 from app.db import pg
 from app.db.db_models import Invite, Tenant
 from app.db.ids import register_tenant
 from app.services.audit_service import log_audit, request_context
 from app.services.tenant_registration import (
-    DEPARTMENT_LABELS,
     INVITE_ALPHABET,
     INVITE_CODE_LENGTH,
 )
