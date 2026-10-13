@@ -834,6 +834,12 @@ async def admin_update_user(
         if isinstance(claims, dict):
             existing = claims
         if req.role is not None:
+            # 2B.4b: only canonical roles may be assigned; legacy -> 400.
+            if req.role not in settings.CANONICAL_ROLES:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Invalid role '{req.role}'. Must be one of {settings.CANONICAL_ROLES}",
+                )
             # RBAC_MODEL.md §7: reject conflicting role changes (AE exclusivity,
             # CAAN vs tenant, SUPER_ADMIN) before writing the claim.
             from app.services.role_validation import validate_role_assignment
@@ -1821,12 +1827,7 @@ class UserCreateRequest(UserProfileCreate):
     tenant_id: str = Field(..., description="Tenant slug the user belongs to")
     name: Optional[str] = Field(None, description="Full display name")
     display_name: Optional[str] = Field(None, description="Alias for name (legacy clients)")
-    role: str = Field("AIRLINE_ADMIN", description="App role written to custom claims")
-
-
-# Roles recognized by the app RBAC for tenant-scoped operator users. Custom
-# roles are accepted for future RBAC additions but logged for awareness.
-ALLOWED_USER_CREATE_ROLES = {"AIRLINE_ADMIN", "TENANT_ADMIN", "DEPT_ADMIN", "SAFETY_OFFICER", "OFFICER", "STAFF", "CAAN_SMD", "STATE_SMD", "ACCOUNTABLE_EXECUTIVE", "SAG_MEMBER"}
+    role: str = Field("TENANT_ADMIN", description="App role written to custom claims")
 
 
 SUPER_ADMIN_PROTECTED_EMAILS = {"ezondiza.dhf@gmail.com", "ghanshyamacharya@outlook.com"}
@@ -2164,11 +2165,12 @@ async def admin_create_user(
     RBAC additions but logged for admin awareness.
     """
     _verify_admin_setup(req.setup_key)
-    role = (req.role or "AIRLINE_ADMIN").strip().upper()
-    if role not in ALLOWED_USER_CREATE_ROLES:
-        logger.warning(
-            f"Custom role '{role}' created for {req.email} by {user.get('email')} "
-            "— verify RBAC permissions cover this role",
+    role = (req.role or "TENANT_ADMIN").strip().upper()
+    # 2B.4b: validate against the canonical role set; unknown/legacy -> 400.
+    if role not in settings.CANONICAL_ROLES:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid role '{role}'. Must be one of {settings.CANONICAL_ROLES}",
         )
     from app.services.tenant_credentials import create_user_for_tenant
     try:

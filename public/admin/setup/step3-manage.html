@@ -238,12 +238,13 @@ AUTHOR: AviaSAFE Systems
             <div class="form-group">
                 <label for="editUserRole">Role *</label>
                 <select id="editUserRole" style="width:100%;padding:9px 11px;border:1px solid #cbd5e1;border-radius:8px;font-size:.86rem;">
-                    <option value="TENANT_ADMIN">Tenant Admin</option>
+                    <option value="SUPER_ADMIN">Super Admin</option>
+                    <option value="STATE_SMD">State SMD (Regulator)</option>
+                    <option value="TENANT_ADMIN">Tenant Admin (Safety Manager)</option>
                     <option value="DEPT_ADMIN">Department Admin</option>
                     <option value="OFFICER">Officer</option>
                     <option value="ACCOUNTABLE_EXECUTIVE">Accountable Executive</option>
-                    <option value="STATE_SMD">State SMD (Regulator)</option>
-                    <option value="SUPER_ADMIN">Super Admin</option>
+                    <option value="STAFF">Staff</option>
                 </select>
             </div>
             <div class="form-group">
@@ -301,21 +302,16 @@ AUTHOR: AviaSAFE Systems
             <div style="margin-top:12px;">
                 <div class="form-group">
                     <label for="newUserRole">Role *</label>
-                    <select id="newUserRole" required onchange="toggleCustomRole()" style="width:100%;padding:9px 11px;border:1px solid #cbd5e1;border-radius:8px;font-size:.86rem;">
-                        <option value="TENANT_ADMIN">Tenant Admin</option>
+                    <select id="newUserRole" required style="width:100%;padding:9px 11px;border:1px solid #cbd5e1;border-radius:8px;font-size:.86rem;">
+                        <option value="SUPER_ADMIN">Super Admin</option>
+                        <option value="STATE_SMD">State SMD (Regulator)</option>
+                        <option value="TENANT_ADMIN">Tenant Admin (Safety Manager)</option>
                         <option value="DEPT_ADMIN">Department Admin</option>
                         <option value="OFFICER">Officer</option>
                         <option value="ACCOUNTABLE_EXECUTIVE">Accountable Executive</option>
-                        <option value="STATE_SMD">State SMD (Regulator)</option>
-                        <option value="__custom__">+ Custom Role</option>
+                        <option value="STAFF">Staff</option>
                     </select>
-                    <small style="color:#94a3b8;">Roles recognized by the app RBAC.</small>
-                </div>
-                <div class="form-group" id="customRoleGroup" style="display:none;">
-                    <label for="customRoleName">Custom Role Name</label>
-                    <input type="text" id="customRoleName" placeholder="e.g., QUALITY_MANAGER" autocomplete="off"
-                           style="width:100%;padding:9px 11px;border:1px solid #cbd5e1;border-radius:8px;font-size:.86rem;box-sizing:border-box;">
-                    <small style="color:#94a3b8;">Custom roles may not have full access until RBAC is updated.</small>
+                    <small style="color:#94a3b8;">Canonical roles (2B.4b).</small>
                 </div>
             </div>
             <div style="margin-top:12px;">
@@ -682,14 +678,6 @@ document.addEventListener('DOMContentLoaded', function () {
 // USER MANAGEMENT — CREATE USER
 // ============================================================================
 
-function toggleCustomRole() {
-    var roleSelect = document.getElementById('newUserRole');
-    var customGroup = document.getElementById('customRoleGroup');
-    if (roleSelect && customGroup) {
-        customGroup.style.display = (roleSelect.value === '__custom__') ? 'block' : 'none';
-    }
-}
-
 function populateUserTenantDropdown() {
     var sel = document.getElementById('newUserTenant');
     if (!sel) return;
@@ -722,7 +710,6 @@ async function openCreateUserModal() {
     if (successEl) successEl.style.display = 'none';
     var errEl = document.getElementById('createUserError');
     if (errEl) { errEl.style.display = 'none'; errEl.textContent = ''; }
-    toggleCustomRole();
     document.getElementById('createUserModal').style.display = 'flex';
     var email = document.getElementById('newUserEmail');
     if (email) setTimeout(function () { email.focus(); }, 50);
@@ -1139,10 +1126,7 @@ document.getElementById('createUserForm').addEventListener('submit', async funct
 
     var email = (document.getElementById('newUserEmail') || {}).value.trim() || '';
     var tenantId = (document.getElementById('newUserTenant') || {}).value || '';
-    var roleVal = (document.getElementById('newUserRole') || {}).value || '';
-    var role = roleVal === '__custom__'
-        ? ((document.getElementById('customRoleName') || {}).value || '').trim().toUpperCase()
-        : roleVal;
+    var role = (document.getElementById('newUserRole') || {}).value || '';
     var name = (document.getElementById('newUserName') || {}).value.trim() || '';
     var department = (document.getElementById('newUserDepartment') || {}).value.trim() || '';
     var setupKey = (document.getElementById('createUserSetupKey') || {}).value.trim() || '';
@@ -1150,11 +1134,6 @@ document.getElementById('createUserForm').addEventListener('submit', async funct
     if (!email || !tenantId || !role || !setupKey) {
         if (errorEl) { errorEl.textContent = 'Please fill in all required fields.'; errorEl.style.display = 'block'; }
         toast('All required fields must be filled.', 'error');
-        return;
-    }
-    if (roleVal === '__custom__' && !role) {
-        if (errorEl) { errorEl.textContent = 'Please enter a custom role name.'; errorEl.style.display = 'block'; }
-        toast('Please enter a custom role name.', 'error');
         return;
     }
 

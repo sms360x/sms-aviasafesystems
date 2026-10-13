@@ -175,7 +175,7 @@ def test_staff_denied_raw_vsr(monkeypatch, role):
 # T7 — Cross-tenant callers still get 404 for a VSR (regression of 1A.7).
 def test_cross_tenant_vsr_returns_404(monkeypatch):
     _patch_detail(monkeypatch, None)
-    _override("CAAN_SMD", tenant_id=None)
+    _override("STATE_SMD", tenant_id=None)
     try:
         r = client.get(f"/api/v1/reports/{uuid.uuid4()}")
         assert r.status_code == 404, r.text
@@ -183,8 +183,8 @@ def test_cross_tenant_vsr_returns_404(monkeypatch):
         _clear()
 
 
-# List endpoint: allowed roles are the Safety Manager aliases + SAFETY_OFFICER.
-@pytest.mark.parametrize("role", ["TENANT_ADMIN", "AIRLINE_ADMIN", "SAFETY_OFFICER"])
+# List endpoint: allowed roles are the Safety Manager + SAFETY_OFFICER.
+@pytest.mark.parametrize("role", ["TENANT_ADMIN", "SAFETY_OFFICER"])
 def test_list_allowed_for_raw_vsr_roles(monkeypatch, role):
     _patch_list(monkeypatch, [_list_row()])
     _override(role)

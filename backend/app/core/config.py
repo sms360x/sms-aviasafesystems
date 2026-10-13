@@ -3,43 +3,11 @@ from dotenv import load_dotenv
 
 from pydantic_settings import BaseSettings
 from typing import List, Optional
-from enum import Enum
 
 # Ensure .env is loaded into os.environ regardless of pydantic-settings path resolution
 _env_path = Path(__file__).resolve().parent.parent.parent / ".env"
 if _env_path.exists():
     load_dotenv(_env_path, override=False)
-
-
-class AuthRole(str, Enum):
-    # Legacy tenant-admin role (kept for backward compatibility).
-    AIRLINE_ADMIN = "AIRLINE_ADMIN"
-    # Canonical tenant admin (Safety Manager); AIRLINE_ADMIN is its legacy alias.
-    TENANT_ADMIN = "TENANT_ADMIN"
-    # Department-scoped administrator (Head of Department).
-    DEPT_ADMIN = "DEPT_ADMIN"
-    # Operational safety review role (cross-department review within tenant).
-    # Legacy name; OFFICER is the canonical rename (dual-accept shim).
-    SAFETY_OFFICER = "SAFETY_OFFICER"
-    # Canonical officer name; accepted everywhere SAFETY_OFFICER is.
-    OFFICER = "OFFICER"
-    # Legacy least-privilege member role.
-    USER = "USER"
-    # Canonical least-privilege member role; USER is its legacy alias.
-    STAFF = "STAFF"
-    CAAN_SMD = "CAAN_SMD"
-    # Generalized alias for the state-regulator role. Accepted on inbound
-    # claims during the CAAN -> state transition and normalized to CAAN_SMD at
-    # the auth boundary (middleware/auth.resolve_user_context) so downstream
-    # guards keep a single comparison target. Remove once no token carries it.
-    STATE_SMD = "STATE_SMD"
-    SUPER_ADMIN = "SUPER_ADMIN"
-    # Accountable Executive (Doc 9859); one per tenant; terminal CAP/EIP +
-    # risk acceptance. New literal (no legacy alias).
-    ACCOUNTABLE_EXECUTIVE = "ACCOUNTABLE_EXECUTIVE"
-    # Safety Action Group member; SAG review + Acceptable-tier risk acceptance.
-    # New literal (no legacy alias).
-    SAG_MEMBER = "SAG_MEMBER"
 
 
 class Settings(BaseSettings):
@@ -172,21 +140,27 @@ class Settings(BaseSettings):
     # ── Roles ──
     ROLE_DEFAULT: str = "STAFF"
     ROLE_DEFAULT_REGISTRATION: str = "AIRLINE_ADMIN"
+    # 2B.4b: NOT canonicalized. Many out-of-scope readers still compare the
+    # literal "CAAN_SMD" (routes/hazards.py, can_cap.py, occurrence_reports.py,
+    # reporting.py, …), so dropping it here would make the canonical STATE_SMD
+    # pass this gate and then fail those literal checks. Reported as residual
+    # (STOP condition: a *_ROLES list has a reader that cannot consume the
+    # canonical value). CAAN_SMD is retired in the data (2B.3); it is kept here
+    # only until the regulator vocabulary is unified.
     CROSS_TENANT_ROLES: List[str] = ["CAAN_SMD", "STATE_SMD", "SUPER_ADMIN"]
     SUPER_ADMIN_ROLES: List[str] = ["SUPER_ADMIN"]
     # Canonical role constants for the delegated admin hierarchy.
     ROLE_TENANT_ADMIN: str = "TENANT_ADMIN"
     ROLE_DEPT_ADMIN: str = "DEPT_ADMIN"
+    # NOTE (2B.4b): ROLE_SAFETY_OFFICER / ROLE_SAG_MEMBER are kept because
+    # services/invites.py (out of this item's scope) still reads them. They are
+    # removed when invites.py is migrated.
     ROLE_SAFETY_OFFICER: str = "SAFETY_OFFICER"
-    # Canonical rename of the officer role (dual-accept shim with the above).
     ROLE_OFFICER: str = "OFFICER"
     ROLE_STAFF: str = "STAFF"
     ROLE_ACCOUNTABLE_EXECUTIVE: str = "ACCOUNTABLE_EXECUTIVE"
     ROLE_SAG_MEMBER: str = "SAG_MEMBER"
     # Canonical roles (2B.1 design of record, SME 2026-10-12): seven roles.
-    # The legacy names (AIRLINE_ADMIN, CAAN_SMD, SAFETY_OFFICER, USER,
-    # SAG_MEMBER, regulator sub-roles) are retired in 2B.3's claim migration;
-    # the other role constants below stay until then.
     CANONICAL_ROLES: List[str] = [
         "SUPER_ADMIN",
         "STATE_SMD",
@@ -196,18 +170,17 @@ class Settings(BaseSettings):
         "ACCOUNTABLE_EXECUTIVE",
         "STAFF",
     ]
-    # Role-alias groups so existing AIRLINE_ADMIN/USER checks recognize the new
-    # canonical names (TENANT_ADMIN == AIRLINE_ADMIN, STAFF == USER).
-    TENANT_ADMIN_ROLES: List[str] = ["AIRLINE_ADMIN", "TENANT_ADMIN"]
+    # 2B.4b: canonical-only membership. Legacy names were migrated in 2B.3, so
+    # the lists no longer carry dual-accept aliases (their names are kept so the
+    # out-of-scope readers continue to work).
+    TENANT_ADMIN_ROLES: List[str] = ["TENANT_ADMIN"]
     DEPT_ADMIN_ROLES: List[str] = ["DEPT_ADMIN"]
-    # Dual-accept shim: OFFICER is the canonical rename of SAFETY_OFFICER.
-    # Both values stay valid until stored claims are migrated (future commit).
-    SAFETY_OFFICER_ROLES: List[str] = ["SAFETY_OFFICER", "OFFICER"]
-    STAFF_ROLES: List[str] = ["USER", "STAFF"]
+    SAFETY_OFFICER_ROLES: List[str] = ["OFFICER"]
+    STAFF_ROLES: List[str] = ["STAFF"]
     ACCOUNTABLE_EXECUTIVE_ROLES: List[str] = ["ACCOUNTABLE_EXECUTIVE"]
-    SAG_MEMBER_ROLES: List[str] = ["SAG_MEMBER"]
+    SAG_MEMBER_ROLES: List[str] = ["SAG_MEMBER"]  # reader: services/role_validation.py
     # Roles permitted to act across the whole tenant (tenant admins + cross-tenant).
-    TENANT_WIDE_ROLES: List[str] = ["AIRLINE_ADMIN", "TENANT_ADMIN", "CAAN_SMD", "SUPER_ADMIN"]
+    TENANT_WIDE_ROLES: List[str] = ["TENANT_ADMIN", "STATE_SMD", "SUPER_ADMIN"]
 
     # ── Tenant kinds (2A.3c) ──
     # Canonical tenant/service-provider kinds. Not a DB CHECK constraint; the

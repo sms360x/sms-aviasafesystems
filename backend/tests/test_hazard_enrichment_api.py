@@ -11,7 +11,7 @@ from app.services.hazard_enrichment_service import HazardEnrichmentService
 client = TestClient(app)
 
 
-def _user(role="SAFETY_OFFICER", tenant_id="air1"):
+def _user(role="OFFICER", tenant_id="air1"):
     return {"uid": "u1", "email": "so@air1.com", "role": role, "tenant_id": tenant_id}
 
 

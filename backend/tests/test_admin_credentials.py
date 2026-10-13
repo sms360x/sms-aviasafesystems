@@ -508,7 +508,7 @@ def test_create_user_route(monkeypatch):
         resp = _client().post("/api/v1/admin/users", json={
             "setup_key": "test-setup-key",
             "email": "reviewer@newair.com",
-            "role": "SAFETY_OFFICER",
+            "role": "OFFICER",
             "tenant_id": "new-air",
             "name": "R. Officer",
             "department": "Safety",
@@ -517,14 +517,15 @@ def test_create_user_route(monkeypatch):
         body = resp.json()
         assert body["success"] is True
         assert body["email"] == "reviewer@newair.com"
-        assert body["role"] == "SAFETY_OFFICER"
+        assert body["role"] == "OFFICER"
         assert body["password"]
         assert body["delivery"]["provider"] == "none"
     finally:
         _clear_overrides()
 
 
-def test_create_user_route_custom_role_allowed(monkeypatch):
+def test_create_user_route_custom_role_rejected(monkeypatch):
+    """2B.4b: only canonical roles are accepted; an unknown/legacy role -> 400."""
     db, auth = _patch_all(monkeypatch)
     _tenant_with_user(db._stores)
     try:
@@ -532,9 +533,9 @@ def test_create_user_route_custom_role_allowed(monkeypatch):
             "setup_key": "test-setup-key",
             "email": "custom@newair.com", "role": "QUALITY_MANAGER", "tenant_id": "new-air",
         })
-        assert resp.status_code == 200
-        assert resp.json()["role"] == "QUALITY_MANAGER"
-        assert auth.by_email["custom@newair.com"].custom_claims["role"] == "QUALITY_MANAGER"
+        assert resp.status_code == 400
+        assert "QUALITY_MANAGER" in resp.json().get("detail", "")
+        assert "custom@newair.com" not in auth.by_email
     finally:
         _clear_overrides()
 

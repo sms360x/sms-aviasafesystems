@@ -173,6 +173,29 @@ def test_cross_tenant_route_requires_tenant():
 
 # T5 — No override / delegation path exists for risk acceptance, so there is no
 #      override audit to record. (Recorded in docs/step1/1C.2_ae_non_delegability.md.)
+def test_get_accountable_executive_admits_only_ae():
+    """2B.4b closure fix: the closure dependency admits only an AE for its
+    owning tenant; denies the retired AIRLINE_ADMIN and cross-tenant callers."""
+    from app.middleware.auth import get_accountable_executive
+
+    async def _run_gate():
+        assert await get_accountable_executive(
+            {"role": "ACCOUNTABLE_EXECUTIVE", "tenant_id": "t1"}) == {
+                "role": "ACCOUNTABLE_EXECUTIVE", "tenant_id": "t1"}
+        for denied in (
+            {"role": "ACCOUNTABLE_EXECUTIVE", "tenant_id": None},
+            {"role": "AIRLINE_ADMIN", "tenant_id": "t1"},
+            {"role": "TENANT_ADMIN", "tenant_id": "t1"},
+            {"role": "STATE_SMD", "tenant_id": None},
+            {"role": "SUPER_ADMIN", "tenant_id": None},
+        ):
+            with pytest.raises(HTTPException) as exc:
+                await get_accountable_executive(denied)
+            assert exc.value.status_code == 403
+
+    _run(_run_gate())
+
+
 def test_no_override_or_delegation_endpoint():
     paths = {getattr(r, "path", "") for r in app.routes}
     assert "/api/v1/sram/risk/accept" in paths

@@ -11,7 +11,7 @@ from app.middleware.auth import get_current_user
 client = TestClient(app)
 
 
-def _user(role="AIRLINE_ADMIN", tenant_id="air1"):
+def _user(role="TENANT_ADMIN", tenant_id="air1"):
     return {"uid": "u1", "email": "sm@air1.com", "role": role, "tenant_id": tenant_id}
 
 

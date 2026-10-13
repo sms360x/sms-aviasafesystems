@@ -49,14 +49,6 @@ def _lookup_tenant_by_email(email: str) -> Optional[Dict[str, Any]]:
         return None
 
 
-# Inbound claim aliases for the CAAN -> state transition. STATE_SMD is the
-# generalized name for the state-regulator role; normalize it to the existing
-# internal value (CAAN_SMD) here so every downstream guard keeps a single
-# comparison target and no route/service needs to change. Remove this map once
-# the internal vocabulary is migrated.
-_ROLE_CLAIM_ALIASES = {"STATE_SMD": "CAAN_SMD"}
-
-
 def _tenant_slug(tenant_uuid_value: Any) -> Optional[str]:
     """Resolve a users.tenant_id (uuid) to the tenant slug (or None).
 
@@ -269,14 +261,20 @@ async def get_responsible_manager(
 async def get_accountable_executive(
     user: Dict[str, Any] = Depends(get_current_user)
 ) -> Dict[str, Any]:
-    if user.get('role') not in settings.CROSS_TENANT_ROLES and user.get('role') != "AIRLINE_ADMIN":
+    """AE-only gate (2B.4b fix). Hazard closure is an AE sign-off (Doc 9859).
+
+    Admits only ACCOUNTABLE_EXECUTIVE for its owning tenant; denies the retired
+    AIRLINE_ADMIN and cross-tenant callers (STATE_SMD / SUPER_ADMIN). Identity
+    is session-derived — no request parameter sets the signer (1C.2).
+    """
+    if user.get('role') != "ACCOUNTABLE_EXECUTIVE":
         raise HTTPException(
             status_code=403,
-            detail="Accountable Executive, AIRLINE_ADMIN, or CAAN_SMD role required"
+            detail="Accountable Executive role required"
         )
-    if user.get('role') == "AIRLINE_ADMIN" and not user.get('tenant_id'):
+    if not user.get('tenant_id'):
         raise HTTPException(
             status_code=403,
-            detail="Tenant access required for AIRLINE_ADMIN"
+            detail="Tenant access required for Accountable Executive"
         )
     return user

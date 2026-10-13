@@ -352,10 +352,10 @@ def test_tenant_admin_can_create_assessment(monkeypatch):
     assert stored["created_by"] == "tenant_admin@example.com"
 
 
-def test_legacy_airline_admin_can_create_assessment(monkeypatch):
+def test_tenant_admin_can_create_assessment(monkeypatch):
     db = _FakeDB()
     _patch(monkeypatch, db)
-    _override_user(_as_role("AIRLINE_ADMIN", tid="airline1"))
+    _override_user(_as_role("TENANT_ADMIN", tid="airline1"))
     try:
         resp = TestClient(app).post("/api/v1/psoe/assessments",
                                     json={"title": "Annual SMS surveillance"})

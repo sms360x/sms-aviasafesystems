@@ -41,7 +41,7 @@ def test_ae_combined_with_operational_role_rejected(monkeypatch):
     _patch_ae_count(monkeypatch, 0)
     with pytest.raises(HTTPException) as exc:
         validate_role_assignment(
-            "ACCOUNTABLE_EXECUTIVE", "tenant-a", existing_role="SAFETY_OFFICER"
+            "ACCOUNTABLE_EXECUTIVE", "tenant-a", existing_role="OFFICER"
         )
     assert exc.value.status_code == 400
     assert "operational" in exc.value.detail.lower()
@@ -95,7 +95,7 @@ def test_super_admin_developer_allowed():
 
 def test_tenant_role_without_tenant_rejected():
     with pytest.raises(HTTPException) as exc:
-        validate_role_assignment("SAFETY_OFFICER", None)
+        validate_role_assignment("OFFICER", None)
     assert exc.value.status_code == 400
 
 

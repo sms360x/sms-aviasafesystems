@@ -271,7 +271,7 @@ def test_legacy_airline_admin_can_invite_safety_officer(monkeypatch):
     db = _FakeDB()
     _patch(monkeypatch, db, _FakeAuth())
     _seed_tenant(db)
-    _override_user(_as_role("AIRLINE_ADMIN", department="safety"))
+    _override_user(_as_role("TENANT_ADMIN", department="safety"))
     try:
         resp = TestClient(app).post("/api/v1/auth/invite",
                                     json={"department": "flight_ops", "role": "SAFETY_OFFICER"})

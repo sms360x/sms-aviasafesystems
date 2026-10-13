@@ -553,3 +553,15 @@ A NEW failure (not on this list) stops the item.
   state), not a code regression. Fix: harden the `seed.users` monkeypatch target
   and add teardown for psoe template/assessment state. Deferred to a test-cleanup
   item.
+
+---
+
+## Step 3 items
+
+### Operational role relabelling
+
+`join.html` presents an "Operational Role" dropdown (postholder, captain, ame,
+dispatcher, ramp, safety_officer) that is distinct from the authorization role
+(`TENANT_ADMIN`, `OFFICER`, etc.). The two share the name "role" but mean
+different things. Relabel or restructure in Step 3. (The dropdown values are
+unchanged; this notes the naming collision.)
