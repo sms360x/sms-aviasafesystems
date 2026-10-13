@@ -18,6 +18,7 @@ from loguru import logger
 from app.core.config import settings
 from app.db import pg
 from app.db.db_models import Tenant, UserProfile
+from app.db.rls import clear_current_identity, identity_from_user, set_current_identity
 from app.firebase import verify_firebase_token
 from app.middleware.tenant_status_cache import get_status, set_status
 from app.services.tenant_service import get_tenant_slug_from_email
@@ -153,7 +154,7 @@ async def get_current_user(
 
     logger.info(f"Authenticated user {email}: role={role}, tenant_id={tenant_id}")
 
-    return {
+    user_context = {
         "uid": decoded_token['uid'],
         "email": email,
         "role": role,
@@ -161,6 +162,12 @@ async def get_current_user(
         "department": department,
         "claims": {"role": role, "tenant_id": tenant_id, "department": department},
     }
+    # Phase 2C.3: publish the identity for the DB session GUC listener. The
+    # ContextVar is per-request (per-task); clear any residual first so a
+    # reused context can never carry a stale identity.
+    clear_current_identity()
+    set_current_identity(identity_from_user(user_context))
+    return user_context
 
 
 async def get_tenant_user(

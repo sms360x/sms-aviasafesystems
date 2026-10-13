@@ -70,6 +70,12 @@ class Settings(BaseSettings):
     # a client-side timeout instead of waiting for the server-side
     # statement_timeout. Bounds the Supabase pooler handshake/query stalls.
     DB_COMMAND_TIMEOUT: int = 30
+    # Phase 2C.3 — RLS enforcement on the app path. When True, every
+    # authenticated transaction also executes `SET LOCAL ROLE authenticated`
+    # (in addition to the app.current_* GUCs, which are always set). Default
+    # False: the mechanism is inert until 2C.3b rewrites the policies and
+    # flips this on. Env: RLS_ENFORCEMENT_ENABLED.
+    RLS_ENFORCEMENT_ENABLED: bool = False
 
     # ── Firebase (Auth-only; Firestore removed B4) ──
     FIREBASE_PROJECT_ID: Optional[str] = None

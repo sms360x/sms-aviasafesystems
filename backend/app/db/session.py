@@ -172,6 +172,14 @@ def get_engine() -> AsyncEngine:
                 "command_timeout": settings.DB_COMMAND_TIMEOUT,
             },
         )
+        # Phase 2C.3: set the app.current_* GUCs (and, when
+        # RLS_ENFORCEMENT_ENABLED, SET LOCAL ROLE authenticated) on every
+        # transaction that carries a request identity. Attached to the sync
+        # engine so it covers both the async session path and the bridge
+        # session (both use this engine). No-op for non-authenticated contexts.
+        from app.db.rls import install_rls_listener
+
+        install_rls_listener(_engine)
     return _engine
 
 

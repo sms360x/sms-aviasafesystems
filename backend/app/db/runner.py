@@ -67,6 +67,20 @@ def in_bridge_loop() -> bool:
     return running is _BRIDGE_LOOP and threading.current_thread() is _BRIDGE_THREAD
 
 
+async def _with_identity(coro: Awaitable[T], identity) -> T:
+    """Run ``coro`` with the caller's RLS identity set in this task's context.
+
+    The identity cannot cross the thread/loop boundary by itself (a ContextVar
+    is per-context), so ``run`` captures it in the caller's context and
+    re-applies it here, inside the task that actually executes the DB work.
+    """
+    if identity is not None:
+        from app.db.rls import set_current_identity
+
+        set_current_identity(identity)
+    return await coro
+
+
 def run(coro: Awaitable[T], timeout: float = 60.0) -> T:
     """Execute an awaitable to completion and return its result.
 
@@ -83,16 +97,27 @@ def run(coro: Awaitable[T], timeout: float = 60.0) -> T:
     ``in_bridge_loop``) the awaitable is executed on its own fresh loop in a
     pooled worker thread instead — scheduling onto the bridge loop would block
     the very thread that must run it.
+
+    The caller's RLS identity (Phase 2C.3) is captured here, in the caller's
+    context, and re-applied inside the bridge coroutine — a ContextVar does not
+    otherwise cross the thread/loop boundary.
     """
     global _NESTED_POOL
+    from app.db.rls import get_current_identity
+
+    identity = get_current_identity()
     if in_bridge_loop():
         if _NESTED_POOL is None:
             _NESTED_POOL = concurrent.futures.ThreadPoolExecutor(
                 max_workers=4, thread_name_prefix="pg-nested"
             )
-        return _NESTED_POOL.submit(lambda: asyncio.run(coro)).result(timeout=timeout)
+        return _NESTED_POOL.submit(
+            lambda: asyncio.run(_with_identity(coro, identity))
+        ).result(timeout=timeout)
 
-    future = asyncio.run_coroutine_threadsafe(coro, _bridge_loop())
+    future = asyncio.run_coroutine_threadsafe(
+        _with_identity(coro, identity), _bridge_loop()
+    )
     try:
         return future.result(timeout=timeout)
     except FutureTimeoutError:
