@@ -192,12 +192,15 @@ def test_rls_denies_cross_tenant_read():
 
         async def _go():
             async with session_scope() as session:
-                # Act as the authenticated JWT role and claim tenant A.
+                # Act as the app role and claim tenant A via the session GUCs
+                # (2C.3b: the policy reads app.current_tenant, not GoTrue claims).
                 await session.execute(text("SET LOCAL ROLE authenticated"))
                 await session.execute(
-                    text("SELECT set_config('request.jwt.claims', :c, true)"),
-                    {"c": '{"app_metadata":{"tenant_id":"%s"}}' % id_a},
+                    text("SELECT set_config('app.current_tenant', :t, true)"),
+                    {"t": id_a},
                 )
+                await session.execute(
+                    text("SELECT set_config('app.current_role', 'TENANT_ADMIN', true)"))
                 own = (await session.execute(
                     text("SELECT count(*) FROM public.sms_maturity WHERE tenant_id = :t"),
                     {"t": id_a},
