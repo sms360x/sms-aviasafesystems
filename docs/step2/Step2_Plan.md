@@ -405,7 +405,8 @@ leaves the product working.
   **Closed 2026-10-12** — the multi-membership resolver was corrected and
   reverted to read from the `users` row; see the Phase 2A close below.
 - **Phase 2B — Role model unification (W2).** Canonical roles, claim
-  migration, closure-path fix. Depends on 2A.
+  migration, closure-path fix. Depends on 2A. **Closed 2026-10-13** — role and
+  department models unified; see the Phase 2B close below.
 - **Phase 2C — Database-layer RLS (W3).** Rewrite policies against the
   resolved identity; write the 8 deferred policies; capture drift;
   decide/implement FORCE RLS. Depends on 2A/2B.
@@ -441,7 +442,30 @@ one role); the `memberships` table is retained as the Super-Admin reporting
 substrate, in sync on creation and role change. The G9/G12 defects found by the
 2A.5 tests are moot under the corrected model.
 
-**Next: Phase 2B — Role model unification (W2).**
+### Phase 2B close (2026-10-13)
+
+Phase 2B is **closed**. The close document is
+`docs/step2/2B.5_phase_2B_close.md` (intent, execution item by item, the two
+design decisions, the invariant set, the residuals, and the Phase 2C handoff).
+
+| Item | Status |
+|---|---|
+| 2B.1 role model design pass | closed (SME-approved 2026-10-12; seven roles) |
+| 2B.2 canonical role list + `tenants.safety_department_name` | closed |
+| 2B.3 stored-claim migration (users, memberships, Firebase) | closed |
+| 2B.4a department model unification (codes) | closed |
+| 2B.4b role model cleanup (dead code, lists, closure fix, dropdown, validation) | closed |
+| 2B.5 close | **CLOSED** (close document) |
+
+Outcome: one canonical role vocabulary (seven roles) and one canonical
+department vocabulary (11 codes). `users.role`, `memberships.role`, and Firebase
+claims store canonical names; `users`/`hazards`/`cans`/`caps` department store
+codes. The closure path admits only the Accountable Executive. Residuals
+(frontend legacy strings, `CROSS_TENANT_ROLES`/`CAAN_SMD`, the role-set collapse,
+the confidential-service `SUPER_ADMIN`, invite/setup-claims validation,
+operational-role relabelling) are recorded for Step 3.
+
+**Next: Phase 2C — Database-layer RLS (W3).**
 
 Phase discipline: one item = one commit, full suite after each item, on a
 new Step 2 branch created after this plan is approved.
@@ -534,6 +558,13 @@ A NEW failure (not on this list) stops the item.
          test_materialize_all_and_invalidate; fails in isolation;
          the materializer path does not touch regulators or
          tenants, so the rename in 2A.3b-cleanup is not the cause)
+    tests/test_ae_non_delegability.py::
+        test_no_override_or_delegation_endpoint
+        (pre-existing at base b3e8c61; asserts on
+         /api/v1/sram/risk/accept, a path the app never
+         registers; the SRAM router mounts under /api/v1
+         with no /sram prefix. Unrelated to Phase 2B.
+         Test defect; fix in a Step 3 cleanup item.)
 
 ---
 
