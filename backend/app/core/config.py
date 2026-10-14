@@ -72,10 +72,10 @@ class Settings(BaseSettings):
     DB_COMMAND_TIMEOUT: int = 30
     # Phase 2C.3 — RLS enforcement on the app path. When True, every
     # authenticated transaction also executes `SET LOCAL ROLE authenticated`
-    # (in addition to the app.current_* GUCs, which are always set). Default
-    # False: the mechanism is inert until 2C.3b rewrites the policies and
-    # flips this on. Env: RLS_ENFORCEMENT_ENABLED.
-    RLS_ENFORCEMENT_ENABLED: bool = False
+    # (in addition to the app.current_* GUCs, which are always set). Enabled in
+    # 2C.3d Phase 2 (2026-10-14) after 2C.4 completed the policy set; rollback is
+    # this one line (True -> False). Env: RLS_ENFORCEMENT_ENABLED.
+    RLS_ENFORCEMENT_ENABLED: bool = True
 
     # ── Firebase (Auth-only; Firestore removed B4) ──
     FIREBASE_PROJECT_ID: Optional[str] = None
