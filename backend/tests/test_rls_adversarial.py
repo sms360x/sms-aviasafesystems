@@ -1,4 +1,4 @@
-"""2C.3d — adversarial RLS isolation tests (Phase 1: flag ON in a test context).
+"""2C.3d/2C.4 — adversarial RLS isolation tests (Phase 1 flag ON in a test context).
 
 These tests exercise RLS enforcement on the real application path. Unlike the
 ~85 tests that override ``get_current_user`` (and therefore never publish an RLS
@@ -11,8 +11,8 @@ Only ``verify_firebase_token`` / ``resolve_user_context`` / ``_tenant_is_suspend
 are patched (the token/DB lookups); ``get_current_user`` itself runs for real.
 
 The flag is enabled per-test via monkeypatch only; ``config.py`` is not changed
-here. Each query runs in its own transaction; write attempts that succeed
-against the wrong tenant are rolled back and the fixture tenants are removed.
+here. Every query runs in its own transaction and the fixture rows are removed
+in teardown.
 """
 
 import asyncio
@@ -27,7 +27,7 @@ from app.db.ids import tenant_uuid
 from app.db.rls import clear_current_identity
 from app.db.session import get_engine, session_scope
 
-from _mbb import cleanup, create_tenant, unique_slug
+from _mbb import cleanup, create_tenant, create_user, unique_slug
 
 
 BATCH = "import_batches"  # Operator-only (uuid tenant_id), simple ALL policy.
@@ -62,15 +62,22 @@ def _flag_on(monkeypatch):
     clear_current_identity()
 
 
-def _insert_batch(tid: str, batch_id: uuid.UUID) -> None:
+def _owner_sql(sql: str, params=None):
     async def _go():
         async with session_scope() as s:
-            await s.execute(text(
-                "INSERT INTO public.import_batches (id, tenant_id) "
-                "VALUES (:id, :tid)"
-            ), {"id": batch_id, "tid": tid})
+            return await s.execute(text(sql), params or {})
 
-    asyncio.run(_go())
+    return asyncio.run(_go())
+
+
+def _owner_count(table: str, where: str = "", params=None) -> int:
+    sql = f"SELECT count(*) FROM public.{table}"
+    if where:
+        sql += f" WHERE {where}"
+    async def _go():
+        async with session_scope() as s:
+            return (await s.execute(text(sql), params or {})).scalar_one()
+    return asyncio.run(_go())
 
 
 @pytest.fixture
@@ -81,8 +88,9 @@ def rls_env():
     create_tenant(slug_b)
     id_a, id_b = tenant_uuid(slug_a), tenant_uuid(slug_b)
     batch_a, batch_b = uuid.uuid4(), uuid.uuid4()
-    _insert_batch(id_a, batch_a)
-    _insert_batch(id_b, batch_b)
+    for tid, bid in ((id_a, batch_a), (id_b, batch_b)):
+        _owner_sql("INSERT INTO public.import_batches (id, tenant_id) VALUES (:id, :tid)",
+                   {"id": bid, "tid": tid})
     try:
         yield {"slug_a": slug_a, "slug_b": slug_b, "id_a": id_a, "id_b": id_b,
                "batch_a": batch_a, "batch_b": batch_b}
@@ -192,7 +200,6 @@ def test_t6_super_admin_exemption_reads_across_tenants(rls_env, monkeypatch):
             text("SELECT count(*) FROM public.import_batches")
         )).scalar_one()
 
-    # SUPER_ADMIN with no tenant sees both A's and B's rows.
     total = _run_as(monkeypatch, None, "SUPER_ADMIN", q, uid="u-admin")
     assert total == 2
 
@@ -206,7 +213,6 @@ def test_t7_unset_identity_fails_closed(rls_env):
 
     async def q():
         async with session_scope() as s:
-            # Authenticated role but no identity -> GUCs unset.
             await s.execute(text("SET LOCAL ROLE authenticated"))
             total = (await s.execute(
                 text("SELECT count(*) FROM public.import_batches")
@@ -228,14 +234,7 @@ def test_t7_unset_identity_fails_closed(rls_env):
 
 def test_t8_read_all_policy_still_returns_rows(rls_env, monkeypatch):
     env = rls_env
-
-    async def owner_count():
-        async with session_scope() as s:
-            return (await s.execute(
-                text(f"SELECT count(*) FROM public.{READ_ALL}")
-            )).scalar_one()
-
-    expected = asyncio.run(owner_count())
+    expected = _owner_count(READ_ALL)
     assert expected >= 1
 
     async def q(s):
@@ -271,14 +270,221 @@ def test_t9_recreator_keeps_policies_guc_based(rls_env):
 
 
 # ---------------------------------------------------------------------------
-# T10 — regulator oversight predicate
+# Governance fixture for T10–T16
 # ---------------------------------------------------------------------------
 
-def test_t10_regulator_oversight_predicate():
-    pytest.skip(
-        "The regulator-oversight branch cannot be exercised yet: "
-        "oversight_relationships has RLS enabled and NO policy, so the EXISTS "
-        "subquery returns no rows for the authenticated role. The predicate is "
-        "written into the Outcome-visible policies but is inert until 2C.4 "
-        "writes the oversight_relationships / memberships policies."
-    )
+@pytest.fixture
+def gov_env():
+    slugs = {k: unique_slug(f"rls-{k}") for k in ("op", "reg", "oth", "xa", "xb")}
+    ids = {}
+    for k, s in slugs.items():
+        ids[k] = create_tenant(s)
+    _owner_sql("UPDATE public.tenants SET kind='regulator' WHERE id=:id", {"id": ids["reg"]})
+
+    oversight_id = uuid.uuid4()
+    a_id, b_id = uuid.uuid4(), uuid.uuid4()
+    finding_id, sms_id, batch_id, ha_id = (uuid.uuid4() for _ in range(4))
+    rca_id = uuid.uuid4()
+    aud_id = f"AUD-{uuid.uuid4().hex[:10]}"
+    member_user_id = uuid.UUID(create_user(ids["op"], unique_slug("u-member")))
+
+    async def _setup():
+        async with session_scope() as s:
+            await s.execute(text(
+                "INSERT INTO public.oversight_relationships "
+                "(id, regulator_tenant_id, operator_tenant_id, effective_from) "
+                "VALUES (:i, :r, :o, now())"),
+                {"i": oversight_id, "r": ids["reg"], "o": ids["op"]})
+            await s.execute(text(
+                "INSERT INTO public.sms_maturity (id, tenant_id) VALUES (:i, :t)"),
+                {"i": sms_id, "t": ids["op"]})
+            await s.execute(text(
+                "INSERT INTO public.import_batches (id, tenant_id) VALUES (:i, :t)"),
+                {"i": batch_id, "t": ids["op"]})
+            await s.execute(text(
+                "INSERT INTO public.hazard_rca_entries "
+                "(id, tenant_id, resource_id, title, description, source_type, functional_area, status) "
+                "VALUES (:i, :t, 'res-1', 't', 'd', 'voluntary', 'flight_operations', 'Open')"),
+                {"i": rca_id, "t": ids["op"]})
+            await s.execute(text(
+                "INSERT INTO public.hazard_assessments (id, tenant_id, entry_id, resource_id) "
+                "VALUES (:i, :t, :e, 'res-1')"),
+                {"i": ha_id, "t": ids["op"], "e": rca_id})
+            await s.execute(text(
+                "INSERT INTO public.feedback (id, tenant_id, user_email) VALUES (:i, :t, 'a@x.com')"),
+                {"i": uuid.uuid4(), "t": ids["op"]})
+            await s.execute(text(
+                "INSERT INTO public.audit_dispatches (audit_id, tenant_id) VALUES (:a, :t)"),
+                {"a": aud_id, "t": slugs["op"]})
+            await s.execute(text(
+                "INSERT INTO public.memberships (user_id, role, effective_from) "
+                "VALUES (:u, 'TENANT_ADMIN', now())"), {"u": member_user_id})
+            await s.execute(text(
+                "INSERT INTO public.psoe_assessments (id, tenant_id, title, template_version) "
+                "VALUES (:i, :t, 't', 'v1')"), {"i": a_id, "t": ids["xa"]})
+            await s.execute(text(
+                "INSERT INTO public.psoe_assessments (id, tenant_id, title, template_version) "
+                "VALUES (:i, :t, 't', 'v1')"), {"i": b_id, "t": ids["xb"]})
+            await s.execute(text(
+                "INSERT INTO public.psoe_findings (id, assessment_id, description) "
+                "VALUES (:i, :a, 'd')"), {"i": finding_id, "a": a_id})
+
+    asyncio.run(_setup())
+
+    try:
+        yield {"slugs": slugs, "ids": ids, "oversight_id": oversight_id,
+               "a_id": a_id, "b_id": b_id, "finding_id": finding_id,
+               "aud_id": aud_id, "member_user_id": member_user_id}
+    finally:
+        async def _teardown():
+            async with session_scope() as s:
+                await s.execute(text(
+                    "DELETE FROM public.psoe_findings WHERE assessment_id = ANY(:a)"),
+                    {"a": [a_id, b_id]})
+                await s.execute(text(
+                    "DELETE FROM public.psoe_assessments WHERE id = ANY(:a)"),
+                    {"a": [a_id, b_id]})
+                await s.execute(text(
+                    "DELETE FROM public.oversight_relationships WHERE id=:i"),
+                    {"i": oversight_id})
+                await s.execute(text(
+                    "DELETE FROM public.memberships WHERE user_id=:u"),
+                    {"u": member_user_id})
+                await s.execute(text(
+                    "DELETE FROM public.audit_dispatches WHERE audit_id=:a"),
+                    {"a": aud_id})
+        try:
+            asyncio.run(_teardown())
+        except Exception:
+            pass
+        for s in slugs.values():
+            cleanup(s, ["hazard_assessments", "hazard_rca_entries",
+                        "sms_maturity", "import_batches", "feedback"])
+
+
+# ---------------------------------------------------------------------------
+# T10 — regulator oversight predicate (Outcome-visible tables only)
+# ---------------------------------------------------------------------------
+
+def test_t10_regulator_oversight_sees_outcomes_not_operator_only(gov_env, monkeypatch):
+    env = gov_env
+    op_id = env["ids"]["op"]
+
+    def count(table):
+        async def q(s):
+            return (await s.execute(
+                text(f"SELECT count(*) FROM public.{table} WHERE tenant_id = :t"),
+                {"t": op_id},
+            )).scalar_one()
+        return q
+
+    # Outcome-visible (has the regulator branch): sms_maturity -> visible.
+    assert _run_as(monkeypatch, env["slugs"]["reg"], "STATE_SMD", count("sms_maturity")) == 1
+    # Operator-only (no branch): import_batches -> hidden even via oversight.
+    assert _run_as(monkeypatch, env["slugs"]["reg"], "STATE_SMD", count("import_batches")) == 0
+
+
+# ---------------------------------------------------------------------------
+# T11 — memberships is SUPER_ADMIN-only
+# ---------------------------------------------------------------------------
+
+def test_t11_memberships_super_admin_only(gov_env, monkeypatch):
+    env = gov_env
+
+    async def q(s):
+        return (await s.execute(text("SELECT count(*) FROM public.memberships"))).scalar_one()
+
+    tenant_view = _run_as(monkeypatch, env["slugs"]["op"], "TENANT_ADMIN", q)
+    assert tenant_view == 0, "a tenant user must not read memberships"
+
+    owner_total = _owner_count("memberships")
+    super_view = _run_as(monkeypatch, None, "SUPER_ADMIN", q, uid="u-admin")
+    assert super_view == owner_total >= 1
+
+
+# ---------------------------------------------------------------------------
+# T12 — oversight_relationships is shared
+# ---------------------------------------------------------------------------
+
+def test_t12_oversight_relationships_shared(gov_env, monkeypatch):
+    env = gov_env
+    oid = env["oversight_id"]
+
+    async def q(s):
+        return (await s.execute(
+            text("SELECT count(*) FROM public.oversight_relationships WHERE id=:i"),
+            {"i": oid},
+        )).scalar_one()
+
+    assert _run_as(monkeypatch, env["slugs"]["reg"], "STATE_SMD", q) == 1
+    assert _run_as(monkeypatch, env["slugs"]["op"], "TENANT_ADMIN", q) == 1
+    assert _run_as(monkeypatch, None, "SUPER_ADMIN", q, uid="u-admin") == 1
+    # A tenant in neither side cannot see the row.
+    assert _run_as(monkeypatch, env["slugs"]["oth"], "TENANT_ADMIN", q) == 0
+
+
+# ---------------------------------------------------------------------------
+# T13 / T15 — operator-only tables (audit_dispatches text slug, feedback uuid)
+# ---------------------------------------------------------------------------
+
+def test_t13_audit_dispatches_operator_only(gov_env, monkeypatch):
+    env = gov_env
+
+    async def q(s):
+        return (await s.execute(
+            text("SELECT count(*) FROM public.audit_dispatches WHERE audit_id=:a"),
+            {"a": env["aud_id"]},
+        )).scalar_one()
+
+    assert _run_as(monkeypatch, env["slugs"]["op"], "TENANT_ADMIN", q) == 1
+    assert _run_as(monkeypatch, env["slugs"]["reg"], "STATE_SMD", q) == 0
+
+
+def test_t15_feedback_operator_only(gov_env, monkeypatch):
+    env = gov_env
+    op_id = env["ids"]["op"]
+
+    async def q(s):
+        return (await s.execute(
+            text("SELECT count(*) FROM public.feedback WHERE tenant_id=:t"),
+            {"t": op_id},
+        )).scalar_one()
+
+    assert _run_as(monkeypatch, env["slugs"]["op"], "TENANT_ADMIN", q) == 1
+    assert _run_as(monkeypatch, env["slugs"]["reg"], "STATE_SMD", q) == 0
+
+
+# ---------------------------------------------------------------------------
+# T14 — hazard_assessments is operator-only (inverted from the original spec)
+# ---------------------------------------------------------------------------
+
+def test_t14_hazard_assessments_operator_only(gov_env, monkeypatch):
+    env = gov_env
+    op_id = env["ids"]["op"]
+
+    async def q(s):
+        return (await s.execute(
+            text("SELECT count(*) FROM public.hazard_assessments WHERE tenant_id=:t"),
+            {"t": op_id},
+        )).scalar_one()
+
+    assert _run_as(monkeypatch, env["slugs"]["op"], "TENANT_ADMIN", q) == 1
+    assert _run_as(monkeypatch, env["slugs"]["reg"], "STATE_SMD", q) == 0
+
+
+# ---------------------------------------------------------------------------
+# T16 — psoe_findings scoped via psoe_assessments
+# ---------------------------------------------------------------------------
+
+def test_t16_psoe_findings_scoped_via_assessment(gov_env, monkeypatch):
+    env = gov_env
+
+    async def q(s):
+        return (await s.execute(
+            text("SELECT count(*) FROM public.psoe_findings WHERE id=:i"),
+            {"i": env["finding_id"]},
+        )).scalar_one()
+
+    # The assessment owner's tenant sees the finding; another tenant does not.
+    assert _run_as(monkeypatch, env["slugs"]["xa"], "TENANT_ADMIN", q) == 1
+    assert _run_as(monkeypatch, env["slugs"]["xb"], "TENANT_ADMIN", q) == 0
