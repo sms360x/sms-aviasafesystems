@@ -385,14 +385,16 @@ _MODULE_B_RLS_TABLES = [
 
 def _module_b_rls_ddl(table: str) -> list:
     policy = f"p_{table}_tenant_isolation"
+    tenant_pred = (
+        "current_setting('app.current_role', true) = 'SUPER_ADMIN' "
+        "OR tenant_id = NULLIF(current_setting('app.current_tenant', true), '')::uuid"
+    )
     return [
         f"ALTER TABLE {table} ENABLE ROW LEVEL SECURITY;",
         f"DROP POLICY IF EXISTS {policy} ON public.{table};",
-        f"CREATE POLICY {policy} ON public.{table} TO authenticated "
-        "USING (tenant_id = ((auth.jwt() -> 'app_metadata'::text) "
-        "->> 'tenant_id'::text)::uuid) "
-        "WITH CHECK (tenant_id = ((auth.jwt() -> 'app_metadata'::text) "
-        "->> 'tenant_id'::text)::uuid);",
+        f"CREATE POLICY {policy} ON public.{table} "
+        f"AS PERMISSIVE FOR ALL TO authenticated "
+        f"USING ({tenant_pred}) WITH CHECK ({tenant_pred});",
         f"GRANT ALL ON TABLE public.{table} TO anon, authenticated, service_role;",
     ]
 
@@ -692,8 +694,8 @@ _MODULE_B_DDL += [
 # ----------------------------------------------------------------------------
 
 _MODULE_C_ROLE_CLAUSE = (
-    "((auth.jwt() -> 'app_metadata'::text) ->> 'role'::text) "
-    "IN ('CAAN_SMD', 'SUPER_ADMIN')"
+    "current_setting('app.current_role', true) "
+    "= ANY (ARRAY['STATE_SMD','SUPER_ADMIN'])"
 )
 
 _MODULE_C_DDL = [
@@ -725,17 +727,17 @@ _MODULE_C_DDL = [
     "ON public.module_c_aggregates;",
     "CREATE POLICY p_module_c_aggregates_tenant_isolation "
     "ON public.module_c_aggregates FOR ALL TO authenticated "
-    "USING (tenant_id = ((auth.jwt() -> 'app_metadata'::text) "
-    "->> 'tenant_id'::text)::uuid) "
-    "WITH CHECK (tenant_id = ((auth.jwt() -> 'app_metadata'::text) "
-    "->> 'tenant_id'::text)::uuid);",
+    "USING (current_setting('app.current_role', true) = 'SUPER_ADMIN' "
+    "OR tenant_id = NULLIF(current_setting('app.current_tenant', true), '')::uuid) "
+    "WITH CHECK (current_setting('app.current_role', true) = 'SUPER_ADMIN' "
+    "OR tenant_id = NULLIF(current_setting('app.current_tenant', true), '')::uuid);",
     # P1-27: national NULL-tenant rows visible only to CAAN_SMD.
     "DROP POLICY IF EXISTS p_module_c_aggregates_national "
     "ON public.module_c_aggregates;",
     "CREATE POLICY p_module_c_aggregates_national "
-    "ON public.module_c_aggregates FOR SELECT TO authenticated "
-    "USING (tenant_id IS NULL AND ((auth.jwt() -> 'app_metadata'::text) "
-    "->> 'role'::text) = 'CAAN_SMD');",
+    "ON public.module_c_aggregates FOR ALL TO authenticated "
+    "USING (tenant_id IS NULL AND current_setting('app.current_role', true) = 'STATE_SMD') "
+    "WITH CHECK (tenant_id IS NULL AND current_setting('app.current_role', true) = 'STATE_SMD');",
     # P1-28: cross-tenant access for CAAN / SUPER_ADMIN.
     "DROP POLICY IF EXISTS p_module_c_aggregates_cross_tenant "
     "ON public.module_c_aggregates;",
@@ -884,10 +886,10 @@ _MODULE_C_DDL = [
     "DROP POLICY IF EXISTS p_caan_reports_tenant_isolation ON public.caan_reports;",
     "CREATE POLICY p_caan_reports_tenant_isolation ON public.caan_reports "
     "FOR ALL TO authenticated "
-    "USING (tenant_id = ((auth.jwt() -> 'app_metadata'::text) "
-    "->> 'tenant_id'::text)) "
-    "WITH CHECK (tenant_id = ((auth.jwt() -> 'app_metadata'::text) "
-    "->> 'tenant_id'::text));",
+    "USING (current_setting('app.current_role', true) = 'SUPER_ADMIN' "
+    "OR tenant_id = NULLIF(current_setting('app.current_tenant_slug', true), '')) "
+    "WITH CHECK (current_setting('app.current_role', true) = 'SUPER_ADMIN' "
+    "OR tenant_id = NULLIF(current_setting('app.current_tenant_slug', true), ''));",
     "DROP POLICY IF EXISTS p_caan_reports_cross_tenant ON public.caan_reports;",
     "CREATE POLICY p_caan_reports_cross_tenant ON public.caan_reports "
     "FOR ALL TO authenticated "
