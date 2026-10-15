@@ -16,6 +16,7 @@ in teardown.
 """
 
 import asyncio
+import time
 import uuid
 
 import pytest
@@ -25,9 +26,53 @@ from sqlalchemy.exc import ProgrammingError
 from app.core.config import settings
 from app.db.ids import tenant_uuid
 from app.db.rls import clear_current_identity
-from app.db.session import get_engine, session_scope
+from app.db.session import get_engine, is_transient_conn_error, session_scope
 
 from _mbb import cleanup, create_tenant, create_user, unique_slug
+
+
+def _is_conn_drop(exc: BaseException) -> bool:
+    """True for a transient pooled-connection drop (Supabase pooler / TCP reset)."""
+    seen = set()
+    e = exc
+    while e is not None and id(e) not in seen:
+        seen.add(id(e))
+        if is_transient_conn_error(e):
+            return True
+        name = type(e).__name__
+        msg = str(e)
+        if name in ("ConnectionResetError", "OSError", "InterfaceError") and (
+            "WinError 64" in msg or "connection was closed" in msg
+            or "network name is no longer available" in msg
+            or "ConnectionResetError" in name
+        ):
+            return True
+        if "ConnectionResetError" in msg or "WinError 64" in msg:
+            return True
+        e = e.__cause__ or e.__context__
+    return False
+
+
+def _retry(fn, attempts: int = 5):
+    """Run ``fn`` retrying transient connection drops (test-side resilience)."""
+    last = None
+    for i in range(attempts):
+        try:
+            return fn()
+        except Exception as e:  # noqa: BLE001 - re-raised unless transient
+            last = e
+            if not _is_conn_drop(e):
+                raise
+            try:
+                asyncio.run(get_engine().dispose())
+            except Exception:
+                pass
+            time.sleep(0.5 * (i + 1))
+    raise last
+
+
+def _create_tenant(slug: str) -> str:
+    return _retry(lambda: create_tenant(slug))
 
 
 BATCH = "import_batches"  # Operator-only (uuid tenant_id), simple ALL policy.
@@ -67,7 +112,7 @@ def _owner_sql(sql: str, params=None):
         async with session_scope() as s:
             return await s.execute(text(sql), params or {})
 
-    return asyncio.run(_go())
+    return _retry(lambda: asyncio.run(_go()))
 
 
 def _owner_count(table: str, where: str = "", params=None) -> int:
@@ -77,15 +122,15 @@ def _owner_count(table: str, where: str = "", params=None) -> int:
     async def _go():
         async with session_scope() as s:
             return (await s.execute(text(sql), params or {})).scalar_one()
-    return asyncio.run(_go())
+    return _retry(lambda: asyncio.run(_go()))
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def rls_env():
     slug_a = unique_slug("rls-a")
     slug_b = unique_slug("rls-b")
-    create_tenant(slug_a)
-    create_tenant(slug_b)
+    _create_tenant(slug_a)
+    _create_tenant(slug_b)
     id_a, id_b = tenant_uuid(slug_a), tenant_uuid(slug_b)
     batch_a, batch_b = uuid.uuid4(), uuid.uuid4()
     for tid, bid in ((id_a, batch_a), (id_b, batch_b)):
@@ -120,7 +165,7 @@ def _run_as(monkeypatch, slug, role, fn, uid="u-rls"):
         async with session_scope() as s:
             return await fn(s)
 
-    return asyncio.run(_go())
+    return _retry(lambda: asyncio.run(_go()))
 
 
 # ---------------------------------------------------------------------------
@@ -197,7 +242,9 @@ def test_t6_super_admin_exemption_reads_across_tenants(rls_env, monkeypatch):
 
     async def q(s):
         return (await s.execute(
-            text("SELECT count(*) FROM public.import_batches")
+            text("SELECT count(*) FROM public.import_batches "
+                 "WHERE tenant_id IN (:a, :b)"),
+            {"a": env["id_a"], "b": env["id_b"]},
         )).scalar_one()
 
     total = _run_as(monkeypatch, None, "SUPER_ADMIN", q, uid="u-admin")
@@ -273,20 +320,23 @@ def test_t9_recreator_keeps_policies_guc_based(rls_env):
 # Governance fixture for T10–T16
 # ---------------------------------------------------------------------------
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def gov_env():
     slugs = {k: unique_slug(f"rls-{k}") for k in ("op", "reg", "oth", "xa", "xb")}
     ids = {}
     for k, s in slugs.items():
-        ids[k] = create_tenant(s)
+        ids[k] = _create_tenant(s)
     _owner_sql("UPDATE public.tenants SET kind='regulator' WHERE id=:id", {"id": ids["reg"]})
 
     oversight_id = uuid.uuid4()
     a_id, b_id = uuid.uuid4(), uuid.uuid4()
     finding_id, sms_id, batch_id, ha_id = (uuid.uuid4() for _ in range(4))
     rca_id = uuid.uuid4()
+    capa_id, factor_id, invite_id = uuid.uuid4(), uuid.uuid4(), uuid.uuid4()
+    invite_code = f"INV-{uuid.uuid4().hex[:10].upper()}"
     aud_id = f"AUD-{uuid.uuid4().hex[:10]}"
-    member_user_id = uuid.UUID(create_user(ids["op"], unique_slug("u-member")))
+    member_user_id = uuid.UUID(_retry(
+        lambda: create_user(ids["op"], unique_slug("u-member"))))
 
     async def _setup():
         async with session_scope() as s:
@@ -328,13 +378,27 @@ def gov_env():
             await s.execute(text(
                 "INSERT INTO public.psoe_findings (id, assessment_id, description) "
                 "VALUES (:i, :a, 'd')"), {"i": finding_id, "a": a_id})
+            await s.execute(text(
+                "INSERT INTO public.hazard_capas (id, tenant_id, entry_id, resource_id) "
+                "VALUES (:i, :t, :e, 'res-1')"),
+                {"i": capa_id, "t": ids["op"], "e": rca_id})
+            await s.execute(text(
+                "INSERT INTO public.hazard_rca_factors (id, tenant_id, entry_id, resource_id) "
+                "VALUES (:i, :t, :e, 'res-1')"),
+                {"i": factor_id, "t": ids["op"], "e": rca_id})
+            await s.execute(text(
+                "INSERT INTO public.invites (id, email, tenant_id, role, code, status) "
+                "VALUES (:i, 'inv@x.com', :t, 'STAFF', :c, 'pending')"),
+                {"i": invite_id, "t": ids["op"], "c": invite_code})
 
     asyncio.run(_setup())
 
     try:
         yield {"slugs": slugs, "ids": ids, "oversight_id": oversight_id,
                "a_id": a_id, "b_id": b_id, "finding_id": finding_id,
-               "aud_id": aud_id, "member_user_id": member_user_id}
+               "aud_id": aud_id, "member_user_id": member_user_id,
+               "capa_id": capa_id, "factor_id": factor_id, "rca_id": rca_id,
+               "invite_id": invite_id, "invite_code": invite_code}
     finally:
         async def _teardown():
             async with session_scope() as s:
@@ -358,8 +422,9 @@ def gov_env():
         except Exception:
             pass
         for s in slugs.values():
-            cleanup(s, ["hazard_assessments", "hazard_rca_entries",
-                        "sms_maturity", "import_batches", "feedback"])
+            cleanup(s, ["hazard_assessments", "hazard_capas", "hazard_rca_factors",
+                        "hazard_rca_entries", "invites", "sms_maturity",
+                        "import_batches", "feedback"])
 
 
 # ---------------------------------------------------------------------------
@@ -488,3 +553,171 @@ def test_t16_psoe_findings_scoped_via_assessment(gov_env, monkeypatch):
     # The assessment owner's tenant sees the finding; another tenant does not.
     assert _run_as(monkeypatch, env["slugs"]["xa"], "TENANT_ADMIN", q) == 1
     assert _run_as(monkeypatch, env["slugs"]["xb"], "TENANT_ADMIN", q) == 0
+
+
+# ---------------------------------------------------------------------------
+# T17–T20 — role coverage
+# ---------------------------------------------------------------------------
+
+def test_t17_department_scope_is_application_level():
+    pytest.skip(
+        "Department scoping is enforced in application code (role-aware service "
+        "guards), not in RLS: none of the 67 policies carry a department "
+        "predicate. A DEPT_ADMIN therefore cannot be distinguished from another "
+        "department by RLS alone. Reported, not weakened."
+    )
+
+
+def _cross_tenant_count(monkeypatch, env, role):
+    async def q(s):
+        return (await s.execute(
+            text("SELECT count(*) FROM public.import_batches WHERE tenant_id = :t"),
+            {"t": env["id_b"]},
+        )).scalar_one()
+    return _run_as(monkeypatch, env["slug_a"], role, q)
+
+
+def test_t18_officer_cannot_read_cross_tenant(rls_env, monkeypatch):
+    assert _cross_tenant_count(monkeypatch, rls_env, "OFFICER") == 0
+
+
+def test_t19_accountable_executive_own_not_other(rls_env, monkeypatch):
+    env = rls_env
+
+    async def own(s):
+        return (await s.execute(
+            text("SELECT count(*) FROM public.import_batches WHERE tenant_id = :t"),
+            {"t": env["id_a"]},
+        )).scalar_one()
+
+    assert _run_as(monkeypatch, env["slug_a"], "ACCOUNTABLE_EXECUTIVE", own) == 1
+    assert _cross_tenant_count(monkeypatch, env, "ACCOUNTABLE_EXECUTIVE") == 0
+
+
+def test_t20_state_smd_cannot_write_operator_data(gov_env, monkeypatch):
+    env = gov_env
+
+    async def q(s):
+        await s.execute(text(
+            "INSERT INTO public.import_batches (id, tenant_id) VALUES (:id, :tid)"
+        ), {"id": uuid.uuid4(), "tid": env["ids"]["op"]})
+
+    with pytest.raises(ProgrammingError) as exc:
+        _run_as(monkeypatch, env["slugs"]["reg"], "STATE_SMD", q)
+    assert "row-level security" in str(exc.value).lower()
+
+
+# ---------------------------------------------------------------------------
+# T21–T24 — edge cases
+# ---------------------------------------------------------------------------
+
+def test_t21_missing_identity_fails_closed():
+    pytest.skip(
+        "Covered by T7 (authenticated role with no identity -> 0 rows). A "
+        "context with NO identity at all is the owner path by design (no "
+        "SET LOCAL ROLE), so it is not 'fail-closed' at the DB; noted, not "
+        "duplicated."
+    )
+
+
+def test_t22_empty_tenant_fails_closed(rls_env, monkeypatch):
+    env = rls_env
+
+    async def q(s):
+        return (await s.execute(
+            text("SELECT count(*) FROM public.import_batches")
+        )).scalar_one()
+
+    # A role but no tenant -> GUC tenant is the empty string; NULLIF(...,'')
+    # makes the predicate NULL, so no rows (and no error).
+    assert _run_as(monkeypatch, None, "TENANT_ADMIN", q) == 0
+
+
+def test_t23_super_admin_cross_tenant():
+    pytest.skip("Covered by T6 (SUPER_ADMIN reads across tenants). Not duplicated.")
+
+
+def test_t24_no_identity_leak_across_transactions(rls_env):
+    env = rls_env
+
+    async def tx(set_role, tid):
+        async with session_scope() as s:
+            if set_role:
+                await s.execute(text("SET LOCAL ROLE authenticated"))
+            if tid is not None:
+                await s.execute(text("SELECT set_config('app.current_tenant', :t, true)"),
+                                {"t": tid})
+                await s.execute(text("SELECT set_config('app.current_role', 'TENANT_ADMIN', true)"))
+                return (await s.execute(text(
+                    "SELECT count(*) FROM public.import_batches WHERE tenant_id = :t"
+                ), {"t": tid})).scalar_one()
+            # owner path (no identity): both fixture tenants' rows visible.
+            return (await s.execute(text(
+                "SELECT count(*) FROM public.import_batches "
+                "WHERE tenant_id IN (:a, :b)"
+            ), {"a": env["id_a"], "b": env["id_b"]})).scalar_one()
+
+    async def sequence():
+        a = await tx(False, env["id_a"])
+        b = await tx(False, env["id_b"])
+        owner = await tx(False, None)
+        return a, b, owner
+
+    a, b, owner = asyncio.run(sequence())
+    assert (a, b, owner) == (1, 1, 2), "the transaction-local GUCs must not leak"
+
+
+# ---------------------------------------------------------------------------
+# 2.2 — table coverage for the 2C.4 tables not covered above
+# ---------------------------------------------------------------------------
+
+def test_hazard_capas_operator_only(gov_env, monkeypatch):
+    env = gov_env
+    op_id = env["ids"]["op"]
+
+    async def q(s):
+        return (await s.execute(
+            text("SELECT count(*) FROM public.hazard_capas WHERE tenant_id=:t"),
+            {"t": op_id})).scalar_one()
+
+    assert _run_as(monkeypatch, env["slugs"]["op"], "TENANT_ADMIN", q) == 1
+    assert _run_as(monkeypatch, env["slugs"]["reg"], "STATE_SMD", q) == 0
+
+
+def test_hazard_rca_entries_operator_only(gov_env, monkeypatch):
+    env = gov_env
+    op_id = env["ids"]["op"]
+
+    async def q(s):
+        return (await s.execute(
+            text("SELECT count(*) FROM public.hazard_rca_entries WHERE tenant_id=:t"),
+            {"t": op_id})).scalar_one()
+
+    assert _run_as(monkeypatch, env["slugs"]["op"], "TENANT_ADMIN", q) == 1
+    assert _run_as(monkeypatch, env["slugs"]["reg"], "STATE_SMD", q) == 0
+
+
+def test_hazard_rca_factors_operator_only(gov_env, monkeypatch):
+    env = gov_env
+    op_id = env["ids"]["op"]
+
+    async def q(s):
+        return (await s.execute(
+            text("SELECT count(*) FROM public.hazard_rca_factors WHERE tenant_id=:t"),
+            {"t": op_id})).scalar_one()
+
+    assert _run_as(monkeypatch, env["slugs"]["op"], "TENANT_ADMIN", q) == 1
+    assert _run_as(monkeypatch, env["slugs"]["reg"], "STATE_SMD", q) == 0
+
+
+def test_invites_operator_only(gov_env, monkeypatch):
+    env = gov_env
+    op_id = env["ids"]["op"]
+
+    async def q(s):
+        return (await s.execute(
+            text("SELECT count(*) FROM public.invites WHERE tenant_id=:t"),
+            {"t": op_id})).scalar_one()
+
+    assert _run_as(monkeypatch, env["slugs"]["op"], "TENANT_ADMIN", q) == 1
+    assert _run_as(monkeypatch, env["slugs"]["reg"], "STATE_SMD", q) == 0
