@@ -12,6 +12,7 @@
 import uuid as _uuid
 from typing import Any, Dict, List, Optional
 from datetime import datetime, timezone
+import html as _html
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status, Request, Response
 from loguru import logger
@@ -520,23 +521,28 @@ def _render_report_template(assessment: PSOEAssessment, template: Any) -> str:
                 cls = "badge-poor"
             comp_rows.append(
                 f"<tr>"
-                f"  <td>{comp_name}</td>"
-                f"  <td><span class='score-badge {cls}'>{'%.1f'|format(score_pct)}%</span></td>"
+                f"  <td>{_html.escape(str(comp_name))}</td>"
+                f"  <td><span class='score-badge {cls}'>{score_pct:.1f}%</span></td>"
                 f"  <td>{score_pts}/{max_score}</td>"
                 f"  <td>{weight}%</td>"
                 f"  <td>{level}</td>"
                 f"</tr>"
             )
-    else:
+    if not comp_rows:
+        # 3C.1B: `for...else` would discard computed rows (else runs when the
+        # loop completes without break) — only fall back when truly empty.
         comp_rows = [
             "<tr><td colspan='5' style='text-align:center;padding:2rem;color:#64748b;'>No component scores available</td></tr>"
         ]
 
     html = template_str.replace("{{ component_rows|safe }}", "\n".join(comp_rows))
-    html = html.replace("{{ overall_level_val }}", overall_level_val)
-    html = html.replace("{{ assessment.assessment_date or '—' }}", assessment.assessment_date or "—")
-    html = html.replace("{{ assessment.auditor_name or '—' }}", assessment.auditor_name or "—")
-    html = html.replace("{{ assessment.tenant_name or assessment.tenant_id or '—' }}", assessment.tenant_id or "—")
+    # 3C.1B (F-P1-2): assessment fields are operator-supplied — escape before
+    # injecting into the served HTML preview (the Jinja env above is not used
+    # on this path, so no autoescaping applies).
+    html = html.replace("{{ overall_level_val }}", _html.escape(str(overall_level_val)))
+    html = html.replace("{{ assessment.assessment_date or '—' }}", _html.escape(str(assessment.assessment_date or "—")))
+    html = html.replace("{{ assessment.auditor_name or '—' }}", _html.escape(str(assessment.auditor_name or "—")))
+    html = html.replace("{{ assessment.tenant_name or assessment.tenant_id or '—' }}", _html.escape(str(assessment.tenant_id or "—")))
     html = html.replace("{{ today() }}", str(date.today()))
 
     return html

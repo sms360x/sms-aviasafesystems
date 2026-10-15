@@ -36,6 +36,18 @@ function escapeHtml(value) {
         .replace(/'/g, '&#39;');
 }
 
+// 3C.1B (F-P2-2): a synthesized fallback series must be labeled estimated,
+// never presented as measured history.
+function markEstimatedTrend(canvas) {
+    if (!canvas || !canvas.parentNode) return;
+    if (canvas.parentNode.querySelector('.trend-note')) return;
+    const p = canvas.ownerDocument.createElement('p');
+    p.className = 'trend-note';
+    p.textContent = 'Estimated trend — no historical measurements available.';
+    p.style.cssText = 'font-size:0.72rem;color:#64748b;margin-top:0.4rem;';
+    canvas.parentNode.appendChild(p);
+}
+
 function classifySpi(status) {
     if (status === 'nominal') return { cls: 'spi-status-nominal', label: '✅ Nominal' };
     if (status === 'watch') return { cls: 'spi-status-watch', label: '⚠️ Watch' };
@@ -195,6 +207,7 @@ function renderTrendChart(trend, values) {
     let labels = null;
     const datasets = [];
     let colors = {};
+    let trendEstimated = false;
 
     if (trend && trend.length) {
         labels = trend[0].months;
@@ -211,6 +224,8 @@ function renderTrendChart(trend, values) {
         });
     } else {
         // Fallback: deterministic 6-month series built around the current values.
+        // 3C.1B: explicitly marked estimated at render (see markEstimatedTrend).
+        trendEstimated = true;
         const months = ['Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep'];
         labels = months;
         Object.keys(SPI_META).forEach((key, i) => {
@@ -244,6 +259,7 @@ function renderTrendChart(trend, values) {
             scales: { y: { beginAtZero: true, ticks: { precision: 0 } } },
         },
     });
+    if (trendEstimated) markEstimatedTrend(ctx);
 }
 
 function renderComparisonChart(values, stateValues) {

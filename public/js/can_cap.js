@@ -1,3 +1,12 @@
+// 3C.1B (F-P1-1): escape untrusted record strings before innerHTML.
+// Matches the escText() helper already used in public/js/dashboard.js.
+function escHtml(v) {
+    return String(v == null ? '' : v)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
 const CanCapAPI = {
     // CAN
     listCans: (params = {}) => {
@@ -127,11 +136,11 @@ async function fetchCans(days) {
                 window.location.href = `/can_cap/can_detail.html?id=${c.id}`;
             });
             tr.innerHTML = `
-                <td><strong>${c.can_reference || '-'}</strong></td>
-                <td>${c.title || '-'}</td>
-                <td><span class="badge ${canPriorityBadgeClass(c.priority)}">${c.priority || '-'}</span></td>
-                <td><span class="badge ${canStatusBadgeClass(c.status)}">${c.status || '-'}</span></td>
-                <td>${c.assigned_to || '-'}</td>
+                <td><strong>${escHtml(c.can_reference) || '-'}</strong></td>
+                <td>${escHtml(c.title) || '-'}</td>
+                <td><span class="badge ${canPriorityBadgeClass(c.priority)}">${escHtml(c.priority) || '-'}</span></td>
+                <td><span class="badge ${canStatusBadgeClass(c.status)}">${escHtml(c.status) || '-'}</span></td>
+                <td>${escHtml(c.assigned_to) || '-'}</td>
                 <td>${formatCanDate(c.target_completion_date)}</td>
                 <td>${formatCanDate(c.issued_at)}</td>
             `;
@@ -141,7 +150,7 @@ async function fetchCans(days) {
     } catch (err) {
         if (stateEl) stateEl.style.display = 'none';
         console.error('fetchCans failed:', err);
-        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:#dc3545;padding:2rem;"><i class="fas fa-exclamation-circle"></i> Error loading CANs: ${err.message}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:#dc3545;padding:2rem;"><i class="fas fa-exclamation-circle"></i> Error loading CANs: ${escHtml(err.message)}</td></tr>`;
         return [];
     }
 }

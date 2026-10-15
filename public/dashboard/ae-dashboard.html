@@ -22,7 +22,7 @@
         .banner .label { font-size:0.65rem; text-transform:uppercase; letter-spacing:0.5px; color:#8fa8bd; font-weight:700; }
         .banner .value { font-size:0.95rem; font-weight:800; margin-top:0.3rem; }
         .chip { display:inline-block; padding:0.25rem 0.7rem; border-radius:999px; font-size:0.75rem; font-weight:700; }
-        .chip-blue { background:#172e52; color:#93c5fd; } .chip-green { background:#14532d; color:#4ade80; } .chip-amber { background:#78350f; color:#fbbf24; } .chip-red { background:#7f1d1d; color:#fca5a5; }
+        .chip-blue { background:#172e52; color:#93c5fd; } .chip-green { background:#14532d; color:#4ade80; } .chip-amber { background:#78350f; color:#fbbf24; } .chip-red { background:#7f1d1d; color:#fca5a5; } .chip-grey { background:#475569; color:#e2e8f0; } /* 3C.1B: unknown/unavailable state */
         .page { max-width:1100px; margin:0 auto; padding:1.5rem; }
         .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(320px,1fr)); gap:1.25rem; }
         .card { background:#fff; border-radius:14px; padding:1.4rem; box-shadow:0 1px 6px rgba(0,0,0,0.06); border:1px solid #f1f5f9; }
@@ -216,6 +216,10 @@ window.SHELL_CONFIG = {
 // Minimalist AE — reuses ae-dashboard.html logic but hides non-executive panels
 let myEmail=null, myDomain=null, charts={}, gPsoeList=[], gCans=[], gCaps=[], gHazards=[], gReports=[], gOverlays={}, currentDecisionCapId=null;
 const AE_LEDGER_N=3; let aeLedgerSelected=new Set(); let aeLedgerExpanded=false; let aeLedgerDetails={};
+// 3C.1B (F-P2-2): track per-source load failures so a total outage renders
+// "Data unavailable" instead of a false all-clear. No failed request may
+// present as zero safety events.
+let gLoadErrors=[];
 function isDemoSession(){ return !!(window.DEMO_CONTEXT && window.DEMO_CONTEXT.archetypeId); }
 firebase.auth().onAuthStateChanged(async function(user){
     if(!user){ window.location.href='/login.html'; return; }
@@ -246,11 +250,12 @@ function psoeStage(pct){
 }
 async function loadDashboard(){
     try{
+        gLoadErrors=[];
         const [cans,caps,hazards,reports]=await Promise.all([
-            ApiClient.get('/api/v1/cans/').catch(err=>{ console.error('[AE dashboard] /api/v1/cans/ failed:', err && err.message ? err.message : err); return []; }),
-            ApiClient.get('/api/v1/cans/caps').catch(err=>{ console.error('[AE dashboard] /api/v1/cans/caps failed:', err && err.message ? err.message : err); return []; }),
-            ApiClient.get('/api/v1/hazards/').catch(err=>{ console.error('[AE dashboard] /api/v1/hazards/ failed:', err && err.message ? err.message : err); return []; }),
-            ApiClient.get('/api/v1/reports/').catch(err=>{ console.error('[AE dashboard] /api/v1/reports/ failed:', err && err.message ? err.message : err); return []; })
+            ApiClient.get('/api/v1/cans/').catch(err=>{ console.error('[AE dashboard] /api/v1/cans/ failed:', err && err.message ? err.message : err); gLoadErrors.push('cans'); return []; }),
+            ApiClient.get('/api/v1/cans/caps').catch(err=>{ console.error('[AE dashboard] /api/v1/cans/caps failed:', err && err.message ? err.message : err); gLoadErrors.push('caps'); return []; }),
+            ApiClient.get('/api/v1/hazards/').catch(err=>{ console.error('[AE dashboard] /api/v1/hazards/ failed:', err && err.message ? err.message : err); gLoadErrors.push('hazards'); return []; }),
+            ApiClient.get('/api/v1/reports/').catch(err=>{ console.error('[AE dashboard] /api/v1/reports/ failed:', err && err.message ? err.message : err); gLoadErrors.push('reports'); return []; })
         ]);
         gPsoeList=[]; gCans=cans||[]; gCaps=caps||[]; gHazards=hazards||[]; gReports=reports||[];
         gCaps.forEach(c=>{ const ov=gOverlays[c.id]; if(ov) Object.assign(c,ov); });
@@ -368,7 +373,8 @@ document.addEventListener('keydown',function(e){
 function renderEscalations(caps){
     const queue=(caps||[]).filter(c=>c.escalated_to_ae).sort((a,b)=>new Date(b.escalated_at||0)-new Date(a.escalated_at||0));
     const el=document.getElementById('escalationQueue');
-    if(!queue.length){ el.innerHTML='<div class="empty">No escalated CAPs — all clear.</div>'; } else {
+    if(gLoadErrors.indexOf('caps')!==-1){ el.innerHTML='<div class="empty" style="color:#b45309;">Data unavailable — could not load CAPs. Do not treat as all clear.</div>'; }
+    else if(!queue.length){ el.innerHTML='<div class="empty">No escalated CAPs — all clear.</div>'; } else {
         el.innerHTML=queue.map(c=>'<div style="border:1px solid #e2e8f0;border-radius:8px;padding:0.8rem;margin-bottom:0.6rem;"><div style="font-weight:700;font-size:0.85rem;"><span onclick="openAeCapReviewModal(\''+aeEsc(c.id)+'\')" style="color:#1a6b8a;text-decoration:underline;cursor:pointer;" role="button" tabindex="0">'+aeEsc(c.cap_reference||c.id)+'</span> <span style="color:#64748b;font-weight:400;">· '+ aeEsc(c.department||'—')+'</span></div><div style="font-size:0.78rem;color:#475569;margin:0.3rem 0;">'+aeEsc(c.escalation_reason||'—')+'</div><div style="display:flex;gap:0.4rem;"><button class="btn btn-approve" onclick="decideEscalation(\''+aeEsc(c.id)+'\',\'acknowledge\')">Acknowledge</button><button class="btn" style="background:#b45309;color:#fff;" onclick="decideEscalation(\''+aeEsc(c.id)+'\',\'continue\')">Continue</button></div></div>').join('');
     }
     // decision ledger (real decision records w/ multi-select + expand)
@@ -667,15 +673,17 @@ function closeAeCapReviewModal(){
 function renderSituationalBanner(){
     // simplified contextual chips (SMS health from Module A maturity)
     const matScore=(gMaturity&&gMaturity.overall_score!=null)?gMaturity.overall_score:null;
-    const health=(matScore!=null&&matScore>=70)?'Healthy':'Attention';
-    document.getElementById('sitHealth').textContent=health; document.getElementById('sitHealth').className='chip '+(health==='Healthy'?'chip-green':'chip-amber');
+    const matFailed=(gMaturity==null);
+    const health=matFailed?'Unknown':((matScore!=null&&matScore>=70)?'Healthy':'Attention');
+    document.getElementById('sitHealth').textContent=health; document.getElementById('sitHealth').className='chip '+(health==='Healthy'?'chip-green':(health==='Unknown'?'chip-grey':'chip-amber'));
+    const cansFailed=gLoadErrors.indexOf('cans')!==-1, capsFailed=gLoadErrors.indexOf('caps')!==-1;
     const exp=(gCans.filter(c=>{const s=c.initial_sra||{}; const idx=s.risk_index||0; return idx>15;}).length);
-    document.getElementById('sitExposure').textContent=exp?exp+' high':'None';
-    document.getElementById('sitExposure').className='chip '+(exp?'chip-red':'chip-green');
+    document.getElementById('sitExposure').textContent=cansFailed?'Unknown':(exp?exp+' high':'None');
+    document.getElementById('sitExposure').className='chip '+(cansFailed?'chip-grey':(exp?'chip-red':'chip-green'));
     const q=gCaps.filter(c=>c.escalated_to_ae).length;
-    document.getElementById('sitQueue').textContent=q?q+' pending':'Clear';
-    document.getElementById('sitQueue').className='chip '+(q?'chip-amber':'chip-green');
-    document.getElementById('sitPrecursor').textContent='Assessed';
+    document.getElementById('sitQueue').textContent=capsFailed?'Unknown':(q?q+' pending':'Clear');
+    document.getElementById('sitQueue').className='chip '+(capsFailed?'chip-grey':(q?'chip-amber':'chip-green'));
+    document.getElementById('sitPrecursor').textContent=(cansFailed||capsFailed||matFailed)?'Unknown':'Assessed';
 }
 </script>
 

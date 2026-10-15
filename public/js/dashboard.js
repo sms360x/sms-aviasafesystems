@@ -236,8 +236,10 @@ async function loadKpis() {
             ApiClient.get(`/api/v1/dashboard/recent?days=${currentDays || 0}&report_type=mandatory&page_size=1`).catch((err) => { console.error('[dashboard] loadKpis /api/v1/dashboard/recent?report_type=mandatory failed:', err && err.message ? err.message : err); return null; }),
         ]);
         const k = (overview && overview.kpis) || {};
-        const vsrCount = (vsr && vsr.total) || 0;
-        const morCount = (mor && mor.total) || 0;
+        // 3C.1B (F-P2-2): a failed request renders as unavailable ("—"), never
+        // as a zero count. Genuine zeros from successful responses still show 0.
+        const vsrCount = kpiCountDisplay(vsr);
+        const morCount = kpiCountDisplay(mor);
 
         el.innerHTML = `
             <div class="kpi-card"><h3>Total Reports</h3><div class="kpi-value">${k.total_reports ?? 0}</div></div>
@@ -276,6 +278,14 @@ function escText(v) {
     return String(v == null ? '' : v)
         .replace(/&/g, '&amp;').replace(/</g, '&lt;')
         .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+// 3C.1B (F-P2-2) display rule: a successful response shows its count
+// (a genuine zero stays zero); a failed response (null) shows '—', never 0.
+// No safety-data outage may present as zero safety events.
+function kpiCountDisplay(resp) {
+    if (resp == null) return '—';
+    return (resp.total != null) ? resp.total : 0;
 }
 
 function displayReportType(rt) {
@@ -484,6 +494,18 @@ function fmtDate(iso) {
     try { return new Date(iso).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }); } catch (e) { return String(iso); }
 }
 
+// 3C.1B (F-P2-2): explicitly authorized demo data must be labeled as such,
+// never presented indistinguishably from operational measurements.
+function markDemoFallback(el) {
+    if (!el.querySelector('.demo-note')) {
+        const p = document.createElement('p');
+        p.className = 'demo-note';
+        p.textContent = 'Demo data — illustrative only, not operational measurements.';
+        p.style.cssText = 'font-size:0.72rem;color:#64748b;margin-top:0.4rem;';
+        el.appendChild(p);
+    }
+}
+
 async function loadSSMRiskTrends() {
     const el = document.getElementById('ssmRiskChart');
     setLoading(el);
@@ -493,9 +515,11 @@ async function loadSSMRiskTrends() {
         let labels = Array.isArray(data.labels) ? data.labels : [];
         let series = Array.isArray(data.series) ? data.series : [];
         // Demo fallback: if no data but demo tenant, show static trend
+        let usedDemoFallback = false;
         if (labels.length === 0) {
             const isDemoTenant = ['fixedwing', 'rotarywing', 'demoairport'].includes(currentTenant);
             if (isDemoTenant) {
+                usedDemoFallback = true;
                 labels = ['2026-Q1', '2026-Q2', '2026-Q3'];
                 series = [
                     { category: 'Operational', points: [{avg_risk_index: 45}, {avg_risk_index: 42}, {avg_risk_index: 38}] },
@@ -510,6 +534,7 @@ async function loadSSMRiskTrends() {
         }
         setReady(el);
         renderSSMRiskChart(data);
+        if (usedDemoFallback) markDemoFallback(el);
     } catch (err) {
         setError(el, err.message);
     }
@@ -538,9 +563,11 @@ async function loadHazardFrequency() {
 
     try {
         let data = safeArray(await DashboardAPI.getHazardFrequency(currentDays));
+        let usedDemoFallback = false;
         if (data.length === 0) {
             const isDemoTenant = ['fixedwing', 'rotarywing', 'demoairport'].includes(currentTenant);
             if (isDemoTenant) {
+                usedDemoFallback = true;
                 // Static demo hazards matching seeded data
                 data = [
                     { occurrence_type: 'Runway Excursion', count: 3, percentage: 30 },
@@ -556,6 +583,7 @@ async function loadHazardFrequency() {
         }
         setReady(el);
         renderHazardChart(data);
+        if (usedDemoFallback) markDemoFallback(el);
     } catch (err) {
         setError(el, err.message);
     }
@@ -733,11 +761,11 @@ function renderReportsTable(items) {
         row.innerHTML = `
             <td>${date}</td>
             <td>${r.report_type === 'mandatory' ? 'MOR' : 'VSR'}</td>
-            <td>${r.occurrence_type || '-'}</td>
-            <td>${r.location || '-'}</td>
+            <td>${escText(r.occurrence_type) || '-'}</td>
+            <td>${escText(r.location) || '-'}</td>
             <td style="text-align:center;font-weight:700;">${ri}</td>
-            <td><span class="badge ${riskClass}">${riskLevel}</span></td>
-            <td><span class="badge ${statClass}">${r.status || 'NEW'}</span></td>
+            <td><span class="badge ${riskClass}">${escText(riskLevel)}</span></td>
+            <td><span class="badge ${statClass}">${escText(r.status) || 'NEW'}</span></td>
         `;
         tbody.appendChild(row);
     }

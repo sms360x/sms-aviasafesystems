@@ -145,6 +145,18 @@ function renderCharts() {
     renderComparisonChart();
 }
 
+// 3C.1B (F-P2-2): this trend is illustrative (deterministic per-code values),
+// not measured history — label it so it is never read as operational data.
+function markIllustrativeTrend(canvas) {
+    if (!canvas || !canvas.parentNode) return;
+    if (canvas.parentNode.querySelector('.trend-note')) return;
+    const p = canvas.ownerDocument.createElement('p');
+    p.className = 'trend-note';
+    p.textContent = 'Illustrative trend — not measured historical data.';
+    p.style.cssText = 'font-size:0.72rem;color:#64748b;margin-top:0.4rem;';
+    canvas.parentNode.appendChild(p);
+}
+
 function renderTrendChart() {
     const ctx = document.getElementById('nhrcTrendChart');
     if (!ctx) return;
@@ -175,6 +187,7 @@ function renderTrendChart() {
             scales: { y: { beginAtZero: true, ticks: { precision: 0 } } },
         },
     });
+    markIllustrativeTrend(ctx);
 }
 
 function renderDistributionChart() {
