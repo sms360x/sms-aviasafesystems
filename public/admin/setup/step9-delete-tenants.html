@@ -133,7 +133,7 @@ async function countTenantRows(tid) {
     if (!area) return;
     area.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> Counting rows for <code>' + esc(tid) + '</code>...</div>';
     try {
-        var resp = await AdminUI.apiGet('/api/v1/admin/delete-demo-tenants/count?tenant_id=' + encodeURIComponent(tid));
+        var resp = await AdminUI.apiGet('/api/v1/admin/delete-demo-tenant/count?tenant_id=' + encodeURIComponent(tid));
         var counts = (resp && resp.counts) || {};
         var html = '<div class="status-box success"><strong>Row counts for ' + esc(tid) + ' — total ' + esc(resp.total || 0) + ' rows.</strong></div>';
         var keys = Object.keys(counts);
@@ -150,7 +150,7 @@ async function execDeleteDemoTenants(body) {
     var area = document.getElementById('deleteArea');
     if (area) area.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> Deleting tenant <code>' + esc(body.tenant_id) + '</code> and its data...</div>';
     try {
-        var resp = await AdminUI.apiPost('/api/v1/admin/delete-demo-tenants', body);
+        var resp = await AdminUI.apiPost('/api/v1/admin/delete-demo-tenant', body);
         if (area) {
             area.innerHTML = '<div class="status-box success"><strong>✅ Delete complete</strong> — tenant <code>' + esc(body.tenant_id) + '</code>: ' +
                 esc(resp.deleted || resp.detail || 'removed') + '</div>';

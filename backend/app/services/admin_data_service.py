@@ -1028,6 +1028,9 @@ async def _build_purge_steps(tenant_uuids: Optional[List[uuid.UUID]] = None):
     When `tenant_uuids` is provided every row for those tenants is deleted
     (regardless of is_demo) so a demo tenant can be fully removed; otherwise
     only `is_demo = true` rows are targeted (the cluster-wide purge).
+    The `tenants` registry step follows the same rule: cluster-wide purge
+    removes all demo registry rows, while a tenant-directed purge removes
+    ONLY the explicitly authorized targets (3C.1A / F-P0-1R).
     """
     if tenant_uuids is not None:
         targets = tuple(tenant_uuids)
@@ -1119,8 +1122,15 @@ async def _build_purge_steps(tenant_uuids: Optional[List[uuid.UUID]] = None):
         # (operator) demo tenants.
         steps.append(("regulators", delete(Regulator).where(
             Regulator.kind == "regulator", Regulator.is_demo == True)))
-    # Master tenant registry (demo only; regulators/users reference slugs, not rows)
-    steps.append(("tenants", delete(Tenant).where(Tenant.is_demo.is_(True))))
+        # Master tenant registry (demo only; regulators/users reference slugs, not rows)
+        steps.append(("tenants", delete(Tenant).where(Tenant.is_demo.is_(True))))
+    else:
+        # 3C.1A (F-P0-1R): a tenant-directed purge must never touch the global
+        # registry. Only the explicitly authorized target tenants are removed.
+        # The is_demo predicate is kept as defense-in-depth so a concurrent
+        # flag change cannot widen this step to a real tenant.
+        steps.append(("tenants", delete(Tenant).where(
+            Tenant.id.in_(targets), Tenant.is_demo.is_(True))))
     return steps
 
 
@@ -1673,6 +1683,146 @@ async def delete_demo_tenants(actor: Dict[str, Any]) -> Dict[str, Any]:
         "firestore": {"deleted": firestore_deleted},
         "users_deleted": users_deleted,
         "regulators": regulator_updates,
+    }
+
+
+# ============================================================================
+# Single-tenant demo deletion — 3C.1A (F-P0-1R / F-P0-1C)
+# ============================================================================
+
+async def _resolve_single_demo_target(session, tenant_id: str) -> Tuple[str, uuid.UUID]:
+    """Resolve a slug-or-uuid reference to (slug, uuid) for single-tenant deletion.
+
+    Raises ValueError (→404) when the tenant is missing or its stored id has
+    drifted from the canonical value; PermissionError (→403) when the tenant
+    is real (never demo-deletable) or a regulator row. The row is re-read here,
+    at deletion time, so a concurrent flag change cannot widen scope
+    (time-of-check/time-of-use mitigation; see count preview).
+    """
+    ref = (tenant_id or "").strip()
+    if not ref:
+        raise ValueError("tenant_id is required")
+    try:
+        as_uuid = uuid.UUID(ref)
+    except (ValueError, TypeError, AttributeError):
+        as_uuid = None
+    if as_uuid is not None:
+        row = (await session.execute(
+            select(Tenant.id, Tenant.slug, Tenant.is_demo, Tenant.kind)
+            .where(Tenant.id == as_uuid)
+        )).first()
+    else:
+        row = (await session.execute(
+            select(Tenant.id, Tenant.slug, Tenant.is_demo, Tenant.kind)
+            .where(Tenant.slug == ref)
+        )).first()
+    if row is None:
+        raise ValueError(f"tenant not found: {ref}")
+    tid, slug, is_demo, kind = row[0], row[1], row[2], row[3]
+    if (kind or "") == "regulator":
+        raise PermissionError(
+            f"tenant '{slug}' is a regulator and cannot be demo-deleted")
+    if not is_demo:
+        raise PermissionError(
+            f"tenant '{slug}' is not a demo tenant; demo deletion is refused")
+    if str(tid) != str(tenant_uuid(slug)):
+        raise ValueError(
+            f"tenant '{slug}' id drift: stored {tid} != canonical "
+            f"{tenant_uuid(slug)}; run scripts/migrate_tenant_ids.py")
+    return slug, uuid.UUID(str(tid))
+
+
+async def count_demo_tenant_rows(tenant_id: str) -> Dict[str, Any]:
+    """Read-only count-first preview for single-tenant demo deletion.
+
+    Returns per-table counts for EXACTLY the step list the deletion will
+    execute (both derive from `_build_purge_steps`), so preview and effect
+    cannot disagree on scope. Resolves and revalidates the target first, so a
+    nonexistent, real, or regulator tenant is rejected before any counting.
+    """
+    async with session_scope() as session:
+        slug, tuuid = await _resolve_single_demo_target(session, tenant_id)
+        steps = await _build_purge_steps(tenant_uuids=[tuuid])
+        counts: Dict[str, int] = {}
+        for name, stmt in steps:
+            model = _model_for_table(name)
+            if model is None:
+                counts[name] = f"Error: no ORM model for table {name!r}"
+                continue
+            query = select(func.count()).select_from(model)
+            if stmt.whereclause is not None:
+                query = query.where(stmt.whereclause)
+            try:
+                counts[name] = (await session.execute(query)).scalar_one()
+            except Exception as e:  # noqa: BLE001 — reported, never raised
+                counts[name] = f"Error: {e}"
+    total = sum(v for v in counts.values() if isinstance(v, int))
+    return {"tenant": slug, "counts": counts, "total": total}
+
+
+async def delete_demo_tenant(tenant_id: str, actor: Dict[str, Any]) -> Dict[str, Any]:
+    """Delete ONE explicitly selected demo tenant and only its owned data.
+
+    Business rules enforced: single-tenant scope (never bulk, never global);
+    real and regulator tenants refused; tenant re-resolved at deletion time;
+    Firestore/Auth mirrors attempted when available and reported accurately
+    (absence is reported as skipped, failures as partial — never silent
+    success). Postgres `UserProfile` rows are intentionally left to the
+    existing bulk-parity behavior and called out in the result note.
+    """
+    async with session_scope() as session:
+        slug, tuuid = await _resolve_single_demo_target(session, tenant_id)
+
+    postgres_result = await _delete_tenant_postgres_data([tuuid])
+
+    firestore: Dict[str, Any] = {}
+    db = _purge_firestore_or_none("delete_demo_tenant")
+    if db is None:
+        firestore = {"status": "skipped",
+                     "reason": "firestore unavailable; postgres deletion complete"}
+    else:
+        try:
+            counter = [0]
+            _delete_firestore_doc_tree(
+                db.collection(settings.FIREBASE_COLLECTION_TENANTS).document(slug),
+                _count=counter,
+            )
+            firestore = {"status": "ok", "deleted": {slug: counter[0]}}
+        except Exception as e:  # noqa: BLE001 — reported below, never raised
+            logger.warning(f"Firestore tenant delete failed for {slug}: {e}")
+            firestore = {"status": "error", "reason": str(e)}
+
+    regulators: Dict[str, Dict[str, Any]] = {}
+    users_deleted = 0
+    users_note = ("user cleanup skipped: firestore unavailable; "
+                  "remove tenant users manually" if db is None else "")
+    if db is not None:
+        regulators = _detach_deleted_tenants_from_regulators([slug], db)
+        users_deleted = _delete_users_for_deleted_tenants([slug], db)
+
+    table_errors = [v for v in postgres_result.get("details", {}).values()
+                    if isinstance(v, str)]
+    result = ("partial" if table_errors or firestore.get("status") == "error"
+              else "success")
+    _audit("TENANT_DEMO_DELETED", actor, slug,
+           f"Deleted demo tenant {slug} — Postgres rows removed: "
+           f"{postgres_result.get('deleted_count', 0)}, users deleted: "
+           f"{users_deleted}, regulators updated: {len(regulators)}, "
+           f"firestore: {firestore.get('status')}",
+           result=result)
+    logger.info(f"Demo tenant deleted: {slug} ({result})")
+    return {
+        "success": True,
+        "result": result,
+        "tenant": slug,
+        "deleted_count": postgres_result.get("deleted_count", 0),
+        "postgres": postgres_result,
+        "firestore": firestore,
+        "users_deleted": users_deleted,
+        "users_note": users_note,
+        "regulators": regulators,
+        "note": ("Postgres UserProfile rows for the tenant are retained "
+                 "(bulk parity); remove via DELETE /api/v1/admin/users if needed."),
     }
 
 

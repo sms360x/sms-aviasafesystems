@@ -11,7 +11,7 @@
 
 import secrets
 from fastapi import APIRouter, Depends, HTTPException, Query, status, Request, Response
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 from typing import Dict, Any, Optional, List
 from loguru import logger
 from datetime import date, datetime, timezone
@@ -1074,6 +1074,10 @@ class PurgeUnifiedRequest(BaseModel):
 
 
 class DeleteDemoTenantsRequest(BaseModel):
+    # 3C.1A (F-P0-1C): this is the BULK operation. A stray tenant_id must fail
+    # loudly (422) instead of being silently ignored while everything is deleted.
+    model_config = ConfigDict(extra="forbid")
+
     setup_key: str
 
 
@@ -1441,6 +1445,65 @@ async def admin_delete_demo_tenants(
     except Exception as e:
         logger.error(f"Delete demo tenants failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+class DeleteDemoTenantRequest(BaseModel):
+    """Single-tenant demo deletion — kept distinct from the bulk operation."""
+
+    setup_key: str
+    tenant_id: str = Field(min_length=1, max_length=200)
+
+
+@router.post("/delete-demo-tenant", status_code=status.HTTP_200_OK)
+async def admin_delete_demo_tenant(
+    req: DeleteDemoTenantRequest,
+    user: Dict[str, Any] = Depends(get_admin_user),
+):
+    """Delete ONE explicitly selected demo tenant and only its owned data.
+
+    Real, regulator, missing, and drifted tenants are rejected (403/404);
+    the tenant is re-resolved at deletion time so preview and effect agree.
+    """
+    _verify_admin_setup(req.setup_key)
+    from app.services.admin_data_service import delete_demo_tenant
+
+    try:
+        return await delete_demo_tenant(req.tenant_id, user)
+    except ValueError as e:
+        msg = str(e)
+        raise HTTPException(
+            status_code=404 if "not found" in msg else 400,
+            detail=msg,
+        )
+    except PermissionError as e:
+        raise HTTPException(status_code=403, detail=str(e))
+    except Exception as e:
+        logger.error(f"Delete demo tenant failed ({req.tenant_id}): {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/delete-demo-tenant/count", status_code=status.HTTP_200_OK)
+async def admin_count_demo_tenant(
+    tenant_id: str = Query(min_length=1, max_length=200),
+    user: Dict[str, Any] = Depends(get_admin_user),
+):
+    """Count-first preview for single-tenant demo deletion (read-only).
+
+    Returns per-table counts for exactly the step list the deletion endpoint
+    will execute. SUPER_ADMIN only; no setup key (no mutation).
+    """
+    from app.services.admin_data_service import count_demo_tenant_rows
+
+    try:
+        return {"success": True, **await count_demo_tenant_rows(tenant_id)}
+    except ValueError as e:
+        msg = str(e)
+        raise HTTPException(
+            status_code=404 if "not found" in msg else 400,
+            detail=msg,
+        )
+    except PermissionError as e:
+        raise HTTPException(status_code=403, detail=str(e))
 
 
 @router.post("/psoe/purge", status_code=status.HTTP_200_OK)
