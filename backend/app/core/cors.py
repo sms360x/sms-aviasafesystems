@@ -36,13 +36,16 @@ CANONICAL_ALLOWED_ORIGINS = (
 # "X-User-Department" and "X-Tenant-Id" are the tenant-routing headers added by
 # public/js/api/client.js; "X-Task-Key" / "X-Request-ID" are server-driven;
 # "X-Firebase-AppCheck" carries the App Check token from the SPA.
+# "X-Setup-Key" carries the admin setup key for sensitive exports (3C.1B);
+# like Authorization it never travels in URLs or query strings.
 ALLOWED_HEADERS = (
     "Content-Type, Authorization, "
     "X-Firebase-AppCheck, x-firebase-appcheck, "
     "X-Requested-With, Accept, Origin, "
     "X-Tenant-Id, X-Tenant-ID, x-tenant-id, "
     "X-User-Department, x-user-department, "
-    "X-Task-Key, X-Request-ID"
+    "X-Task-Key, X-Request-ID, "
+    "X-Setup-Key, x-setup-key"
 )
 
 # Headers the browser may read off cross-origin responses. The sliding-window

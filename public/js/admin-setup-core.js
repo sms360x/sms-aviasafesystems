@@ -245,6 +245,9 @@ async function loadAuditLog() {
 // The endpoints are GET /api/v1/admin/export/* guarded by get_admin_user, so
 // each request must carry the Firebase ID token in the Authorization header
 // (plain window.location navigation would drop it).
+// Sensitive exports (/export/all-tables, /export/table/{name}) additionally
+// require the setup key in the X-Setup-Key header (3C.1B) — never in URLs or
+// query strings. Pass setupKey only for those endpoints.
 // ============================================================================
 
 function exportStatus(id, msgHtml, type) {
@@ -252,15 +255,15 @@ function exportStatus(id, msgHtml, type) {
     if (el) el.innerHTML = '<div class="status-box ' + (type || 'info') + '">' + msgHtml + '</div>';
 }
 
-async function exportCsv(url, statusId) {
+async function exportCsv(url, statusId, setupKey) {
     var statusEl = document.getElementById(statusId);
     if (statusEl) statusEl.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> Preparing export...</div>';
     try {
         var token = await ApiClient._getToken();
         if (!token) return;
-        var resp = await fetch(ApiClient._baseUrl() + url, {
-            headers: { 'Authorization': 'Bearer ' + token }
-        });
+        var headers = { 'Authorization': 'Bearer ' + token };
+        if (setupKey) headers['X-Setup-Key'] = setupKey;
+        var resp = await fetch(ApiClient._baseUrl() + url, { headers: headers });
         if (resp.status === 401) { window.location.href = '/admin/login.html'; return; }
         if (!resp.ok) {
             var err = await resp.json().catch(function () { return { detail: 'HTTP ' + resp.status }; });

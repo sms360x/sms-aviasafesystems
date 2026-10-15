@@ -1552,6 +1552,83 @@ async def admin_purge_state_risk_demo(
 # ============================================================================
 
 
+def _export_actor(user: Dict[str, Any]) -> str:
+    return (user or {}).get("email") or (user or {}).get("uid") or "anonymous"
+
+
+def _export_ip(request: Request) -> Optional[str]:
+    try:
+        return request.client.host if request.client else None
+    except Exception:
+        return None
+
+
+async def _require_export_admin(
+    request: Request,
+    user: Dict[str, Any] = Depends(get_current_user),
+) -> Dict[str, Any]:
+    """SUPER_ADMIN gate for sensitive exports with denial auditing.
+
+    3C.1B (F-P1-6): rejected attempts are audited (actor + reason, never
+    secrets) so brute-force or privilege-escalation probes leave a trail.
+    log_audit is warn-only and never blocks the rejection itself.
+    """
+    try:
+        return await get_admin_user(user)
+    except HTTPException as e:
+        try:
+            log_audit(
+                action="EXPORT_DENIED",
+                user=_export_actor(user),
+                target_type="export",
+                target_id=request.url.path,
+                ip=_export_ip(request),
+                metadata={"reason": "role", "status": e.status_code},
+            )
+        except Exception:
+            pass
+        raise
+
+
+def _verify_export_setup_key(request: Request, user: Dict[str, Any], target: str) -> None:
+    """Second factor for sensitive exports: X-Setup-Key header (never URL/query).
+
+    Runs after role authorization and before any export query executes, so a
+    rejected request never touches export data. Fail-closed: missing server
+    secret -> 503, missing/wrong key -> 403. Rejections are audited.
+    """
+    try:
+        _verify_admin_setup(request.headers.get("X-Setup-Key") or "")
+    except HTTPException as e:
+        try:
+            log_audit(
+                action="EXPORT_DENIED",
+                user=_export_actor(user),
+                target_type="export",
+                target_id=target,
+                ip=_export_ip(request),
+                metadata={"reason": "setup-key", "status": e.status_code},
+            )
+        except Exception:
+            pass
+        raise
+
+
+def _audit_export_success(request: Request, user: Dict[str, Any], target: str, rows: int) -> None:
+    """Audit a completed sensitive export (row counts only — never secrets)."""
+    try:
+        log_audit(
+            action="EXPORT_ALL_TABLES" if target == "all-tables" else "EXPORT_TABLE",
+            user=_export_actor(user),
+            target_type="export",
+            target_id=target,
+            ip=_export_ip(request),
+            metadata={"rows": rows},
+        )
+    except Exception:
+        pass
+
+
 def _csv_download_response(csv_text: str, filename: str, rows: int) -> Response:
     """Return a downloadable CSV with a UTF-8 BOM so Excel renders headers."""
     return Response(
@@ -1590,23 +1667,43 @@ async def admin_export_purge_data(user: Dict[str, Any] = Depends(get_admin_user)
 
 
 @router.get("/export/all-tables")
-async def admin_export_all_tables(user: Dict[str, Any] = Depends(get_admin_user)):
-    """Export every operational Postgres table (all rows) as one CSV download."""
+async def admin_export_all_tables(
+    request: Request,
+    user: Dict[str, Any] = Depends(_require_export_admin),
+):
+    """Export every operational Postgres table (all rows) as one CSV download.
+
+    3C.1B (F-P1-6): SUPER_ADMIN token alone is not enough — the request must
+    also carry the server-verified setup key in the X-Setup-Key header
+    (never in URLs or query strings). Success and rejection are audited.
+    """
+    _verify_export_setup_key(request, user, "all-tables")
     from app.services.admin_data_service import export_all_tables_csv
 
     csv_text, filename, csv_rows = await export_all_tables_csv()
+    _audit_export_success(request, user, "all-tables", csv_rows)
     return _csv_download_response(csv_text, filename, csv_rows)
 
 
 @router.get("/export/table/{table_name}")
-async def admin_export_table(table_name: str, user: Dict[str, Any] = Depends(get_admin_user)):
-    """Export a single table (all rows) as a CSV download. Unknown table -> 404."""
+async def admin_export_table(
+    table_name: str,
+    request: Request,
+    user: Dict[str, Any] = Depends(_require_export_admin),
+):
+    """Export a single table (all rows) as a CSV download. Unknown table -> 404.
+
+    Same two-factor protection as /export/all-tables. Unknown names are
+    rejected before any query runs.
+    """
+    _verify_export_setup_key(request, user, f"table/{table_name}")
     from app.services.admin_data_service import export_single_table_csv
 
     try:
         csv_text, filename, csv_rows = await export_single_table_csv(table_name)
     except KeyError as e:
         raise HTTPException(status_code=404, detail=str(e))
+    _audit_export_success(request, user, f"table/{table_name}", csv_rows)
     return _csv_download_response(csv_text, filename, csv_rows)
 
 
