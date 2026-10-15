@@ -36,17 +36,21 @@ router = APIRouter()
 
 # VSR_VISIBILITY_RULE="A": raw VSR access is limited to the Safety Manager
 # (TENANT_ADMIN / AIRLINE_ADMIN) and the Safety Department officer
-# (SAFETY_OFFICER). Cross-tenant roles are handled separately (1A.7). The
-# officer role is keyed on the literal `SAFETY_OFFICER` (not the dual-accept
-# `SAFETY_OFFICER_ROLES`); see docs/step1/1C.1_vsr_visibility.md.
-_RAW_VSR_ROLES = set(settings.TENANT_ADMIN_ROLES) | {settings.ROLE_SAFETY_OFFICER}
+# (SAFETY_OFFICER, canonical OFFICER). Cross-tenant roles are handled
+# separately (1A.7). The set keeps the legacy `SAFETY_OFFICER` literal for
+# accounts whose Firebase claims predate the 2B.3 canonical migration, plus
+# the canonical `SAFETY_OFFICER_ROLES` (OFFICER); see
+# docs/step1/1C.1_vsr_visibility.md.
+_RAW_VSR_ROLES = (set(settings.TENANT_ADMIN_ROLES)
+                  | set(settings.SAFETY_OFFICER_ROLES)
+                  | {"SAFETY_OFFICER"})
 
 
 def can_submit_mor(user: Dict[str, Any]) -> bool:
     """Check if user has permission to submit MOR (CAMO/QA restricted)."""
     if not user:
         return False
-    allowed_roles = ['CAMO_ADMIN', 'QA_ADMIN', 'CAMO_USER', 'QA_USER', 'AIRLINE_ADMIN', 'TENANT_ADMIN', 'SUPER_ADMIN', 'CAAN_SMD']
+    allowed_roles = ['CAMO_ADMIN', 'QA_ADMIN', 'CAMO_USER', 'QA_USER', 'AIRLINE_ADMIN', 'TENANT_ADMIN', 'SUPER_ADMIN', 'CAAN_SMD', 'STATE_SMD']
     role = (user.get('role') or '').strip().upper()
     if role in [r.upper() for r in allowed_roles]:
         return True
@@ -315,7 +319,9 @@ async def regulatory_submit_mor(
 
     Stamps `regulatory_submitted_at` + `regulatory_submission_ref`. Operational
     safety roles only; CAAN inspectors are read-only."""
-    if str(user.get("role") or "") in ("CAAN_SMD", "CAAN_INSPECTOR"):
+    # 3C.2C: block the canonical STATE_SMD explicitly — never rely on the
+    # regulator happening to have tenant_id=None.
+    if str(user.get("role") or "") in ("CAAN_SMD", "CAAN_INSPECTOR", "STATE_SMD"):
         raise HTTPException(status_code=403,
                             detail="CAAN inspectors have READ-ONLY access to operator records")
     if not user.get("tenant_id"):

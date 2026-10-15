@@ -27,7 +27,9 @@ async def issue_can(
         raise HTTPException(status_code=403, detail="Tenant access required")
     # CAAN inspectors hold READ-ONLY access to operator records
     # (AviaSAFE-SMS audit / CAR-19 oversight: aggregate analytics only).
-    if str(user.get("role") or "") in ("CAAN_SMD", "CAAN_INSPECTOR"):
+    # 3C.2C: block the canonical STATE_SMD explicitly — never rely on the
+    # regulator happening to have tenant_id=None.
+    if str(user.get("role") or "") in ("CAAN_SMD", "CAAN_INSPECTOR", "STATE_SMD"):
         raise HTTPException(
             status_code=403,
             detail="CAAN inspectors have READ-ONLY access to operator CAN/CAP records",
@@ -168,7 +170,9 @@ async def update_can_status(
         raise HTTPException(status_code=403, detail="Tenant access required")
     # CAAN inspectors hold READ-ONLY access to operator records
     # (AviaSAFE-SMS audit / CAR-19 oversight: aggregate analytics only).
-    if str(user.get("role") or "") in ("CAAN_SMD", "CAAN_INSPECTOR"):
+    # 3C.2C: block the canonical STATE_SMD explicitly — never rely on the
+    # regulator happening to have tenant_id=None.
+    if str(user.get("role") or "") in ("CAAN_SMD", "CAAN_INSPECTOR", "STATE_SMD"):
         raise HTTPException(
             status_code=403,
             detail="CAAN inspectors have READ-ONLY access to operator CAN/CAP records",
@@ -191,7 +195,9 @@ async def delete_can(
         raise HTTPException(status_code=403, detail="Tenant access required")
     # CAAN inspectors hold READ-ONLY access to operator records
     # (AviaSAFE-SMS audit / CAR-19 oversight: aggregate analytics only).
-    if str(user.get("role") or "") in ("CAAN_SMD", "CAAN_INSPECTOR"):
+    # 3C.2C: block the canonical STATE_SMD explicitly — never rely on the
+    # regulator happening to have tenant_id=None.
+    if str(user.get("role") or "") in ("CAAN_SMD", "CAAN_INSPECTOR", "STATE_SMD"):
         raise HTTPException(
             status_code=403,
             detail="CAAN inspectors have READ-ONLY access to operator CAN/CAP records",
@@ -226,7 +232,9 @@ async def submit_cap(
         raise HTTPException(status_code=403, detail="Tenant access required")
     # CAAN inspectors hold READ-ONLY access to operator records
     # (AviaSAFE-SMS audit / CAR-19 oversight: aggregate analytics only).
-    if str(user.get("role") or "") in ("CAAN_SMD", "CAAN_INSPECTOR"):
+    # 3C.2C: block the canonical STATE_SMD explicitly — never rely on the
+    # regulator happening to have tenant_id=None.
+    if str(user.get("role") or "") in ("CAAN_SMD", "CAAN_INSPECTOR", "STATE_SMD"):
         raise HTTPException(
             status_code=403,
             detail="CAAN inspectors have READ-ONLY access to operator CAN/CAP records",
@@ -287,7 +295,9 @@ async def update_cap(
         raise HTTPException(status_code=403, detail="Tenant access required")
     # CAAN inspectors hold READ-ONLY access to operator records
     # (AviaSAFE-SMS audit / CAR-19 oversight: aggregate analytics only).
-    if str(user.get("role") or "") in ("CAAN_SMD", "CAAN_INSPECTOR"):
+    # 3C.2C: block the canonical STATE_SMD explicitly — never rely on the
+    # regulator happening to have tenant_id=None.
+    if str(user.get("role") or "") in ("CAAN_SMD", "CAAN_INSPECTOR", "STATE_SMD"):
         raise HTTPException(
             status_code=403,
             detail="CAAN inspectors have READ-ONLY access to operator CAN/CAP records",
@@ -323,7 +333,9 @@ async def review_cap(
         raise HTTPException(status_code=403, detail="Tenant access required")
     # CAAN inspectors hold READ-ONLY access to operator records
     # (AviaSAFE-SMS audit / CAR-19 oversight: aggregate analytics only).
-    if str(user.get("role") or "") in ("CAAN_SMD", "CAAN_INSPECTOR"):
+    # 3C.2C: block the canonical STATE_SMD explicitly — never rely on the
+    # regulator happening to have tenant_id=None.
+    if str(user.get("role") or "") in ("CAAN_SMD", "CAAN_INSPECTOR", "STATE_SMD"):
         raise HTTPException(
             status_code=403,
             detail="CAAN inspectors have READ-ONLY access to operator CAN/CAP records",
@@ -468,7 +480,9 @@ async def update_cap_status(
         raise HTTPException(status_code=403, detail="Tenant access required")
     # CAAN inspectors hold READ-ONLY access to operator records
     # (AviaSAFE-SMS audit / CAR-19 oversight: aggregate analytics only).
-    if str(user.get("role") or "") in ("CAAN_SMD", "CAAN_INSPECTOR"):
+    # 3C.2C: block the canonical STATE_SMD explicitly — never rely on the
+    # regulator happening to have tenant_id=None.
+    if str(user.get("role") or "") in ("CAAN_SMD", "CAAN_INSPECTOR", "STATE_SMD"):
         raise HTTPException(
             status_code=403,
             detail="CAAN inspectors have READ-ONLY access to operator CAN/CAP records",

@@ -143,7 +143,8 @@ def _list_reports(
                     "generated_by": data.get("generated_by"),
                 })
         else:
-            if user.get("role") in ("CAAN_SMD", "SUPER_ADMIN"):
+            # 3C.2C: canonical STATE_SMD included via CROSS_TENANT_ROLES.
+            if user.get("role") in settings.CROSS_TENANT_ROLES:
                 rows = pg.fetch_all(
                     CaanReport,
                     where=[CaanReport.data["report_type"].astext == report_type],

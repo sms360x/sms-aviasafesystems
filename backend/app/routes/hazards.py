@@ -290,7 +290,9 @@ async def list_hazards(
         svc_user["role"] = "AIRLINE_ADMIN"
     else:
         effective_tenant = user.get("tenant_id")
-        if user.get("role") in ["CAAN_SMD", "SUPER_ADMIN"] and tenant_id:
+        # 3C.2C: honor cross-tenant scoping for the canonical STATE_SMD via
+        # CROSS_TENANT_ROLES (previously only the legacy CAAN_SMD literal).
+        if user.get("role") in settings.CROSS_TENANT_ROLES and tenant_id:
             effective_tenant = tenant_id
 
     service = HazardService(effective_tenant)
@@ -307,7 +309,7 @@ async def list_hazards(
         filters["department"] = department
     if search:
         filters["search"] = search
-    if tenant_id and user.get("role") in ["CAAN_SMD", "SUPER_ADMIN"]:
+    if tenant_id and user.get("role") in settings.CROSS_TENANT_ROLES:
         filters["tenant_id"] = tenant_id
 
     docs = service.list_hazards(svc_user, filters)

@@ -289,7 +289,8 @@ class LinkCapRequest(BaseModel):
 
 
 def _require_safety_manager_link(user: dict) -> None:
-    allowed = settings.TENANT_ADMIN_ROLES + ["SUPER_ADMIN", "CAAN_SMD"]
+    # 3C.2C: canonical STATE_SMD included alongside the legacy CAAN_SMD.
+    allowed = settings.TENANT_ADMIN_ROLES + ["SUPER_ADMIN", "CAAN_SMD", "STATE_SMD"]
     if (user.get("role") or "") not in allowed:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
                             detail="Safety Manager role required")

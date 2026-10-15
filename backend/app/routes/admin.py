@@ -157,7 +157,8 @@ async def get_risk_matrix(
     Defaults to ICAO-aligned thresholds if not yet configured.
     """
     tenant_id = user.get("tenant_id")
-    if not tenant_id and user.get("role") in ["CAAN_SMD", "SUPER_ADMIN"]:
+    # 3C.2C: canonical STATE_SMD included via CROSS_TENANT_ROLES.
+    if not tenant_id and user.get("role") in settings.CROSS_TENANT_ROLES:
         tenant_id = "default"
     config = get_risk_matrix_config(tenant_id)
     return config
@@ -182,7 +183,8 @@ async def update_risk_matrix(
         )
 
     tenant_id = user.get("tenant_id")
-    if not tenant_id and user.get("role") in ["CAAN_SMD", "SUPER_ADMIN"]:
+    # 3C.2C: canonical STATE_SMD included via CROSS_TENANT_ROLES.
+    if not tenant_id and user.get("role") in settings.CROSS_TENANT_ROLES:
         tenant_id = "default"
 
     now = datetime.now(timezone.utc).isoformat()
