@@ -565,6 +565,35 @@ A NEW failure (not on this list) stops the item.
          registers; the SRAM router mounts under /api/v1
          with no /sram prefix. Unrelated to Phase 2B.
          Test defect; fix in a Step 3 cleanup item.)
+    tests/test_psoe_models.py::
+        test_caan_smd_can_create_assessment_with_target_tenant
+    tests/test_psoe_models.py::
+        test_caan_smd_must_specify_target_tenant
+    tests/test_psoe_models.py::
+        test_caan_smd_lists_all_or_scopes_by_tenant
+        (Pre-existing from 9a9335a regulator alignment. The
+         PSoE endpoint rejects CAAN_SMD with tid=None, returning
+         "Tenant access required". Deterministic, not
+         environmental. Scheduled fix: item 2C.8.)
+
+---
+
+## Phase 2C — planned items
+
+2C.8 — Regulator alignment for PSoE endpoints
+
+Finding: the PSoE endpoints reject CAAN_SMD (tid=None)
+with "Tenant access required" (api/v1/endpoints/psoe.py:163-169).
+Three tests assert that CAAN_SMD can read/create
+assessments with a target tenant. The guard prevents
+this.
+
+Action: either allow CAAN_SMD to pass a target tenant
+through the guard (matching the 3A regulator alignment
+intent), or formally update the tests to assert the
+CAAN_SMD restriction.
+
+SME to decide in 2C.8.
 
 ---
 

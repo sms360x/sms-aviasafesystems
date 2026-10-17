@@ -15,9 +15,9 @@ import app.routes.hazards as hazards_routes
 import app.routes.occurrence_reports as occ_routes
 
 
-def _user(role, tenant_id="t1", email=None):
+def _user(role, tenant_id="t1", email=None, department=None):
     return {"uid": "u-" + role.lower(), "email": email or f"{role.lower()}@x.test",
-            "role": role, "tenant_id": tenant_id}
+            "role": role, "tenant_id": tenant_id, "department": department}
 
 
 @pytest.fixture
@@ -31,10 +31,11 @@ def client(monkeypatch):
         app.dependency_overrides.clear()
 
 
-def _override(role, tenant_id="t1"):
+def _override(role, tenant_id="t1", department=None):
     from app.main import app
 
-    app.dependency_overrides[get_current_user] = lambda: _user(role, tenant_id)
+    app.dependency_overrides[get_current_user] = (
+        lambda: _user(role, tenant_id, department=department))
 
 
 # ---------------------------------------------------------------------------
@@ -137,11 +138,20 @@ def test_state_smd_can_list_reports(client, monkeypatch):
 # OFFICER canonical equivalence for raw VSR reads (+ legacy compat)
 # ---------------------------------------------------------------------------
 
+# An OFFICER in the Safety Department (department == 'safety', the canonical
+# code) reads the raw report list.
 def test_officer_can_read_report_list(client, monkeypatch):
     monkeypatch.setattr(occ_routes.ReportService, "get_reports",
                         lambda self, user: [])
-    _override("OFFICER", "t1")
+    _override("OFFICER", "t1", department="safety")
     assert client.get("/api/v1/reports/").status_code == 200
+
+
+# An OFFICER outside the Safety Department is denied the raw report list.
+def test_officer_outside_safety_department_cannot_read_report_list(client):
+    _override("OFFICER", "t1", department="camo")
+    r = client.get("/api/v1/reports/")
+    assert r.status_code == 403
 
 
 def test_legacy_safety_officer_still_admitted(client, monkeypatch):

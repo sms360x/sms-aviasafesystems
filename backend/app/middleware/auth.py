@@ -89,10 +89,17 @@ def resolve_user_context(email: str) -> Dict[str, Any]:
         logger.warning(f"No users row for user (email={email}).")
         return {"role": None, "tenant_id": None}
 
-    return {
+    ctx = {
         "role": urow.get("role"),
         "tenant_id": _tenant_slug(urow.get("tenant_id")),
     }
+    # 2C.7: carry the users-row department (authoritative) so the
+    # department-based raw-VSR rule does not depend on token freshness. Omitted
+    # when NULL/empty to keep the resolved shape minimal.
+    department = urow.get("department")
+    if department:
+        ctx["department"] = department
+    return ctx
 
 
 SUSPENDED_TENANT_DETAIL = (
@@ -147,6 +154,9 @@ async def get_current_user(
     resolved = resolve_user_context(email)
     role = resolved["role"]
     tenant_id = resolved["tenant_id"]
+    # 2C.7: the users-row department is authoritative; fall back to the token
+    # claim only when the users row has none.
+    department = resolved.get("department") or department
 
     if tenant_id and role not in settings.CROSS_TENANT_ROLES and _tenant_is_suspended(tenant_id):
         logger.warning(f"Suspended tenant access denied for {email} (tenant={tenant_id})")

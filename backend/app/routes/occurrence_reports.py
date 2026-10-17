@@ -34,16 +34,33 @@ from app.middleware.rate_limit import rate_limit
 
 router = APIRouter()
 
-# VSR_VISIBILITY_RULE="A": raw VSR access is limited to the Safety Manager
-# (TENANT_ADMIN / AIRLINE_ADMIN) and the Safety Department officer
-# (SAFETY_OFFICER, canonical OFFICER). Cross-tenant roles are handled
-# separately (1A.7). The set keeps the legacy `SAFETY_OFFICER` literal for
-# accounts whose Firebase claims predate the 2B.3 canonical migration, plus
-# the canonical `SAFETY_OFFICER_ROLES` (OFFICER); see
-# docs/step1/1C.1_vsr_visibility.md.
-_RAW_VSR_ROLES = (set(settings.TENANT_ADMIN_ROLES)
-                  | set(settings.SAFETY_OFFICER_ROLES)
-                  | {"SAFETY_OFFICER"})
+# VSR_VISIBILITY_RULE="A" — raw-VSR access (SME ruling 2026-10-17).
+# 'safety' is the universal canonical department code for the Safety
+# Department. Tenant display labels (tenants.safety_department_name) are
+# cosmetic and are NOT consulted for access control. See
+# docs/step1/1C.1_vsr_visibility.md and
+# docs/step2/2C.7_vsr_visibility_regression_fix.md.
+def can_view_raw_vsr(user: Dict[str, Any]) -> bool:
+    """Raw VSR access per SME ruling 2026-10-17.
+
+    Allowed:
+        - TENANT_ADMIN (the Safety Manager)
+        - OFFICER whose department is 'safety' (the canonical code)
+        - SAFETY_OFFICER literal (defensive fallback; no live users have it)
+
+    'safety' is the universal department code for the Safety Department.
+    Display labels (e.g. "Corporate Safety Department") are cosmetic and not
+    consulted.
+    """
+    role = user.get("role")
+    if role in settings.TENANT_ADMIN_ROLES:
+        return True
+    if role == settings.ROLE_SAFETY_OFFICER:
+        return True
+    if role == settings.ROLE_OFFICER:
+        if user.get("department") == "safety":
+            return True
+    return False
 
 
 def can_submit_mor(user: Dict[str, Any]) -> bool:
@@ -267,12 +284,13 @@ async def get_reports(
     """
     if not user.get("tenant_id") and user.get("role") not in settings.CROSS_TENANT_ROLES:
         raise HTTPException(status_code=403, detail="User does not have tenant access")
-    # VSR_VISIBILITY_RULE=A: within a tenant the raw report list is Safety
-    # Manager (TENANT_ADMIN/AIRLINE_ADMIN) or the Safety Department officer
-    # (SAFETY_OFFICER) only. Cross-tenant roles keep their existing view (1A.7
-    # excludes VSRs for them in the service layer).
+    # VSR_VISIBILITY_RULE=A: within a tenant the raw report list is the Safety
+    # Manager (TENANT_ADMIN/AIRLINE_ADMIN) and the Safety Department officer
+    # (OFFICER in the tenant's safety department, or the legacy SAFETY_OFFICER
+    # literal) only. Cross-tenant roles keep their existing view (1A.7 excludes
+    # VSRs for them in the service layer).
     if (user.get("role") not in settings.CROSS_TENANT_ROLES
-            and user.get("role") not in _RAW_VSR_ROLES):
+            and not can_view_raw_vsr(user)):
         raise HTTPException(status_code=403, detail="Safety Manager role required")
     service = ReportService(user.get("tenant_id", "default"))
 
@@ -294,14 +312,14 @@ async def get_report(
     if not doc:
         raise HTTPException(status_code=404, detail="Report not found")
 
-    # VSR_VISIBILITY_RULE=A: raw VSR (narrative + reporter metadata) is Safety
-    # Manager (TENANT_ADMIN/AIRLINE_ADMIN) or the Safety Department officer
-    # (SAFETY_OFFICER) only. Cross-tenant callers never reach here for a VSR
-    # (the service returns None -> 404, 1A.7). MOR and other report types are
-    # unchanged.
+    # VSR_VISIBILITY_RULE=A: raw VSR (narrative + reporter metadata) is the
+    # Safety Manager (TENANT_ADMIN/AIRLINE_ADMIN) and the Safety Department
+    # officer (OFFICER in the tenant's safety department, or the legacy
+    # SAFETY_OFFICER literal) only. Cross-tenant callers never reach here for a
+    # VSR (the service returns None -> 404, 1A.7). MOR/other types unchanged.
     if (doc.get("report_type") == "voluntary"
             and user.get("role") not in settings.CROSS_TENANT_ROLES
-            and user.get("role") not in _RAW_VSR_ROLES):
+            and not can_view_raw_vsr(user)):
         raise HTTPException(status_code=403,
                             detail="Safety Manager role required for voluntary reports")
 

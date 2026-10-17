@@ -69,6 +69,18 @@ def _override(role, tenant_id=TENANT):
     app.dependency_overrides[get_current_user] = lambda: _user(role, tenant_id)
 
 
+def _user_with_department(role, department, tenant_id=TENANT):
+    user = _user(role, tenant_id)
+    user["department"] = department
+    user["claims"] = {"role": role, "tenant_id": tenant_id, "department": department}
+    return user
+
+
+def _override_with_department(role, department, tenant_id=TENANT):
+    app.dependency_overrides[get_current_user] = (
+        lambda: _user_with_department(role, department, tenant_id))
+
+
 def _clear():
     app.dependency_overrides.clear()
 
@@ -148,14 +160,38 @@ def test_dept_admin_denied_raw_vsr(monkeypatch):
         _clear()
 
 
-# T5 — OFFICER (the dual-accept rename, not the Safety Department literal) is
-#      denied raw VSR: the rule keys on the literal `SAFETY_OFFICER`.
-def test_officer_denied_raw_vsr(monkeypatch):
+# T5a — OFFICER with department 'safety' (the canonical code) is allowed the
+#       raw VSR (department-based rule).
+def test_officer_in_safety_department_allowed(monkeypatch):
     _patch_detail(monkeypatch, _report("voluntary"))
-    _override("OFFICER")
+    _override_with_department("OFFICER", department="safety")
+    try:
+        r = client.get(f"/api/v1/reports/{uuid.uuid4()}")
+        assert r.status_code == 200, r.text
+        assert r.json()["narrative"] == "raw narrative text"
+    finally:
+        _clear()
+
+
+# T5b — OFFICER in another department is denied the raw VSR.
+def test_officer_in_other_department_denied(monkeypatch):
+    _patch_detail(monkeypatch, _report("voluntary"))
+    _override_with_department("OFFICER", department="camo")
     try:
         r = client.get(f"/api/v1/reports/{uuid.uuid4()}")
         assert r.status_code == 403, r.text
+    finally:
+        _clear()
+
+
+# T5c — the legacy SAFETY_OFFICER literal is still allowed (defensive fallback;
+#       the residue users were deleted 2026-10-17).
+def test_legacy_safety_officer_allowed(monkeypatch):
+    _patch_detail(monkeypatch, _report("voluntary"))
+    _override("SAFETY_OFFICER")
+    try:
+        r = client.get(f"/api/v1/reports/{uuid.uuid4()}")
+        assert r.status_code == 200, r.text
     finally:
         _clear()
 
@@ -201,15 +237,21 @@ def test_list_allowed_for_raw_vsr_roles(monkeypatch, role):
         _clear()
 
 
-# List endpoint: every other same-tenant role is denied.
-@pytest.mark.parametrize("role", [
-    "ACCOUNTABLE_EXECUTIVE", "DEPT_ADMIN", "OFFICER", "USER", "STAFF",
+# List endpoint: access is decided by role, and for OFFICER by department.
+@pytest.mark.parametrize("role,department,expected", [
+    ("ACCOUNTABLE_EXECUTIVE", None, 403),
+    ("DEPT_ADMIN", None, 403),
+    ("OFFICER", "safety", 200),
+    ("OFFICER", "camo", 403),
+    ("SAFETY_OFFICER", None, 200),
+    ("USER", None, 403),
+    ("STAFF", None, 403),
 ])
-def test_list_denied_for_non_raw_vsr_roles(monkeypatch, role):
-    _override(role)
+def test_list_access_by_role_and_department(monkeypatch, role, department, expected):
+    _override_with_department(role, department=department)
     try:
         r = client.get("/api/v1/reports/")
-        assert r.status_code == 403, r.text
+        assert r.status_code == expected, r.text
     finally:
         _clear()
 
