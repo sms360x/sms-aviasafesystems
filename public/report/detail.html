@@ -256,7 +256,15 @@ function renderReport(report, isSafetyManager, user) {
     }
 
     // AI Assistant Panel
-    if (report.ai_suggested_assessment || report.ai_analysis) {
+    // Phase 3C AI-4: a VSR whose external AI was intentionally skipped carries
+    // ai_status "SKIPPED" and no ai_analysis. Show a neutral policy notice and
+    // never render invented model output, confidence or risk values.
+    const externalAiSkipped = report.ai_status === 'SKIPPED';
+    if (externalAiSkipped) {
+        const skipPanel = document.getElementById('aiPanel');
+        skipPanel.style.display = 'block';
+        document.getElementById('aiContent').textContent = 'External AI analysis was not performed under the VSR confidentiality policy.';
+    } else if (report.ai_suggested_assessment || report.ai_analysis) {
         const aiPanel = document.getElementById('aiPanel');
         aiPanel.style.display = 'block';
         const aiContent = document.getElementById('aiContent');

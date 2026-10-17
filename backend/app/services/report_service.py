@@ -78,6 +78,21 @@ _REPORT_JSONB_COLUMNS = {
     "contributing_factors",
 }
 
+# ── Phase 3C AI-4 — VSR external-AI containment ──────────────────────────────
+# Voluntary Safety Reports (VSRs) are never transmitted to external AI (Gemini)
+# under the confidentiality policy. The report is still stored, retains its
+# original narrative, and remains available to authorized Safety Department
+# staff. A blocked report is recorded truthfully as ai_status="SKIPPED" with
+# ai_analysis left NULL: no fabricated model identifier, confidence or risk
+# values are produced, and the operational status is not marked COMPLETED.
+_EXTERNAL_AI_BLOCKED_REPORT_TYPES = frozenset({"voluntary"})
+VSR_EXTERNAL_AI_POLICY = "VSR_CONFIDENTIALITY_POLICY"
+
+
+def external_ai_blocked_for_report_type(report_type: Optional[str]) -> bool:
+    """True when external AI must not run for this report type (VSR policy)."""
+    return (report_type or "").strip().lower() in _EXTERNAL_AI_BLOCKED_REPORT_TYPES
+
 
 def _report_to_dict(row: Report) -> dict:
     data = {}
@@ -151,6 +166,34 @@ async def _set_ai_status_async(self, tid: uuid.UUID, report_uuid: uuid.UUID, ai_
             row.updated_at = datetime.now(timezone.utc)
 
 
+async def _report_type_blocks_external_ai(self, tid: uuid.UUID, report_uuid: uuid.UUID) -> bool:
+    """Read the persisted report type to decide external-AI eligibility."""
+    async with session_scope() as session:
+        row = (
+            await session.execute(_report_lookup_stmt(tid, report_uuid))
+        ).scalars().first()
+        return bool(row) and external_ai_blocked_for_report_type(row.report_type)
+
+
+async def _mark_external_ai_skipped_async(self, tid: uuid.UUID, report_uuid: uuid.UUID) -> dict:
+    """Record a truthful 'skipped' AI state (no fabricated analysis values)."""
+    now = datetime.now(timezone.utc)
+    async with session_scope() as session:
+        row = (
+            await session.execute(_report_lookup_stmt(tid, report_uuid))
+        ).scalars().first()
+        if not row:
+            return {}
+        row.ai_status = "SKIPPED"
+        # No analysis was performed: keep ai_analysis NULL so no model output,
+        # confidence or risk value can be misread as an assessed safety fact.
+        row.ai_analysis = None
+        # NOTE: report.status is deliberately left untouched — AI must not imply
+        # operational completion or Safety Department review (Phase 3C AI-4 §5).
+        row.updated_at = now
+    return {"ai_status": "SKIPPED", "policy": VSR_EXTERNAL_AI_POLICY}
+
+
 async def _run_ai_analysis_async(self, report_id: str, narrative: str) -> dict:
     start = time.monotonic()
     tid = register_tenant(self.tenant_id)
@@ -160,6 +203,17 @@ async def _run_ai_analysis_async(self, report_id: str, narrative: str) -> dict:
         return {}
 
     try:
+        # Phase 3C AI-4: never transmit a VSR narrative to external AI. The
+        # guard lives at the common analysis choke point so every report-creation
+        # path (including alternate callers) is covered before any egress.
+        if await _report_type_blocks_external_ai(self, tid, report_uuid):
+            await _mark_external_ai_skipped_async(self, tid, report_uuid)
+            logger.info(
+                f"External AI skipped for report {report_id} "
+                f"(policy={VSR_EXTERNAL_AI_POLICY})"
+            )
+            return {}
+
         await _set_ai_status_async(self, tid, report_uuid, "PROCESSING")
 
         analysis = analyze_report(narrative)
@@ -387,6 +441,15 @@ class ReportService:
 
     def run_ai_analysis(self, report_id: str, narrative: str) -> dict:
         return run(_run_ai_analysis_async(self, report_id, narrative))
+
+    def mark_external_ai_skipped(self, report_id: str) -> dict:
+        """Record a truthful 'skipped' AI state for a report excluded from
+        external AI (VSR confidentiality policy). No narrative is transmitted."""
+        report_uuid = _as_uuid(report_id)
+        if report_uuid is None:
+            return {}
+        tid = register_tenant(self.tenant_id)
+        return run(_mark_external_ai_skipped_async(self, tid, report_uuid))
 
     def confirm_risk_assessment(
         self, report_id: str, severity: int, probability: int, user: dict, notes: str = None

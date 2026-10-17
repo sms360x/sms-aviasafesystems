@@ -108,6 +108,25 @@ def _effective_tenant(user: Dict[str, Any], requested: Optional[str]) -> str:
     return user_tenant
 
 
+def _require_assessment_access(user: Dict[str, Any], row_tenant_slug: str) -> None:
+    """3C.2D-PSOE-1: airline self-assessments are private to their tenant.
+
+    An oversight relationship never implies access to self-assessments, and a
+    Module C entitlement never overrides tenant ownership. Regulators
+    (STATE_SMD/CAAN_SMD) may touch only rows owned by their own tenant until
+    regulator workspaces exist; tenantless regulator identities are denied.
+    SUPER_ADMIN platform administration is preserved and recorded separately.
+    """
+    if (user or {}).get("role") in settings.SUPER_ADMIN_ROLES:
+        return
+    own = (user or {}).get("tenant_id")
+    if not own:
+        raise HTTPException(status_code=403, detail="Tenant access required")
+    if (row_tenant_slug or "") != own:
+        raise HTTPException(
+            status_code=403, detail="Cannot access another tenant's assessment")
+
+
 @router.get("/template", response_model=dict)
 async def get_template():
     """Return the standard CAAN Appendix 10 surveillance questions + weights."""
@@ -128,8 +147,23 @@ async def list_assessments(
     archetypeId: Optional[str] = Query(None, description="Virtual archetype tenant (demo-fixed-wing / demo-rotary-wing)."),
     user: Dict[str, Any] = Depends(get_current_user),
 ):
-    """List PSOE assessments for the caller's tenant (all tenants for CAAN_SMD)."""
+    """List PSOE assessments for the caller's own tenant.
+
+    3C.2D-PSOE-1: SUPER_ADMIN alone may browse across tenants. Regulator
+    oversight of an airline never implies access to its self-assessments.
+    """
     effective = _effective_tenant(user, tenant_id)
+    # 3C.2D-PSOE-1: oversight never implies self-assessment access. Only
+    # SUPER_ADMIN may browse across tenants; every other role (tenant or
+    # regulator) is confined to its own tenant rows.
+    if user.get("role") not in settings.SUPER_ADMIN_ROLES:
+        own = user.get("tenant_id")
+        if not own:
+            raise HTTPException(status_code=403, detail="Tenant access required")
+        if tenant_id and tenant_id != own:
+            raise HTTPException(
+                status_code=403, detail="Cannot access another tenant's assessments")
+        effective = own
     # Virtual archetype tenants (safe fallback: only demo-* values honored).
     if archetypeId and str(archetypeId).strip().startswith("demo-"):
         effective = str(archetypeId).strip()
@@ -183,10 +217,22 @@ async def create_assessment(
     user: Dict[str, Any] = Depends(get_safety_manager),
 ):
     """Draft a new PSOE assessment (TENANT_ADMIN / AIRLINE_ADMIN / CAAN_SMD)."""
-    if user.get("role") in settings.CROSS_TENANT_ROLES:
+    if user.get("role") in settings.SUPER_ADMIN_ROLES:
         tenant_id = payload.tenant_id or (user.get("tenant_id") or "")
         if not tenant_id:
-            raise HTTPException(status_code=422, detail="tenant_id is required for CAAN_SMD assessments")
+            raise HTTPException(status_code=422, detail="tenant_id is required")
+    elif user.get("role") in settings.CROSS_TENANT_ROLES:
+        # 3C.2D-PSOE-1: a regulator may only file under its own tenant.
+        # Filing into an airline tenant (surveillance-into-operator rows) is
+        # refused until regulator workspaces exist; tenantless regulators
+        # cannot create assessments at all.
+        own = user.get("tenant_id") or ""
+        if not own:
+            raise HTTPException(status_code=403, detail="Tenant access required")
+        if payload.tenant_id and payload.tenant_id != own:
+            raise HTTPException(
+                status_code=403, detail="Cannot create assessments for another tenant")
+        tenant_id = own
     else:
         tenant_id = user.get("tenant_id") or ""
         if not tenant_id:
@@ -272,8 +318,9 @@ async def get_assessment(
             pass
         if row_tenant_slug == "default":
             row_tenant_slug = str(row.get("tenant_id") or "")
-    if effective and row_tenant_slug != effective:
-        raise HTTPException(status_code=403, detail="Cannot access another tenant's assessment")
+    # 3C.2D-PSOE-1: ownership check applies to regulators too (no silent
+    # cross-tenant bypass when the effective tenant is empty).
+    _require_assessment_access(user, row_tenant_slug)
     return _row_to_assessment(row)
 
 
@@ -306,8 +353,9 @@ async def update_assessment(
             pass
         if row_tenant_slug == "default":
             row_tenant_slug = str(row.get("tenant_id") or "")
-    if effective and row_tenant_slug != effective:
-        raise HTTPException(status_code=403, detail="Cannot access another tenant's assessment")
+    # 3C.2D-PSOE-1: ownership check applies to regulators too (no silent
+    # cross-tenant bypass when the effective tenant is empty).
+    _require_assessment_access(user, row_tenant_slug)
 
     updates: Dict[str, Any] = {}
     for field in ("title", "department", "scope", "auditor_name", "assessor_email",
@@ -681,8 +729,9 @@ async def export_assessment_report(
             pass
         if row_tenant_slug == "default":
             row_tenant_slug = str(row.get("tenant_id") or "")
-    if effective and row_tenant_slug != effective:
-        raise HTTPException(status_code=403, detail="Cannot access another tenant's assessment")
+    # 3C.2D-PSOE-1: ownership check applies to regulators too (no silent
+    # cross-tenant bypass when the effective tenant is empty).
+    _require_assessment_access(user, row_tenant_slug)
 
     assessment = _row_to_assessment(row)
     template = await load_template()

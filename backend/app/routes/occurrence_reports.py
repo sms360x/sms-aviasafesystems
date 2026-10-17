@@ -25,7 +25,7 @@ from app.models.hazard import (
 from app.middleware.auth import get_current_user, get_tenant_user, get_safety_manager
 from app.core.config import settings
 from app.db.ids import register_tenant
-from app.services.report_service import ReportService
+from app.services.report_service import ReportService, external_ai_blocked_for_report_type
 from app.services.hazard_service import HazardService, derive_priority_from_consequence
 from app.services.risk_matrix import compute_risk_index, get_risk_level
 from app.services.severity_service import apply_auto_severity
@@ -108,7 +108,12 @@ async def submit_report(
     payload = report.model_dump()
     apply_auto_severity(payload)
     stored = service.create_report(payload, user)
-    background_tasks.add_task(service.run_ai_analysis, stored["id"], report.narrative)
+    # Phase 3C AI-4: only non-VSR reports are eligible for external AI. This
+    # legacy path can also create voluntary reports, so the policy applies here.
+    if external_ai_blocked_for_report_type(stored.get("report_type")):
+        background_tasks.add_task(service.mark_external_ai_skipped, stored["id"])
+    else:
+        background_tasks.add_task(service.run_ai_analysis, stored["id"], report.narrative)
     _auto_create_hazard_from_report(stored, user)
     ip, request_id = request_context(request)
     log_audit(
@@ -233,7 +238,9 @@ async def submit_vsr(
     payload["report_type"] = "voluntary"
 
     stored = service.create_report(payload, user)
-    background_tasks.add_task(service.run_ai_analysis, stored["id"], report.narrative)
+    # Phase 3C AI-4: VSR narratives are never sent to external AI. The narrative
+    # is not passed into any AI task; only a truthful skipped state is recorded.
+    background_tasks.add_task(service.mark_external_ai_skipped, stored["id"])
     _auto_create_hazard_from_report(stored, user)
     ip, request_id = request_context(request)
     log_audit(

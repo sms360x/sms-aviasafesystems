@@ -145,7 +145,12 @@ Do NOT include risk_index or risk_level in the JSON. Those are computed server-s
             result = json.loads(json_match.group())
             return result
         else:
-            logger.error(f"Failed to parse Gemini response: {response_text}")
+            # Phase 3C AI-4: never log the raw model response — it can echo the
+            # report narrative. Log only non-sensitive diagnostics.
+            logger.error(
+                "Failed to parse Gemini response "
+                f"(length={len(response_text)} chars); using keyword fallback."
+            )
             return mock_analysis(narrative)
 
     except Exception as e:

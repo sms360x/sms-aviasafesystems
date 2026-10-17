@@ -23,6 +23,10 @@ class AiStatus(str, Enum):
     PROCESSING = "PROCESSING"
     COMPLETED = "COMPLETED"
     FAILED = "FAILED"
+    # Phase 3C AI-4 — external AI intentionally not performed (e.g. VSR
+    # confidentiality policy). Truthful terminal state: never implies an
+    # attempted or completed analysis.
+    SKIPPED = "SKIPPED"
 
 
 _OCCURRENCE_TYPES = ["ACCIDENT", "SERIOUS_INCIDENT", "INCIDENT"]

@@ -157,6 +157,23 @@ async def list_assessments(
 ):
     """List assessments for the user's tenant (optionally a target tenant for
     regulator / super admin roles)."""
+    # 3C.2D-PSOE-1: oversight never implies self-assessment access. Only
+    # SUPER_ADMIN may scope across tenants; regulators are confined to their
+    # own tenant rows until regulator workspaces exist.
+    if (user.get("role") in settings.CROSS_TENANT_ROLES
+            and user.get("role") not in settings.SUPER_ADMIN_ROLES):
+        own = user.get("tenant_id") or ""
+        if not own:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Tenant access required",
+            )
+        if tenant_id and tenant_id != own:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Cannot access another tenant's assessments",
+            )
+        tenant_id = own
     try:
         result = await psoe_complete_service.list_assessments(
             _resolve_scope(user, tenant_id), status=status_filter
