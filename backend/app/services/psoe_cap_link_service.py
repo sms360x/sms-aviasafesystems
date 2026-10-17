@@ -15,10 +15,32 @@ from typing import Any, Dict, Optional
 from loguru import logger
 from sqlalchemy import select
 
-from app.db.db_models import Cap, PsoeFinding
+from app.db.db_models import Cap, PsoeAssessment, PsoeFinding
+from app.db.ids import register_tenant
 from app.db.runner import run
 from app.db.session import session_scope
 from app.services.audit_service import log_audit
+
+
+async def _scope_uuid(tenant_slug: str) -> uuid.UUID:
+    return _to_uuid(register_tenant(tenant_slug))
+
+
+async def _finding_assessment_tenant(session, finding_id: str) -> uuid.UUID:
+    """Tenant uuid owning a finding (via its parent assessment)."""
+    assessment_id = (await session.execute(
+        select(PsoeFinding.assessment_id).where(
+            PsoeFinding.id == _to_uuid(finding_id))
+    )).scalar_one_or_none()
+    if assessment_id is None:
+        raise ValueError(f"PSOE finding {finding_id!r} not found")
+    owner = (await session.execute(
+        select(PsoeAssessment.tenant_id).where(
+            PsoeAssessment.id == assessment_id)
+    )).scalar_one_or_none()
+    if owner is None:
+        raise ValueError(f"PSOE finding {finding_id!r} has no assessment")
+    return owner
 
 
 def _to_uuid(value: Any) -> uuid.UUID:
@@ -62,6 +84,16 @@ class PsoeCapLinkService:
             if not cap:
                 raise ValueError(f"CAP {cap_id!r} not found")
 
+            # 3C.2D-PSOE-1: both sides must belong to the caller's authorized
+            # scope. Bare record IDs never bypass tenant authorization; the
+            # link gate already requires TENANT_ADMIN-family or regulator role,
+            # and linking a CAP is a Module B mutation under that same role.
+            scope = await _scope_uuid(self.tenant_id or "")
+            assessment_owner = await _finding_assessment_tenant(session, finding_id)
+            if assessment_owner != scope or cap.tenant_id != scope:
+                raise PermissionError(
+                    "Cross-tenant PSOE-to-CAP link denied")
+
             # Both sides updated in the same transaction.
             finding.cap_id = cap.id
             cap.source_psoe_finding_id = finding.id
@@ -87,6 +119,12 @@ class PsoeCapLinkService:
             )).scalars().first()
             if not finding:
                 raise ValueError(f"PSOE finding {finding_id!r} not found")
+            # 3C.2D-PSOE-1: unlinks mutate shared linkage state — the finding
+            # must belong to the caller's authorized scope first.
+            scope = await _scope_uuid(self.tenant_id or "")
+            if await _finding_assessment_tenant(session, finding_id) != scope:
+                raise PermissionError(
+                    "Cross-tenant PSOE-to-CAP unlink denied")
             cap_id = finding.cap_id
             finding.cap_id = None
             if cap_id is not None:
