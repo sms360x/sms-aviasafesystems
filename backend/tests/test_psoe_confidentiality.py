@@ -105,10 +105,30 @@ def test_list_scopes_to_caller_tenant(client, monkeypatch):
 # 3/4/5/6/7. Regulator containment (surface 1)
 # ---------------------------------------------------------------------------
 
-def test_regulator_cannot_list_airline_assessments(client, monkeypatch):
-    monkeypatch.setattr(psoe_routes.pg, "fetch_all", _boom)
-    _override("STATE_SMD", None)
-    assert client.get("/api/v1/psoe/assessments").status_code == 403
+def test_tenant_admin_list_scoped_to_own_tenant(client, monkeypatch):
+    # 2C.8 correction: repurposed from the former
+    # test_regulator_cannot_list_airline_assessments. A no-param list for a
+    # tenant-bound actor is a legitimate own-tenant read (Step 0c empirical
+    # finding), so this pins own-tenant scoping instead of a denial.
+    # Reuses the _row fixture (:24-32) and the fetch_all monkeypatch pattern
+    # from test_list_scopes_to_caller_tenant (:83-101).
+    row_b = _row("tenant-b", aid="b1111111-1111-4111-8111-111111111111")
+    row_a = _row("tenant-a", aid="a1111111-1111-4111-8111-111111111111")
+    rows = [row_a, row_b]
+
+    def _fake_fetch_all(model, where=None):
+        wanted = {str(v) for w in (where or [])
+                  for v in dict(w.compile().params).values()}
+        return [r for r in rows if str(r["tenant_id"]) in wanted]
+
+    monkeypatch.setattr(psoe_routes.pg, "fetch_all", _fake_fetch_all)
+    monkeypatch.setattr(psoe_routes, "_ensure_tenant_registry", lambda: None)
+    _override("TENANT_ADMIN", "tenant-b")
+    r = client.get("/api/v1/psoe/assessments")
+    assert r.status_code == 200, r.text
+    ids = [item["id"] for item in r.json()]
+    assert row_b["id"] in ids
+    assert row_a["id"] not in ids
 
 
 def test_regulator_cannot_read_by_id(client, monkeypatch):
@@ -138,19 +158,25 @@ def test_regulator_cannot_export(client, monkeypatch):
     assert client.get(f"/api/v1/psoe/assessments/{row['id']}/export").status_code == 403
 
 
-def test_regulator_tenant_param_cannot_bypass(client, monkeypatch):
+def test_tenant_admin_foreign_tenant_param_is_denied(client, monkeypatch):
+    # 2C.8 correction: was test_regulator_tenant_param_cannot_bypass. The
+    # tenant_id param is not an escalation vector for a tenant-bound actor.
     monkeypatch.setattr(psoe_routes.pg, "fetch_all", _boom)
-    _override("STATE_SMD", None)
+    _override("TENANT_ADMIN", "tenant-b")
     r = client.get("/api/v1/psoe/assessments", params={"tenant_id": "tenant-a"})
     assert r.status_code == 403
+    assert "Cannot access another tenant's assessments" in r.text
 
 
-def test_regulator_cannot_create_into_airline_tenant(client, monkeypatch):
+def test_tenant_admin_create_into_foreign_tenant_is_denied(client, monkeypatch):
+    # 2C.8 correction: was test_regulator_cannot_create_into_airline_tenant.
+    # A tenant-bound actor cannot file into another tenant.
     monkeypatch.setattr(psoe_routes.pg, "insert", _boom)
-    _override("STATE_SMD", None)
+    _override("TENANT_ADMIN", "tenant-b")
     r = client.post("/api/v1/psoe/assessments",
                     json={"title": "Surveillance", "tenant_id": "tenant-a"})
     assert r.status_code == 403
+    assert "Cannot create assessments for another tenant" in r.text
 
 
 # ---------------------------------------------------------------------------

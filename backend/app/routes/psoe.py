@@ -49,14 +49,12 @@ router = APIRouter()
 
 PSOE_COLLECTION = "psoe_assessments"
 
-# 2C.8 — regulator alignment for the PSoE surface. PSoE (CAAN Appendix 10) is
-# CAAN-specific surveillance: the CAAN regulator (CAAN_SMD) may browse across
-# operators or scope to an explicit target tenant, like SUPER_ADMIN and like
-# reporting._effective_tenant. The generalized STATE_SMD alias is NOT a PSoE
-# reviewer — it keeps the stricter 3C.2D-PSOE-1 containment (an oversight/state
-# role never sees an operator's self-assessments), pinned by
-# tests/test_psoe_confidentiality.py.
-_REGULATOR_SURVEY_ROLES = frozenset(settings.SUPER_ADMIN_ROLES) | {"CAAN_SMD"}
+# 2C.8 (corrected) — the PSoE reviewer is the canonical, state-neutral regulator
+# role STATE_SMD (Step 2 D4 / Step 1 L4). List and create therefore gate on
+# settings.CROSS_TENANT_ROLES = ["CAAN_SMD", "STATE_SMD", "SUPER_ADMIN"]: the
+# migration target STATE_SMD plus SUPER_ADMIN, with the legacy CAAN_SMD literal
+# retained until Step 3 — 2B.5:168-169 keeps it in CROSS_TENANT_ROLES because
+# ~40 out-of-scope readers still compare the literal "CAAN_SMD".
 
 
 def _ensure_tenant_registry() -> None:
@@ -162,11 +160,11 @@ async def list_assessments(
     oversight of an airline never implies access to its self-assessments.
     """
     effective = _effective_tenant(user, tenant_id)
-    # 2C.8: SUPER_ADMIN (platform administration) and the CAAN regulator
-    # (CAAN_SMD) may browse across tenants or scope to an explicit target.
-    # Every other role — tenant-bound and the generalized STATE_SMD alias —
-    # stays confined to its own tenant rows (3C.2D-PSOE-1 containment).
-    if user.get("role") not in _REGULATOR_SURVEY_ROLES:
+    # 2C.8 (corrected): the STATE_SMD regulator (canonical; multi-state), the
+    # legacy CAAN_SMD literal (Step-3 residual), and SUPER_ADMIN may browse
+    # across tenants or scope to an explicit target. Tenant-bound roles stay
+    # confined to their own tenant rows.
+    if user.get("role") not in settings.CROSS_TENANT_ROLES:
         own = user.get("tenant_id")
         if not own:
             raise HTTPException(status_code=403, detail="Tenant access required")
@@ -226,25 +224,14 @@ async def create_assessment(
     payload: PSOEAssessmentCreate,
     user: Dict[str, Any] = Depends(get_safety_manager),
 ):
-    """Draft a new PSOE assessment (TENANT_ADMIN / AIRLINE_ADMIN / CAAN_SMD)."""
-    if user.get("role") in _REGULATOR_SURVEY_ROLES:
-        # 2C.8: SUPER_ADMIN and the CAAN regulator (CAAN_SMD) file under an
-        # explicit target tenant; a tenantless CAAN caller must name one (422).
+    """Draft a new PSOE assessment (TENANT_ADMIN / STATE_SMD / CAAN_SMD)."""
+    if user.get("role") in settings.CROSS_TENANT_ROLES:
+        # 2C.8 (corrected): STATE_SMD (canonical), the legacy CAAN_SMD literal,
+        # and SUPER_ADMIN file under an explicit target tenant; a caller with
+        # neither a target nor a tenant of their own must name one (422).
         tenant_id = payload.tenant_id or (user.get("tenant_id") or "")
         if not tenant_id:
             raise HTTPException(status_code=422, detail="tenant_id is required")
-    elif user.get("role") in settings.CROSS_TENANT_ROLES:
-        # 3C.2D-PSOE-1: a regulator may only file under its own tenant.
-        # Filing into an airline tenant (surveillance-into-operator rows) is
-        # refused until regulator workspaces exist; tenantless regulators
-        # cannot create assessments at all.
-        own = user.get("tenant_id") or ""
-        if not own:
-            raise HTTPException(status_code=403, detail="Tenant access required")
-        if payload.tenant_id and payload.tenant_id != own:
-            raise HTTPException(
-                status_code=403, detail="Cannot create assessments for another tenant")
-        tenant_id = own
     else:
         tenant_id = user.get("tenant_id") or ""
         if not tenant_id:
@@ -343,7 +330,7 @@ async def update_assessment(
     tenant_id: Optional[str] = Query(None),
     user: Dict[str, Any] = Depends(get_safety_manager),
 ):
-    """Update an existing PSOE assessment (TENANT_ADMIN / AIRLINE_ADMIN / CAAN_SMD)."""
+    """Update an existing PSOE assessment (TENANT_ADMIN / STATE_SMD / CAAN_SMD)."""
     effective = _effective_tenant(user, tenant_id)
     try:
         row = pg.fetch_by(PgAssessment, "id", assessment_id)

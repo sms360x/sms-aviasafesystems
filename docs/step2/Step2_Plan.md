@@ -571,6 +571,7 @@ A NEW failure (not on this list) stops the item.
 ## Phase 2C — planned items
 
 2C.8 — Regulator alignment for PSoE endpoints — COMPLETE
+(corrected in the follow-up commit on top of 3719fe1)
 
 Finding: the PSoE endpoints rejected CAAN_SMD (tid=None)
 with "Tenant access required" (the list/create guards in
@@ -579,17 +580,34 @@ noted). Three tests assert that CAAN_SMD can read/create
 assessments with a target tenant. The guard prevented
 this.
 
-Resolution (implemented): the CAAN regulator (CAAN_SMD) may
-pass a target tenant through the PSoE guard. On list it
-browses across operators or scopes to an explicit target;
-on create it files under an explicit target and returns 422
-when a tenantless CAAN caller names none. This matches the
-module's contract (PSoE is CAAN-specific surveillance) and
-the cross-tenant scoping already used by
-reporting._effective_tenant. The generalized STATE_SMD alias
-is NOT a PSoE reviewer: it keeps the stricter 3C.2D-PSOE-1
-containment pinned by tests/test_psoe_confidentiality.py, so
-no test assertion was changed.
+Resolution (implemented, then corrected):
+- (a) The first fix introduced a CAAN_SMD-only literal
+  (`_REGULATOR_SURVEY_ROLES`) and framed PSoE as
+  CAAN-specific. That was misaligned with D4 (STATE_SMD
+  canonical; retire CAAN_SMD) and the multi-state roadmap.
+- (b) The correction deletes that literal and aligns the
+  list/create guards with `settings.CROSS_TENANT_ROLES`
+  (`config.py:156`) — the same set `reporting._effective_tenant`
+  uses.
+- (c) STATE_SMD now has full PSoE list + create parity: it
+  browses across operators or scopes to an explicit target
+  (list), and files under an explicit target (create; 422
+  when a caller names none and has no tenant of their own).
+- (d) Three tenant-containment assertions were rewritten to
+  the canonical, migrated actor `TENANT_ADMIN` (2B.3):
+  list/create into a foreign tenant stay denied
+  ("Cannot access another tenant's assessments" /
+  "Cannot create assessments for another tenant"). The
+  regulator gains the index + explicit filing; the
+  assessment *body* stays contained — read/edit/export by
+  id are unchanged via `_require_assessment_access`.
+- (e) `test_regulator_cannot_list_airline_assessments` was
+  repurposed to a positive own-tenant scoping test
+  (`test_tenant_admin_list_scoped_to_own_tenant`): a
+  no-param list for a tenant-bound actor is legitimate
+  (Step 0c empirical finding — 200, not 403).
+- (f) `CAAN_SMD` is retained in `CROSS_TENANT_ROLES` as a
+  Step-3 residual (2B.5:168-169); it is not removed here.
 
 3 tests fixed (now removed from the known-failures list):
 tests/test_psoe_models.py::
