@@ -409,9 +409,14 @@ leaves the product working.
   department models unified; see the Phase 2B close below.
 - **Phase 2C — Database-layer RLS (W3).** Rewrite policies against the
   resolved identity; write the 8 deferred policies; capture drift;
-  decide/implement FORCE RLS. Depends on 2A/2B.
+  decide/implement FORCE RLS. Depends on 2A/2B. **Closed 2026-10-15** — RLS
+  enforced on the app path with adversarial, smoke, and drift proofs; see
+  the Phase 2C close below (2C.6). 2C.7 and 2C.8 are post-close fixes.
 - **Phase 2D — Reporter-contact store + service wiring (W4).** Can run
-  in parallel with 2C after 2B.
+  in parallel with 2C after 2B. **Design of record:
+  `docs/step2/2D.1_reporter_contact_design.md`** (completed design pass,
+  2026-10-17). 2D.1 §16 lists 8 open SME questions that MUST be resolved
+  before 2D.2 begins (required gate). 2D.2 not started.
 - **Phase 2E — Durable audit trail (W5).** Persist escalations/overrides;
   extend read-audit coverage. Depends on 2A/2B; can run alongside 2D/2C.
 - **Phase 2F — Placeholder removal (W6).** Depends on 2B; can run last or
@@ -573,6 +578,12 @@ A NEW failure (not on this list) stops the item.
 2C.8 — Regulator alignment for PSoE endpoints — COMPLETE
 (corrected in the follow-up commit on top of 3719fe1)
 
+Follow-up commit 5fc2a4a adds STATE_SMD positive-path tests
+(`test_state_smd_can_list_all_assessments`,
+`test_state_smd_can_list_scoped_by_tenant`,
+`test_state_smd_can_create_assessment_with_target_tenant`) mirroring the
+CAAN_SMD coverage. Recorded as a follow-up commit, not a new plan item.
+
 Finding: the PSoE endpoints rejected CAAN_SMD (tid=None)
 with "Tenant access required" (the list/create guards in
 backend/app/routes/psoe.py, not endpoints/psoe.py as first
@@ -614,6 +625,16 @@ tests/test_psoe_models.py::
   test_caan_smd_can_create_assessment_with_target_tenant,
   test_caan_smd_must_specify_target_tenant,
   test_caan_smd_lists_all_or_scopes_by_tenant
+
+### PSoE status (on hold)
+
+PSoE Audit is deliberately **on hold** until the current Step-2 tasks
+complete; it is not a blocker for 2C/2D/2E/2F. Surface 1
+(`backend/app/routes/psoe.py`) currently grants regulator list + create via
+`settings.CROSS_TENANT_ROLES` (2C.8). Surface 2
+(`backend/app/api/v1/endpoints/psoe.py:163-169`) still denies regulator browse;
+the surface-1 vs surface-2 asymmetry is intentional while PSoE is on hold, and
+the two surfaces are to be reconciled when PSoE resumes.
 
 ---
 
