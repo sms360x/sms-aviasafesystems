@@ -380,6 +380,21 @@ def test_caan_smd_can_create_assessment_with_target_tenant(monkeypatch):
     assert resp.json()["tenant_id"] == "airline1"
 
 
+def test_state_smd_can_create_assessment_with_target_tenant(monkeypatch):
+    db = _FakeDB()
+    _patch(monkeypatch, db)
+    _override_user(_as_role("STATE_SMD", tid=None))
+    try:
+        resp = TestClient(app).post("/api/v1/psoe/assessments", json={
+            "title": "STATE surveillance - airline1",
+            "tenant_id": "airline1",
+        })
+    finally:
+        _clear_override()
+    assert resp.status_code == 201, resp.text
+    assert resp.json()["tenant_id"] == "airline1"
+
+
 def test_caan_smd_must_specify_target_tenant(monkeypatch):
     db = _FakeDB()
     _patch(monkeypatch, db)
@@ -452,6 +467,50 @@ def test_caan_smd_lists_all_or_scopes_by_tenant(monkeypatch):
     assert len(resp.json()) == 2
 
     _override_user(_as_role("CAAN_SMD", tid=None))
+    try:
+        resp = TestClient(app).get("/api/v1/psoe/assessments?tenant_id=airline2")
+    finally:
+        _clear_override()
+    assert resp.status_code == 200
+    assert [a["tenant_id"] for a in resp.json()] == ["airline2"]
+
+
+def test_state_smd_can_list_all_assessments(monkeypatch):
+    db = _FakeDB()
+    _patch(monkeypatch, db)
+    db.psoe_assessments["a1"] = {
+        "id": "a1", "tenant_id": tenant_uuid("airline1"), "title": "Airline 1 audit",
+        "status": "draft", "template_version": "1.0.0", "is_demo": demo_scope(),
+        "created_at": "2026-08-20T00:00:00Z",
+    }
+    db.psoe_assessments["a2"] = {
+        "id": "a2", "tenant_id": tenant_uuid("airline2"), "title": "Airline 2 audit",
+        "status": "draft", "template_version": "1.0.0", "is_demo": demo_scope(),
+        "created_at": "2026-08-20T00:00:00Z",
+    }
+    _override_user(_as_role("STATE_SMD", tid=None))
+    try:
+        resp = TestClient(app).get("/api/v1/psoe/assessments")
+    finally:
+        _clear_override()
+    assert resp.status_code == 200
+    assert len(resp.json()) == 2
+
+
+def test_state_smd_can_list_scoped_by_tenant(monkeypatch):
+    db = _FakeDB()
+    _patch(monkeypatch, db)
+    db.psoe_assessments["a1"] = {
+        "id": "a1", "tenant_id": tenant_uuid("airline1"), "title": "Airline 1 audit",
+        "status": "draft", "template_version": "1.0.0", "is_demo": demo_scope(),
+        "created_at": "2026-08-20T00:00:00Z",
+    }
+    db.psoe_assessments["a2"] = {
+        "id": "a2", "tenant_id": tenant_uuid("airline2"), "title": "Airline 2 audit",
+        "status": "draft", "template_version": "1.0.0", "is_demo": demo_scope(),
+        "created_at": "2026-08-20T00:00:00Z",
+    }
+    _override_user(_as_role("STATE_SMD", tid=None))
     try:
         resp = TestClient(app).get("/api/v1/psoe/assessments?tenant_id=airline2")
     finally:
