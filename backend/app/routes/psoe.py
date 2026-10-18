@@ -49,6 +49,15 @@ router = APIRouter()
 
 PSOE_COLLECTION = "psoe_assessments"
 
+# 2C.8 — regulator alignment for the PSoE surface. PSoE (CAAN Appendix 10) is
+# CAAN-specific surveillance: the CAAN regulator (CAAN_SMD) may browse across
+# operators or scope to an explicit target tenant, like SUPER_ADMIN and like
+# reporting._effective_tenant. The generalized STATE_SMD alias is NOT a PSoE
+# reviewer — it keeps the stricter 3C.2D-PSOE-1 containment (an oversight/state
+# role never sees an operator's self-assessments), pinned by
+# tests/test_psoe_confidentiality.py.
+_REGULATOR_SURVEY_ROLES = frozenset(settings.SUPER_ADMIN_ROLES) | {"CAAN_SMD"}
+
 
 def _ensure_tenant_registry() -> None:
     try:
@@ -153,10 +162,11 @@ async def list_assessments(
     oversight of an airline never implies access to its self-assessments.
     """
     effective = _effective_tenant(user, tenant_id)
-    # 3C.2D-PSOE-1: oversight never implies self-assessment access. Only
-    # SUPER_ADMIN may browse across tenants; every other role (tenant or
-    # regulator) is confined to its own tenant rows.
-    if user.get("role") not in settings.SUPER_ADMIN_ROLES:
+    # 2C.8: SUPER_ADMIN (platform administration) and the CAAN regulator
+    # (CAAN_SMD) may browse across tenants or scope to an explicit target.
+    # Every other role — tenant-bound and the generalized STATE_SMD alias —
+    # stays confined to its own tenant rows (3C.2D-PSOE-1 containment).
+    if user.get("role") not in _REGULATOR_SURVEY_ROLES:
         own = user.get("tenant_id")
         if not own:
             raise HTTPException(status_code=403, detail="Tenant access required")
@@ -217,7 +227,9 @@ async def create_assessment(
     user: Dict[str, Any] = Depends(get_safety_manager),
 ):
     """Draft a new PSOE assessment (TENANT_ADMIN / AIRLINE_ADMIN / CAAN_SMD)."""
-    if user.get("role") in settings.SUPER_ADMIN_ROLES:
+    if user.get("role") in _REGULATOR_SURVEY_ROLES:
+        # 2C.8: SUPER_ADMIN and the CAAN regulator (CAAN_SMD) file under an
+        # explicit target tenant; a tenantless CAAN caller must name one (422).
         tenant_id = payload.tenant_id or (user.get("tenant_id") or "")
         if not tenant_id:
             raise HTTPException(status_code=422, detail="tenant_id is required")

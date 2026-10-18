@@ -565,35 +565,37 @@ A NEW failure (not on this list) stops the item.
          registers; the SRAM router mounts under /api/v1
          with no /sram prefix. Unrelated to Phase 2B.
          Test defect; fix in a Step 3 cleanup item.)
-    tests/test_psoe_models.py::
-        test_caan_smd_can_create_assessment_with_target_tenant
-    tests/test_psoe_models.py::
-        test_caan_smd_must_specify_target_tenant
-    tests/test_psoe_models.py::
-        test_caan_smd_lists_all_or_scopes_by_tenant
-        (Pre-existing from 9a9335a regulator alignment. The
-         PSoE endpoint rejects CAAN_SMD with tid=None, returning
-         "Tenant access required". Deterministic, not
-         environmental. Scheduled fix: item 2C.8.)
 
 ---
 
 ## Phase 2C — planned items
 
-2C.8 — Regulator alignment for PSoE endpoints
+2C.8 — Regulator alignment for PSoE endpoints — COMPLETE
 
-Finding: the PSoE endpoints reject CAAN_SMD (tid=None)
-with "Tenant access required" (api/v1/endpoints/psoe.py:163-169).
-Three tests assert that CAAN_SMD can read/create
-assessments with a target tenant. The guard prevents
+Finding: the PSoE endpoints rejected CAAN_SMD (tid=None)
+with "Tenant access required" (the list/create guards in
+backend/app/routes/psoe.py, not endpoints/psoe.py as first
+noted). Three tests assert that CAAN_SMD can read/create
+assessments with a target tenant. The guard prevented
 this.
 
-Action: either allow CAAN_SMD to pass a target tenant
-through the guard (matching the 3A regulator alignment
-intent), or formally update the tests to assert the
-CAAN_SMD restriction.
+Resolution (implemented): the CAAN regulator (CAAN_SMD) may
+pass a target tenant through the PSoE guard. On list it
+browses across operators or scopes to an explicit target;
+on create it files under an explicit target and returns 422
+when a tenantless CAAN caller names none. This matches the
+module's contract (PSoE is CAAN-specific surveillance) and
+the cross-tenant scoping already used by
+reporting._effective_tenant. The generalized STATE_SMD alias
+is NOT a PSoE reviewer: it keeps the stricter 3C.2D-PSOE-1
+containment pinned by tests/test_psoe_confidentiality.py, so
+no test assertion was changed.
 
-SME to decide in 2C.8.
+3 tests fixed (now removed from the known-failures list):
+tests/test_psoe_models.py::
+  test_caan_smd_can_create_assessment_with_target_tenant,
+  test_caan_smd_must_specify_target_tenant,
+  test_caan_smd_lists_all_or_scopes_by_tenant
 
 ---
 
