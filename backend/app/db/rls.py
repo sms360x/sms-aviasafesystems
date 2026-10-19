@@ -5,7 +5,7 @@
 #          database session so RLS policies can read it (D7/D8).
 #
 #          A request-scoped ContextVar holds the identity. A SQLAlchemy
-#          `after_begin` listener sets the four `app.current_*` session GUCs on
+#          `after_begin` listener sets the five `app.current_*` session GUCs on
 #          every transaction that has an identity (harmless under the owner
 #          role), and additionally runs `SET LOCAL ROLE authenticated` only when
 #          settings.RLS_ENFORCEMENT_ENABLED is true.
@@ -63,6 +63,7 @@ def identity_from_user(user: Optional[Dict[str, Any]]) -> Optional[Dict[str, Any
         "tenant_uuid": tenant_uuid_value,
         "tenant_slug": str(slug) if slug else None,
         "role": user.get("role"),
+        "department": user.get("department"),
         "user_uid": user.get("uid"),
     }
 
@@ -95,6 +96,12 @@ def _apply_identity(conn) -> None:
     conn.exec_driver_sql(
         "SELECT set_config('app.current_role', "
         f"{_q(identity.get('role'))}, true)"
+    )
+    # 2D.2: "safety department" is a constraint on VSR-related activity, not a
+    # role. Policies that gate VSR work need the department alongside the role.
+    conn.exec_driver_sql(
+        "SELECT set_config('app.current_department', "
+        f"{_q(identity.get('department'))}, true)"
     )
     conn.exec_driver_sql(
         "SELECT set_config('app.current_user', "

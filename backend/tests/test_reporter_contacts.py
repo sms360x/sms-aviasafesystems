@@ -15,6 +15,8 @@ from datetime import datetime, timezone
 
 from sqlalchemy import select
 
+import pytest
+
 from app.db.db_models import Report, ReporterContact
 from app.db.isolation import demo_scope
 from app.db.session import session_scope
@@ -78,7 +80,8 @@ def test_vsr_contact_written_at_submission():
             rid, tid,
             {"reporter_name": "Jane Reporter", "reporter_email": "jane@x.com",
              "reporter_phone": "+977-9800000000"},
-            {"role": "STAFF", "tenant_id": slug, "uid": "u1"})
+            {"role": "OFFICER", "department": "safety", "tenant_id": slug,
+             "uid": "u1"})
         assert out["report_id"] == rid
 
         row = _contact_row(rid)
@@ -237,8 +240,8 @@ def test_create_report_writes_store_and_sets_flag():
                 "reporter_phone": "+977-9800000000",
                 "is_anonymous": False,
             },
-            {"uid": "reporter-1", "email": "jane@x.com", "role": "STAFF",
-             "tenant_id": slug},
+            {"uid": "reporter-1", "email": "jane@x.com", "role": "OFFICER",
+             "department": "safety", "tenant_id": slug},
         )
         rid = stored["id"]
         assert stored["is_confidential"] is True
@@ -280,10 +283,125 @@ def test_create_mor_does_not_write_store():
                 "reporter_name": "Jane Reporter",
                 "reporter_email": "jane@x.com",
             },
-            {"uid": "reporter-2", "email": "jane@x.com", "role": "STAFF",
-             "tenant_id": slug},
+            {"uid": "reporter-2", "email": "jane@x.com", "role": "OFFICER",
+             "department": "safety", "tenant_id": slug},
         )
         assert not stored.get("is_confidential")
         assert _contact_row(stored["id"]) is None
+    finally:
+        cleanup(slug, TABLES)
+
+
+# ---------------------------------------------------------------------------
+# Submission actor: "OFFICER" is a role; "safety department" is a constraint on
+# VSR activity. Only (OFFICER AND department='safety') or TENANT_ADMIN may file.
+# ---------------------------------------------------------------------------
+@pytest.mark.parametrize("role,department,allowed", [
+    ("OFFICER", "safety", True),
+    ("TENANT_ADMIN", None, True),
+    ("OFFICER", "camo", False),
+    ("OFFICER", None, False),
+    ("STAFF", "safety", False),
+    ("DEPT_ADMIN", "safety", False),
+    ("STATE_SMD", "safety", False),
+    ("SUPER_ADMIN", "safety", False),
+])
+def test_can_submit_vsr_actor_matrix(role, department, allowed):
+    from app.routes.occurrence_reports import can_submit_vsr
+
+    user = {"role": role, "tenant_id": "air1"}
+    if department is not None:
+        user["department"] = department
+    assert can_submit_vsr(user) is allowed
+
+
+def test_vsr_endpoint_rejects_non_safety_actor(monkeypatch):
+    """A STAFF caller gets a clear 403, not a report whose contact row was
+    silently dropped by RLS."""
+    from fastapi.testclient import TestClient
+
+    from app.main import app
+    from app.middleware.auth import get_tenant_user
+    from app.services.report_service import ReportService
+
+    app.dependency_overrides[get_tenant_user] = lambda: {
+        "uid": "u1", "email": "u1@x.test", "role": "STAFF",
+        "tenant_id": "air1", "department": "safety",
+    }
+    called = []
+    monkeypatch.setattr(ReportService, "create_report",
+                        lambda self, payload, user: called.append(1) or {})
+    try:
+        resp = TestClient(app).post("/api/v1/reports/vsr", json={
+            "narrative": "a report narrative long enough",
+            "location": "KTM",
+            "occurrence_date": datetime.now(timezone.utc).isoformat(),
+        })
+        assert resp.status_code == 403, resp.text
+        assert not called, "create_report must not run for a denied actor"
+    finally:
+        app.dependency_overrides.clear()
+
+
+def test_rls_insert_policy_admits_only_safety_actor():
+    """The database policy — not just the app check — admits exactly the SME's
+    actor set. Exercises the real RLS policy as `authenticated`."""
+    from sqlalchemy import text
+
+    from app.db.ids import register_tenant
+
+    slug = unique_slug("rc-rls-ins")
+    tid = str(register_tenant(slug))
+    report_ids = {}
+
+    async def seed(report_id):
+        async with session_scope() as s:
+            await s.execute(text(
+                "insert into public.reports (id, tenant_id, report_type, status, "
+                "ai_status, narrative, location, occurrence_date, created_by, "
+                "is_confidential) values (:id, :t, 'voluntary', 'NEW', 'PENDING', "
+                "'n', 'KTM', now(), 'sys', true)"), {"id": report_id, "t": tid})
+
+    async def seed_tenant():
+        async with session_scope() as s:
+            await s.execute(text(
+                "insert into public.tenants (id, slug, name, is_demo, "
+                "is_beta_sandbox, created_at, updated_at) values "
+                "(:id, :slug, :name, false, false, now(), now()) "
+                "on conflict do nothing"), {"id": tid, "slug": slug, "name": slug})
+
+    def attempt(role, department):
+        report_id = str(uuid.uuid4())
+        report_ids[role + str(department)] = report_id
+
+        async def _go():
+            await seed(report_id)
+            async with session_scope() as s:
+                await s.execute(text("SET LOCAL ROLE authenticated"))
+                await s.execute(text(
+                    "select set_config('app.current_role', :r, true)"), {"r": role})
+                await s.execute(text(
+                    "select set_config('app.current_tenant', :t, true)"), {"t": tid})
+                await s.execute(text(
+                    "select set_config('app.current_department', :d, true)"),
+                    {"d": department or ""})
+                await s.execute(text(
+                    "insert into public.reporter_contacts (report_id, tenant_id, "
+                    "reporter_name) values (:r, :t, 'Jane')"),
+                    {"r": report_id, "t": tid})
+
+        try:
+            run(_go())
+            return True
+        except Exception:
+            return False
+
+    try:
+        run(seed_tenant())
+        assert attempt("OFFICER", "safety") is True
+        assert attempt("TENANT_ADMIN", None) is True
+        assert attempt("OFFICER", "camo") is False
+        assert attempt("STAFF", "safety") is False
+        assert attempt("STATE_SMD", "safety") is False
     finally:
         cleanup(slug, TABLES)

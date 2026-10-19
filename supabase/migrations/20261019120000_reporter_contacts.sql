@@ -10,6 +10,9 @@
 --     fallback, no SUPER_ADMIN break-glass (Q4/Q5/Q7).
 --   * Reports are tenant-scoped by construction; the state regulator sees
 --     aggregates, never individual reports or reporter identity (Q7/§17).
+--   * VSR submission is a safety-department activity: (OFFICER AND
+--     department='safety') OR TENANT_ADMIN. STAFF is not admitted (Step-3
+--     retirement; no live STAFF-filed VSRs).
 --
 -- RLS: enabled (not forced — the Phase 2C convention: the app connects as a
 -- non-owner `authenticated` role, so the owner-bypass is not reachable from the
@@ -61,19 +64,32 @@ CREATE POLICY reporter_contacts_tenant_admin ON public.reporter_contacts
     );
 
 -- ── Submission write path ───────────────────────────────────────────────────
--- The reporter who files a VSR is an ordinary tenant member (STAFF/OFFICER/…),
--- not a TENANT_ADMIN, so the custodial policy above cannot admit the INSERT.
--- The app writes the contact row exactly once, at submission, for the report's
--- own tenant (ReportService.create_report). This permissive INSERT policy
--- admits that write and nothing else: SELECT/UPDATE/DELETE remain gated by the
--- custodial policy above (a FOR INSERT policy does not apply to SELECT).
+-- VSR submission is a *safety-department* activity, not "any tenant member":
+-- "OFFICER" is a role spanning all departments, while "safety department" is a
+-- constraint on the activity. The actor must therefore be
+--   (role = 'OFFICER' AND department = 'safety')  -- safety officer filing
+--   OR role = 'TENANT_ADMIN'                      -- custodian/safety manager
+-- and never STAFF, never an OFFICER outside the safety department.
+--
+-- This is a FOR INSERT policy, so it governs the write only; SELECT/UPDATE/
+-- DELETE remain gated by reporter_contacts_tenant_admin above. A STAFF actor
+-- has no branch here by design: STAFF is being retired in favour of OFFICER
+-- (Step-3 item; all current data is dummy and no live STAFF-filed VSR exists).
 DROP POLICY IF EXISTS reporter_contacts_submission_insert ON public.reporter_contacts;
-CREATE POLICY reporter_contacts_submission_insert ON public.reporter_contacts
+DROP POLICY IF EXISTS reporter_contacts_insert_safety_officer ON public.reporter_contacts;
+CREATE POLICY reporter_contacts_insert_safety_officer ON public.reporter_contacts
     AS PERMISSIVE
     FOR INSERT
     TO authenticated
     WITH CHECK (
         tenant_id = NULLIF(current_setting('app.current_tenant', true), '')::uuid
+        AND (
+            (
+                current_setting('app.current_role', true) = 'OFFICER'
+                AND current_setting('app.current_department', true) = 'safety'
+            )
+            OR current_setting('app.current_role', true) = 'TENANT_ADMIN'
+        )
     );
 
 -- ── Grants (table-level; RLS still governs every row) ──────────────────────

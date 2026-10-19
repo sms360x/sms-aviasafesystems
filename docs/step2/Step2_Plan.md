@@ -419,11 +419,13 @@ leaves the product working.
   §11/§12, and the purpose/scope framing in §17). The 2D.1 §16 gate is
   **closed** — all 8 questions were answered by the SME on 2026-10-19.
   **2D.2 started and complete 2026-10-19**: `reporter_contacts` created
-  (VSR-only, 1:1, tenant-scoped), RLS enabled with a single-form
-  `TENANT_ADMIN`-of-the-report's-tenant policy (no state GUC, no department
-  GUC, no `SUPER_ADMIN` path), app-layer custodian check, submission
-  write-through, and Path-C audit writes. `reports.reporter_*` remains
-  populated for VSR (deprecate now, drop later — Q2); MOR identity is untouched.
+  (VSR-only, 1:1, tenant-scoped), RLS enabled with two policies — custodial
+  read/write limited to the report tenant's `TENANT_ADMIN`, plus a submission
+  insert limited to (`OFFICER` AND `department='safety'`) OR `TENANT_ADMIN`.
+  No state GUC, no `SUPER_ADMIN` path, no `STAFF` branch (Step-3 retirement).
+  App-layer custodian check, submission write-through, and Path-C audit
+  writes. `reports.reporter_*` remains populated for VSR (deprecate now, drop
+  later — Q2); MOR identity is untouched.
   **2E dependency (required Step-3 gate):** 2E must migrate the audit sink for
   `TENANT_ADMIN` reads/writes of `reporter_contacts` from the current ephemeral
   sink (`audit_logs` + Firestore mirror) to the durable trail. Event shape is
@@ -671,6 +673,18 @@ the two surfaces are to be reconciled when PSoE resumes.
 ---
 
 ## Step 3 items
+
+### STAFF → OFFICER role consolidation
+
+**STAFF → OFFICER role consolidation (analogous to CAAN_SMD and AIRLINE_ADMIN
+retirement). Recorded by SME 2026-10-19.**
+
+STAFF is planned for retirement in favour of `OFFICER`, following the same
+pattern as `CAAN_SMD` → `STATE_SMD` and `AIRLINE_ADMIN` → `TENANT_ADMIN`. No
+transitional STAFF branch is required in the 2D.2 `reporter_contacts` insert
+policy: all current data is dummy and no live STAFF-filed VSR exists. Concretely
+this item must migrate stored `users.role`/claims, drop `STAFF` from
+`CANONICAL_ROLES`, and update the remaining `STAFF_ROLES` readers.
 
 ### Operational role relabelling
 

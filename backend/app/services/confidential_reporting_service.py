@@ -223,8 +223,16 @@ class ConfidentialReportingService:
                     await session.flush()
                     contact_id = str(row.id)
         except Exception as exc:
+            # The savepoint rolled back: the VSR exists but has NO reporter
+            # contact. That is a data-integrity gap the custodian cannot fix
+            # from the UI, so log it loudly and specifically rather than
+            # silently continuing.
             logger.warning(
-                f"Reporter contact not stored for report {report_id}: {exc}")
+                "REPORTER_CONTACT_WRITE_FAILED report_id={} tenant_id={} "
+                "error={}: {} — VSR stored without a reporter contact; the "
+                "custodian cannot follow up on this report until it is "
+                "backfilled",
+                report_id, tenant_id, type(exc).__name__, exc)
             return {}
         log_audit(
             action=AUDIT_CONTACT_WRITTEN,

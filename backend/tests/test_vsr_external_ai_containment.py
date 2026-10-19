@@ -34,14 +34,15 @@ TENANT = "air1"
 
 # ---------------------------------------------------------------- helpers ---
 
-def _user(role="AIRLINE_ADMIN", tenant_id=TENANT):
+def _user(role="OFFICER", tenant_id=TENANT, department="safety"):
     return {
         "uid": "u1",
         "email": f"u1@{str(role).lower()}.example.com",
         "role": role,
         "tenant_id": tenant_id,
-        "department": None,
-        "claims": {"role": role, "tenant_id": tenant_id},
+        "department": department,
+        "claims": {"role": role, "tenant_id": tenant_id,
+                   "department": department},
     }
 
 

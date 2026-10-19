@@ -63,6 +63,29 @@ def can_view_raw_vsr(user: Dict[str, Any]) -> bool:
     return False
 
 
+def can_submit_vsr(user: Dict[str, Any]) -> bool:
+    """VSR submission is a safety-department activity (SME 2026-10-19).
+
+    "OFFICER" is a role spanning every department; "safety department" is a
+    constraint on the *activity*, not a role. Submission therefore requires:
+
+        (role == 'OFFICER' AND department == 'safety')
+        OR role == 'TENANT_ADMIN'   (custodian / safety manager may also file)
+
+    STAFF is not admitted: it is being retired in favour of OFFICER (Step-3
+    item). This mirrors `reporter_contacts_insert_safety_officer` in the
+    database, which is the enforcement point; this check exists so the caller
+    gets a clear 403 instead of a report whose contact row was silently
+    dropped by RLS.
+    """
+    role = (user or {}).get("role")
+    if role in settings.TENANT_ADMIN_ROLES:
+        return True
+    if role == settings.ROLE_OFFICER:
+        return (user or {}).get("department") == "safety"
+    return False
+
+
 def can_submit_mor(user: Dict[str, Any]) -> bool:
     """Check if user has permission to submit MOR (CAMO/QA restricted)."""
     if not user:
@@ -237,6 +260,11 @@ async def submit_vsr(
       - No engine/propeller, people, or investigation validation
     """
     tenant_id = user["tenant_id"]
+    if not can_submit_vsr(user):
+        raise HTTPException(
+            status_code=403,
+            detail="VSR submission requires a Safety Department officer "
+                   "(OFFICER in the safety department) or the tenant admin")
     service = ReportService(tenant_id)
     payload = report.model_dump()
     apply_auto_severity(payload)
