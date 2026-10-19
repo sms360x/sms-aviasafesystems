@@ -406,11 +406,35 @@ class ReportService:
                 continue
             values[key] = payload.get(key)
 
+        # 2D.2 / 2D.1 §16 Q3: a VSR is confidential by class. Set the flag at
+        # submission (application layer) rather than by a DB trigger/DEFAULT.
+        if values.get("report_type") == "voluntary":
+            values["is_confidential"] = True
+
         row = run(_create_report_async(self, values))
+        # Capture the id while the instance is still loaded: the side-write
+        # below must not force a refresh of a detached, expired instance.
+        report_id = str(row.id)
         data = _report_to_dict(row)
-        data["id"] = str(row.id)
+        data["id"] = report_id
         data["tolerability_tier"] = tolerability_tier
-        logger.info(f"Report {row.id} created for tenant {self.tenant_id}")
+
+        # 2D.2 / 2D.1 §16 Q1: write the VSR reporter contact to its own store.
+        # The `reports.reporter_*` columns are left populated (deprecate now,
+        # drop later — Q2), so no existing reader changes behaviour.
+        if values.get("report_type") == "voluntary":
+            try:
+                from app.services.confidential_reporting_service import (
+                    ConfidentialReportingService,
+                )
+
+                ConfidentialReportingService(self.tenant_id).save_reporter_contact(
+                    report_id, tid, payload, user)
+            except Exception as exc:  # never fail a submission on the store
+                logger.warning(
+                    f"Reporter-contact write failed for report {report_id}: {exc}")
+
+        logger.info(f"Report {report_id} created for tenant {self.tenant_id}")
         ReportRepository().invalidate_cache(prefix=f"{self.tenant_id}::")
         return data
 

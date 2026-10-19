@@ -35,7 +35,7 @@ def test_flag_custodian_and_deidentify():
     slug = unique_slug("conf")
     tid = create_tenant(slug)
     custodian_uid = "cust-" + uuid.uuid4().hex[:8]
-    custodian_id = create_user(tid, custodian_uid, role="AIRLINE_ADMIN")
+    custodian_id = create_user(tid, custodian_uid, role="TENANT_ADMIN")
     other_uid = "other-" + uuid.uuid4().hex[:8]
     create_user(tid, other_uid, role="SAFETY_OFFICER")
     rid = _seed_report(tid)
@@ -43,20 +43,26 @@ def test_flag_custodian_and_deidentify():
         svc = ConfidentialReportingService(slug)
         marked = svc.mark_confidential(
             rid, {"uid": custodian_uid, "email": f"{custodian_uid}@test.local"},
-            {"role": "AIRLINE_ADMIN", "uid": custodian_uid})
+            {"role": "TENANT_ADMIN", "uid": custodian_uid})
         assert marked["is_confidential"] is True
         assert marked["confidential_custodian_id"] == custodian_id
 
-        report = {"is_confidential": True, "confidential_custodian_id": custodian_id}
-        # The custodian can see reporter identity; another user cannot.
+        # 2D.2 / 2D.1 §16 Q4: custody is the TENANT_ADMIN of the report's own
+        # tenant. The named-custodian column is retained but no longer grants
+        # access, and the department branch is retired.
+        report = {"is_confidential": True, "tenant_id": tid,
+                  "confidential_custodian_id": custodian_id}
         assert svc.can_view_reporter_identity(
-            report, {"role": "AIRLINE_ADMIN", "uid": custodian_uid, "email": f"{custodian_uid}@test.local"}) is True
+            report, {"role": "TENANT_ADMIN", "tenant_id": slug,
+                     "uid": custodian_uid, "email": f"{custodian_uid}@test.local"}) is True
         assert svc.can_view_reporter_identity(
-            report, {"role": "SAFETY_OFFICER", "uid": other_uid, "email": f"{other_uid}@test.local"}) is False
+            report, {"role": "SAFETY_OFFICER", "tenant_id": slug,
+                     "uid": other_uid, "email": f"{other_uid}@test.local"}) is False
 
         # Downstream projection is de-identified for a non-custodian.
         downstream = svc.get_for_downstream(
-            rid, {"role": "SAFETY_OFFICER", "uid": other_uid, "email": f"{other_uid}@test.local"})
+            rid, {"role": "SAFETY_OFFICER", "tenant_id": slug,
+                  "uid": other_uid, "email": f"{other_uid}@test.local"})
         assert downstream["reporter_name"] is None
         assert downstream["reporter_email"] is None
         assert downstream["is_anonymous"] is True

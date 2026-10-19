@@ -313,6 +313,37 @@ class Report(Base):
     )
 
 
+# 2D.2 — VSR reporter-contact store (docs/step2/2D.1_reporter_contact_design.md
+# §8/§16, SME 2026-10-19). VSR-only; 1:1 with a report; custodied by the report
+# tenant's TENANT_ADMIN. Reporter identity never reaches STATE_ADMIN.
+class ReporterContact(Base):
+    __tablename__ = "reporter_contacts"
+
+    id: Mapped[object] = _uuid_pk()
+    report_id: Mapped[object] = mapped_column(
+        Uuid(as_uuid=True),
+        ForeignKey("reports.id", ondelete="CASCADE"),
+        nullable=False,
+        unique=True,
+    )
+    tenant_id: Mapped[object] = mapped_column(
+        Uuid(as_uuid=True), ForeignKey("tenants.id"), nullable=False
+    )
+    reporter_name: Mapped[object] = mapped_column(Text, nullable=True)
+    reporter_email: Mapped[object] = mapped_column(Text, nullable=True)
+    reporter_phone: Mapped[object] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=datetime.utcnow
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=datetime.utcnow
+    )
+
+    __table_args__ = (
+        Index("ix_reporter_contacts_tenant", "tenant_id"),
+    )
+
+
 # ============================================================================
 # 3. CANS
 # ============================================================================

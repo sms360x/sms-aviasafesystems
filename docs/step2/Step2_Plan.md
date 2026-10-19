@@ -414,11 +414,24 @@ leaves the product working.
   the Phase 2C close below (2C.6). 2C.7 and 2C.8 are post-close fixes.
 - **Phase 2D — Reporter-contact store + service wiring (W4).** Can run
   in parallel with 2C after 2B. **Design of record:
-  `docs/step2/2D.1_reporter_contact_design.md`** (completed design pass,
-  2026-10-17). 2D.1 §16 lists 8 open SME questions that MUST be resolved
-  before 2D.2 begins (required gate). 2D.2 not started.
+  `docs/step2/2D.1_reporter_contact_design.md`** (design pass 2026-10-17;
+  amended 2026-10-19 with the SME decisions in §16, the supersede callouts in
+  §11/§12, and the purpose/scope framing in §17). The 2D.1 §16 gate is
+  **closed** — all 8 questions were answered by the SME on 2026-10-19.
+  **2D.2 started and complete 2026-10-19**: `reporter_contacts` created
+  (VSR-only, 1:1, tenant-scoped), RLS enabled with a single-form
+  `TENANT_ADMIN`-of-the-report's-tenant policy (no state GUC, no department
+  GUC, no `SUPER_ADMIN` path), app-layer custodian check, submission
+  write-through, and Path-C audit writes. `reports.reporter_*` remains
+  populated for VSR (deprecate now, drop later — Q2); MOR identity is untouched.
+  **2E dependency (required Step-3 gate):** 2E must migrate the audit sink for
+  `TENANT_ADMIN` reads/writes of `reporter_contacts` from the current ephemeral
+  sink (`audit_logs` + Firestore mirror) to the durable trail. Event shape is
+  stable across the migration; only the destination changes. 2D.2 is not
+  considered fully closed until that migration lands.
 - **Phase 2E — Durable audit trail (W5).** Persist escalations/overrides;
   extend read-audit coverage. Depends on 2A/2B; can run alongside 2D/2C.
+  **Carries the 2D.2 audit-sink migration gate above.**
 - **Phase 2F — Placeholder removal (W6).** Depends on 2B; can run last or
   in parallel once roles are stable.
 

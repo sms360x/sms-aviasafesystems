@@ -6,6 +6,14 @@
 #          Module B report; reporter identity is visible ONLY to the custodian
 #          (Appendix 3 protection) and downstream consumers see a de-identified
 #          projection.
+#
+#          2D.2 (SME 2026-10-19): the reporter contact for a VSR lives in its own
+#          table (`reporter_contacts`, 1:1 with the report) and is custodied by
+#          the TENANT_ADMIN of the report's tenant — nothing else. There is no
+#          STATE_ADMIN path, no named-custodian column, no department branch and
+#          no SUPER_ADMIN break-glass (docs/step2/2D.1_reporter_contact_design.md
+#          §16, §17). Custodian reads/writes of the store are audited from day
+#          one against the current audit sink (Path C); 2E migrates that sink.
 # ============================================================================
 
 from __future__ import annotations
@@ -17,18 +25,32 @@ from typing import Any, Dict, Optional
 from loguru import logger
 from sqlalchemy import select
 
-from app.db.db_models import Report
+from app.db.db_models import Report, ReporterContact
+from app.db.ids import register_tenant
 from app.db.runner import run
 from app.db.session import session_scope
 from app.services.actor import resolve_actor_uuid
 from app.services.audit_service import log_audit
 
-# Roles permitted to act as / view a custodian's protected data.
+# The only role that may hold custody of a VSR reporter contact.
+CUSTODIAN_ROLE = "TENANT_ADMIN"
+
+# DEPRECATED (2D.2): retained for callers/tests that import it. Custody is no
+# longer role-set based — it is CUSTODIAN_ROLE + the report's own tenant (§16
+# Q4). The retired `AIRLINE_ADMIN`/`SUPER_ADMIN` members must not be used.
 CUSTODIAN_ROLES = {"TENANT_ADMIN", "AIRLINE_ADMIN", "SUPER_ADMIN"}
 
 # Reporter-identity fields stripped by de-identification.
 _IDENTITY_FIELDS = ("reporter_name", "reporter_email", "reporter_phone",
                     "reporter_role", "reporter_organisation")
+
+# Reporter-contact fields carried by the `reporter_contacts` store.
+_CONTACT_FIELDS = ("reporter_name", "reporter_email", "reporter_phone")
+
+# Audit actions (Path C — current sink: pg `audit_logs` + Firestore mirror).
+AUDIT_CONTACT_WRITTEN = "REPORTER_CONTACT_WRITTEN"
+AUDIT_CONTACT_READ = "REPORTER_CONTACT_READ"
+AUDIT_CONTACT_DENIED = "REPORTER_CONTACT_READ_DENIED"
 
 
 def _to_uuid(value: Any) -> Optional[uuid.UUID]:
@@ -38,11 +60,43 @@ def _to_uuid(value: Any) -> Optional[uuid.UUID]:
         return None
 
 
+def _actor_label(user: Optional[Dict[str, Any]]) -> Optional[str]:
+    user = user or {}
+    return user.get("email") or user.get("uid")
+
+
 class ConfidentialReportingService:
     """DP-4 confidential reporting — flag + custodian access control."""
 
     def __init__(self, tenant_id: Optional[str] = None):
         self.tenant_id = tenant_id
+
+    # -- custody ------------------------------------------------------------
+
+    def user_tenant_uuid(self, user: Optional[Dict[str, Any]]):
+        """Resolve a request user's tenant (slug) to its deterministic uuid."""
+        slug = (user or {}).get("tenant_id")
+        if not slug:
+            return None
+        try:
+            return register_tenant(str(slug))
+        except Exception:
+            return None
+
+    def is_tenant_custodian(self, user: Optional[Dict[str, Any]],
+                            tenant_id: Any) -> bool:
+        """True iff ``user`` is the TENANT_ADMIN of ``tenant_id``.
+
+        Single-form rule (§16 Q4/Q7): role == TENANT_ADMIN and the user's tenant
+        equals the report's tenant. No STATE_ADMIN, no department, no named
+        custodian, no SUPER_ADMIN fallback.
+        """
+        if (user or {}).get("role") != CUSTODIAN_ROLE:
+            return False
+        user_tid = self.user_tenant_uuid(user)
+        if user_tid is None or tenant_id is None:
+            return False
+        return str(user_tid) == str(tenant_id)
 
     # -- public -------------------------------------------------------------
 
@@ -52,23 +106,24 @@ class ConfidentialReportingService:
 
     def can_view_reporter_identity(self, report: Any,
                                    user: Dict[str, Any]) -> bool:
-        if not getattr(report, "is_confidential", False) and not (
-            isinstance(report, dict) and report.get("is_confidential")
-        ):
+        """Whether the caller may see raw reporter identity for ``report``.
+
+        Non-confidential reports are unprotected. A confidential (VSR) report's
+        identity is visible only to the TENANT_ADMIN of the report's own tenant
+        (§16 Q4). `SUPER_ADMIN` is explicitly denied (§16 Q5).
+        """
+        is_conf = getattr(report, "is_confidential", None)
+        tenant_id = getattr(report, "tenant_id", None)
+        if isinstance(report, dict):
+            is_conf = report.get("is_confidential", is_conf)
+            tenant_id = report.get("tenant_id", tenant_id)
+        if not is_conf:
             return True
         role = (user or {}).get("role")
-        if role == "SUPER_ADMIN":
-            return True
-        if role not in CUSTODIAN_ROLES:
+        if role != CUSTODIAN_ROLE:
             return False
-        custodian_id = (report.get("confidential_custodian_id")
-                        if isinstance(report, dict)
-                        else getattr(report, "confidential_custodian_id", None))
-        if custodian_id is None:
-            # Confidential but no designated custodian yet: custodian roles only.
-            return True
-        actor = self._resolve_actor_sync(user)
-        return actor is not None and str(actor) == str(custodian_id)
+        # Named-custodian column retired (§16 Q4): custody is the tenant rule.
+        return self.is_tenant_custodian(user, tenant_id)
 
     def deidentify(self, report: Any) -> Dict[str, Any]:
         """Return a reporter-identity-free projection for downstream use."""
@@ -86,13 +141,28 @@ class ConfidentialReportingService:
                            user: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         return run(self._downstream_async(report_id, user))
 
-    # -- internals ----------------------------------------------------------
+    # -- reporter-contact store (2D.2) --------------------------------------
 
-    def _resolve_actor_sync(self, user):
-        try:
-            return run(resolve_actor_uuid(user))
-        except Exception:
-            return None
+    def save_reporter_contact(self, report_id: str, tenant_id: Any, payload: Dict[str, Any],
+                              user: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+        """Write-through a VSR reporter contact at submission (VSR only).
+
+        Idempotent on `report_id` (1:1): a repeat submission updates the row.
+        This is the single write site for the store. Audited from day one.
+        """
+        return run(self._save_contact_async(report_id, tenant_id, payload, user))
+
+    def get_reporter_contact(self, report_id: str,
+                             user: Optional[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
+        """Return the reporter contact for a report iff the caller is the
+        TENANT_ADMIN of the report's tenant. Every access attempt is audited.
+
+        Returns None (never raises) when the report has no contact row or the
+        caller is not the custodian — a denied read discloses nothing.
+        """
+        return run(self._get_contact_async(report_id, user))
+
+    # -- internals ----------------------------------------------------------
 
     async def _mark_async(self, report_id, custodian, user):
         cid = await resolve_actor_uuid(custodian)
@@ -122,6 +192,104 @@ class ConfidentialReportingService:
         )
         logger.info(f"Report {report_id} marked confidential (custodian={cid})")
         return result
+
+    async def _save_contact_async(self, report_id, tenant_id, payload, user):
+        rid = _to_uuid(report_id)
+        tid = _to_uuid(tenant_id)
+        if rid is None or tid is None:
+            raise ValueError(f"Invalid report_id/tenant_id: {report_id!r}/{tenant_id!r}")
+        now = datetime.now(timezone.utc)
+        values = {f: payload.get(f) for f in _CONTACT_FIELDS}
+        # Isolate the write in a SAVEPOINT: a failure (e.g. a report whose tenant
+        # row is absent) must never poison the caller's transaction or fail the
+        # submission. The store is a side-write, not part of report creation.
+        try:
+            async with session_scope() as session:
+                async with session.begin_nested():
+                    row = (await session.execute(
+                        select(ReporterContact).where(
+                            ReporterContact.report_id == rid)
+                    )).scalars().first()
+                    if row is None:
+                        row = ReporterContact(
+                            report_id=rid, tenant_id=tid, created_at=now,
+                            updated_at=now, **values,
+                        )
+                        session.add(row)
+                    else:
+                        for key, value in values.items():
+                            setattr(row, key, value)
+                        row.updated_at = now
+                    await session.flush()
+                    contact_id = str(row.id)
+        except Exception as exc:
+            logger.warning(
+                f"Reporter contact not stored for report {report_id}: {exc}")
+            return {}
+        log_audit(
+            action=AUDIT_CONTACT_WRITTEN,
+            user=_actor_label(user),
+            tenant_id=self.tenant_id,
+            target_type="reporter_contact",
+            target_id=str(report_id),
+            metadata={"has_name": bool(values.get("reporter_name")),
+                      "has_email": bool(values.get("reporter_email")),
+                      "has_phone": bool(values.get("reporter_phone"))},
+        )
+        logger.info(f"Reporter contact stored for report {report_id}")
+        return {"id": contact_id, "report_id": str(rid), "tenant_id": str(tid)}
+
+    async def _get_contact_async(self, report_id, user):
+        rid = _to_uuid(report_id)
+        if rid is None:
+            return None
+        async with session_scope() as session:
+            report = (await session.execute(
+                select(Report).where(Report.id == rid)
+            )).scalars().first()
+            if not report:
+                return None
+            allowed = self.is_tenant_custodian(user, report.tenant_id)
+            contact = None
+            if allowed:
+                contact = (await session.execute(
+                    select(ReporterContact).where(ReporterContact.report_id == rid)
+                )).scalars().first()
+            if (report.report_type or "") != "voluntary":
+                # The store is VSR-only (Q1). A non-VSR report can never be a
+                # custodian read of this store.
+                allowed = False
+                contact = None
+        if not allowed:
+            log_audit(
+                action=AUDIT_CONTACT_DENIED,
+                user=_actor_label(user),
+                tenant_id=self.tenant_id,
+                target_type="reporter_contact",
+                target_id=str(report_id),
+                metadata={"reason": "not_tenant_custodian"},
+            )
+            return None
+        log_audit(
+            action=AUDIT_CONTACT_READ,
+            user=_actor_label(user),
+            tenant_id=self.tenant_id,
+            target_type="reporter_contact",
+            target_id=str(report_id),
+            metadata={"custodian": True},
+        )
+        if contact is None:
+            return None
+        return {
+            "id": str(contact.id),
+            "report_id": str(contact.report_id),
+            "tenant_id": str(contact.tenant_id),
+            "reporter_name": contact.reporter_name,
+            "reporter_email": contact.reporter_email,
+            "reporter_phone": contact.reporter_phone,
+            "created_at": contact.created_at,
+            "updated_at": contact.updated_at,
+        }
 
     async def _downstream_async(self, report_id, user):
         async with session_scope() as session:
