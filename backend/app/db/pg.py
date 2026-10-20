@@ -22,6 +22,7 @@
 from __future__ import annotations
 
 import os
+import uuid
 from typing import Any, Awaitable, Callable, Dict, List, Optional, Sequence
 
 from loguru import logger
@@ -327,12 +328,29 @@ def fetch_by(model: type, column: str, value: Any) -> Optional[Dict[str, Any]]:
 
 
 def insert(model: type, doc: Dict[str, Any]) -> None:
-    """Insert a Firestore-shaped document (typed columns + JSONB bag)."""
+    """Insert a Firestore-shaped document (typed columns + JSONB bag).
+
+    2D.2.1: inserted without RETURNING. Tables whose RLS grants append but
+    restricts SELECT (notably `audit_logs`) reject `INSERT ... RETURNING`
+    because the returned row must satisfy the SELECT policy. This helper never
+    needs the generated row, so suppressing implicit RETURNING keeps
+    append-only tables writable without widening their read policy.
+    """
 
     async def _go(session) -> None:
+        from sqlalchemy import insert as sa_insert
+
         kwargs = _split_doc(model, dict(doc))
         _deterministic_tenant_id(kwargs)
-        session.add(model(**kwargs))
+        # Supply the PK explicitly so the compiler does not add
+        # `RETURNING id` to fetch the gen_random_uuid() server default.
+        if "id" in model.__table__.columns:
+            kwargs.setdefault("id", uuid.uuid4())
+        await session.execute(
+            sa_insert(model)
+            .values(**kwargs)
+            .execution_options(implicit_returning=False)
+        )
 
     _record_db("insert", model, lambda: _run_on_bridge(_go))
 

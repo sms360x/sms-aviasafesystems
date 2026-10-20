@@ -23,7 +23,7 @@ from datetime import datetime, timezone
 from typing import Any, Dict, Optional
 
 from loguru import logger
-from sqlalchemy import select
+from sqlalchemy import select, text
 
 from app.db.db_models import Report, ReporterContact
 from app.db.ids import register_tenant
@@ -198,30 +198,42 @@ class ConfidentialReportingService:
         tid = _to_uuid(tenant_id)
         if rid is None or tid is None:
             raise ValueError(f"Invalid report_id/tenant_id: {report_id!r}/{tenant_id!r}")
-        now = datetime.now(timezone.utc)
         values = {f: payload.get(f) for f in _CONTACT_FIELDS}
-        # Isolate the write in a SAVEPOINT: a failure (e.g. a report whose tenant
-        # row is absent) must never poison the caller's transaction or fail the
-        # submission. The store is a side-write, not part of report creation.
+
+        # 2D.2.1 (SME): an anonymous VSR — all contact fields empty — gets NO
+        # contact row at all. Never insert a row of nulls or a synthetic
+        # "Anonymous" name; there would be nothing for the custodian to follow up
+        # on and it would imply a contact exists.
+        if not any((str(v).strip() if v is not None else "")
+                   for v in values.values()):
+            logger.info(
+                "Anonymous VSR %s: no reporter contact row written", report_id)
+            return {}
+
+        # 2D.2.1: all writes go through the SECURITY DEFINER function. The
+        # submitter may be any authenticated tenant member (STAFF/public
+        # intake), so a direct INSERT cannot satisfy the custodial RLS policy.
+        # The function re-validates that the report is a VSR, belongs to the
+        # supplied tenant, and (when a request identity is present) that the
+        # tenant matches it.
         try:
             async with session_scope() as session:
                 async with session.begin_nested():
-                    row = (await session.execute(
-                        select(ReporterContact).where(
-                            ReporterContact.report_id == rid)
-                    )).scalars().first()
-                    if row is None:
-                        row = ReporterContact(
-                            report_id=rid, tenant_id=tid, created_at=now,
-                            updated_at=now, **values,
-                        )
-                        session.add(row)
-                    else:
-                        for key, value in values.items():
-                            setattr(row, key, value)
-                        row.updated_at = now
-                    await session.flush()
-                    contact_id = str(row.id)
+                    result = await session.execute(
+                        text(
+                            "select public.submit_vsr_contact("
+                            ":report_id, :tenant_id, :reporter_name, "
+                            ":reporter_email, :reporter_phone)"
+                        ),
+                        {
+                            "report_id": rid,
+                            "tenant_id": tid,
+                            "reporter_name": values["reporter_name"],
+                            "reporter_email": values["reporter_email"],
+                            "reporter_phone": values["reporter_phone"],
+                        },
+                    )
+                    contact_id = result.scalar()
         except Exception as exc:
             # The savepoint rolled back: the VSR exists but has NO reporter
             # contact. That is a data-integrity gap the custodian cannot fix
@@ -236,7 +248,9 @@ class ConfidentialReportingService:
             return {}
         log_audit(
             action=AUDIT_CONTACT_WRITTEN,
-            user=_actor_label(user),
+            # 2D.2.1: VSR contact writes are anonymous. Recording the submitter
+            # here would re-link the contact row to the person via audit_logs.
+            user=None,
             tenant_id=self.tenant_id,
             target_type="reporter_contact",
             target_id=str(report_id),
@@ -245,7 +259,8 @@ class ConfidentialReportingService:
                       "has_phone": bool(values.get("reporter_phone"))},
         )
         logger.info(f"Reporter contact stored for report {report_id}")
-        return {"id": contact_id, "report_id": str(rid), "tenant_id": str(tid)}
+        return {"id": str(contact_id),
+                "report_id": str(rid), "tenant_id": str(tid)}
 
     async def _get_contact_async(self, report_id, user):
         rid = _to_uuid(report_id)

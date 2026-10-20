@@ -64,33 +64,10 @@ CREATE POLICY reporter_contacts_tenant_admin ON public.reporter_contacts
     );
 
 -- ── Submission write path ───────────────────────────────────────────────────
--- VSR submission is a *safety-department* activity, not "any tenant member":
--- "OFFICER" is a role spanning all departments, while "safety department" is a
--- constraint on the activity. The actor must therefore be
---   (role = 'OFFICER' AND department = 'safety')  -- safety officer filing
---   OR role = 'TENANT_ADMIN'                      -- custodian/safety manager
--- and never STAFF, never an OFFICER outside the safety department.
---
--- This is a FOR INSERT policy, so it governs the write only; SELECT/UPDATE/
--- DELETE remain gated by reporter_contacts_tenant_admin above. A STAFF actor
--- has no branch here by design: STAFF is being retired in favour of OFFICER
--- (Step-3 item; all current data is dummy and no live STAFF-filed VSR exists).
-DROP POLICY IF EXISTS reporter_contacts_submission_insert ON public.reporter_contacts;
-DROP POLICY IF EXISTS reporter_contacts_insert_safety_officer ON public.reporter_contacts;
-CREATE POLICY reporter_contacts_insert_safety_officer ON public.reporter_contacts
-    AS PERMISSIVE
-    FOR INSERT
-    TO authenticated
-    WITH CHECK (
-        tenant_id = NULLIF(current_setting('app.current_tenant', true), '')::uuid
-        AND (
-            (
-                current_setting('app.current_role', true) = 'OFFICER'
-                AND current_setting('app.current_department', true) = 'safety'
-            )
-            OR current_setting('app.current_role', true) = 'TENANT_ADMIN'
-        )
-    );
+-- Superseded by 2D.2.1 (`20261020120000_vsr_anonymity.sql`): VSR submission is
+-- open to any authenticated tenant member and writes through the SECURITY
+-- DEFINER function `submit_vsr_contact()`; there is no direct INSERT policy on
+-- this table. The 2D.2.1 migration drops the historical policy name.
 
 -- ── Grants (table-level; RLS still governs every row) ──────────────────────
 GRANT ALL ON TABLE public.reporter_contacts TO anon, authenticated, service_role;

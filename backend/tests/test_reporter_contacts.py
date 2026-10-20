@@ -15,8 +15,6 @@ from datetime import datetime, timezone
 
 from sqlalchemy import select
 
-import pytest
-
 from app.db.db_models import Report, ReporterContact
 from app.db.isolation import demo_scope
 from app.db.session import session_scope
@@ -293,98 +291,285 @@ def test_create_mor_does_not_write_store():
 
 
 # ---------------------------------------------------------------------------
-# Submission actor: "OFFICER" is a role; "safety department" is a constraint on
-# VSR activity. Only (OFFICER AND department='safety') or TENANT_ADMIN may file.
+# 2D.2.1 — VSR anonymity and the definer write path.
 # ---------------------------------------------------------------------------
-@pytest.mark.parametrize("role,department,allowed", [
-    ("OFFICER", "safety", True),
-    ("TENANT_ADMIN", None, True),
-    ("OFFICER", "camo", False),
-    ("OFFICER", None, False),
-    ("STAFF", "safety", False),
-    ("DEPT_ADMIN", "safety", False),
-    ("STATE_SMD", "safety", False),
-    ("SUPER_ADMIN", "safety", False),
-])
-def test_can_submit_vsr_actor_matrix(role, department, allowed):
-    from app.routes.occurrence_reports import can_submit_vsr
+def _created_by(report_id):
+    from sqlalchemy import text
 
-    user = {"role": role, "tenant_id": "air1"}
-    if department is not None:
-        user["department"] = department
-    assert can_submit_vsr(user) is allowed
+    async def _go():
+        async with session_scope() as s:
+            r = await s.execute(
+                text("select created_by from public.reports where id = :id"),
+                {"id": report_id})
+            return r.scalar()
+
+    return run(_go())
 
 
-def test_vsr_endpoint_rejects_non_safety_actor(monkeypatch):
-    """A STAFF caller gets a clear 403, not a report whose contact row was
-    silently dropped by RLS."""
+def _audit_rows_for(report_id):
+    from sqlalchemy import text
+
+    async def _go():
+        async with session_scope() as s:
+            r = await s.execute(
+                text("select action, actor from public.audit_logs "
+                     "where target_id = :id"), {"id": report_id})
+            return r.fetchall()
+
+    return run(_go())
+
+
+def test_vsr_anonymous_created_by_is_null():
+    """SME Q1/Q2: every VSR is anonymous at the DB layer, even when the
+    submitter is a logged-in STAFF user."""
+    from app.services.report_service import ReportService
+
+    slug = unique_slug("rc-anon")
+    tid = create_tenant(slug)
+    try:
+        stored = ReportService(slug).create_report(
+            {
+                "report_type": "voluntary",
+                "narrative": "anonymous bird strike report",
+                "location": "KTM",
+                "occurrence_date": datetime.now(timezone.utc),
+                "reporter_name": None,
+                "reporter_email": None,
+                "reporter_phone": None,
+                "is_anonymous": True,
+            },
+            {"uid": "staff-uid", "email": "staff@x.test", "role": "STAFF",
+             "tenant_id": slug},
+        )
+        assert _created_by(stored["id"]) is None
+    finally:
+        cleanup(slug, TABLES)
+
+
+def test_vsr_identified_created_by_is_still_null():
+    """Q2: contact fields do not re-identify the row — created_by stays NULL."""
+    from app.services.report_service import ReportService
+
+    slug = unique_slug("rc-ident")
+    tid = create_tenant(slug)
+    try:
+        stored = ReportService(slug).create_report(
+            {
+                "report_type": "voluntary",
+                "narrative": "identified bird strike report",
+                "location": "KTM",
+                "occurrence_date": datetime.now(timezone.utc),
+                "reporter_name": "Jane Reporter",
+                "reporter_email": "jane@x.com",
+            },
+            {"uid": "staff-uid", "email": "staff@x.test", "role": "STAFF",
+             "tenant_id": slug},
+        )
+        assert _created_by(stored["id"]) is None
+        row = _contact_row(stored["id"])
+        assert row is not None and row.reporter_email == "jane@x.com"
+        # The contact-write audit must not name the submitter either.
+        rows = _audit_rows_for(stored["id"])
+        assert all(actor != "staff@x.test" for _, actor in rows)
+    finally:
+        cleanup(slug, TABLES)
+
+
+def test_mor_created_by_unchanged():
+    """MOR is identified: created_by keeps the submitter uid."""
+    from app.services.report_service import ReportService
+
+    slug = unique_slug("rc-mor-cb")
+    tid = create_tenant(slug)
+    try:
+        stored = ReportService(slug).create_report(
+            {
+                "report_type": "mandatory",
+                "narrative": "runway incursion report",
+                "location": "KTM",
+                "occurrence_date": datetime.now(timezone.utc),
+                "reporter_name": "Jane Reporter",
+                "reporter_email": "jane@x.com",
+            },
+            {"uid": "mor-uid", "email": "mor@x.test", "role": "OFFICER",
+             "department": "safety", "tenant_id": slug},
+        )
+        assert _created_by(stored["id"]) == "mor-uid"
+    finally:
+        cleanup(slug, TABLES)
+
+
+def test_vsr_anonymous_no_contact_row():
+    """Edit 5: all contact fields empty -> no row at all (not a null row)."""
+    from app.services.report_service import ReportService
+
+    slug = unique_slug("rc-no-contact")
+    tid = create_tenant(slug)
+    try:
+        stored = ReportService(slug).create_report(
+            {
+                "report_type": "voluntary",
+                "narrative": "anonymous report with no contact",
+                "location": "KTM",
+                "occurrence_date": datetime.now(timezone.utc),
+                "reporter_name": None,
+                "reporter_email": None,
+                "reporter_phone": None,
+            },
+            {"uid": "staff-uid", "email": "staff@x.test", "role": "STAFF",
+             "tenant_id": slug},
+        )
+        assert _contact_row(stored["id"]) is None
+    finally:
+        cleanup(slug, TABLES)
+
+
+def test_vsr_staff_can_submit():
+    """A STAFF user can file a VSR (post-office model) via the legacy route."""
     from fastapi.testclient import TestClient
 
     from app.main import app
     from app.middleware.auth import get_tenant_user
-    from app.services.report_service import ReportService
 
+    slug = unique_slug("rc-staff")
+    tid = create_tenant(slug)
+    submitter = "staff-" + uuid.uuid4().hex[:8]
     app.dependency_overrides[get_tenant_user] = lambda: {
-        "uid": "u1", "email": "u1@x.test", "role": "STAFF",
-        "tenant_id": "air1", "department": "safety",
+        "uid": submitter, "email": f"{submitter}@x.test", "role": "STAFF",
+        "tenant_id": slug, "department": "flight_ops",
     }
-    called = []
-    monkeypatch.setattr(ReportService, "create_report",
-                        lambda self, payload, user: called.append(1) or {})
     try:
-        resp = TestClient(app).post("/api/v1/reports/vsr", json={
-            "narrative": "a report narrative long enough",
+        resp = TestClient(app).post("/api/v1/reports/", json={
+            "narrative": "a staff-filed voluntary safety report",
             "location": "KTM",
             "occurrence_date": datetime.now(timezone.utc).isoformat(),
+            "reporter_name": None,
+            "reporter_email": None,
+            "reporter_phone": None,
+            "is_anonymous": True,
         })
-        assert resp.status_code == 403, resp.text
-        assert not called, "create_report must not run for a denied actor"
+        assert resp.status_code == 201, resp.text
+        report_id = resp.json()["id"]
+        assert _created_by(report_id) is None
+        # No submitter email anywhere in the audit trail for this report.
+        rows = _audit_rows_for(report_id)
+        assert rows, "expected a VSR_SUBMITTED audit event"
+        assert all(actor != f"{submitter}@x.test" for _, actor in rows)
+        assert any(action == "VSR_SUBMITTED" for action, _ in rows)
+        # Anonymous -> no contact row.
+        assert _contact_row(report_id) is None
     finally:
         app.dependency_overrides.clear()
+        cleanup(slug, TABLES)
 
 
-def test_rls_insert_policy_admits_only_safety_actor():
-    """The database policy — not just the app check — admits exactly the SME's
-    actor set. Exercises the real RLS policy as `authenticated`."""
+def test_vsr_audit_does_not_contain_submitter_email():
+    """Finding C: the VSR audit event must not identify the submitter."""
+    from fastapi.testclient import TestClient
+
+    from app.main import app
+    from app.middleware.auth import get_tenant_user
+
+    slug = unique_slug("rc-audit-anon")
+    tid = create_tenant(slug)
+    submitter = "sub-" + uuid.uuid4().hex[:8]
+    app.dependency_overrides[get_tenant_user] = lambda: {
+        "uid": submitter, "email": f"{submitter}@x.test", "role": "OFFICER",
+        "tenant_id": slug, "department": "safety",
+    }
+    try:
+        resp = TestClient(app).post("/api/v1/reports/vsr", json={
+            "narrative": "a safety department filed voluntary report",
+            "location": "KTM",
+            "occurrence_date": datetime.now(timezone.utc).isoformat(),
+            "is_anonymous": True,
+        })
+        assert resp.status_code == 201, resp.text
+        report_id = resp.json()["id"]
+        rows = _audit_rows_for(report_id)
+        assert any(action == "VSR_SUBMITTED" for action, _ in rows)
+        assert all(actor != f"{submitter}@x.test" for _, actor in rows)
+    finally:
+        app.dependency_overrides.clear()
+        cleanup(slug, TABLES)
+
+
+def test_mor_audit_contains_submitter_email():
+    """MOR stays identified, including in the audit trail."""
+    from fastapi.testclient import TestClient
+
+    from app.main import app
+    from app.middleware.auth import get_tenant_user
+
+    slug = unique_slug("rc-audit-mor")
+    tid = create_tenant(slug)
+    submitter = "mor-" + uuid.uuid4().hex[:8]
+    app.dependency_overrides[get_tenant_user] = lambda: {
+        "uid": submitter, "email": f"{submitter}@x.test", "role": "TENANT_ADMIN",
+        "tenant_id": slug, "department": "safety",
+    }
+    try:
+        resp = TestClient(app).post("/api/v1/reports/mor", json={
+            "narrative": "mandatory occurrence report",
+            "occurrence_date_time": datetime.now(timezone.utc).isoformat(),
+            "occurrence_location": "KTM",
+            "occurrence_country": "NP",
+            "occurrence_type": "INCIDENT",
+            "occurrence_class": "CLASS_C",
+            "occurrence_category": "BIRD",
+            "flight_type": "Commercial",
+            "flight_phase": "Landing",
+            "aircraft_make": "Boeing",
+            "aircraft_model": "737",
+            "aircraft_registration": "9N-ABC",
+            "aircraft_category": "Aeroplane",
+            "operator": "Test Air",
+            "reporter_name": "Jane Reporter",
+            "reporter_role": "pilot",
+            "reporter_organisation": "Test Air",
+            "reporter_email": "jane@x.com",
+        })
+        assert resp.status_code == 201, resp.text
+        report_id = resp.json()["id"]
+        rows = _audit_rows_for(report_id)
+        assert any(actor == f"{submitter}@x.test" for _, actor in rows)
+    finally:
+        app.dependency_overrides.clear()
+        cleanup(slug, TABLES)
+
+
+def test_direct_insert_denied_and_definer_allowed():
+    """The table has no `authenticated` INSERT policy; all writes must go
+    through public.submit_vsr_contact()."""
     from sqlalchemy import text
 
     from app.db.ids import register_tenant
 
-    slug = unique_slug("rc-rls-ins")
+    slug = unique_slug("rc-definer")
     tid = str(register_tenant(slug))
-    report_ids = {}
+    report_id = str(uuid.uuid4())
 
-    async def seed(report_id):
-        async with session_scope() as s:
-            await s.execute(text(
-                "insert into public.reports (id, tenant_id, report_type, status, "
-                "ai_status, narrative, location, occurrence_date, created_by, "
-                "is_confidential) values (:id, :t, 'voluntary', 'NEW', 'PENDING', "
-                "'n', 'KTM', now(), 'sys', true)"), {"id": report_id, "t": tid})
-
-    async def seed_tenant():
+    async def seed():
         async with session_scope() as s:
             await s.execute(text(
                 "insert into public.tenants (id, slug, name, is_demo, "
                 "is_beta_sandbox, created_at, updated_at) values "
                 "(:id, :slug, :name, false, false, now(), now()) "
                 "on conflict do nothing"), {"id": tid, "slug": slug, "name": slug})
+            await s.execute(text(
+                "insert into public.reports (id, tenant_id, report_type, status, "
+                "ai_status, narrative, location, occurrence_date, created_by, "
+                "is_confidential) values (:id, :t, 'voluntary', 'NEW', 'PENDING', "
+                "'n', 'KTM', now(), NULL, true)"), {"id": report_id, "t": tid})
 
-    def attempt(role, department):
-        report_id = str(uuid.uuid4())
-        report_ids[role + str(department)] = report_id
-
+    def attempt_direct():
         async def _go():
-            await seed(report_id)
             async with session_scope() as s:
                 await s.execute(text("SET LOCAL ROLE authenticated"))
                 await s.execute(text(
-                    "select set_config('app.current_role', :r, true)"), {"r": role})
+                    "select set_config('app.current_role', 'STAFF', true)"))
                 await s.execute(text(
                     "select set_config('app.current_tenant', :t, true)"), {"t": tid})
-                await s.execute(text(
-                    "select set_config('app.current_department', :d, true)"),
-                    {"d": department or ""})
                 await s.execute(text(
                     "insert into public.reporter_contacts (report_id, tenant_id, "
                     "reporter_name) values (:r, :t, 'Jane')"),
@@ -396,12 +581,28 @@ def test_rls_insert_policy_admits_only_safety_actor():
         except Exception:
             return False
 
+    def attempt_definer():
+        async def _go():
+            async with session_scope() as s:
+                await s.execute(text("SET LOCAL ROLE authenticated"))
+                await s.execute(text(
+                    "select set_config('app.current_role', 'STAFF', true)"))
+                await s.execute(text(
+                    "select set_config('app.current_tenant', :t, true)"), {"t": tid})
+                await s.execute(text(
+                    "select public.submit_vsr_contact(:r, :t, 'Jane', NULL, NULL)"),
+                    {"r": report_id, "t": tid})
+
+        try:
+            run(_go())
+            return True
+        except Exception:
+            return False
+
     try:
-        run(seed_tenant())
-        assert attempt("OFFICER", "safety") is True
-        assert attempt("TENANT_ADMIN", None) is True
-        assert attempt("OFFICER", "camo") is False
-        assert attempt("STAFF", "safety") is False
-        assert attempt("STATE_SMD", "safety") is False
+        run(seed())
+        assert attempt_direct() is False
+        assert attempt_definer() is True
+        assert _contact_row(report_id) is not None
     finally:
         cleanup(slug, TABLES)

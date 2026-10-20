@@ -316,7 +316,8 @@ class ReportResponse(BaseModel):
     narrative: str
     location: str
     occurrence_date: datetime
-    created_by: str
+    # 2D.2.1: NULL for VSRs (anonymous by construction).
+    created_by: Optional[str] = None
     created_at: datetime
     updated_at: datetime
     is_anonymous: bool = False
@@ -392,7 +393,8 @@ class ReportListItem(BaseModel):
     ai_status: AiStatus
     location: str
     occurrence_date: datetime
-    created_by: str
+    # 2D.2.1: NULL for VSRs (anonymous by construction).
+    created_by: Optional[str] = None
     created_at: datetime
     is_anonymous: bool
     occurrence_type: Optional[str] = None

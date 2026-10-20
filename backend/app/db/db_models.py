@@ -291,7 +291,9 @@ class Report(Base):
 
     is_demo: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
 
-    created_by: Mapped[str] = mapped_column(Text, nullable=False)
+    # 2D.2.1: NULL for every VSR (anonymous by construction); the submitter
+    # uid for MOR. Kept nullable so a VSR never carries a submitter link.
+    created_by: Mapped[object] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, default=datetime.utcnow
     )

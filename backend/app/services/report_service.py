@@ -377,7 +377,14 @@ class ReportService:
                 values[key] = risk_level
                 continue
             if key == "created_by":
-                values[key] = user["uid"]
+                # 2D.2.1 (SME Q1/Q2): a VSR is anonymous at the database layer.
+                # `created_by` is NULL for every voluntary report, identified or
+                # not, so a reporter contact can never be joined back to the
+                # submitter. MOR keeps the uid (mandatory reports are identified).
+                values[key] = (
+                    None if payload.get("report_type") == "voluntary"
+                    else user["uid"]
+                )
                 continue
             if key == "occurrence_date":
                 values[key] = _dt(payload.get("occurrence_date")) or now

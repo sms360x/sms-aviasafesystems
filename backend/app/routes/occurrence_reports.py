@@ -63,29 +63,6 @@ def can_view_raw_vsr(user: Dict[str, Any]) -> bool:
     return False
 
 
-def can_submit_vsr(user: Dict[str, Any]) -> bool:
-    """VSR submission is a safety-department activity (SME 2026-10-19).
-
-    "OFFICER" is a role spanning every department; "safety department" is a
-    constraint on the *activity*, not a role. Submission therefore requires:
-
-        (role == 'OFFICER' AND department == 'safety')
-        OR role == 'TENANT_ADMIN'   (custodian / safety manager may also file)
-
-    STAFF is not admitted: it is being retired in favour of OFFICER (Step-3
-    item). This mirrors `reporter_contacts_insert_safety_officer` in the
-    database, which is the enforcement point; this check exists so the caller
-    gets a clear 403 instead of a report whose contact row was silently
-    dropped by RLS.
-    """
-    role = (user or {}).get("role")
-    if role in settings.TENANT_ADMIN_ROLES:
-        return True
-    if role == settings.ROLE_OFFICER:
-        return (user or {}).get("department") == "safety"
-    return False
-
-
 def can_submit_mor(user: Dict[str, Any]) -> bool:
     """Check if user has permission to submit MOR (CAMO/QA restricted)."""
     if not user:
@@ -156,15 +133,20 @@ async def submit_report(
         background_tasks.add_task(service.run_ai_analysis, stored["id"], report.narrative)
     _auto_create_hazard_from_report(stored, user)
     ip, request_id = request_context(request)
+    # 2D.2.1: this legacy route can create either class. A VSR is anonymous and
+    # must not carry the submitter's email into the audit trail; a mandatory
+    # report keeps the identified audit.
+    is_vsr = (stored.get("report_type") == "voluntary")
     log_audit(
-        action="REPORT_SUBMITTED",
-        user=user.get("email"),
+        action="VSR_SUBMITTED" if is_vsr else "REPORT_SUBMITTED",
+        user=None if is_vsr else user.get("email"),
         tenant_id=tenant_id,
         target_type="report",
         target_id=stored["id"],
         ip=ip,
         request_id=request_id,
-        metadata={"report_type": "voluntary"},
+        metadata={"report_type": stored.get("report_type"),
+                  "anonymous": bool(is_vsr)},
     )
     return _to_report_response(stored)
 
@@ -260,17 +242,13 @@ async def submit_vsr(
       - No engine/propeller, people, or investigation validation
     """
     tenant_id = user["tenant_id"]
-    if not can_submit_vsr(user):
-        raise HTTPException(
-            status_code=403,
-            detail="VSR submission requires a Safety Department officer "
-                   "(OFFICER in the safety department) or the tenant admin")
     service = ReportService(tenant_id)
     payload = report.model_dump()
     apply_auto_severity(payload)
 
+    # 2D.2.1: an anonymous VSR leaves the contact fields empty. Do NOT synthesise
+    # "Anonymous" — the store skips the row entirely when every field is empty.
     if not payload.get("reporter_name"):
-        payload["reporter_name"] = "Anonymous"
         payload["is_anonymous"] = True
 
     sev = payload.get("severity_level")
@@ -288,15 +266,17 @@ async def submit_vsr(
     background_tasks.add_task(service.mark_external_ai_skipped, stored["id"])
     _auto_create_hazard_from_report(stored, user)
     ip, request_id = request_context(request)
+    # 2D.2.1 (SME Q1/Q3): a VSR is anonymous. The audit event must never carry
+    # the submitter's email — it would re-link the report to the person.
     log_audit(
-        action="REPORT_SUBMITTED",
-        user=user.get("email"),
+        action="VSR_SUBMITTED",
+        user=None,
         tenant_id=tenant_id,
         target_type="report",
         target_id=stored["id"],
         ip=ip,
         request_id=request_id,
-        metadata={"report_type": "voluntary"},
+        metadata={"report_type": "voluntary", "anonymous": True},
     )
     return _to_report_response(stored)
 
@@ -555,12 +535,19 @@ def _auto_create_hazard_from_report(stored: dict, user: dict):
             tenant_id=tenant_id,
         )
         service = HazardService(tenant_id)
-        created = service.create_hazard(hazard_payload.model_dump(), user)
+        # 2D.2.1: a VSR is anonymous. The auto-created hazard copies the
+        # narrative, so it must not also carry the submitter's uid/email.
+        is_vsr = stored.get("report_type") == "voluntary"
+        hazard_actor = (
+            {**user, "uid": None, "email": None} if is_vsr else user
+        )
+        created = service.create_hazard(
+            hazard_payload.model_dump(), hazard_actor)
         logger.info(f"Auto-created hazard from report {stored.get('id')}")
         if created:
             log_audit(
                 action="HAZARD_CREATED",
-                user=user.get("email"),
+                user=None if is_vsr else user.get("email"),
                 tenant_id=tenant_id,
                 target_type="hazard",
                 target_id=created.get("id"),

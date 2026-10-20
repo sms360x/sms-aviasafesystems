@@ -194,7 +194,7 @@ document.getElementById('reportForm').addEventListener('submit', async function(
     };
     if (!payload.narrative || !document.getElementById('reportTitle').value.trim()) { showMsg('Title and description required','error'); return; }
     if (isMor && (!payload.reporterName || !payload.reporterEmail || !payload.reporterPhone)) { showMsg('MOR requires name, email and phone','error'); return; }
-    if (type==='vsr' && !payload.reporterName) { payload.reporterName='Anonymous'; payload.isAnonymous=true; }
+    if (type==='vsr' && !payload.reporterName) { payload.isAnonymous=true; }
     if (!document.getElementById('justCultureCheck').checked) { showMsg('Please confirm Just Culture','error'); return; }
     const btn=document.getElementById('submitBtn'); btn.disabled=true; btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Submitting...';
     try {

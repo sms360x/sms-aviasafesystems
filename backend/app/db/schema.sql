@@ -181,7 +181,8 @@ CREATE TABLE reports (
     manufacturer_advised        BOOLEAN NOT NULL DEFAULT FALSE,
     fdr_data_retained           BOOLEAN NOT NULL DEFAULT FALSE,
 
-    created_by                  TEXT NOT NULL,
+    -- 2D.2.1: NULL for every VSR; the submitter uid for MOR.
+    created_by                  TEXT,
     created_at                  TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at                  TIMESTAMPTZ NOT NULL DEFAULT now()
 );

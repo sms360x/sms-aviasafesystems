@@ -413,10 +413,6 @@ document.addEventListener('DOMContentLoaded', async function () {
     const reportDateEl = document.getElementById('reportDate');
     if (reportDateEl) reportDateEl.value = now.getFullYear() + '-' + pad(now.getMonth() + 1) + '-' + pad(now.getDate());
 
-    if (user.email) {
-        document.getElementById('reporterEmail').value = user.email;
-    }
-
     document.getElementById('toggleAnonymous').addEventListener('change', toggleAnonymity);
 
     document.querySelectorAll('.nav-section').forEach(el => {
