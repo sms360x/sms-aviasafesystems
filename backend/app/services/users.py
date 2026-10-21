@@ -180,8 +180,30 @@ def update_membership_role(uid: str, role: str, tenant_id: Any = None) -> None:
     2A.5: called on user creation and on role/tenant change (via
     ``upsert_user_doc``). Delegates to :func:`ensure_membership`, which maintains
     exactly one active row per user (one user = one tenant = one role).
+
+    2E.2: emits a durable `USER_ROLE_CHANGED` event when the membership role
+    actually changes (best-effort; never raises).
     """
+    from app.db.db_models import Membership
+
+    prev_role = None
+    try:
+        urow = pg.fetch_by(UserProfile, "uid", uid)
+        if urow and urow.get("id"):
+            mrow = pg.fetch_by(Membership, "user_id", urow.get("id"))
+            prev_role = (mrow or {}).get("role")
+    except Exception:
+        prev_role = None
+
     ensure_membership(uid, tenant_id, role)
+
+    if prev_role and prev_role != role:
+        try:
+            from app.services.audit_service import log_user_role_changed
+
+            log_user_role_changed(uid, prev_role, role, tenant_id=tenant_id)
+        except Exception as e:
+            logger.warning(f"USER_ROLE_CHANGED audit failed for {uid}: {e}")
 
 
 def ensure_membership(uid: str, tenant_id: Any, role: str) -> None:

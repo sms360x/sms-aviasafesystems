@@ -268,9 +268,16 @@ def require_not_aggregate_only(user: Dict[str, Any], resource: str = "records") 
     """Deny ACCOUNTABLE_EXECUTIVE / STATE_SMD raw-list access (403)."""
     role = (user or {}).get("role")
     if role in AGGREGATE_ONLY_ROLES:
+        detail = f"{resource} is not available for aggregate-only roles"
+        try:
+            from app.services.audit_service import log_authorization_denied
+
+            log_authorization_denied(user, resource, detail)
+        except Exception:
+            pass
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail=f"{resource} is not available for aggregate-only roles",
+            detail=detail,
         )
 
 

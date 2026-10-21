@@ -312,8 +312,8 @@ def _audit_rows_for(report_id):
     async def _go():
         async with session_scope() as s:
             r = await s.execute(
-                text("select action, actor from public.audit_logs "
-                     "where target_id = :id"), {"id": report_id})
+                text("select action, actor_uid from public.durable_audit_logs "
+                     "where resource_id = :id"), {"id": report_id})
             return r.fetchall()
 
     return run(_go())

@@ -105,6 +105,12 @@ class Settings(BaseSettings):
     JWT_ALGORITHM: str = "RS256"
     JWT_EXPIRES_IN: int = 3600
 
+    # ── Durable audit (Phase 2E.2) ──
+    # Server-side HMAC-SHA256 key used to hash-chain the durable_audit_logs
+    # table. When unset the audit service falls back to a dev-only key (and
+    # logs a warning); production MUST set a real random key.
+    AUDIT_HMAC_KEY: Optional[str] = None
+
     # ── AI / Gemini ──
     AI_MODEL: str = "gemini-2.0-pro-exp-02-05"
     AI_PROMPT_VERSION: str = "2.0"

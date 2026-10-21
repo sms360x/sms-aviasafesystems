@@ -26,10 +26,10 @@ from app.middleware.auth import get_current_user, get_tenant_user, get_safety_ma
 from app.core.config import settings
 from app.db.ids import register_tenant
 from app.services.report_service import ReportService, external_ai_blocked_for_report_type
+from app.services.audit_service import log_audit, request_context, log_report_read
 from app.services.hazard_service import HazardService, derive_priority_from_consequence
 from app.services.risk_matrix import compute_risk_index, get_risk_level
 from app.services.severity_service import apply_auto_severity
-from app.services.audit_service import log_audit, request_context
 from app.middleware.rate_limit import rate_limit
 
 router = APIRouter()
@@ -333,6 +333,9 @@ async def get_report(
             and not can_view_raw_vsr(user)):
         raise HTTPException(status_code=403,
                             detail="Safety Manager role required for voluntary reports")
+
+    # 2E.2: audit privileged raw-report reads (TENANT_ADMIN / OFFICER only).
+    log_report_read(user, report_id, doc.get("report_type"))
 
     return _to_report_response(doc)
 
