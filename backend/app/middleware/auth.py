@@ -10,7 +10,7 @@
 # CODE OWNER: AviaSafeSystems
 # ============================================================================
 
-from fastapi import HTTPException, Security, Depends
+from fastapi import HTTPException, Security, Depends, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from typing import Dict, Any, Optional
 from loguru import logger
@@ -237,6 +237,41 @@ DEPARTMENT_SCOPE_PREFIXES = {
     "camo": "camo",
     "ops": "flight_ops",
 }
+
+
+# Roles that consume only aggregate surfaces. They are denied raw operational
+# lists (hazards / CANs / CAPs / reports) at the route layer; the same matrix is
+# re-enforced in RLS (defense in depth, see supabase/migrations).
+AGGREGATE_ONLY_ROLES = frozenset({"ACCOUNTABLE_EXECUTIVE", "STATE_SMD"})
+
+
+def resolve_role_scope(user: Dict[str, Any]) -> Dict[str, Any]:
+    """Return WHERE-clause parameters that scope a raw list to the caller's role.
+
+    - ``DEPT_ADMIN`` -> ``{"department": <user's department>}`` (own department
+      only). A DEPT_ADMIN without a department is denied (least privilege).
+    - everyone else -> ``{}`` (tenant scope is applied by the service layer).
+    """
+    role = (user or {}).get("role")
+    if role in settings.DEPT_ADMIN_ROLES:
+        dept = (user or {}).get("department")
+        if not dept:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Department scope is required for this account",
+            )
+        return {"department": dept}
+    return {}
+
+
+def require_not_aggregate_only(user: Dict[str, Any], resource: str = "records") -> None:
+    """Deny ACCOUNTABLE_EXECUTIVE / STATE_SMD raw-list access (403)."""
+    role = (user or {}).get("role")
+    if role in AGGREGATE_ONLY_ROLES:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"{resource} is not available for aggregate-only roles",
+        )
 
 
 def get_department_scope(user: Dict[str, Any]) -> Optional[str]:

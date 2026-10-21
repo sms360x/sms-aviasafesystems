@@ -24,7 +24,13 @@ from app.models.hazard import (
     SramCalculateRequest,
     SramSaveRequest,
 )
-from app.middleware.auth import get_current_user, get_tenant_user, get_safety_manager
+from app.middleware.auth import (
+    get_current_user,
+    get_tenant_user,
+    get_safety_manager,
+    resolve_role_scope,
+    require_not_aggregate_only,
+)
 from app.services.hazard_service import HazardService
 from app.services.audit_service import log_audit, request_context
 from app.services import (
@@ -281,6 +287,11 @@ async def list_hazards(
 ):
     from app.services.archetype_scope import resolve_data_tenant
 
+    # 2D.3: aggregate-only roles are denied raw hazard lists; DEPT_ADMIN is
+    # forced to its own department (caller-supplied department is overridden).
+    require_not_aggregate_only(user, "hazards")
+    role_scope = resolve_role_scope(user)
+
     svc_user = user
     # Archetype requests take precedence and scope to the virtual tenant.
     if archetypeId and str(archetypeId).strip().startswith("demo-"):
@@ -311,6 +322,9 @@ async def list_hazards(
         filters["search"] = search
     if tenant_id and user.get("role") in settings.CROSS_TENANT_ROLES:
         filters["tenant_id"] = tenant_id
+
+    # Role-derived scope wins over any caller-supplied department filter.
+    filters.update(role_scope)
 
     docs = service.list_hazards(svc_user, filters)
     return [_to_list_item(d) for d in docs]

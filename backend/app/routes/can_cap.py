@@ -8,7 +8,15 @@ from app.models.can_cap import (
     CANCreate, CANUpdate, CANResponse, CANListItem,
     CAPCreate, CAPUpdate, CAPReview, CAPResponse, CANStatus, CAPStatus
 )
-from app.middleware.auth import get_current_user, get_tenant_user, get_safety_manager, get_responsible_manager, get_department_scope
+from app.middleware.auth import (
+    get_current_user,
+    get_tenant_user,
+    get_safety_manager,
+    get_responsible_manager,
+    get_department_scope,
+    resolve_role_scope,
+    require_not_aggregate_only,
+)
 from app.services.can_cap_service import CanCapService
 from app.services.audit_service import log_audit, request_context
 
@@ -65,6 +73,11 @@ async def list_cans(
 ):
     from app.services.archetype_scope import resolve_data_tenant
 
+    # 2D.3: aggregate-only roles are denied raw CAN lists; DEPT_ADMIN is forced
+    # to its own department (caller-supplied department is overridden).
+    require_not_aggregate_only(user, "CANs")
+    role_scope = resolve_role_scope(user)
+
     effective_tenant = resolve_data_tenant(archetypeId, user)
     service = CanCapService(effective_tenant)
     filters = {}
@@ -87,6 +100,9 @@ async def list_cans(
     scope = get_department_scope(user)
     if scope:
         filters["department"] = scope
+
+    # Role-derived scope wins over any caller-supplied department filter.
+    filters.update(role_scope)
 
     docs = service.list_cans(user, filters)
     return [_to_can_list_item(d) for d in docs]
@@ -122,6 +138,21 @@ async def list_all_caps(
     (Module B §23 / P3-7)."""
     from app.services.archetype_scope import resolve_data_tenant
 
+    # 2D.3: STATE_SMD is denied raw CAP lists entirely. ACCOUNTABLE_EXECUTIVE
+    # may only read the escalation queue (escalated_to_ae=true).
+    role = (user or {}).get("role")
+    if role == "STATE_SMD":
+        raise HTTPException(
+            status_code=403,
+            detail="CAPs are not available for STATE_SMD",
+        )
+    if role == "ACCOUNTABLE_EXECUTIVE" and not escalated_to_ae:
+        raise HTTPException(
+            status_code=403,
+            detail="Accountable Executive may only list escalated CAPs",
+        )
+    role_scope = resolve_role_scope(user)
+
     effective_tenant = resolve_data_tenant(archetypeId, user)
     service = CanCapService(effective_tenant)
     filters = {}
@@ -142,6 +173,9 @@ async def list_all_caps(
     scope = get_department_scope(user)
     if scope:
         filters["department"] = scope
+
+    # Role-derived scope wins over any caller-supplied department filter.
+    filters.update(role_scope)
 
     docs = service.list_all_caps(user, filters)
     return [_to_cap_list_item(d) for d in docs]

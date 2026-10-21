@@ -567,6 +567,11 @@ class CanCapService:
         results = []
         for row in rows:
             data = _can_to_dict(row, hazard_id_ref=ref_map.get(str(row.hazard_id)))
+            # Defense in depth: the SQL predicate already scopes department, but
+            # keep an in-memory guard so a session that ignores the WHERE clause
+            # (or a future refactor) cannot leak a cross-department CAN.
+            if filters.get("department") and (data.get("department") or "") != filters["department"]:
+                continue
             if filters.get("search"):
                 s = filters["search"].lower()
                 ref = (data.get("can_reference") or "").lower()

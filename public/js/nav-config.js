@@ -232,7 +232,7 @@ function getUserRoleType(user) {
     var role = String(user.role || 'USER').toUpperCase();
 
     if (role === 'SUPER_ADMIN') return 'SUPER';
-    if (role === 'CAAN_SMD' || role === 'CAAN_ADMIN' || role === 'CAAN_AUDITOR') return 'CAAN';
+    if (role === 'CAAN_SMD' || role === 'STATE_SMD' || role === 'CAAN_ADMIN' || role === 'CAAN_AUDITOR') return 'CAAN';
     if (role === 'ACCOUNTABLE_EXECUTIVE') return 'AE';
     if (role === 'SAG_MEMBER') return 'SAG';
     // Legacy AE heuristic (firebase.js getRoleDestination): AE accounts are

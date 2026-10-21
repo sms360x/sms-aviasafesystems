@@ -22,7 +22,7 @@ from app.models.hazard import (
     HazardPriority,
     revalue_taxonomy,
 )
-from app.middleware.auth import get_current_user, get_tenant_user, get_safety_manager
+from app.middleware.auth import get_current_user, get_tenant_user, get_safety_manager, require_not_aggregate_only
 from app.core.config import settings
 from app.db.ids import register_tenant
 from app.services.report_service import ReportService, external_ai_blocked_for_report_type
@@ -292,6 +292,9 @@ async def get_reports(
     """
     if not user.get("tenant_id") and user.get("role") not in settings.CROSS_TENANT_ROLES:
         raise HTTPException(status_code=403, detail="User does not have tenant access")
+    # 2D.3: aggregate-only roles (ACCOUNTABLE_EXECUTIVE / STATE_SMD) are denied
+    # the raw report list; they consume aggregate endpoints only.
+    require_not_aggregate_only(user, "reports")
     # VSR_VISIBILITY_RULE=A: within a tenant the raw report list is the Safety
     # Manager (TENANT_ADMIN/AIRLINE_ADMIN) and the Safety Department officer
     # (OFFICER in the tenant's safety department, or the legacy SAFETY_OFFICER

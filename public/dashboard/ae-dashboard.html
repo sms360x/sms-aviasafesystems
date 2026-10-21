@@ -214,7 +214,7 @@ window.SHELL_CONFIG = {
 <script src="/js/shell.js"></script>
 <script>
 // Minimalist AE — reuses ae-dashboard.html logic but hides non-executive panels
-let myEmail=null, myDomain=null, charts={}, gPsoeList=[], gCans=[], gCaps=[], gHazards=[], gReports=[], gOverlays={}, currentDecisionCapId=null;
+let myEmail=null, myDomain=null, charts={}, gPsoeList=[], gCans=[], gCaps=[], gHazards=[], gReports=[], gAeKpis=null, gOverlays={}, currentDecisionCapId=null;
 const AE_LEDGER_N=3; let aeLedgerSelected=new Set(); let aeLedgerExpanded=false; let aeLedgerDetails={};
 // 3C.1B (F-P2-2): track per-source load failures so a total outage renders
 // "Data unavailable" instead of a false all-clear. No failed request may
@@ -251,13 +251,14 @@ function psoeStage(pct){
 async function loadDashboard(){
     try{
         gLoadErrors=[];
-        const [cans,caps,hazards,reports]=await Promise.all([
-            ApiClient.get('/api/v1/cans/').catch(err=>{ console.error('[AE dashboard] /api/v1/cans/ failed:', err && err.message ? err.message : err); gLoadErrors.push('cans'); return []; }),
-            ApiClient.get('/api/v1/cans/caps').catch(err=>{ console.error('[AE dashboard] /api/v1/cans/caps failed:', err && err.message ? err.message : err); gLoadErrors.push('caps'); return []; }),
-            ApiClient.get('/api/v1/hazards/').catch(err=>{ console.error('[AE dashboard] /api/v1/hazards/ failed:', err && err.message ? err.message : err); gLoadErrors.push('hazards'); return []; }),
-            ApiClient.get('/api/v1/reports/').catch(err=>{ console.error('[AE dashboard] /api/v1/reports/ failed:', err && err.message ? err.message : err); gLoadErrors.push('reports'); return []; })
+        // 2D.3: the AE consumes aggregate/queue surfaces only — no raw reports,
+        // hazards, or CAN lists. KPIs come from /dashboard/ae/kpis; the single
+        // actionable list is the escalated-CAP queue.
+        const [caps, kpis]=await Promise.all([
+            ApiClient.get('/api/v1/cans/caps?escalated_to_ae=true').catch(err=>{ console.error('[AE dashboard] /api/v1/cans/caps?escalated_to_ae=true failed:', err && err.message ? err.message : err); gLoadErrors.push('caps'); return []; }),
+            ApiClient.get('/api/v1/dashboard/ae/kpis').catch(err=>{ console.error('[AE dashboard] /api/v1/dashboard/ae/kpis failed:', err && err.message ? err.message : err); gLoadErrors.push('kpis'); return null; })
         ]);
-        gPsoeList=[]; gCans=cans||[]; gCaps=caps||[]; gHazards=hazards||[]; gReports=reports||[];
+        gPsoeList=[]; gCans=[]; gCaps=caps||[]; gHazards=[]; gReports=[]; gAeKpis=kpis||null;
         gCaps.forEach(c=>{ const ov=gOverlays[c.id]; if(ov) Object.assign(c,ov); });
         renderEscalations(gCaps);
         renderSituationalBanner();

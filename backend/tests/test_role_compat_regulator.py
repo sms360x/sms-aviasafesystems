@@ -109,29 +109,23 @@ def test_unauthenticated_cannot_issue_can(client):
 
 
 # ---------------------------------------------------------------------------
-# Canonical regulator reads preserved
+# Canonical regulator reads preserved — aggregate surfaces only
 # ---------------------------------------------------------------------------
 
-def test_state_smd_hazard_scoping_honored(client, monkeypatch):
-    captured = {}
-
-    def _fake_list(self, svc_user, filters):
-        captured["tenant"] = filters.get("tenant_id")
-        return []
-
-    monkeypatch.setattr(hazards_routes.HazardService, "list_hazards", _fake_list)
+def test_state_smd_denied_raw_hazard_list(client, monkeypatch):
+    monkeypatch.setattr(hazards_routes.HazardService, "list_hazards",
+                        lambda self, svc_user, filters: [])
     _override("STATE_SMD", None)
     r = client.get("/api/v1/hazards/", params={"tenant_id": "op-1"})
-    assert r.status_code == 200
-    assert captured["tenant"] == "op-1"
+    assert r.status_code == 403
 
 
-def test_state_smd_can_list_reports(client, monkeypatch):
+def test_state_smd_denied_raw_report_list(client, monkeypatch):
     monkeypatch.setattr(occ_routes.ReportService, "get_reports",
                         lambda self, user: [])
     _override("STATE_SMD", None)
     r = client.get("/api/v1/reports/")
-    assert r.status_code == 200
+    assert r.status_code == 403
 
 
 # ---------------------------------------------------------------------------
