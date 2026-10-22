@@ -484,7 +484,12 @@
         let role = currentUserState.role ||
             (window.currentUser && (window.currentUser.roles || window.currentUser.role)) || '';
         role = global.normalizeRoleClaim ? global.normalizeRoleClaim(String(role)) : String(role);
-        return { email: email || '', role: role || 'USER' };
+        var department = currentUserState.dept;
+        if (!department && window.currentUser) {
+            var claims = window.currentUser.claims || {};
+            department = claims.department || window.currentUser.department || window.currentUser.dept || '';
+        }
+        return { email: email || '', role: role || 'USER', department: department || '' };
     }
 
     // Convert NAV_CONFIG into dropdown groups. EVERY group and item is rendered
@@ -1076,6 +1081,7 @@
                         const claims = (tokenResult && tokenResult.claims) || {};
                         if (claims.tenant_id) applyTenantToSurveyLinks(claims.tenant_id);
                         currentUserState.tenant = claims.tenant_id || null;
+                        currentUserState.dept = claims.department || null;
                         var rawRole = claims.role || claims.roles || null;
                         currentUserState.role = rawRole ? (global.normalizeRoleClaim ? global.normalizeRoleClaim(rawRole) : rawRole) : null;
                         currentUserState.plan = claims.plan || null;

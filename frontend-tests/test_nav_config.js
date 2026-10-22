@@ -33,10 +33,18 @@ function test_role_type_mapping() {
     assert.strictEqual(getUserRoleType({ role: 'TENANT_ADMIN' }), 'SAFETY');
     assert.strictEqual(getUserRoleType({ role: 'SAFETY_OFFICER' }), 'SAFETY');
     assert.strictEqual(getUserRoleType({ role: 'DEPT_ADMIN' }), 'DEPT_ADMIN');
-    // Step-3: STAFF is retired and merged into OFFICER. OFFICER keeps the
-    // officer (SAFETY) persona; the retired literal is no longer special-cased
-    // and falls through to the wildcard exactly like USER.
-    assert.strictEqual(getUserRoleType({ role: 'OFFICER' }), 'SAFETY');
+    // Step-3: STAFF is retired and merged into OFFICER. OFFICER is
+    // department-scoped: only the Safety (Corporate Safety) department is
+    // a Safety Officer; any other officer falls back to the basic
+    // employee persona.
+    assert.strictEqual(getUserRoleType({ role: 'OFFICER', department: 'safety' }), 'SAFETY');
+    assert.strictEqual(getUserRoleType({ role: 'OFFICER', department: 'corporate_safety' }), 'SAFETY');
+    assert.strictEqual(getUserRoleType({ role: 'OFFICER', department: 'flight_ops' }), 'ALL');
+    assert.strictEqual(getUserRoleType({ role: 'OFFICER', department: 'maintenance_145' }), 'ALL');
+    assert.strictEqual(getUserRoleType({ role: 'OFFICER', department: 'camo' }), 'ALL');
+    // No department claim -> fail closed to the basic persona (mirrors the
+    // backend: an officer without a department is not a Safety Officer).
+    assert.strictEqual(getUserRoleType({ role: 'OFFICER' }), 'ALL');
     assert.strictEqual(getUserRoleType({ role: 'STAFF' }), 'ALL');
     assert.strictEqual(getUserRoleType({ role: 'ACCOUNTABLE_EXECUTIVE' }), 'AE');
     assert.strictEqual(getUserRoleType({ role: 'SAG_MEMBER' }), 'SAG');
@@ -106,11 +114,16 @@ function test_dept_workspace_nav() {
     // render for callers that pass no moduleAccess, e.g. shell.js).
     const noModules = groupsOf(getVisibleNav({ role: 'DEPT_ADMIN', email: 'camo@sitaair.com.np' }));
     assert.deepStrictEqual(Object.keys(noModules), ['Workspace'], 'DEPT_ADMIN Workspace without moduleAccess');
-    // Step-3: OFFICER absorbed the retired STAFF role — it is an officer
-    // persona now, so it does NOT get the department Workspace group.
-    const officer = groupsOf(getVisibleNav({ role: 'OFFICER', email: 'camo@sitaair.com.np' }));
-    assert.ok(!officer.Workspace, 'OFFICER does NOT see the department Workspace group');
-    assert.ok(officer.Dashboard, 'OFFICER keeps the safety Dashboard group');
+    // Step-3: OFFICER absorbed the retired STAFF role, but the persona is
+    // department-scoped. A non-safety officer must NOT get the department
+    // Workspace group and falls back to the basic menu; a safety officer
+    // keeps the Safety persona and its Dashboard.
+    const flightOpsOfficer = groupsOf(getVisibleNav({ role: 'OFFICER', department: 'flight_ops', email: 'flightops@airline.com' }));
+    assert.ok(!flightOpsOfficer.Workspace, 'Flight Ops OFFICER does NOT see the department Workspace group');
+    assert.strictEqual(getUserRoleType({ role: 'OFFICER', department: 'flight_ops' }), 'ALL', 'Flight Ops OFFICER gets the basic (ALL) persona');
+    const officer = groupsOf(getVisibleNav({ role: 'OFFICER', department: 'safety', email: 'so@airline.com' }));
+    assert.ok(!officer.Workspace, 'Safety OFFICER does NOT see the department Workspace group');
+    assert.ok(officer.Dashboard, 'Safety OFFICER keeps the safety Dashboard group');
 }
 
 // ---------------------------------------------------------------------------
@@ -213,7 +226,7 @@ function main() {
     test_legacy_module_keys_mapped();
     test_no_module_access_arg_backward_compatible();
     test_regulator_untouched();
-    console.log('test_nav_config: 11 tests passed (AE narrow menu, dept Workspace, SAG hidden, canonical flags, module gating, back-compat)');
+    console.log('test_nav_config: 11 tests passed (AE narrow menu, dept Workspace, SAG hidden, canonical flags, module gating, back-compat, department-scoped OFFICER)');
 }
 
 main();

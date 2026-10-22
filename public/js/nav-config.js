@@ -223,6 +223,24 @@ function moduleEnabled(normalized, flag) {
 // Role types: SUPER | CAAN | AE | SAFETY | DEPT_ADMIN | SAG | ALL.
 // SAG_MEMBER → SAG (no dashboard in scope — hidden from nav, P4-6.2).
 // ACCOUNTABLE_EXECUTIVE → AE (narrow menu, P4-6.1).
+
+function getUserDepartment(user) {
+    var dept = '';
+    if (user && typeof user === 'object') {
+        dept = user.department || user.dept || '';
+    }
+    if (!dept && typeof window !== 'undefined' && window.currentUser) {
+        var claims = window.currentUser.claims || {};
+        dept = claims.department || window.currentUser.department || window.currentUser.dept || '';
+    }
+    return String(dept || '').trim().toLowerCase();
+}
+
+function isSafetyDepartment(department) {
+    var d = String(department || '').trim().toLowerCase();
+    return d === 'safety' || d === 'corporate_safety';
+}
+
 function getUserRoleType(user) {
     if (!user) return 'ALL';
     var email = (user.email || '').toLowerCase();
@@ -236,7 +254,13 @@ function getUserRoleType(user) {
     // stubbed as TENANT_ADMIN, so the ae@ email check must run
     // BEFORE the tenant-admin mapping — preserves existing routing behavior.
     if (email.indexOf('ae@') === 0 || email.indexOf('ae.') === 0) return 'AE';
-    if (role === 'TENANT_ADMIN' || role === 'SAFETY_OFFICER' || role === 'OFFICER') return 'SAFETY';
+    if (role === 'TENANT_ADMIN' || role === 'SAFETY_OFFICER') return 'SAFETY';
+    if (role === 'OFFICER') {
+        // OFFICER is department-scoped: only the Safety (Corporate Safety)
+        // department is a Safety Officer; all other officers fall back to
+        // the basic employee persona.
+        return isSafetyDepartment(getUserDepartment(user)) ? 'SAFETY' : 'ALL';
+    }
     if (role === 'DEPT_ADMIN') return 'DEPT_ADMIN';
     return 'ALL';
 }
