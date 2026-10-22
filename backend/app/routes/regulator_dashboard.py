@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 import io
+from loguru import logger
 
 from app.core.config import settings
 from app.services.aggregation_service import AggregationService
@@ -25,8 +26,18 @@ def get_tenant_ids_from_query(tenant_ids: Optional[str] = Query(None, descriptio
 def _default_tenant_ids(tenant_ids: Optional[str]) -> List[str]:
     tids = get_tenant_ids_from_query(tenant_ids)
     if not tids:
-        # Default to all known tenants (mock for demo)
-        tids = ["fixedwing", "rotarywing", "demoairport"]
+        # Discover real operator tenants from Postgres. Never fabricate a
+        # hardcoded demo tenant list — an empty industry is an empty industry.
+        try:
+            from app.db import pg
+            from app.db.db_models import Tenant
+
+            tenants = pg.fetch_all(Tenant, limit=500)
+            tids = [t.get("slug") or t.get("tenant_id") or t.get("id") for t in tenants]
+            tids = [t for t in tids if t]
+        except Exception as e:  # noqa: BLE001 - discovery is best-effort
+            logger.warning(f"Tenant discovery for regulator dashboard failed: {e}")
+            tids = []
     return tids
 
 def _service() -> AggregationService:

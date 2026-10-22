@@ -30,17 +30,6 @@ function escapeHtml(value) {
         .replace(/'/g, '&#39;');
 }
 
-// Deterministic per-code+month pseudo-random so the demo trend chart stays
-// stable across refreshes (replaces Math.random() shuffling on every load).
-function trendValueFor(code, monthIndex) {
-    let seed = 0;
-    const key = code + '-' + monthIndex;
-    for (let i = 0; i < key.length; i++) {
-        seed = (seed * 31 + key.charCodeAt(i)) >>> 0;
-    }
-    return Math.round(((seed % 100) / 100) * 5);
-}
-
 document.addEventListener('DOMContentLoaded', async () => {
     await waitForFirebase();
     const user = await getCurrentUser();
@@ -145,49 +134,15 @@ function renderCharts() {
     renderComparisonChart();
 }
 
-// 3C.1B (F-P2-2): this trend is illustrative (deterministic per-code values),
-// not measured history — label it so it is never read as operational data.
-function markIllustrativeTrend(canvas) {
-    if (!canvas || !canvas.parentNode) return;
-    if (canvas.parentNode.querySelector('.trend-note')) return;
-    const p = canvas.ownerDocument.createElement('p');
-    p.className = 'trend-note';
-    p.textContent = 'Illustrative trend — not measured historical data.';
-    p.style.cssText = 'font-size:0.72rem;color:#64748b;margin-top:0.4rem;';
-    canvas.parentNode.appendChild(p);
-}
-
 function renderTrendChart() {
     const ctx = document.getElementById('nhrcTrendChart');
     if (!ctx) return;
-
-    // Demo trend data derived deterministically from the hazard counts; in
-    // production this would come from a time-bucketed API series.
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
-    const datasets = nhrcData.map(k => {
-        const meta = NHRC_META[k.nhrc] || { color: '#64748b' };
-        return {
-            label: k.nhrc,
-            data: months.map((_, i) => trendValueFor(k.nhrc, i)),
-            borderColor: meta.color,
-            backgroundColor: meta.color + '1a',
-            fill: false,
-            tension: 0.3,
-        };
-    });
-
-    destroyChart('nhrcTrendChart');
-    chartInstances['nhrcTrendChart'] = new Chart(ctx, {
-        type: 'line',
-        data: { labels: months, datasets },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: { legend: { position: 'bottom' } },
-            scales: { y: { beginAtZero: true, ticks: { precision: 0 } } },
-        },
-    });
-    markIllustrativeTrend(ctx);
+    // No measured N-HRC time-series exists yet — render an empty state instead
+    // of a fabricated illustrative trend.
+    const wrap = ctx.parentNode;
+    if (wrap) {
+        wrap.innerHTML = '<div class="nhrc-empty">No trend data available yet.</div>';
+    }
 }
 
 function renderDistributionChart() {

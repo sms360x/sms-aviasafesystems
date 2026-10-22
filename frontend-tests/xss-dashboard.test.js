@@ -83,17 +83,17 @@ assert.ok(dashboard.includes('kpiCountDisplay(vsr)') && dashboard.includes('kpiC
     'loadKpis must use kpiCountDisplay for VSR/MOR cards');
 console.log('ok - zero-vs-unavailable display rule (functional)');
 
-// ---- F-P2-2 static: outage must not render all-clear ------------------------
+// ---- F-P2-2 static: outage must not render all-clear; fabricated data removed ----
 
 assert.ok(ae.includes('gLoadErrors'), 'ae-dashboard must track load failures');
 assert.ok(ae.includes('Data unavailable'), 'ae-dashboard must render unavailable state');
 assert.ok(ae.includes("'Unknown'"), 'ae-dashboard banner must support Unknown chips');
-assert.ok(spi.includes('markEstimatedTrend'), 'spi trend must mark estimated fallback');
-assert.ok(spi.includes('Estimated trend'), 'spi estimated label present');
-assert.ok(nhrc.includes('markIllustrativeTrend'), 'nhrc trend must mark illustrative data');
-assert.ok(nhrc.includes('Illustrative trend'), 'nhrc illustrative label present');
-assert.ok(dashboard.includes('markDemoFallback'), 'safety dashboard must label demo fallback');
-assert.ok(dashboard.includes('Demo data'), 'demo-only label present');
-console.log('ok - outage/estimated/demo markers present (static)');
+assert.ok(!spi.includes('markEstimatedTrend'), 'spi must not synthesize an estimated trend');
+assert.ok(spi.includes('No trend data available yet'), 'spi renders an empty trend state');
+assert.ok(!nhrc.includes('markIllustrativeTrend'), 'nhrc must not synthesize an illustrative trend');
+assert.ok(nhrc.includes('No trend data available yet'), 'nhrc renders an empty trend state');
+assert.ok(!dashboard.includes('markDemoFallback'), 'safety dashboard must not inject a demo fallback');
+assert.ok(!dashboard.includes('isDemoTenant'), 'safety dashboard must not special-case demo tenants');
+console.log('ok - outage markers present; fabricated demo/estimated/illustrative data removed (static)');
 
 console.log('\nAll 3C.1B frontend checks passed.');

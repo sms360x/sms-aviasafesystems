@@ -122,7 +122,15 @@ def _sample_db():
         {"id": "s-demo", "tenant_id": _si64("demoairport"), "is_demo": dm,
          "submitted_at": now, **_md_docs(5)},
     ]
-    return _DemoDB({"hazards": hazards, "surveys": surveys, "tenants": []})
+    return _DemoDB({
+        "hazards": hazards,
+        "surveys": surveys,
+        "tenants": [
+            {"id": "fixedwing", "slug": "fixedwing"},
+            {"id": "rotarywing", "slug": "rotarywing"},
+            {"id": "demoairport", "slug": "demoairport"},
+        ],
+    })
 
 
 def _patch_reg_dashboard_db(monkeypatch):

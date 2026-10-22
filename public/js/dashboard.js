@@ -494,47 +494,19 @@ function fmtDate(iso) {
     try { return new Date(iso).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }); } catch (e) { return String(iso); }
 }
 
-// 3C.1B (F-P2-2): explicitly authorized demo data must be labeled as such,
-// never presented indistinguishably from operational measurements.
-function markDemoFallback(el) {
-    if (!el.querySelector('.demo-note')) {
-        const p = document.createElement('p');
-        p.className = 'demo-note';
-        p.textContent = 'Demo data — illustrative only, not operational measurements.';
-        p.style.cssText = 'font-size:0.72rem;color:#64748b;margin-top:0.4rem;';
-        el.appendChild(p);
-    }
-}
-
 async function loadSSMRiskTrends() {
     const el = document.getElementById('ssmRiskChart');
     setLoading(el);
 
     try {
         const data = (await DashboardAPI.getSSPRiskTrends(730)) || {};
-        let labels = Array.isArray(data.labels) ? data.labels : [];
-        let series = Array.isArray(data.series) ? data.series : [];
-        // Demo fallback: if no data but demo tenant, show static trend
-        let usedDemoFallback = false;
+        const labels = Array.isArray(data.labels) ? data.labels : [];
         if (labels.length === 0) {
-            const isDemoTenant = ['fixedwing', 'rotarywing', 'demoairport'].includes(currentTenant);
-            if (isDemoTenant) {
-                usedDemoFallback = true;
-                labels = ['2026-Q1', '2026-Q2', '2026-Q3'];
-                series = [
-                    { category: 'Operational', points: [{avg_risk_index: 45}, {avg_risk_index: 42}, {avg_risk_index: 38}] },
-                    { category: 'Technical', points: [{avg_risk_index: 55}, {avg_risk_index: 52}, {avg_risk_index: 48}] }
-                ];
-                data.labels = labels;
-                data.series = series;
-            } else {
-                setEmpty(el, 'No SSM risk trend data available yet');
-                return;
-            }
+            setEmpty(el, 'No SSM risk trend data available yet');
+            return;
         }
         setReady(el);
         renderSSMRiskChart(data);
-        if (usedDemoFallback) markDemoFallback(el);
     } catch (err) {
         setError(el, err.message);
     }
@@ -562,28 +534,13 @@ async function loadHazardFrequency() {
     setLoading(el);
 
     try {
-        let data = safeArray(await DashboardAPI.getHazardFrequency(currentDays));
-        let usedDemoFallback = false;
+        const data = safeArray(await DashboardAPI.getHazardFrequency(currentDays));
         if (data.length === 0) {
-            const isDemoTenant = ['fixedwing', 'rotarywing', 'demoairport'].includes(currentTenant);
-            if (isDemoTenant) {
-                usedDemoFallback = true;
-                // Static demo hazards matching seeded data
-                data = [
-                    { occurrence_type: 'Runway Excursion', count: 3, percentage: 30 },
-                    { occurrence_type: 'Bird Strike', count: 2, percentage: 20 },
-                    { occurrence_type: 'Engine Failure', count: 2, percentage: 20 },
-                    { occurrence_type: 'Cabin Pressurization', count: 1, percentage: 10 },
-                    { occurrence_type: 'Tail Rotor', count: 1, percentage: 10 }
-                ];
-            } else {
-                setEmpty(el, 'No hazard data available');
-                return;
-            }
+            setEmpty(el, 'No hazard data available');
+            return;
         }
         setReady(el);
         renderHazardChart(data);
-        if (usedDemoFallback) markDemoFallback(el);
     } catch (err) {
         setError(el, err.message);
     }
