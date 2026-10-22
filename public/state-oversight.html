@@ -267,8 +267,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         window.location.href = '/login.html?tenant=caan';
         return;
     }
-    if (currentUser.role !== 'CAAN_SMD' && currentUser.role !== 'SUPER_ADMIN') {
-        alert('Access denied. CAAN_SMD or SUPER_ADMIN role required.');
+    if (currentUser.role !== 'STATE_SMD' && currentUser.role !== 'SUPER_ADMIN') {
+        alert('Access denied. STATE_SMD or SUPER_ADMIN role required.');
         window.location.href = '/';
         return;
     }
@@ -332,7 +332,7 @@ function withinPeriod(ts, cutoff) {
 // All figures come from the backend aggregation endpoint
 // (/api/v1/dashboard/caan/state) which computes the state view server-side
 // from the cross-tenant reports/hazards/responses collections. The client
-// performs no direct Firestore queries, so the State Regulator (CAAN_SMD)
+// performs no direct Firestore queries, so the State Regulator (STATE_SMD)
 // role always sees consolidated, anonymized data regardless of client-side
 // Firestore rules.
 // ============================================================================

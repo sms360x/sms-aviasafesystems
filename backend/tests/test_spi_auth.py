@@ -7,7 +7,7 @@ Now:
   * All routes require a valid Firebase ID token (Depends(get_current_user)).
   * GET|POST /spi/tenant/{tenant_id}/values|status|trend|targets require the
     caller's tenant_id to match {tenant_id} unless the role is cross-tenant
-    (CAAN_SMD / SUPER_ADMIN) — shared require_tenant_access helper.
+    (STATE_SMD / SUPER_ADMIN) — shared require_tenant_access helper.
   * GET /spi/state/values|status are State aggregates and require the CAAN
     role (Depends(get_caan_user)).
 
@@ -46,7 +46,7 @@ SPI_GET_URLS = SPI_TENANT_GET_URLS + [
 # Helpers
 # ---------------------------------------------------------------------------
 
-def _user(role="AIRLINE_ADMIN", tenant_id="fixedwing", uid="u-fw"):
+def _user(role="TENANT_ADMIN", tenant_id="fixedwing", uid="u-fw"):
     return {
         "uid": uid,
         "email": "safety@fixedwing.com.np",
@@ -117,7 +117,7 @@ def test_tenant_get_routes_reject_cross_tenant(monkeypatch):
 
 def test_tenant_get_routes_allow_caan_any_tenant(monkeypatch):
     _patch_service(monkeypatch)
-    _override(_user(role="CAAN_SMD", tenant_id=None, uid="u-caan"))
+    _override(_user(role="STATE_SMD", tenant_id=None, uid="u-caan"))
     try:
         c = TestClient(app)
         for url in SPI_TENANT_GET_URLS:
@@ -140,7 +140,7 @@ def test_tenant_get_routes_allow_super_admin_any_tenant(monkeypatch):
 
 
 # ---------------------------------------------------------------------------
-# GET /state/* — CAAN role only (state-level aggregate)
+# GET /state/* — STATE_SMD role only (state-level aggregate)
 # ---------------------------------------------------------------------------
 
 def test_state_get_routes_reject_airline_user(monkeypatch):
@@ -151,14 +151,14 @@ def test_state_get_routes_reject_airline_user(monkeypatch):
         for url in SPI_STATE_URLS:
             resp = c.get(url)
             assert resp.status_code == 403, (url, resp.status_code)
-            assert "CAAN" in resp.json()["detail"]
+            assert "STATE_SMD" in resp.json()["detail"]
     finally:
         app.dependency_overrides.clear()
 
 
 def test_state_get_routes_allow_caan_user(monkeypatch):
     _patch_service(monkeypatch)
-    _override(_user(role="CAAN_SMD", tenant_id=None, uid="u-caan"))
+    _override(_user(role="STATE_SMD", tenant_id=None, uid="u-caan"))
     try:
         c = TestClient(app)
         for url in SPI_STATE_URLS:
@@ -225,7 +225,7 @@ def test_update_targets_rejects_cross_tenant_user():
 
 
 def test_update_targets_allows_caan_for_any_tenant():
-    _override(_user(role="CAAN_SMD", tenant_id=None, uid="u-caan"))
+    _override(_user(role="STATE_SMD", tenant_id=None, uid="u-caan"))
     try:
         resp = TestClient(app).post(
             "/api/v1/spi/tenant/rotarywing/targets",

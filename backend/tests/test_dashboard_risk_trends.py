@@ -18,7 +18,7 @@ from app.main import app
 from app.middleware.auth import get_current_user
 
 
-def _tenant_user(role="AIRLINE_ADMIN", tenant_id="test_airline"):
+def _tenant_user(role="TENANT_ADMIN", tenant_id="test_airline"):
     return {
         "uid": "mock_user",
         "email": "test@aviasafe.com",

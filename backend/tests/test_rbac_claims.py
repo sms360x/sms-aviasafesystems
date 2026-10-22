@@ -2,13 +2,13 @@
 
 Verifies the security-domain rules applied by seed config + provisioning:
 
-  safety@{tenant}.com  -> AIRLINE_ADMIN  (full tenant dashboard)
+  safety@{tenant}.com  -> TENANT_ADMIN  (full tenant dashboard)
   camo@{tenant}.com    -> USER  / CAMO
   145@{tenant}.com     -> USER  / Part-145
   ops@{tenant}.com     -> USER  / Flight Operations
 
 Extended six-role scheme (2026-08-21) for fishtail-air / summit-air:
-  ae@{domain}          -> AIRLINE_ADMIN (Accountable Executive)
+  ae@{domain}          -> TENANT_ADMIN (Accountable Executive)
   pilot@{domain}       -> USER  / Line Crew
 
 and the resulting frontend routing contract (getRoleDestination in
@@ -29,7 +29,7 @@ from seed.config import (
 )
 
 EXPECTED_ROLE_RULES = {
-    "safety": ("AIRLINE_ADMIN", ""),
+    "safety": ("TENANT_ADMIN", ""),
     "camo": ("USER", "CAMO"),
     "145": ("USER", "Part-145"),
     "ops": ("USER", "Flight Operations"),
@@ -73,7 +73,7 @@ def test_extended_operators_provision_ae_and_pilot_accounts():
         assert {"ae", "pilot"} <= set(entries), tid
 
         ae = entries["ae"]
-        assert ae["app_role"] == "AIRLINE_ADMIN"
+        assert ae["app_role"] == "TENANT_ADMIN"
         assert ae["department"] == ""
         pilot = entries["pilot"]
         assert pilot["app_role"] == "USER"
@@ -102,7 +102,7 @@ def _route(user):
     role = user.get("role") or "USER"
     if role == "SUPER_ADMIN":
         return "/admin/production-setup.html"
-    if role == "CAAN_SMD":
+    if role == "STATE_SMD":
         return "/state-oversight.html"
     if role == "USER":
         department = user.get("department") or ""
@@ -114,9 +114,9 @@ def _route(user):
 
 def test_safety_routes_to_full_dashboard():
     r = _rule("safety")
-    assert r["app_role"] == "AIRLINE_ADMIN"
+    assert r["app_role"] == "TENANT_ADMIN"
     assert r.get("department") == ""
-    assert _route({"role": "AIRLINE_ADMIN", "department": ""}) == "/safety.html"
+    assert _route({"role": "TENANT_ADMIN", "department": ""}) == "/safety.html"
 
 
 @pytest.mark.parametrize("token,op_id,expected_email", [
@@ -201,12 +201,12 @@ def test_create_user_omits_claim_when_no_department():
         "email": "safety@tara-air.com",
         "password": "TARA-Safety-2026",
         "full_name": "Safety Manager (Tara Air)",
-        "role": "AIRLINE_ADMIN",
+        "role": "TENANT_ADMIN",
         "tenant_id": "tara-air",
         "department": "",
     }
     create_user(auth, spec)
-    assert auth.claims["safety-tara-air-001"] == {"role": "AIRLINE_ADMIN", "tenant_id": "tara-air"}
+    assert auth.claims["safety-tara-air-001"] == {"role": "TENANT_ADMIN", "tenant_id": "tara-air"}
 
 
 def test_create_user_sets_is_developer_claim():

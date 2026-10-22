@@ -1,4 +1,4 @@
-"""Check remaining accounts: demoairport + CAAN_SMD."""
+"""Check remaining accounts: demoairport + STATE_SMD."""
 import sys, io, os, time
 if os.name == "nt":
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
@@ -15,7 +15,7 @@ da = [
     ("DA-Staff", "staff@demoairport.com", "staff_demo_2026"),
 ]
 
-# CAAN_SMD (from env or default)
+# STATE_SMD (from env or default)
 caan_name = "CAAN-SMD"
 caan_email = "smd@caanepal.gov.np"
 caan_pw = os.environ.get("AVIASAFE_PW_CAAN", "AviationSafe2026!")

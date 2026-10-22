@@ -52,9 +52,9 @@ def check(label, resp):
 
 print(f"Backend: {API}")
 tokens = {
-    "buddha": mint_id_token("sm-buddha-air-001", {"role": "AIRLINE_ADMIN", "tenant_id": "buddha-air"}),
-    "sita": mint_id_token("sm-sita-air-001", {"role": "AIRLINE_ADMIN", "tenant_id": "sita-air"}),
-    "caan": mint_id_token("caan-smd-001", {"role": "CAAN_SMD", "tenant_id": None}),
+    "buddha": mint_id_token("sm-buddha-air-001", {"role": "TENANT_ADMIN", "tenant_id": "buddha-air"}),
+    "sita": mint_id_token("sm-sita-air-001", {"role": "TENANT_ADMIN", "tenant_id": "sita-air"}),
+    "caan": mint_id_token("caan-smd-001", {"role": "STATE_SMD", "tenant_id": None}),
 }
 print("Tokens minted:", {k: len(v) for k, v in tokens.items()})
 

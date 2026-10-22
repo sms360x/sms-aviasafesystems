@@ -294,8 +294,8 @@ def test_survey_route_authenticated_tenant_mismatch(monkeypatch):
     _patch_db(monkeypatch, _FakeDB(tenant_known=True))
     user = {
         "uid": "u1", "email": "officer@taraair.com",
-        "role": "AIRLINE_ADMIN", "tenant_id": "tara-air",
-        "claims": {"role": "AIRLINE_ADMIN", "tenant_id": "tara-air"},
+        "role": "TENANT_ADMIN", "tenant_id": "tara-air",
+        "claims": {"role": "TENANT_ADMIN", "tenant_id": "tara-air"},
     }
     _patch_user(monkeypatch, user)
     # User belongs to tara-air but posts to another tenant -> 403
@@ -309,8 +309,8 @@ def test_survey_route_authenticated_own_tenant(monkeypatch):
     _patch_db(monkeypatch, db)
     user = {
         "uid": "u1", "email": "officer@taraair.com",
-        "role": "AIRLINE_ADMIN", "tenant_id": "tara-air",
-        "claims": {"role": "AIRLINE_ADMIN", "tenant_id": "tara-air"},
+        "role": "TENANT_ADMIN", "tenant_id": "tara-air",
+        "claims": {"role": "TENANT_ADMIN", "tenant_id": "tara-air"},
     }
     _patch_user(monkeypatch, user)
     resp = _post({"tenantId": "tara-air", "answers": VALID_ANSWERS},

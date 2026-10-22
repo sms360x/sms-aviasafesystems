@@ -109,7 +109,7 @@ class StateRiskService:
         self.role = self.user.get("role", "USER")
 
     # ------------------------------------------------------------------
-    # Public: read paths (CAAN_SMD / SUPER_ADMIN)
+    # Public: read paths (STATE_SMD / SUPER_ADMIN)
     # ------------------------------------------------------------------
 
     def list_register(self, year: Optional[int] = None, quarter: Optional[int] = None) -> List[Dict[str, Any]]:

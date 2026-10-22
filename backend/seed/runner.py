@@ -324,7 +324,7 @@ def run(
                 "email": ae_email_base[idx],
                 "full_name": f"Accountable Executive ({tenant_name})",
                 "organization": tenant_name,
-                "role": "AIRLINE_ADMIN",
+                "role": "TENANT_ADMIN",
                 "tenant_id": tid,
                 "password": ae_pwd,
             })

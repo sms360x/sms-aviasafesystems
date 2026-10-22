@@ -12,14 +12,6 @@
 (function (global) {
     'use strict';
 
-    // CAAN -> state transition: normalize the generalized STATE_SMD claim to
-    // the internal CAAN_SMD value at the boundary. Remove once migrated.
-    if (typeof global.normalizeRoleClaim !== 'function') {
-        global.normalizeRoleClaim = function (role) {
-            return role === 'STATE_SMD' ? 'CAAN_SMD' : role;
-        };
-    }
-
     // Hosts where the demo-persona switcher is available. On every other host
     // (production tenant subdomains) the tenant is strictly locked to the
     // subdomain and demo-switching controls are hidden.
@@ -191,10 +183,10 @@
             var tenantId = null;
             if (typeof user === 'string') tenantId = user;
             else if (user && (user.tenantId || user.tenant_id)) tenantId = user.tenantId || user.tenant_id;
-            // SUPER_ADMIN / CAAN_SMD are cross-tenant — never pin a demo tenant
+            // SUPER_ADMIN / STATE_SMD are cross-tenant — never pin a demo tenant
             var role = user && (user.role || (user.claims && user.claims.role));
         if (role) role = global.normalizeRoleClaim(role);
-            if (role === 'SUPER_ADMIN' || role === 'CAAN_SMD') {
+            if (role === 'SUPER_ADMIN' || role === 'STATE_SMD') {
                 clearDemoTenant();
                 return;
             }
@@ -255,7 +247,7 @@
     }
 
     // Resolve the operator tenant slug from a sign-in email's domain. Returns
-    // null for unknown/empty addresses so cross-tenant (SUPER_ADMIN / CAAN_SMD)
+    // null for unknown/empty addresses so cross-tenant (SUPER_ADMIN / STATE_SMD)
     // and external (gmail.com) accounts are never pinned to an operator tenant.
     function getTenantSlugFromEmail(email) {
         if (!email) return null;

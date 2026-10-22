@@ -26,7 +26,7 @@ profile. Both **k6** and **Artillery** configs are provided.
 # Airline scenario (dashboard-view, report-submission):
 LOADTEST_TOKEN=$(node load-tests/get-token.mjs safety@tara-air.com 'TARA-Safety-2026')
 
-# CAAN scenario — use a CAAN_SMD / SUPER_ADMIN account instead:
+# CAAN scenario — use a STATE_SMD / SUPER_ADMIN account instead:
 LOADTEST_TOKEN=$(node load-tests/get-token.mjs '<caan-email>' '<caan-password>')
 ```
 
@@ -81,7 +81,7 @@ artillery run load-tests/artillery/caan-dashboard.yml
 3. **Dashboard and CAAN GET endpoints are NOT rate-limited**, so those
    scenarios are clean latency tests and safe to run against beta.
 
-4. **CAAN endpoints need a CAAN_SMD/SUPER_ADMIN token.** An airline token will
+4. **CAAN endpoints need a STATE_SMD/SUPER_ADMIN token.** An airline token will
    be rejected with 403.
 
 5. **Audit logging is active.** Every request type exercised here also writes

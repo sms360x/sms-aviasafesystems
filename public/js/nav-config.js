@@ -5,8 +5,8 @@
  *
  * PHASE 4 WAVE 1 (P4-6):
  *  - Canonical role literals supported (RBAC_MODEL.md §1): SUPER_ADMIN,
- *    CAAN_SMD, TENANT_ADMIN, DEPT_ADMIN, SAFETY_OFFICER, STAFF,
- *    ACCOUNTABLE_EXECUTIVE, SAG_MEMBER (+ legacy aliases AIRLINE_ADMIN,
+ *    STATE_SMD, TENANT_ADMIN, DEPT_ADMIN, OFFICER,
+ *    ACCOUNTABLE_EXECUTIVE, SAG_MEMBER (+ legacy aliases SAFETY_OFFICER,
  *    USER, CAAN_ADMIN, CAAN_AUDITOR).
  *  - ACCOUNTABLE_EXECUTIVE maps to the AE role type with a NARROW menu:
  *    Dashboard (/dashboard/ae-dashboard.html) — Executive only. Trends is
@@ -43,7 +43,7 @@
 
 var NAV_CONFIG = {
     // ─── DASHBOARD ─── (All roles except department personas; AE sees ONLY
-    // this group — narrow menu. DEPT_ADMIN/STAFF get My Tasks from their
+    // this group — narrow menu. DEPT_ADMIN gets My Tasks from its
     // Workspace group instead — see the dashboard skip in getVisibleNav.)
     dashboard: {
         label: 'Dashboard',
@@ -87,15 +87,14 @@ var NAV_CONFIG = {
         ]
     },
 
-    // ─── DEPARTMENT WORKSPACE ─── (DEPT_ADMIN + STAFF: narrow operational
-    // scope. Both department personas land on My Tasks and share this nav;
-    // they differ in action-level authority, not navigation. No Reports
-    // tab — reports are SAFETY-only. SAFETY_OFFICER references elsewhere
-    // are legacy (role retired in favor of STAFF) — untouched here.)
+    // ─── DEPARTMENT WORKSPACE ─── (DEPT_ADMIN: narrow operational
+    // scope. The department persona lands on My Tasks and shares this nav;
+    // action-level authority differs, not navigation. No Reports
+    // tab — reports are SAFETY-only.)
     dept_workspace: {
         label: 'Workspace',
         icon: 'fa-briefcase',
-        roles: ['DEPT_ADMIN', 'STAFF'],
+        roles: ['DEPT_ADMIN'],
         module: 'module_b_srm',
         items: [
             { id: 'dept-tasks', href: '/dashboard/my-tasks.html', label: 'My Tasks', badge: true },
@@ -221,9 +220,7 @@ function moduleEnabled(normalized, flag) {
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
 // Canonical role literals (RBAC_MODEL.md §1) + legacy aliases → nav role type.
-// Role types: SUPER | CAAN | AE | SAFETY | DEPT_ADMIN | STAFF | SAG | ALL.
-// STAFF shares the department Workspace nav with DEPT_ADMIN (same nav,
-// same scope; action-level authority differs, not navigation).
+// Role types: SUPER | CAAN | AE | SAFETY | DEPT_ADMIN | SAG | ALL.
 // SAG_MEMBER → SAG (no dashboard in scope — hidden from nav, P4-6.2).
 // ACCOUNTABLE_EXECUTIVE → AE (narrow menu, P4-6.1).
 function getUserRoleType(user) {
@@ -232,21 +229,15 @@ function getUserRoleType(user) {
     var role = String(user.role || 'USER').toUpperCase();
 
     if (role === 'SUPER_ADMIN') return 'SUPER';
-    if (role === 'CAAN_SMD' || role === 'STATE_SMD' || role === 'CAAN_ADMIN' || role === 'CAAN_AUDITOR') return 'CAAN';
+    if (role === 'STATE_SMD' || role === 'CAAN_ADMIN' || role === 'CAAN_AUDITOR') return 'CAAN';
     if (role === 'ACCOUNTABLE_EXECUTIVE') return 'AE';
     if (role === 'SAG_MEMBER') return 'SAG';
     // Legacy AE heuristic (firebase.js getRoleDestination): AE accounts are
-    // stubbed as TENANT_ADMIN/AIRLINE_ADMIN, so the ae@ email check must run
+    // stubbed as TENANT_ADMIN, so the ae@ email check must run
     // BEFORE the tenant-admin mapping — preserves existing routing behavior.
     if (email.indexOf('ae@') === 0 || email.indexOf('ae.') === 0) return 'AE';
-    if (role === 'AIRLINE_ADMIN' || role === 'TENANT_ADMIN' || role === 'SAFETY_OFFICER' || role === 'OFFICER') return 'SAFETY';
+    if (role === 'TENANT_ADMIN' || role === 'SAFETY_OFFICER' || role === 'OFFICER') return 'SAFETY';
     if (role === 'DEPT_ADMIN') return 'DEPT_ADMIN';
-    // STAFF (department staff, role-based emails) shares the department
-    // Workspace nav with DEPT_ADMIN. Mapped explicitly (not left to the
-    // ALL fallthrough) so Workspace roles ['DEPT_ADMIN','STAFF'] match.
-    // NOTE: frontend-tests/test_nav_config.js:36 asserts STAFF → ALL and
-    // will need updating to STAFF → STAFF (test file untouched here).
-    if (role === 'STAFF') return 'STAFF';
     return 'ALL';
 }
 
@@ -268,14 +259,14 @@ function getVisibleNav(user, moduleAccess) {
 
     var keys = Object.keys(NAV_CONFIG);
     for (var i = 0; i < keys.length; i++) {
-        // Department personas (DEPT_ADMIN + STAFF) live in their Workspace
+        // Department persona (DEPT_ADMIN) lives in its Workspace
         // group — hide the shared Dashboard wrapper so My Tasks appears only
         // once. Done here (not by narrowing the group's ['ALL'] roles)
         // because 'ALL' is a wildcard: removing it would also hide Dashboard
         // from genuinely unknown roles (USER/legacy fallthrough), while
         // keeping it would still match department roles. Targeted skip
         // preserves wildcard semantics for everyone else.
-        if ((roleType === 'DEPT_ADMIN' || roleType === 'STAFF') && keys[i] === 'dashboard') continue;
+        if (roleType === 'DEPT_ADMIN' && keys[i] === 'dashboard') continue;
         var group = NAV_CONFIG[keys[i]];
         // Check if group is visible for this role
         if (group.roles.indexOf('ALL') === -1 && group.roles.indexOf(roleType) === -1) continue;
@@ -283,11 +274,10 @@ function getVisibleNav(user, moduleAccess) {
         if (normalized && !moduleEnabled(normalized, group.module)) continue;
 
         var items = group.items.filter(function (item) {
-            // AE sees Executive only — My Tasks is not an AE
+            // AE sees Executive only - My Tasks is not an AE
             // surface (same targeted-skip pattern as the department
-            // Dashboard exclusion above). NOTE: frontend-tests
-            // test_ae_narrow_menu asserts the old 3-item AE menu and
-            // will need updating (test file untouched here).
+            // Dashboard exclusion above). The AE trends surface is not
+            // in scope, so the AE menu is the Executive dashboard alone.
             if (roleType === 'AE' && item.id === 'my-tasks') return false;
             // CAAN has no task surface (caan.html is macro/state-scope only),
             // so hide My Tasks for CAAN only — every other role keeps it.

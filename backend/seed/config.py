@@ -1014,7 +1014,7 @@ DEMO_USERS = [
         "password": DEMO_USER_PASSWORD,
         "full_name": "CAAN Safety Management Department",
         "organization": "CAAN",
-        "role": "CAAN_SMD",
+        "role": "STATE_SMD",
         "tenant_id": "caan",
     },
 ]
@@ -1034,7 +1034,7 @@ DEVELOPER_ACCOUNT = {
 }
 
 # The single State Regulator authority account for CAAN. `smd@caanepal.gov.np`
-# is the sole cross-tenant CAAN account (role CAAN_SMD = state-regulator
+# is the sole cross-tenant CAAN account (role STATE_SMD = state-regulator
 # inspector authority, tenant caan). No multi-department CAAN accounts exist.
 CAAN_REGULATOR_ACCOUNT = DEMO_USERS[0]
 
@@ -1107,7 +1107,7 @@ CREDENTIAL_EMAIL_DOMAINS = {
 }
 
 SIMPLIFIED_ROLE_ACCOUNTS = [
-    {"token": "safety", "password_token": "Safety", "app_role": "AIRLINE_ADMIN",
+    {"token": "safety", "password_token": "Safety", "app_role": "TENANT_ADMIN",
      "full_name": "Safety Manager", "department": ""},
     {"token": "camo", "password_token": "CAMO", "app_role": "USER",
      "full_name": "CAMO Manager", "department": "CAMO"},
@@ -1120,7 +1120,7 @@ SIMPLIFIED_ROLE_ACCOUNTS = [
 # Extended six-role scheme: Accountable Executive + Line Pilot, provisioned on
 # top of the four base roles for the commercial operators below.
 EXTENDED_SIMPLIFIED_ROLE_ACCOUNTS = [
-    {"token": "ae", "password_token": "AE", "app_role": "AIRLINE_ADMIN",
+    {"token": "ae", "password_token": "AE", "app_role": "TENANT_ADMIN",
      "full_name": "Accountable Executive", "department": ""},
     {"token": "pilot", "password_token": "Pilot", "app_role": "USER",
      "full_name": "Line Pilot", "department": "Line Crew"},

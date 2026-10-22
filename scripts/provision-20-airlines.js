@@ -61,7 +61,7 @@ async function provisionAirline(airline) {
     });
 
     await admin.auth().setCustomUserClaims(user.uid, {
-      role: 'AIRLINE_ADMIN',
+      role: 'TENANT_ADMIN',
       tenant_id: airline.id
     });
 

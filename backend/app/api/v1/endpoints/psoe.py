@@ -45,7 +45,7 @@ from app.services.psoe_complete_service import (
 router = APIRouter(prefix="/psoe", tags=["PSOE - Post Safety Oversight Evaluation"])
 
 # Roles allowed to mutate assessments/findings (full access):
-# regulator (CAAN_SMD / CAAN_ADMIN), auditor (CAAN_AUDITOR), super admin.
+# regulator (STATE_SMD / CAAN_ADMIN), auditor (CAAN_AUDITOR), super admin.
 _EDIT_ROLES = frozenset(settings.CROSS_TENANT_ROLES)
 _EDIT_ROLES = _EDIT_ROLES.union(settings.SUPER_ADMIN_ROLES).union(
     {"CAAN_ADMIN", "CAAN_AUDITOR"}
@@ -306,8 +306,8 @@ class LinkCapRequest(BaseModel):
 
 
 def _require_safety_manager_link(user: dict) -> None:
-    # 3C.2C: canonical STATE_SMD included alongside the legacy CAAN_SMD.
-    allowed = settings.TENANT_ADMIN_ROLES + ["SUPER_ADMIN", "CAAN_SMD", "STATE_SMD"]
+    # 3C.2C: canonical STATE_SMD included alongside the legacy STATE_SMD.
+    allowed = settings.TENANT_ADMIN_ROLES + ["SUPER_ADMIN", "STATE_SMD"]
     if (user.get("role") or "") not in allowed:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
                             detail="Safety Manager role required")

@@ -26,7 +26,7 @@ from app.services.audit_service import log_audit
 TRIAGE_DECISIONS = ("Accepted", "Rejected", "Duplicate", "Escalated")
 
 # Reversal requires the safety-manager capability (SN13 Decision 2).
-SAFETY_MANAGER_ROLES = {"TENANT_ADMIN", "AIRLINE_ADMIN"}
+SAFETY_MANAGER_ROLES = {"TENANT_ADMIN"}
 
 
 def _row_to_dict(row: Any) -> Dict[str, Any]:

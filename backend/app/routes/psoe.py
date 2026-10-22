@@ -5,7 +5,7 @@
 #          CAAN SMS Procedure Manual Appendix 10 checklist template and manages
 #          tenant-scoped surveillance assessments. Assessments are stored in
 #          the Postgres `psoe_assessments` table (each row carries
-#          ``tenant_id`` UUID) so CAAN_SMD can review assessments across operators.
+#          ``tenant_id`` UUID) so STATE_SMD can review assessments across operators.
 #          Step 2C adds the export endpoint for PDF/HTML audit reports.
 # ============================================================================
 
@@ -51,10 +51,7 @@ PSOE_COLLECTION = "psoe_assessments"
 
 # 2C.8 (corrected) — the PSoE reviewer is the canonical, state-neutral regulator
 # role STATE_SMD (Step 2 D4 / Step 1 L4). List and create therefore gate on
-# settings.CROSS_TENANT_ROLES = ["CAAN_SMD", "STATE_SMD", "SUPER_ADMIN"]: the
-# migration target STATE_SMD plus SUPER_ADMIN, with the legacy CAAN_SMD literal
-# retained until Step 3 — 2B.5:168-169 keeps it in CROSS_TENANT_ROLES because
-# ~40 out-of-scope readers still compare the literal "CAAN_SMD".
+# settings.CROSS_TENANT_ROLES = ["STATE_SMD", "SUPER_ADMIN"].
 
 
 def _ensure_tenant_registry() -> None:
@@ -101,7 +98,7 @@ def _row_to_assessment(row: Dict[str, Any]) -> PSOEAssessment:
 def _effective_tenant(user: Dict[str, Any], requested: Optional[str]) -> str:
     """Resolve the tenant scope for a request.
 
-    Cross-tenant roles (CAAN_SMD / SUPER_ADMIN) may scope to any tenant or
+    Cross-tenant roles (STATE_SMD / SUPER_ADMIN) may scope to any tenant or
     browse all; tenant-bound roles are always locked to their own tenant.
     """
     role = user.get("role")
@@ -120,7 +117,7 @@ def _require_assessment_access(user: Dict[str, Any], row_tenant_slug: str) -> No
 
     An oversight relationship never implies access to self-assessments, and a
     Module C entitlement never overrides tenant ownership. Regulators
-    (STATE_SMD/CAAN_SMD) may touch only rows owned by their own tenant until
+    (STATE_SMD) may touch only rows owned by their own tenant until
     regulator workspaces exist; tenantless regulator identities are denied.
     SUPER_ADMIN platform administration is preserved and recorded separately.
     """
@@ -160,10 +157,9 @@ async def list_assessments(
     oversight of an airline never implies access to its self-assessments.
     """
     effective = _effective_tenant(user, tenant_id)
-    # 2C.8 (corrected): the STATE_SMD regulator (canonical; multi-state), the
-    # legacy CAAN_SMD literal (Step-3 residual), and SUPER_ADMIN may browse
-    # across tenants or scope to an explicit target. Tenant-bound roles stay
-    # confined to their own tenant rows.
+    # 2C.8 (corrected): the STATE_SMD regulator (canonical; multi-state) and
+    # SUPER_ADMIN may browse across tenants or scope to an explicit target.
+    # Tenant-bound roles stay confined to their own tenant rows.
     if user.get("role") not in settings.CROSS_TENANT_ROLES:
         own = user.get("tenant_id")
         if not own:
@@ -224,9 +220,9 @@ async def create_assessment(
     payload: PSOEAssessmentCreate,
     user: Dict[str, Any] = Depends(get_safety_manager),
 ):
-    """Draft a new PSOE assessment (TENANT_ADMIN / STATE_SMD / CAAN_SMD)."""
+    """Draft a new PSOE assessment (TENANT_ADMIN / STATE_SMD)."""
     if user.get("role") in settings.CROSS_TENANT_ROLES:
-        # 2C.8 (corrected): STATE_SMD (canonical), the legacy CAAN_SMD literal,
+        # 2C.8 (corrected): STATE_SMD (canonical), the legacy STATE_SMD literal,
         # and SUPER_ADMIN file under an explicit target tenant; a caller with
         # neither a target nor a tenant of their own must name one (422).
         tenant_id = payload.tenant_id or (user.get("tenant_id") or "")
@@ -330,7 +326,7 @@ async def update_assessment(
     tenant_id: Optional[str] = Query(None),
     user: Dict[str, Any] = Depends(get_safety_manager),
 ):
-    """Update an existing PSOE assessment (TENANT_ADMIN / STATE_SMD / CAAN_SMD)."""
+    """Update an existing PSOE assessment (TENANT_ADMIN / STATE_SMD)."""
     effective = _effective_tenant(user, tenant_id)
     try:
         row = pg.fetch_by(PgAssessment, "id", assessment_id)

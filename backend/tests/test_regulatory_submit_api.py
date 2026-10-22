@@ -16,7 +16,7 @@ def _user(role="TENANT_ADMIN", tenant_id="air1"):
 
 
 def test_regulatory_submit_requires_safety_manager():
-    app.dependency_overrides[get_current_user] = lambda: _user(role="STAFF")
+    app.dependency_overrides[get_current_user] = lambda: _user(role="OFFICER")
     try:
         r = client.post("/api/v1/reports/R1/regulatory-submit", json={})
         assert r.status_code in (403, 422)
@@ -26,7 +26,7 @@ def test_regulatory_submit_requires_safety_manager():
 
 def test_regulatory_submit_rejects_caan():
     app.dependency_overrides[get_current_user] = lambda: {
-        "uid": "c", "email": "c@caan.np", "role": "CAAN_SMD", "tenant_id": None}
+        "uid": "c", "email": "c@caan.np", "role": "STATE_SMD", "tenant_id": None}
     try:
         r = client.post("/api/v1/reports/R1/regulatory-submit", json={})
         assert r.status_code in (403, 422)

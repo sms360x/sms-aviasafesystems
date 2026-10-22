@@ -27,7 +27,7 @@ from app.db.db_models import CaanReport, RegulatoryReport
 from app.db.ids import tenant_uuid
 from app.routes import reporting
 
-CAAN_SMD = {"uid": "smd-caan-001", "role": "CAAN_SMD", "tenant_id": "caan"}
+STATE_SMD = {"uid": "smd-caan-001", "role": "STATE_SMD", "tenant_id": "caan"}
 
 
 # ============================================================================
@@ -36,13 +36,13 @@ CAAN_SMD = {"uid": "smd-caan-001", "role": "CAAN_SMD", "tenant_id": "caan"}
 
 def test_effective_tenant_caan_scoped_to_operator():
     """CAAN inspector with ?tenant_id=sita-air resolves to sita-air."""
-    assert reporting._effective_tenant(CAAN_SMD, "sita-air") == "sita-air"
+    assert reporting._effective_tenant(STATE_SMD, "sita-air") == "sita-air"
 
 
 def test_effective_tenant_caan_omitted_is_state():
     """CAAN inspector with no tenant_id resolves to None (state)."""
-    assert reporting._effective_tenant(CAAN_SMD) is None
-    assert reporting._effective_tenant(CAAN_SMD, None) is None
+    assert reporting._effective_tenant(STATE_SMD) is None
+    assert reporting._effective_tenant(STATE_SMD, None) is None
 
 
 def test_effective_tenant_super_admin_scope():
@@ -53,7 +53,7 @@ def test_effective_tenant_super_admin_scope():
 
 def test_effective_tenant_operator_role_always_own_tenant():
     """A tenant role ignores cross-tenant scoping and uses its own tenant."""
-    op = {"role": "AIRLINE_ADMIN", "tenant_id": "sita-air"}
+    op = {"role": "TENANT_ADMIN", "tenant_id": "sita-air"}
     assert reporting._effective_tenant(op) == "sita-air"
     assert reporting._effective_tenant(op, None) == "sita-air"
 
@@ -116,7 +116,7 @@ def _assert_no_legacy_national(payload):
 def test_quarterly_generation_scopes_to_operator_when_tenant_id_given():
     """Operator scope persists to PG regulatory_reports (tenant uuid) only."""
     gen = _FakeGenerator()
-    _override_user(CAAN_SMD)
+    _override_user(STATE_SMD)
     try:
         with patch.object(reporting, "ReportGenerator", gen), \
              patch.object(reporting.pg, "upsert") as upsert:
@@ -148,7 +148,7 @@ def test_quarterly_generation_scopes_to_operator_when_tenant_id_given():
 def test_quarterly_generation_reverts_to_state_when_tenant_id_omitted():
     """State scope (no tenant_id) persists to PG caan_reports with tenant None."""
     gen = _FakeGenerator()
-    _override_user(CAAN_SMD)
+    _override_user(STATE_SMD)
     try:
         with patch.object(reporting, "ReportGenerator", gen), \
              patch.object(reporting.pg, "upsert") as upsert:
@@ -181,7 +181,7 @@ def test_quarterly_generation_reverts_to_state_when_tenant_id_omitted():
 
 def test_list_quarterly_reports_state_reads_caan_reports():
     """State scope queries the PG caan_reports table, filtered by report_type."""
-    _override_user(CAAN_SMD)
+    _override_user(STATE_SMD)
     rid = reporting._report_id(None, "quarterly", 2026, 1)
     row = {
         "id": rid,
@@ -212,7 +212,7 @@ def test_list_quarterly_reports_state_reads_caan_reports():
 
 def test_list_quarterly_reports_scoped_reads_operator_collection():
     """Operator scope queries PG regulatory_reports, scoped to the tenant uuid."""
-    _override_user(CAAN_SMD)
+    _override_user(STATE_SMD)
     tid_uuid = tenant_uuid("sita-air")
     row = {
         "tenant_id": tid_uuid,
@@ -242,7 +242,7 @@ def test_list_quarterly_reports_scoped_reads_operator_collection():
 
 def test_get_quarterly_report_returns_state_payload():
     """GET /api/v1/reporting/quarterly/{id} returns data.state, no national key."""
-    _override_user(CAAN_SMD)
+    _override_user(STATE_SMD)
     rid = reporting._report_id(None, "quarterly", 2026, 2)
     row = {
         "report_id": rid,

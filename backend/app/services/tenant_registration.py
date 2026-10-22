@@ -5,7 +5,7 @@
 #          self-service portal (sms.aviasafesystems.com).
 #
 #   register_tenant():   creates a slugified tenant_id, provisions the primary
-#                        administrator (AIRLINE_ADMIN / safety), initialises the
+#                        administrator (TENANT_ADMIN / safety), initialises the
 #                        operational profile under tenants/{tid}/profile/operational
 #                        and issues a unique 6-char team invite code.
 #   join_team():         self-registers a department postholder under an existing
@@ -346,7 +346,7 @@ def register_tenant(
     )
     auth.set_custom_user_claims(
         user.uid,
-        {"role": "AIRLINE_ADMIN", "tenant_id": tid, "department": "safety"},
+        {"role": "TENANT_ADMIN", "tenant_id": tid, "department": "safety"},
     )
 
     operates_flights = scope.operates_flights
@@ -402,7 +402,7 @@ def register_tenant(
         uid=user.uid,
         email=email,
         display_name=admin_full_name,
-        role="AIRLINE_ADMIN",
+        role="TENANT_ADMIN",
         tenant_id=tid,
         department="safety",
         created_at=now,
@@ -543,7 +543,7 @@ def join_team(
     """Self-register a department postholder under an existing tenant.
 
     Invitees are provisioned with the least-privilege 'USER' tier scoped to the
-    tenant_id — they can never self-elevate to AIRLINE_ADMIN / tenant_admin;
+    tenant_id — they can never self-elevate to TENANT_ADMIN / tenant_admin;
     that requires a Safety Manager action in the admin console.
     """
     _validate_password(password)

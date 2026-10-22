@@ -71,7 +71,7 @@ const ApiClient = {
                 } catch (_) { /* ignore */ }
                 return authTenant;
             }
-            // Unauthenticated or cross-tenant (SUPER_ADMIN/CAAN_SMD without tenant) —
+            // Unauthenticated or cross-tenant (SUPER_ADMIN/STATE_SMD without tenant) —
             // fall back to subdomain / demo context
             if (typeof TenantResolver !== 'undefined' && TenantResolver.getCurrentTenant) {
                 const active = TenantResolver.getCurrentTenant();

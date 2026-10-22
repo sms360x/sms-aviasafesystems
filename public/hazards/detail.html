@@ -363,10 +363,10 @@ async function renderVerificationSection(h) {
 
         // Buttons
         actionsContainer.innerHTML = '';
-        if (h.status === 'Under Review' && currentUserRole === 'AIRLINE_ADMIN') {
+        if (h.status === 'Under Review' && currentUserRole === 'TENANT_ADMIN') {
             actionsContainer.innerHTML += `<a href="/hazards/verify.html?hazard_id=${h.id}" class="action-btn action-btn-review"><i class="fas fa-clipboard-check"></i> Verify CAP</a>`;
         }
-        if (h.status === 'Pending Closure' && currentUserRole === 'AIRLINE_ADMIN') {
+        if (h.status === 'Pending Closure' && currentUserRole === 'TENANT_ADMIN') {
             actionsContainer.innerHTML += `<a href="/hazards/approve_closure.html?hazard_id=${h.id}" class="action-btn action-btn-close"><i class="fas fa-check-double"></i> Approve Closure</a>`;
         }
         if (h.status === 'Closed') {

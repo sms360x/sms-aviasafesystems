@@ -91,7 +91,7 @@ const AviaSDCPSRouter = (function () {
       template: 'views/caan-oversight.html',
       controllerName: 'AviaSDCPSCaanOversight',
       title: 'CAAN SSP Oversight Dashboard',
-      allowedRoles: ['regulator', 'auditor', 'CAAN_SMD', 'CAAN_ADMIN', 'CAAN_AUDITOR']
+      allowedRoles: ['regulator', 'auditor', 'STATE_SMD', 'CAAN_ADMIN', 'CAAN_AUDITOR']
     },
 
     // Tenant SMS Dashboard (role-restricted)
@@ -99,7 +99,7 @@ const AviaSDCPSRouter = (function () {
       template: 'views/tenant-dashboard.html',
       controllerName: 'AviaSDCPSTenantDashboard',
       title: 'Tenant SMS Dashboard',
-      allowedRoles: ['operator', 'safety_manager', 'admin', 'AIRLINE_ADMIN', 'TENANT_ADMIN', 'DEPT_ADMIN', 'SAFETY_OFFICER', 'OFFICER']
+      allowedRoles: ['operator', 'safety_manager', 'admin', 'TENANT_ADMIN', 'DEPT_ADMIN', 'SAFETY_OFFICER', 'OFFICER']
     }
   };
 

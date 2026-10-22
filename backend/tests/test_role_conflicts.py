@@ -65,20 +65,20 @@ def test_ae_without_tenant_rejected(monkeypatch):
 
 def test_caan_with_tenant_role_rejected():
     with pytest.raises(HTTPException) as exc:
-        validate_role_assignment("CAAN_SMD", "tenant-a")
+        validate_role_assignment("STATE_SMD", "tenant-a")
     assert exc.value.status_code == 400
     assert "tenant" in exc.value.detail.lower()
 
 
 def test_caan_combined_with_tenant_role_rejected():
     with pytest.raises(HTTPException) as exc:
-        validate_role_assignment("CAAN_SMD", None, existing_role="STAFF")
+        validate_role_assignment("STATE_SMD", None, existing_role="OFFICER")
     assert exc.value.status_code == 400
 
 
 def test_super_admin_combined_rejected():
     with pytest.raises(HTTPException) as exc:
-        validate_role_assignment(["SUPER_ADMIN", "STAFF"], None)
+        validate_role_assignment(["SUPER_ADMIN", "OFFICER"], None)
     assert exc.value.status_code == 400
     assert "SUPER_ADMIN" in exc.value.detail
 
@@ -112,7 +112,7 @@ def test_create_user_service_invokes_validator(monkeypatch):
     monkeypatch.setattr(tenant_credentials, "_read_tenant", lambda tid: {"users": []})
     with pytest.raises(HTTPException) as exc:
         tenant_credentials.create_user_for_tenant(
-            {"tenant_id": "tenant-a", "email": "x@example.com", "role": "CAAN_SMD"},
+            {"tenant_id": "tenant-a", "email": "x@example.com", "role": "STATE_SMD"},
             {"uid": "admin", "email": "admin@example.com"},
         )
     assert exc.value.status_code == 400
@@ -123,8 +123,9 @@ def test_create_user_service_invokes_validator(monkeypatch):
 # ---------------------------------------------------------------------------
 
 def test_canonical_roles_include_new_literals():
-    # 2B.2: the canonical set is the seven-role model (2B.1 design of record,
-    # SME 2026-10-12). Asserting the exact list makes future drift fail loudly.
+    # Step-3: the canonical set is the six-role model (2B.1 design of record,
+    # SME 2026-10-12; STAFF is retired and merged into OFFICER). Asserting the
+    # exact list makes future drift fail loudly.
     assert settings.CANONICAL_ROLES == [
         "SUPER_ADMIN",
         "STATE_SMD",
@@ -132,11 +133,9 @@ def test_canonical_roles_include_new_literals():
         "DEPT_ADMIN",
         "OFFICER",
         "ACCOUNTABLE_EXECUTIVE",
-        "STAFF",
     ]
-    # Legacy names are retired in 2B.3 and must not be canonical.
-    for legacy in ("CAAN_SMD", "SAFETY_OFFICER", "AIRLINE_ADMIN", "USER",
-                   "SAG_MEMBER"):
+    # Legacy names are retired and must not be canonical.
+    for legacy in ("SAFETY_OFFICER", "USER", "SAG_MEMBER"):
         assert legacy not in settings.CANONICAL_ROLES
     # REGULATORY_LIAISON deliberately folded into SAFETY_OFFICER (RBAC Q-R3).
     assert "REGULATORY_LIAISON" not in settings.CANONICAL_ROLES

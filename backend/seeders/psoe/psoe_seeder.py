@@ -32,7 +32,7 @@ from app.models.psoe import PSOEAnswer
 from app.services.psoe_service import score_assessment, TEMPLATE_VERSION
 
 
-# Auditor (CAAN_SMD style) per operator tenant, and the Safety Manager who owns
+# Auditor (STATE_SMD style) per operator tenant, and the Safety Manager who owns
 # the assessment within the operator.
 AUDITORS: Dict[str, Dict[str, str]] = {
     "fixedwing": {"email": "smd@demostate.com", "name": "Mr. Prakash Adhikari"},

@@ -9,7 +9,7 @@ def test_caan_audit_actions(monkeypatch):
     calls = []
     monkeypatch.setattr(caan_audit, "log_audit",
                         lambda **kw: calls.append(kw))
-    user = {"role": "CAAN_SMD", "email": "smd@caan.gov.np"}
+    user = {"role": "STATE_SMD", "email": "smd@caan.gov.np"}
 
     caan_audit.log_caan_read(user, "industry_averages")
     caan_audit.log_caan_share(user, "benchmark", recipient="state-x")

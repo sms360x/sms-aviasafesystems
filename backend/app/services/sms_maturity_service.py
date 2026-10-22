@@ -167,7 +167,7 @@ def analyze_sms_maturity(
     from app.services.dashboard_service import DashboardService
 
     days = days or settings.SMS_MATURITY_ANALYSIS_WINDOW_DAYS
-    svc = DashboardService({"role": "CAAN_SMD", "tenant_id": tenant_id})
+    svc = DashboardService({"role": "STATE_SMD", "tenant_id": tenant_id})
     docs = [
         d for d in svc._survey_docs(days)
         if (d.to_dict().get("tenant_id") or None) == tenant_id

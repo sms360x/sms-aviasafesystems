@@ -150,16 +150,11 @@ class Settings(BaseSettings):
     SMS_MATURITY_ANALYSIS_MAX_RETRIES: int = 3
 
     # ── Roles ──
-    ROLE_DEFAULT: str = "STAFF"
-    ROLE_DEFAULT_REGISTRATION: str = "AIRLINE_ADMIN"
-    # 2B.4b: NOT canonicalized. Many out-of-scope readers still compare the
-    # literal "CAAN_SMD" (routes/hazards.py, can_cap.py, occurrence_reports.py,
-    # reporting.py, …), so dropping it here would make the canonical STATE_SMD
-    # pass this gate and then fail those literal checks. Reported as residual
-    # (STOP condition: a *_ROLES list has a reader that cannot consume the
-    # canonical value). CAAN_SMD is retired in the data (2B.3); it is kept here
-    # only until the regulator vocabulary is unified.
-    CROSS_TENANT_ROLES: List[str] = ["CAAN_SMD", "STATE_SMD", "SUPER_ADMIN"]
+    ROLE_DEFAULT: str = "OFFICER"
+    ROLE_DEFAULT_REGISTRATION: str = "TENANT_ADMIN"
+    # Step-3: the regulator vocabulary is unified on STATE_SMD; the legacy
+    # regulator alias is retired and no longer accepted anywhere in active code.
+    CROSS_TENANT_ROLES: List[str] = ["STATE_SMD", "SUPER_ADMIN"]
     SUPER_ADMIN_ROLES: List[str] = ["SUPER_ADMIN"]
     # Canonical role constants for the delegated admin hierarchy.
     ROLE_TENANT_ADMIN: str = "TENANT_ADMIN"
@@ -169,10 +164,9 @@ class Settings(BaseSettings):
     # removed when invites.py is migrated.
     ROLE_SAFETY_OFFICER: str = "SAFETY_OFFICER"
     ROLE_OFFICER: str = "OFFICER"
-    ROLE_STAFF: str = "STAFF"
     ROLE_ACCOUNTABLE_EXECUTIVE: str = "ACCOUNTABLE_EXECUTIVE"
     ROLE_SAG_MEMBER: str = "SAG_MEMBER"
-    # Canonical roles (2B.1 design of record, SME 2026-10-12): seven roles.
+    # Canonical roles (2B.1 design of record, SME 2026-10-12): six roles.
     CANONICAL_ROLES: List[str] = [
         "SUPER_ADMIN",
         "STATE_SMD",
@@ -180,7 +174,6 @@ class Settings(BaseSettings):
         "DEPT_ADMIN",
         "OFFICER",
         "ACCOUNTABLE_EXECUTIVE",
-        "STAFF",
     ]
     # 2B.4b: canonical-only membership. Legacy names were migrated in 2B.3, so
     # the lists no longer carry dual-accept aliases (their names are kept so the
@@ -188,7 +181,6 @@ class Settings(BaseSettings):
     TENANT_ADMIN_ROLES: List[str] = ["TENANT_ADMIN"]
     DEPT_ADMIN_ROLES: List[str] = ["DEPT_ADMIN"]
     SAFETY_OFFICER_ROLES: List[str] = ["OFFICER"]
-    STAFF_ROLES: List[str] = ["STAFF"]
     ACCOUNTABLE_EXECUTIVE_ROLES: List[str] = ["ACCOUNTABLE_EXECUTIVE"]
     SAG_MEMBER_ROLES: List[str] = ["SAG_MEMBER"]  # reader: services/role_validation.py
     # Roles permitted to act across the whole tenant (tenant admins + cross-tenant).

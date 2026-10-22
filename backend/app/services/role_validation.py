@@ -28,7 +28,6 @@ _TENANT_SCOPED_ROLES = (
     set(settings.TENANT_ADMIN_ROLES)
     | set(settings.DEPT_ADMIN_ROLES)
     | set(settings.SAFETY_OFFICER_ROLES)
-    | set(settings.STAFF_ROLES)
     | set(settings.ACCOUNTABLE_EXECUTIVE_ROLES)
     | set(settings.SAG_MEMBER_ROLES)
 )
@@ -96,19 +95,19 @@ def validate_role_assignment(
                 detail="SUPER_ADMIN is platform-scoped and cannot hold a tenant",
             )
 
-    # State-regulator role (CAAN_SMD, with STATE_SMD as the generalized alias)
-    # cannot hold (or be combined with) any tenant role.
-    regulator_roles = {"CAAN_SMD", "STATE_SMD"}
+    # State-regulator role (STATE_SMD) cannot hold (or be combined with) any
+    # tenant role.
+    regulator_roles = {"STATE_SMD"}
     if combined & regulator_roles:
         if tenant_id:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="CAAN_SMD cannot hold a tenant role",
+                detail="STATE_SMD cannot hold a tenant role",
             )
         if combined - regulator_roles:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="CAAN_SMD cannot be combined with tenant roles",
+                detail="STATE_SMD cannot be combined with tenant roles",
             )
 
     # Accountable Executive: one per tenant, not combinable with operational roles.

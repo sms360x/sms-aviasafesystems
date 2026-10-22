@@ -194,7 +194,7 @@ def test_list_regulator_operators_explicit_ids(monkeypatch):
 # ============================================================================
 
 def _caan_user():
-    return {"role": "CAAN_SMD", "tenant_id": None, "uid": "caan", "email": "caan@test.np"}
+    return {"role": "STATE_SMD", "tenant_id": None, "uid": "caan", "email": "caan@test.np"}
 
 
 def test_regulators_route_requires_caan_role():
@@ -292,7 +292,7 @@ def _patch_aggregation_dbs(monkeypatch, hazards, reports):
         "app.services.regulator_service.operator_tenant_ids_for_regulator",
         fake_operator_ids,
     )
-    return StateRiskService({"uid": "caan", "role": "CAAN_SMD"})
+    return StateRiskService({"uid": "caan", "role": "STATE_SMD"})
 
 
 def test_aggregate_scoped_to_regulator_operators(monkeypatch):
@@ -329,7 +329,7 @@ def _patch_survey_maturity_dbs(monkeypatch, surveys):
 
     monkeypatch.setattr("app.firebase.get_db", lambda: _DB())
     _patch_reg_db(monkeypatch, _regulator_db(*_sample_regulators()))
-    svc = DashboardService({"uid": "caan", "role": "CAAN_SMD"})
+    svc = DashboardService({"uid": "caan", "role": "STATE_SMD"})
     # Surveys now come from Postgres; patch the service's data fetch so this
     # test stays focused on regulator scoping of the aggregation.
     monkeypatch.setattr(

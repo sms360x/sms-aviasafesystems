@@ -9,9 +9,14 @@
 #   CAAN_SMD / CAAN_INSPECTOR / CAAN_ADMIN / CAAN_AUDITOR -> STATE_SMD
 #   SAFETY_OFFICER              -> OFFICER
 #   AIRLINE_ADMIN               -> TENANT_ADMIN
-#   USER / CAMO_USER / QA_USER / SAG_MEMBER -> STAFF
+#   STAFF / USER / CAMO_USER / QA_USER / SAG_MEMBER -> OFFICER
 #   CAMO_ADMIN / QA_ADMIN       -> DEPT_ADMIN
 #   regulator / auditor         -> STATE_SMD
+#
+#   Step-3 retired the STAFF literal: it is no longer a canonical target and
+#   is itself rewritten to OFFICER (OFFICER absorbed the general-employee
+#   role). SAFETY_OFFICER remains accepted as a legacy alias elsewhere in the
+#   code, but it is normalised to OFFICER here as well.
 #
 #   `safety` is reported but NEVER auto-changed (it is used as a Safety-Manager
 #   alias in the code and needs an SME decision before it is rewritten).
@@ -42,15 +47,16 @@ LEGACY_MAP = {
     "CAAN_SMD": "STATE_SMD",
     "SAFETY_OFFICER": "OFFICER",
     "AIRLINE_ADMIN": "TENANT_ADMIN",
-    "USER": "STAFF",
+    "STAFF": "OFFICER",
+    "USER": "OFFICER",
     "CAMO_ADMIN": "DEPT_ADMIN",
-    "CAMO_USER": "STAFF",
+    "CAMO_USER": "OFFICER",
     "QA_ADMIN": "DEPT_ADMIN",
-    "QA_USER": "STAFF",
+    "QA_USER": "OFFICER",
     "CAAN_INSPECTOR": "STATE_SMD",
     "CAAN_ADMIN": "STATE_SMD",
     "CAAN_AUDITOR": "STATE_SMD",
-    "SAG_MEMBER": "STAFF",
+    "SAG_MEMBER": "OFFICER",
     # lowercase variants
     "regulator": "STATE_SMD",
     "auditor": "STATE_SMD",
@@ -58,7 +64,7 @@ LEGACY_MAP = {
 
 CANONICAL_ROLES = {
     "SUPER_ADMIN", "STATE_SMD", "TENANT_ADMIN", "DEPT_ADMIN",
-    "OFFICER", "ACCOUNTABLE_EXECUTIVE", "STAFF",
+    "OFFICER", "ACCOUNTABLE_EXECUTIVE",
 }
 
 # Reported, never auto-rewritten: `safety` is a Safety-Manager alias in code

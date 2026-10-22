@@ -15,7 +15,7 @@ from app.db.ids import tenant_uuid
 from app.middleware.auth import get_current_user
 
 
-def _user(role="AIRLINE_ADMIN", tenant_id="test_airline"):
+def _user(role="TENANT_ADMIN", tenant_id="test_airline"):
     return {
         "uid": "mock_user",
         "email": "test@aviasafe.com",
@@ -51,7 +51,7 @@ def test_feedback_rejects_empty_message(client):
 
 
 def test_feedback_stores_with_role_and_tenant(client):
-    _override_current_user(_user(role="AIRLINE_ADMIN", tenant_id="test_airline"))
+    _override_current_user(_user(role="TENANT_ADMIN", tenant_id="test_airline"))
     captured = {}
     pg_captured = {}
 
@@ -102,10 +102,10 @@ def test_feedback_stores_with_role_and_tenant(client):
     assert captured["collection"] == "feedback"
     data = captured["data"]
     assert data["tenant_id"] == tenant_uuid("test_airline")
-    assert data["role"] == "AIRLINE_ADMIN"
+    assert data["role"] == "TENANT_ADMIN"
     assert data["rating"] == 4
     assert data["page"] == "/safety.html"
     assert data["status"] == "new"
     assert "email" in data
-    assert pg_captured["doc"]["role"] == "AIRLINE_ADMIN"
+    assert pg_captured["doc"]["role"] == "TENANT_ADMIN"
     assert pg_captured["doc"]["tenant_id"] == tenant_uuid("test_airline")

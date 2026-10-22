@@ -93,7 +93,7 @@ def test_survey_counts_per_provider_within_15_25():
 def test_caan_regulator_account_single_identity():
     assert CAAN_REGULATOR_ACCOUNT["uid"] == "smd-caan-001"
     assert CAAN_REGULATOR_ACCOUNT["email"] == "smd@caanepal.gov.np"
-    assert CAAN_REGULATOR_ACCOUNT["role"] == "CAAN_SMD"
+    assert CAAN_REGULATOR_ACCOUNT["role"] == "STATE_SMD"
     assert CAAN_REGULATOR_ACCOUNT["tenant_id"] == "caan"
 
 

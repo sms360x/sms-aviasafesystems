@@ -22,7 +22,7 @@ from app.services.audit_service import log_audit
 # CAAN-only authorisation (Module C §9 / Q4.3-style gate).
 # 3C.2C: canonical STATE_SMD included — the route layer (get_caan_user)
 # already admits it, so excluding it here denied legitimate regulator writes.
-CAAN_ROLES = {"CAAN_SMD", "STATE_SMD", "SUPER_ADMIN"}
+CAAN_ROLES = {"STATE_SMD", "SUPER_ADMIN"}
 
 
 def _row_to_dict(row: Any) -> Dict[str, Any]:

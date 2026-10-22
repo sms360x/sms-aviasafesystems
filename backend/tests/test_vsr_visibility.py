@@ -2,7 +2,7 @@
 # 1C.1 — VSR visibility rule (VSR_VISIBILITY_RULE = "A").
 #
 # Raw VSR (narrative + reporter metadata) is visible only to the owning
-# tenant's Safety Manager (TENANT_ADMIN / AIRLINE_ADMIN) and the Safety
+# tenant's Safety Manager (TENANT_ADMIN) and the Safety
 # Department officer (SAFETY_OFFICER). Any other same-tenant role is denied at
 # the route layer. Cross-tenant callers stay denied (1A.7). MOR/other report
 # types are unchanged.
@@ -196,9 +196,9 @@ def test_legacy_safety_officer_allowed(monkeypatch):
         _clear()
 
 
-# T6 — USER / STAFF are denied the raw VSR.
-@pytest.mark.parametrize("role", ["USER", "STAFF"])
-def test_staff_denied_raw_vsr(monkeypatch, role):
+# T6 — USER / employee roles are denied the raw VSR.
+@pytest.mark.parametrize("role", ["USER", "OFFICER"])
+def test_officer_denied_raw_vsr(monkeypatch, role):
     _patch_detail(monkeypatch, _report("voluntary"))
     _override(role)
     try:
@@ -245,7 +245,7 @@ def test_list_allowed_for_raw_vsr_roles(monkeypatch, role):
     ("OFFICER", "camo", 403),
     ("SAFETY_OFFICER", None, 200),
     ("USER", None, 403),
-    ("STAFF", None, 403),
+    ("OFFICER", None, 403),
 ])
 def test_list_access_by_role_and_department(monkeypatch, role, department, expected):
     _override_with_department(role, department=department)

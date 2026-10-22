@@ -42,8 +42,8 @@ def _lookup_tenant_by_email(email: str) -> Optional[Dict[str, Any]]:
         for td in docs:
             sm = td.get("safety_manager")
             if sm and sm.get("email") == email:
-                return {"tenant_id": td.get("tenant_id") or td.get("slug") or td.get("id"), "role": "AIRLINE_ADMIN"}
-            # Also check for CAAN_SMD emails in a separate config
+                return {"tenant_id": td.get("tenant_id") or td.get("slug") or td.get("id"), "role": "TENANT_ADMIN"}
+            # Also check for STATE_SMD emails in a separate config
         return None
     except Exception as e:
         logger.warning(f"Tenant lookup failed for {email}: {e}")
@@ -197,7 +197,7 @@ async def get_caan_user(
     if user.get('role') not in settings.CROSS_TENANT_ROLES:
         raise HTTPException(
             status_code=403,
-            detail="CAAN_SMD role required"
+            detail="STATE_SMD role required"
         )
     return user
 
@@ -219,7 +219,7 @@ async def get_safety_manager(
     if user.get('role') not in settings.CROSS_TENANT_ROLES and user.get('role') not in settings.TENANT_ADMIN_ROLES:
         raise HTTPException(
             status_code=403,
-            detail="Safety Manager or CAAN_SMD role required"
+            detail="Safety Manager or STATE_SMD role required"
         )
     if user.get('role') in settings.TENANT_ADMIN_ROLES and not user.get('tenant_id'):
         raise HTTPException(
@@ -302,12 +302,11 @@ async def get_responsible_manager(
         settings.CROSS_TENANT_ROLES
         + settings.TENANT_ADMIN_ROLES
         + settings.SAFETY_OFFICER_ROLES
-        + settings.STAFF_ROLES
     )
     if user.get('role') not in allowed:
         raise HTTPException(
             status_code=403,
-            detail="Responsible Manager, Safety Manager, or CAAN_SMD role required"
+            detail="Responsible Manager, Safety Manager, or STATE_SMD role required"
         )
     if not user.get('tenant_id') and user.get('role') not in settings.CROSS_TENANT_ROLES:
         raise HTTPException(
@@ -323,7 +322,7 @@ async def get_accountable_executive(
     """AE-only gate (2B.4b fix). Hazard closure is an AE sign-off (Doc 9859).
 
     Admits only ACCOUNTABLE_EXECUTIVE for its owning tenant; denies the retired
-    AIRLINE_ADMIN and cross-tenant callers (STATE_SMD / SUPER_ADMIN). Identity
+    TENANT_ADMIN and cross-tenant callers (STATE_SMD / SUPER_ADMIN). Identity
     is session-derived — no request parameter sets the signer (1C.2).
     """
     if user.get('role') != "ACCOUNTABLE_EXECUTIVE":

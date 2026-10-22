@@ -57,9 +57,8 @@ CAP_BODY = {
 
 
 @pytest.mark.parametrize("tenant_id", [None, "t1"])
-@pytest.mark.parametrize("role", ["STATE_SMD", "CAAN_SMD"])
-def test_regulator_cannot_issue_can(client, role, tenant_id):
-    _override(role, tenant_id)
+def test_regulator_cannot_issue_can(client, tenant_id):
+    _override("STATE_SMD", tenant_id)
     r = client.post("/api/v1/cans/", json=CAN_BODY)
     assert r.status_code == 403
     if tenant_id is not None:
@@ -69,9 +68,8 @@ def test_regulator_cannot_issue_can(client, role, tenant_id):
 
 
 @pytest.mark.parametrize("tenant_id", [None, "t1"])
-@pytest.mark.parametrize("role", ["STATE_SMD", "CAAN_SMD"])
-def test_regulator_cannot_change_can_status(client, role, tenant_id):
-    _override(role, tenant_id)
+def test_regulator_cannot_change_can_status(client, tenant_id):
+    _override("STATE_SMD", tenant_id)
     r = client.patch("/api/v1/cans/c1/status", params={"status": "Closed"})
     assert r.status_code == 403
 
@@ -155,8 +153,8 @@ def test_legacy_safety_officer_still_admitted(client, monkeypatch):
     assert client.get("/api/v1/reports/").status_code == 200
 
 
-def test_staff_cannot_read_report_list(client):
-    _override("STAFF", "t1")
+def test_officer_cannot_read_report_list(client):
+    _override("OFFICER", "t1")
     r = client.get("/api/v1/reports/")
     assert r.status_code == 403
 
@@ -188,6 +186,5 @@ def test_tenant_admin_mor_submit_allowed(client, monkeypatch):
 
     assert can_submit_mor(_user("TENANT_ADMIN", "t1")) is True
     assert can_submit_mor(_user("STATE_SMD", None)) is True
-    assert can_submit_mor(_user("CAAN_SMD", None)) is True
-    assert can_submit_mor(_user("STAFF", "t1")) is False
+    assert can_submit_mor(_user("OFFICER", "t1")) is False
     assert can_submit_mor(None) is False

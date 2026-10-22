@@ -2,7 +2,7 @@
 
 Covers (2026-08):
   * POST /api/v1/auth/invite  — TENANT_ADMIN may invite DEPT_ADMIN/SAFETY_OFFICER/
-    STAFF into any applicable department; DEPT_ADMIN may only invite STAFF into
+    OFFICER into any applicable department; DEPT_ADMIN may only invite OFFICER into
     their own department (cross-department and escalation -> 403).
   * POST /api/v1/auth/join (alias of /join-team) — a department-scoped invite
     binds the invitee's department AND role directly from the invite document.
@@ -190,7 +190,7 @@ def _seed_tenant(db, tid="yeti-airlines", name="Yeti Airlines",
 
 
 def _seed_scoped_invite(db, code="HOD123", tid="yeti-airlines",
-                        department="flight_ops", role="STAFF", status="ACTIVE"):
+                        department="flight_ops", role="OFFICER", status="ACTIVE"):
     db.invites[code] = {
         "code": code,
         "tenant_id": tid,
@@ -253,21 +253,21 @@ def test_tenant_admin_invites_dept_admin_any_department(monkeypatch):
     assert stored["created_by"] == "uid-tenant_admin"
 
 
-def test_tenant_admin_invites_staff_any_department(monkeypatch):
+def test_tenant_admin_invites_officer_any_department(monkeypatch):
     db = _FakeDB()
     _patch(monkeypatch, db, _FakeAuth())
     _seed_tenant(db)
     _override_user(_as_role("TENANT_ADMIN", department="safety"))
     try:
         resp = TestClient(app).post("/api/v1/auth/invite",
-                                    json={"department": "qa", "role": "STAFF"})
+                                    json={"department": "qa", "role": "OFFICER"})
     finally:
         _clear_override()
     assert resp.status_code == 200, resp.text
-    assert resp.json()["role"] == "STAFF"
+    assert resp.json()["role"] == "OFFICER"
 
 
-def test_legacy_airline_admin_can_invite_safety_officer(monkeypatch):
+def test_tenant_admin_can_invite_safety_officer(monkeypatch):
     db = _FakeDB()
     _patch(monkeypatch, db, _FakeAuth())
     _seed_tenant(db)
@@ -288,25 +288,25 @@ def test_legacy_auth_invite_alias_works(monkeypatch):
     _override_user(_as_role("TENANT_ADMIN", department="safety"))
     try:
         resp = TestClient(app).post("/api/auth/invite",
-                                    json={"department": "camo", "role": "STAFF"})
+                                    json={"department": "camo", "role": "OFFICER"})
     finally:
         _clear_override()
     assert resp.status_code == 200, resp.text
 
 
-def test_dept_admin_invites_staff_own_department(monkeypatch):
+def test_dept_admin_invites_officer_own_department(monkeypatch):
     db = _FakeDB()
     _patch(monkeypatch, db, _FakeAuth())
     _seed_tenant(db)
     _override_user(_as_role("DEPT_ADMIN", department="Flight Operations"))
     try:
         resp = TestClient(app).post("/api/v1/auth/invite",
-                                    json={"department": "flight_ops", "role": "STAFF"})
+                                    json={"department": "flight_ops", "role": "OFFICER"})
     finally:
         _clear_override()
     assert resp.status_code == 200, resp.text
     body = resp.json()
-    assert body["role"] == "STAFF"
+    assert body["role"] == "OFFICER"
     assert body["department"] == "flight_ops"
 
 
@@ -317,7 +317,7 @@ def test_dept_admin_cross_department_invite_returns_403(monkeypatch):
     _override_user(_as_role("DEPT_ADMIN", department="Flight Operations"))
     try:
         resp = TestClient(app).post("/api/v1/auth/invite",
-                                    json={"department": "camo", "role": "STAFF"})
+                                    json={"department": "camo", "role": "OFFICER"})
     finally:
         _clear_override()
     assert resp.status_code == 403
@@ -354,14 +354,14 @@ def test_dept_admin_cannot_assign_tenant_admin_role(monkeypatch):
     assert not db.invites
 
 
-def test_staff_cannot_invite(monkeypatch):
+def test_officer_cannot_invite(monkeypatch):
     db = _FakeDB()
     _patch(monkeypatch, db, _FakeAuth())
     _seed_tenant(db)
-    _override_user(_as_role("STAFF", department="Flight Operations"))
+    _override_user(_as_role("OFFICER", department="Flight Operations"))
     try:
         resp = TestClient(app).post("/api/v1/auth/invite",
-                                    json={"department": "flight_ops", "role": "STAFF"})
+                                    json={"department": "flight_ops", "role": "OFFICER"})
     finally:
         _clear_override()
     assert resp.status_code == 403
@@ -375,7 +375,7 @@ def test_tenant_admin_cannot_invite_to_inapplicable_department(monkeypatch):
     _override_user(_as_role("TENANT_ADMIN", department="safety"))
     try:
         resp = TestClient(app).post("/api/v1/auth/invite",
-                                    json={"department": "arff", "role": "STAFF"})
+                                    json={"department": "arff", "role": "OFFICER"})
     finally:
         _clear_override()
     assert resp.status_code == 422
@@ -399,12 +399,12 @@ def _join_body(invite_code="HOD123", department="flight_ops", **overrides):
     return body
 
 
-def test_join_with_scoped_invite_binds_department_and_staff_role(monkeypatch):
+def test_join_with_scoped_invite_binds_department_and_officer_role(monkeypatch):
     db = _FakeDB()
     auth = _FakeAuth()
     _patch(monkeypatch, db, auth)
     _seed_tenant(db)
-    _seed_scoped_invite(db, code="HOD123", department="camo", role="STAFF")
+    _seed_scoped_invite(db, code="HOD123", department="camo", role="OFFICER")
 
     resp = TestClient(app).post(
         "/api/v1/auth/join-team",
@@ -414,16 +414,16 @@ def test_join_with_scoped_invite_binds_department_and_staff_role(monkeypatch):
     body = resp.json()
     assert body["department"] == "camo"
     assert body["department_label"] == "CAMO"
-    assert body["role"] == "STAFF"
+    assert body["role"] == "OFFICER"
 
     uid = list(auth.claims)[0]
     assert auth.claims[uid] == {
-        "role": "STAFF",
+        "role": "OFFICER",
         "tenant_id": "yeti-airlines",
         "department": "camo",
     }
     user_doc = list(db.users.values())[0]
-    assert user_doc["role"] == "STAFF"
+    assert user_doc["role"] == "OFFICER"
     assert user_doc["department"] == "camo"
     assert user_doc["email"] == "ramesh@yetiairlines.com"
 
@@ -454,7 +454,7 @@ def test_join_inactive_scoped_invite_rejected(monkeypatch):
     auth = _FakeAuth()
     _patch(monkeypatch, db, auth)
     _seed_tenant(db)
-    _seed_scoped_invite(db, code="DEAD00", department="camo", role="STAFF", status="USED")
+    _seed_scoped_invite(db, code="DEAD00", department="camo", role="OFFICER", status="USED")
 
     resp = TestClient(app).post(
         "/api/v1/auth/join-team",
@@ -477,7 +477,7 @@ def test_join_legacy_tenant_code_still_defaults_to_least_privilege(monkeypatch):
     )
     assert resp.status_code == 200, resp.text
     uid = list(auth.claims)[0]
-    assert auth.claims[uid]["role"] == "STAFF"
+    assert auth.claims[uid]["role"] == "OFFICER"
     assert auth.claims[uid]["department"] == "flight_ops"
 
 
@@ -506,7 +506,7 @@ YETI_AIR_UUID = "0bc08e7f-bb15-5e7a-b07e-27a0ddd19fd0"
 
 def _seed_users(db):
     db.users["u-sm"] = {
-        "uid": "u-sm", "email": "sm@yeti.com", "role": "AIRLINE_ADMIN",
+        "uid": "u-sm", "email": "sm@yeti.com", "role": "TENANT_ADMIN",
         "tenant_id": YETI_AIR_UUID, "department": "Safety",
     }
     db.users["u-hod"] = {
@@ -514,11 +514,11 @@ def _seed_users(db):
         "tenant_id": YETI_AIR_UUID, "department": "Flight Operations",
     }
     db.users["u-eng"] = {
-        "uid": "u-eng", "email": "eng@yeti.com", "role": "STAFF",
+        "uid": "u-eng", "email": "eng@yeti.com", "role": "OFFICER",
         "tenant_id": YETI_AIR_UUID, "department": "Flight Operations",
     }
     db.users["u-camo"] = {
-        "uid": "u-camo", "email": "camo@yeti.com", "role": "STAFF",
+        "uid": "u-camo", "email": "camo@yeti.com", "role": "OFFICER",
         "tenant_id": YETI_AIR_UUID, "department": "CAMO",
     }
 

@@ -5,8 +5,8 @@ FIREBASE_AUTH_URL = 'https://identitytoolkit.googleapis.com/v1/accounts:signInWi
 BASE_API = 'https://aviasafe-unified-platform.onrender.com'
 
 users = {
-    'airline_admin': {'email': 'sal@aviasafesystems.com', 'password': os.environ.get('AVIASAFE_PW_AIRLINE', '')},
-    'caan_smd': {'email': 'smd@caanepal.gov.np', 'password': os.environ.get('AVIASAFE_PW_CAAN', '')},
+    'TENANT_ADMIN': {'email': 'sal@aviasafesystems.com', 'password': os.environ.get('AVIASAFE_PW_AIRLINE', '')},
+    'STATE_SMD': {'email': 'smd@caanepal.gov.np', 'password': os.environ.get('AVIASAFE_PW_CAAN', '')},
     'super_admin': {'email': 'admin@aviasafesystems.com', 'password': os.environ.get('AVIASAFE_PW_ADMIN', '')},
     'safety': {'email': 'salsafety@aviasafesystems.com', 'password': os.environ.get('AVIASAFE_PW_SAFETY', '')},
 }
@@ -31,8 +31,8 @@ for name, creds in users.items():
     else:
         print(f'{name}: FAILED - {r.status_code} {r.text[:200]}')
 
-if 'airline_admin' in tokens:
-    h = {'Authorization': 'Bearer ' + tokens['airline_admin']}
+if 'TENANT_ADMIN' in tokens:
+    h = {'Authorization': 'Bearer ' + tokens['TENANT_ADMIN']}
     endpoints = [
         ('GET', '/api/v1/hazards/stats'),
         ('GET', '/api/v1/cans/stats'),
@@ -42,7 +42,7 @@ if 'airline_admin' in tokens:
         ('GET', '/api/v1/dashboard/overview'),
         ('GET', '/api/v1/reports/'),
     ]
-    print('\n--- Testing with airline_admin ---')
+    print('\n--- Testing with TENANT_ADMIN ---')
     for method, path in endpoints:
         fn = getattr(requests, method.lower())
         r = fn(BASE_API + path, headers=h, timeout=15)

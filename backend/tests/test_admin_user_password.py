@@ -102,7 +102,7 @@ def _setup(monkeypatch):
         "name": "Password Regression Air",
         "regulator_id": "caan",
         "users": [
-            {"email": "admin@pwtestair.com", "role": "AIRLINE_ADMIN",
+            {"email": "admin@pwtestair.com", "role": "TENANT_ADMIN",
              "full_name": "Admin", "status": "active"},
         ],
     }
@@ -153,7 +153,7 @@ def test_returned_password_signs_in_via_identity_toolkit(monkeypatch):
             "setup_key": "test-setup-key",
             "tenant_id": "pwtest-air",
             "email": email,
-            "role": "STAFF",
+            "role": "OFFICER",
             "name": "Password Check User",
             "department": "Safety",
         })
@@ -196,7 +196,7 @@ def test_returned_password_signs_in_wrong_password_rejected(monkeypatch):
             "setup_key": "test-setup-key",
             "tenant_id": "pwtest-air",
             "email": email,
-            "role": "STAFF",
+            "role": "OFFICER",
         })
         assert resp.status_code == 200
         password = resp.json()["password"]

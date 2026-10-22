@@ -2,7 +2,7 @@
 
    Verifies against the deployed beta stack:
      1. POST /api/v1/feedback returns 201 + stored doc id for an authenticated
-        AIRLINE_ADMIN (operator) and a CAAN Super Admin.
+        TENANT_ADMIN (operator) and a CAAN Super Admin.
      2. Unauthenticated POST is rejected (401/403).
      3. The deployed CAAN and operator pages include the feedback widget
         (js/feedback.js) and the CAAN page includes the SSP report link.
@@ -68,7 +68,7 @@ function check(name, cond, detail) {
   const accounts = loadAccounts();
   const buddha = accounts.find((a) => a.tenant.includes("Buddha") && a.role.includes("Admin"));
   const caan = accounts.find((a) => a.tenant.includes("CAAN") && a.role.includes("Super Admin"));
-  if (!buddha || !caan) throw new Error("Could not find Buddha AIRLINE_ADMIN or CAAN Super Admin in credentials file");
+  if (!buddha || !caan) throw new Error("Could not find Buddha TENANT_ADMIN or CAAN Super Admin in credentials file");
 
   const buddhaToken = await signIn(buddha.email, buddha.password);
   const caanToken = await signIn(caan.email, caan.password);

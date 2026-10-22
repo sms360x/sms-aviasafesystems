@@ -67,7 +67,7 @@ def can_submit_mor(user: Dict[str, Any]) -> bool:
     """Check if user has permission to submit MOR (CAMO/QA restricted)."""
     if not user:
         return False
-    allowed_roles = ['CAMO_ADMIN', 'QA_ADMIN', 'CAMO_USER', 'QA_USER', 'AIRLINE_ADMIN', 'TENANT_ADMIN', 'SUPER_ADMIN', 'CAAN_SMD', 'STATE_SMD']
+    allowed_roles = ['CAMO_ADMIN', 'QA_ADMIN', 'CAMO_USER', 'QA_USER', 'TENANT_ADMIN', 'SUPER_ADMIN', 'STATE_SMD']
     role = (user.get('role') or '').strip().upper()
     if role in [r.upper() for r in allowed_roles]:
         return True
@@ -287,8 +287,8 @@ async def get_reports(
 ):
     """Retrieve safety reports.
 
-    AIRLINE_ADMIN: reports scoped to their tenant.
-    CAAN_SMD / SUPER_ADMIN: cross-tenant view.
+    TENANT_ADMIN: reports scoped to their tenant.
+    STATE_SMD / SUPER_ADMIN: cross-tenant view.
     """
     if not user.get("tenant_id") and user.get("role") not in settings.CROSS_TENANT_ROLES:
         raise HTTPException(status_code=403, detail="User does not have tenant access")
@@ -296,7 +296,7 @@ async def get_reports(
     # the raw report list; they consume aggregate endpoints only.
     require_not_aggregate_only(user, "reports")
     # VSR_VISIBILITY_RULE=A: within a tenant the raw report list is the Safety
-    # Manager (TENANT_ADMIN/AIRLINE_ADMIN) and the Safety Department officer
+    # Manager (TENANT_ADMIN) and the Safety Department officer
     # (OFFICER in the tenant's safety department, or the legacy SAFETY_OFFICER
     # literal) only. Cross-tenant roles keep their existing view (1A.7 excludes
     # VSRs for them in the service layer).
@@ -324,7 +324,7 @@ async def get_report(
         raise HTTPException(status_code=404, detail="Report not found")
 
     # VSR_VISIBILITY_RULE=A: raw VSR (narrative + reporter metadata) is the
-    # Safety Manager (TENANT_ADMIN/AIRLINE_ADMIN) and the Safety Department
+    # Safety Manager (TENANT_ADMIN) and the Safety Department
     # officer (OFFICER in the tenant's safety department, or the legacy
     # SAFETY_OFFICER literal) only. Cross-tenant callers never reach here for a
     # VSR (the service returns None -> 404, 1A.7). MOR/other types unchanged.
@@ -360,7 +360,7 @@ async def regulatory_submit_mor(
     safety roles only; CAAN inspectors are read-only."""
     # 3C.2C: block the canonical STATE_SMD explicitly — never rely on the
     # regulator happening to have tenant_id=None.
-    if str(user.get("role") or "") in ("CAAN_SMD", "CAAN_INSPECTOR", "STATE_SMD"):
+    if str(user.get("role") or "") in ("STATE_SMD", "CAAN_INSPECTOR"):
         raise HTTPException(status_code=403,
                             detail="CAAN inspectors have READ-ONLY access to operator records")
     if not user.get("tenant_id"):
@@ -420,8 +420,8 @@ async def confirm_risk_assessment(
     """Safety Manager confirms the official ICAO risk assessment for a report.
 
     Severity x Probability = Risk Index determines Risk Level.
-    AIRLINE_ADMIN: scoped to their tenant.
-    CAAN_SMD / SUPER_ADMIN: cross-tenant access.
+    TENANT_ADMIN: scoped to their tenant.
+    STATE_SMD / SUPER_ADMIN: cross-tenant access.
     """
     tenant_id = user["tenant_id"]
     service = ReportService(tenant_id)

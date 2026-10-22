@@ -1,7 +1,7 @@
 # ============================================================================
 # FILE: verify_caan_live.py
 # PATH: backend/scripts/verify_caan_live.py
-# PURPOSE: One-off live verification: mints a custom token for a CAAN_SMD seed
+# PURPOSE: One-off live verification: mints a custom token for a STATE_SMD seed
 #          user via the Admin SDK, exchanges it for an ID token, then calls the
 #          live /api/v1/dashboard/caan/survey-maturity and /api/v1/state-risk/*
 #          endpoints to confirm they return data (not 403).
@@ -39,9 +39,9 @@ def init_admin():
 def main():
     init_admin()
 
-    # CAAN_SMD seed user from seed/config.py (smd@caanepal.gov.np / smd-caan-001)
+    # STATE_SMD seed user from seed/config.py (smd@caanepal.gov.np / smd-caan-001)
     uid = "smd-caan-001"
-    custom = admin_auth.create_custom_token(uid, {"role": "CAAN_SMD", "tenant_id": "caan"})
+    custom = admin_auth.create_custom_token(uid, {"role": "STATE_SMD", "tenant_id": "caan"})
     custom = custom.decode() if isinstance(custom, bytes) else custom
 
     api_key = "AIzaSyCdCtUuyOcUIoCBEaiWGbhp6_XwZKHsicc"
@@ -53,7 +53,7 @@ def main():
     r.raise_for_status()
     id_token = r.json()["idToken"]
     headers = {"Authorization": f"Bearer {id_token}"}
-    print(f"Minted CAAN_SMD token (uid={uid})")
+    print(f"Minted STATE_SMD token (uid={uid})")
 
     for method, path in [
         ("GET", "/api/v1/dashboard/caan/survey-maturity"),

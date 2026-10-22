@@ -43,7 +43,7 @@ async def get_optional_user(
         return None
     return await get_current_user(credentials)
 
-SURVEY_MANAGER_ROLES = ("AIRLINE_ADMIN", "TENANT_ADMIN", "safety")
+SURVEY_MANAGER_ROLES = ("TENANT_ADMIN", "safety")
 
 
 @router.get("/departments", status_code=status.HTTP_200_OK)
@@ -94,8 +94,8 @@ class TenantConfigUpdate(BaseModel):
 
 
 def _require_tenant_admin(user: Dict[str, Any], tenant_id: str) -> None:
-    """Only the Safety Manager (AIRLINE_ADMIN / TENANT_ADMIN / safety) of the
-    target tenant may update its config. SUPER_ADMIN / CAAN_SMD cannot edit
+    """Only the Safety Manager (TENANT_ADMIN / safety) of the
+    target tenant may update its config. SUPER_ADMIN / STATE_SMD cannot edit
     tenant settings."""
     if user.get("role") not in SURVEY_MANAGER_ROLES:
         raise HTTPException(
@@ -110,12 +110,12 @@ def _require_tenant_admin(user: Dict[str, Any], tenant_id: str) -> None:
 
 
 def _require_tenant_viewer(user: Dict[str, Any], tenant_id: str) -> None:
-    """AIRLINE_ADMIN / TENANT_ADMIN / DEPT_ADMIN of the tenant or SUPER_ADMIN
+    """TENANT_ADMIN / DEPT_ADMIN of the tenant or SUPER_ADMIN
     may list users. DEPT_ADMIN is additionally restricted to their own
     department (enforced in the list endpoint)."""
     if user.get("role") == "SUPER_ADMIN":
         return
-    if user.get("role") not in ("AIRLINE_ADMIN", "TENANT_ADMIN", "DEPT_ADMIN"):
+    if user.get("role") not in ("TENANT_ADMIN", "DEPT_ADMIN"):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Only the Safety Manager or Department Admin of this tenant or SUPER_ADMIN can view users",
@@ -210,7 +210,7 @@ async def list_users(
 ):
     """List the authorized users for a tenant (view-only).
 
-    AIRLINE_ADMIN of the target tenant or SUPER_ADMIN. Returns uid, email,
+    TENANT_ADMIN of the target tenant or SUPER_ADMIN. Returns uid, email,
     display_name, role, department, phone and tenant_id from the mirrored
     users table (typed as ``UserProfileRead``).
     """
@@ -243,7 +243,7 @@ async def update_tenant_config(
 
     Accepts the survey activation dates, the manual open/close override, the
     daily respondent rate limit and the survey instructions. Only the Safety
-    Manager (AIRLINE_ADMIN / safety role) of the target tenant may edit it.
+    Manager (TENANT_ADMIN / safety role) of the target tenant may edit it.
     """
     tenant_id = tenant_id.strip()
     _require_tenant_admin(user, tenant_id)

@@ -72,7 +72,7 @@ class ScheduledReportWorker:
         quarter: int,
         user: str,
     ) -> Dict[str, Any]:
-        state_svc = StateRiskService(user={"uid": user, "role": "CAAN_SMD"})
+        state_svc = StateRiskService(user={"uid": user, "role": "STATE_SMD"})
         agg = state_svc.aggregate_state_risk(year, quarter, regulator_id=regulator_id)
 
         report_data = {

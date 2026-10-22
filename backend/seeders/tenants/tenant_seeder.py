@@ -63,35 +63,35 @@ REGULATORS: List[Dict[str, Any]] = [
 
 # role_token metadata: (role, full_name, department)
 _USER_ROLE_META: Dict[str, Dict[str, str]] = {
-    "ae": {"role": "AIRLINE_ADMIN", "full_name": "Accountable Executive", "department": "Executive"},
-    "safety": {"role": "AIRLINE_ADMIN", "full_name": "Safety Manager", "department": "Safety"},
+    "ae": {"role": "TENANT_ADMIN", "full_name": "Accountable Executive", "department": "Executive"},
+    "safety": {"role": "TENANT_ADMIN", "full_name": "Safety Manager", "department": "Safety"},
     "camo": {"role": "DEPT_ADMIN", "full_name": "CAMO Manager", "department": "CAMO"},
     "145": {"role": "DEPT_ADMIN", "full_name": "Part-145 Maintenance Manager", "department": "Part-145"},
     "ops": {"role": "DEPT_ADMIN", "full_name": "Operations Manager", "department": "Flight Operations"},
     "staff": {"role": "USER", "full_name": "Staff Member", "department": ""},
-    "smd": {"role": "CAAN_SMD", "full_name": "State Regulator (SMD)", "department": ""},
+    "smd": {"role": "STATE_SMD", "full_name": "State Regulator (SMD)", "department": ""},
 }
 
 USERS: Dict[str, List[Dict[str, str]]] = {
     "fixedwing": [
-        {"email": "ae@fixedwing.com", "role": "AIRLINE_ADMIN", "department": "Executive"},
-        {"email": "safety@fixedwing.com", "role": "AIRLINE_ADMIN", "department": "Safety"},
+        {"email": "ae@fixedwing.com", "role": "TENANT_ADMIN", "department": "Executive"},
+        {"email": "safety@fixedwing.com", "role": "TENANT_ADMIN", "department": "Safety"},
         {"email": "camo@fixedwing.com", "role": "DEPT_ADMIN", "department": "CAMO"},
         {"email": "145@fixedwing.com", "role": "DEPT_ADMIN", "department": "Part-145"},
         {"email": "ops@fixedwing.com", "role": "DEPT_ADMIN", "department": "Flight Operations"},
         {"email": "staff@fixedwing.com", "role": "USER", "department": ""},
     ],
     "rotarywing": [
-        {"email": "ae@rotarywing.com", "role": "AIRLINE_ADMIN", "department": "Executive"},
-        {"email": "safety@rotarywing.com", "role": "AIRLINE_ADMIN", "department": "Safety"},
+        {"email": "ae@rotarywing.com", "role": "TENANT_ADMIN", "department": "Executive"},
+        {"email": "safety@rotarywing.com", "role": "TENANT_ADMIN", "department": "Safety"},
         {"email": "camo@rotarywing.com", "role": "DEPT_ADMIN", "department": "CAMO"},
         {"email": "145@rotarywing.com", "role": "DEPT_ADMIN", "department": "Part-145"},
         {"email": "ops@rotarywing.com", "role": "DEPT_ADMIN", "department": "Flight Operations"},
         {"email": "staff@rotarywing.com", "role": "USER", "department": ""},
     ],
     "demoairport": [
-        {"email": "ae@demoairport.com", "role": "AIRLINE_ADMIN", "department": "Executive"},
-        {"email": "safety@demoairport.com", "role": "AIRLINE_ADMIN", "department": "Safety"},
+        {"email": "ae@demoairport.com", "role": "TENANT_ADMIN", "department": "Executive"},
+        {"email": "safety@demoairport.com", "role": "TENANT_ADMIN", "department": "Safety"},
         {"email": "ops@demoairport.com", "role": "DEPT_ADMIN", "department": "Flight Operations"},
         {"email": "staff@demoairport.com", "role": "USER", "department": ""},
     ],

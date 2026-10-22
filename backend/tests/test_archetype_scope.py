@@ -19,13 +19,13 @@ def test_archetype_ids_are_demo_prefixed_only():
 
 
 def test_resolve_prefers_archetype_when_valid():
-    user = {"tenant_id": "buddha-air", "role": "AIRLINE_ADMIN"}
+    user = {"tenant_id": "buddha-air", "role": "TENANT_ADMIN"}
     assert resolve_data_tenant("demo-fixed-wing", user) == "demo-fixed-wing"
     assert resolve_data_tenant("demo-rotary-wing", user) == "demo-rotary-wing"
 
 
 def test_resolve_falls_back_to_caller_tenant():
-    user = {"tenant_id": "buddha-air", "role": "AIRLINE_ADMIN"}
+    user = {"tenant_id": "buddha-air", "role": "TENANT_ADMIN"}
     # Non-demo values are ignored (cannot cross into another real tenant).
     assert resolve_data_tenant("yeti-airlines", user) == "buddha-air"
     assert resolve_data_tenant(None, user) == "buddha-air"
@@ -42,7 +42,7 @@ def test_resolve_custom_default():
     assert resolve_data_tenant(None, {"tenant_id": None}, default_tenant="t1") == "t1"
 
 
-def test_caan_smd_archetype_request_scopes_to_demo_tenant():
+def test_state_smd_archetype_request_scopes_to_demo_tenant():
     """Even cross-tenant roles scope down to the requested archetype."""
-    smd = {"tenant_id": "caan", "role": "CAAN_SMD"}
+    smd = {"tenant_id": "caan", "role": "STATE_SMD"}
     assert resolve_data_tenant("demo-fixed-wing", smd) == "demo-fixed-wing"

@@ -44,9 +44,9 @@ def test_module_path_mapping():
 
 def test_employee_blocked_from_module5(monkeypatch):
     monkeypatch.setattr(mw, "_user_from_request", lambda r: {
-        "role": "STAFF", "tenant_id": "air1"})
+        "role": "OFFICER", "tenant_id": "air1"})
     resp = _call(mw.rbac_middleware, "/api/v1/regulator/industry-averages",
-                 {"role": "STAFF"}, monkeypatch)
+                 {"role": "OFFICER"}, monkeypatch)
     assert getattr(resp, "status_code", None) == 403
 
 
@@ -68,11 +68,11 @@ def test_module_disabled_blocks_tenant_user(monkeypatch):
 
 def test_cross_tenant_bypasses_module_gate(monkeypatch):
     monkeypatch.setattr(mw, "_user_from_request", lambda r: {
-        "role": "CAAN_SMD", "tenant_id": None})
+        "role": "STATE_SMD", "tenant_id": None})
     # Even if a tenant flag lookup would deny, CAAN bypasses it.
     monkeypatch.setattr(mw, "_tenant_module_enabled", lambda t, m: False)
     resp = _call(mw.rbac_middleware, "/api/v1/regulator/industry-averages",
-                 {"role": "CAAN_SMD"}, monkeypatch)
+                 {"role": "STATE_SMD"}, monkeypatch)
     assert resp == {"ok": True}
 
 
@@ -108,7 +108,7 @@ def test_unauthenticated_passthrough(monkeypatch):
 
 def test_has_permission_for_user_helper():
     assert mw.has_permission_for_user({"role": "TENANT_ADMIN"}, "module2") is True
-    assert mw.has_permission_for_user({"role": "STAFF"}, "module5") is False
+    assert mw.has_permission_for_user({"role": "OFFICER"}, "module5") is False
 
 
 # ============================================================================

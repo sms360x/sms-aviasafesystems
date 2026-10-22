@@ -238,7 +238,7 @@ def test_cache_endpoint_round_trip():
     slug = _unique_slug("smapi")
     _create_tenant(slug)
     app.dependency_overrides[get_current_user] = lambda: {
-        "uid": "u", "role": "AIRLINE_ADMIN", "tenant_id": slug,
+        "uid": "u", "role": "TENANT_ADMIN", "tenant_id": slug,
         "email": "officer@example.com",
     }
     try:
@@ -270,7 +270,7 @@ def test_cache_endpoint_rejects_cross_tenant_scope():
     _create_tenant(slug_a)
     _create_tenant(slug_b)
     app.dependency_overrides[get_current_user] = lambda: {
-        "uid": "u", "role": "AIRLINE_ADMIN", "tenant_id": slug_a,
+        "uid": "u", "role": "TENANT_ADMIN", "tenant_id": slug_a,
         "email": "officer@example.com",
     }
     try:
@@ -318,7 +318,7 @@ def test_cache_fresh_returns_without_llm(monkeypatch):
 
         # Dashboard read path: fresh cache -> cached recs, no LLM call.
         svc = dashboard_service.DashboardService(
-            {"role": "AIRLINE_ADMIN", "tenant_id": slug})
+            {"role": "TENANT_ADMIN", "tenant_id": slug})
         recs = svc._tenant_recommendations(
             slug, 365, {}, {}, datetime.now(timezone.utc))
         assert recs == [{"action": "cached"}]
@@ -357,7 +357,7 @@ def test_cache_stale_triggers_regeneration(monkeypatch):
             lambda t, **k: enqueued.append(t) or True,
         )
         svc = dashboard_service.DashboardService(
-            {"role": "AIRLINE_ADMIN", "tenant_id": slug})
+            {"role": "TENANT_ADMIN", "tenant_id": slug})
         recs = svc._tenant_recommendations(
             slug, 365, {}, {}, datetime.now(timezone.utc))
         assert enqueued == [slug], "stale cache must queue a re-analysis"

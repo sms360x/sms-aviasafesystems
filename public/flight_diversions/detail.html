@@ -210,7 +210,7 @@ function renderHazardLink(d) {
 
 function renderActionButtons(d) {
     const container = document.getElementById('actionButtons');
-    const isSafety = currentUserRole === 'AIRLINE_ADMIN';
+    const isSafety = currentUserRole === 'TENANT_ADMIN';
     let html = '';
 
     if (d.status !== 'Closed' && d.status !== 'Linked to Hazard') {

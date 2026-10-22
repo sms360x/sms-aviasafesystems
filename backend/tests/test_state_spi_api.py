@@ -13,11 +13,11 @@ client = TestClient(app)
 
 
 def _caan():
-    return {"uid": "c", "email": "smd@caan.np", "role": "CAAN_SMD", "tenant_id": None}
+    return {"uid": "c", "email": "smd@caan.np", "role": "STATE_SMD", "tenant_id": None}
 
 
 def _airline():
-    return {"uid": "a", "email": "a@air.com", "role": "AIRLINE_ADMIN", "tenant_id": "air1"}
+    return {"uid": "a", "email": "a@air.com", "role": "TENANT_ADMIN", "tenant_id": "air1"}
 
 
 def test_state_endpoints_require_caan():

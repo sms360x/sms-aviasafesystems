@@ -23,7 +23,7 @@ router = APIRouter(prefix="/spi", tags=["SPI/SPT Safety Performance"])
 def require_tenant_access(user: Dict[str, Any], tenant_id: str) -> None:
     """Gate a /tenant/{tenant_id}/... route to the caller's own tenant.
 
-    Cross-tenant roles (CAAN_SMD / SUPER_ADMIN, see settings.CROSS_TENANT_ROLES)
+    Cross-tenant roles (STATE_SMD / SUPER_ADMIN, see settings.CROSS_TENANT_ROLES)
     may access any tenant; any other role is limited to their own tenant_id.
     Shared by the SPI and N-HRC v1 routers for both reads (GET values/status/
     trend, N-HRC KPIs) and writes (SPT target updates). Mirrors the tenant-scope

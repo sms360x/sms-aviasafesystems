@@ -3,7 +3,7 @@
 Previously every regulator endpoint depended on get_current_user, so any
 authenticated airline user could read other operators' aggregated risk /
 benchmark data. Now all routes require the CAAN role (get_caan_user ->
-CAAN_SMD / SUPER_ADMIN from CROSS_TENANT_ROLES). Because the route is CAAN
+STATE_SMD / SUPER_ADMIN from CROSS_TENANT_ROLES). Because the route is CAAN
 gated, the caller-controlled tenant_ids query parameter is inherently
 restricted to regulator scope.
 
@@ -45,10 +45,10 @@ def _airline_user():
     return {
         "uid": "u-fw",
         "email": "safety@fixedwing.com.np",
-        "role": "AIRLINE_ADMIN",
+        "role": "TENANT_ADMIN",
         "tenant_id": "fixedwing",
         "department": "safety",
-        "claims": {"role": "AIRLINE_ADMIN", "tenant_id": "fixedwing"},
+        "claims": {"role": "TENANT_ADMIN", "tenant_id": "fixedwing"},
     }
 
 
@@ -56,10 +56,10 @@ def _caan_user():
     return {
         "uid": "u-caan",
         "email": "smd@caanepal.gov.np",
-        "role": "CAAN_SMD",
+        "role": "STATE_SMD",
         "tenant_id": None,
         "department": None,
-        "claims": {"role": "CAAN_SMD", "tenant_id": None},
+        "claims": {"role": "STATE_SMD", "tenant_id": None},
     }
 
 
@@ -120,7 +120,7 @@ def test_regulator_routes_reject_unauthenticated():
 
 
 # ---------------------------------------------------------------------------
-# Authenticated airline user — must be rejected (CAAN gate)
+# Authenticated airline user — must be rejected (state-regulator gate)
 # ---------------------------------------------------------------------------
 
 def test_regulator_routes_reject_airline_user():
@@ -130,7 +130,7 @@ def test_regulator_routes_reject_airline_user():
         for url in REGULATOR_URLS:
             resp = c.get(url)
             assert resp.status_code == 403, (url, resp.status_code)
-            assert "CAAN" in resp.json()["detail"]
+            assert "STATE_SMD" in resp.json()["detail"]
     finally:
         app.dependency_overrides.clear()
 

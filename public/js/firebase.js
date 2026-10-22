@@ -444,11 +444,12 @@ window.getAppCheckToken = getAppCheckToken;
 // SHARED AUTH HELPERS (used by all pages)
 // ============================================================================
 
-// CAAN -> state transition: normalize the generalized STATE_SMD claim to the
-// existing internal CAAN_SMD value at this boundary, so every downstream role
-// check is unchanged. Remove once the internal vocabulary is migrated.
+// Role-claim normalization hook. Step-3 retired the legacy regulator alias,
+// so the canonical STATE_SMD claim is already the internal vocabulary — the
+// hook is an identity pass-through, kept as the single definition of the
+// contract (every other call site is guarded).
 window.normalizeRoleClaim = window.normalizeRoleClaim || function (role) {
-    return role === 'STATE_SMD' ? 'CAAN_SMD' : role;
+    return role;
 };
 
 function waitForFirebase() {
@@ -529,8 +530,8 @@ async function getCurrentUser() {
 function getDepartmentLabel(claims) {
     var role = (claims && claims.role) || 'USER';
     var dept = (claims && claims.department) || '';
-    if (role === 'CAAN_SMD') return 'State Aviation Safety Oversight';
-    if (role === 'AIRLINE_ADMIN' || role === 'TENANT_ADMIN') return 'Corporate Safety Department';
+    if (role === 'STATE_SMD') return 'State Aviation Safety Oversight';
+    if (role === 'TENANT_ADMIN') return 'Corporate Safety Department';
     if (dept === 'CAMO') return 'CAMO Department';
     if (dept === 'Part-145') return 'Part-145 Maintenance Department';
     if (dept === 'Flight Operations') return 'Flight Operations Department';
@@ -652,7 +653,7 @@ function getRoleDestination(user) {
     var role = (user && user.role) || 'USER';
 
     // 1. Regulator
-    if (role === 'CAAN_SMD') return '/state-oversight.html';
+    if (role === 'STATE_SMD') return '/state-oversight.html';
 
     // 2. Accountable Executive — executive governance dashboard per
     // ICAO Annex 19 / Doc 10159.
@@ -662,7 +663,7 @@ function getRoleDestination(user) {
     if (role === 'SUPER_ADMIN') return '/admin/production-setup.html';
 
     // 4. Safety Manager (tenant-wide). Legacy ae@ heuristic preserved:
-    // AE accounts stubbed as TENANT_ADMIN/AIRLINE_ADMIN still resolve +
+    // AE accounts stubbed as TENANT_ADMIN still resolve +
     // persist the mirroring context BEFORE the dashboard loads.
     if (role === 'TENANT_ADMIN') {
         var tenantEmail = ((user && user.email) || '').toLowerCase();
@@ -687,17 +688,7 @@ function getRoleDestination(user) {
         return '/dashboard/my-tasks.html';
     }
 
-    // 7. Legacy alias
-    if (role === 'AIRLINE_ADMIN') {
-        var legacyEmail = ((user && user.email) || '').toLowerCase();
-        if (_isAeEmail(legacyEmail)) {
-            try { resolveTenantContext({ email: legacyEmail }); } catch (e) { /* non-fatal */ }
-            return '/dashboard/ae-dashboard.html';
-        }
-        return '/safety.html';
-    }
-
-    // 8. USER with department claim → department landing
+    // 7. USER with department claim → department landing
     if (role === 'USER') {
         var claims = (user && (user.claims || {})) || {};
         var department = claims.department || (user && user.department) || '';
@@ -705,7 +696,7 @@ function getRoleDestination(user) {
         return '/safety.html';
     }
 
-    // 9. Default
+    // 8. Default
     return '/safety.html';
 }
 
@@ -713,17 +704,17 @@ function getRoleDestination(user) {
 // Drives CSS (e.g. `body.role-safety .operational { display:none }`) by adding
 // a profile class to <body> once auth resolves. Operational/departmental
 // logins (ops@, camo@, 145, pilot@) become `role-operational` and keep
-// operational-only controls; safety-management accounts (safety@, airline/tenant
-// admins, CAAN/SUPER) become `role-safety` and hide them. Runs centrally on
+// operational-only controls; safety-management accounts (safety@, tenant
+// admins, state regulator/SUPER) become `role-safety` and hide them. Runs centrally on
 // every page that loads this file -- no page-specific hardcoding.
 function isSafetyManagementRole(email, role) {
     var e = String(email || '').toLowerCase();
     if (e.indexOf('safety@') === 0) return true;
     var r = String(role || '').toUpperCase();
-    if (r === 'SUPER_ADMIN' || r === 'CAAN_SMD') return true;
-    // Accountable Executives (ae@) are AIRLINE_ADMIN but sit on the executive
+    if (r === 'SUPER_ADMIN' || r === 'STATE_SMD') return true;
+    // Accountable Executives (ae@) are TENANT_ADMIN but sit on the executive
     // governance surface, not the operational workspaces, so keep them operational.
-    if (r === 'AIRLINE_ADMIN' || r === 'TENANT_ADMIN') {
+    if (r === 'TENANT_ADMIN') {
         return !(e.indexOf('ae@') === 0 || e.indexOf('ae.') === 0);
     }
     return false;

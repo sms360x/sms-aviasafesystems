@@ -6,10 +6,10 @@
 #   create_invite():   authenticated admin issues a department-scoped invite
 #                      document keyed by its 6-char code in the top-level
 #                      `invites` collection. RBAC:
-#                        - TENANT_ADMIN / AIRLINE_ADMIN / SUPER_ADMIN may invite
+#                        - TENANT_ADMIN / SUPER_ADMIN may invite
 #                          into ANY applicable department with roles
-#                          DEPT_ADMIN / SAFETY_OFFICER / OFFICER / STAFF.
-#                        - DEPT_ADMIN may only invite STAFF into their OWN
+#                          DEPT_ADMIN / SAFETY_OFFICER / OFFICER.
+#                        - DEPT_ADMIN may only invite OFFICER into their OWN
 #                          department (cross-department or privilege escalation
 #                          is rejected with PermissionError -> 403).
 #   resolve_invite():  lookup an invite document by code (used by the public
@@ -45,17 +45,16 @@ ROLE_DEPT_ADMIN = settings.ROLE_DEPT_ADMIN
 ROLE_SAFETY_OFFICER = settings.ROLE_SAFETY_OFFICER
 # Canonical rename (dual-accept shim with ROLE_SAFETY_OFFICER).
 ROLE_OFFICER = settings.ROLE_OFFICER
-ROLE_STAFF = settings.ROLE_STAFF
 ROLE_SAG_MEMBER = settings.ROLE_SAG_MEMBER
 
 # Roles a tenant admin (or SUPER_ADMIN) may assign via invite. The Accountable
 # Executive is deliberately NOT invite-assignable — one per tenant, provisioned
 # by SUPER_ADMIN / tenant provisioning (RBAC_MODEL.md §1).
 TENANT_ADMIN_ASSIGNABLE_ROLES = frozenset(
-    {ROLE_DEPT_ADMIN, ROLE_SAFETY_OFFICER, ROLE_OFFICER, ROLE_STAFF, ROLE_SAG_MEMBER}
+    {ROLE_DEPT_ADMIN, ROLE_SAFETY_OFFICER, ROLE_OFFICER, ROLE_SAG_MEMBER}
 )
 # Roles a department admin (HOD) may assign via invite.
-DEPT_ADMIN_ASSIGNABLE_ROLES = frozenset({ROLE_STAFF})
+DEPT_ADMIN_ASSIGNABLE_ROLES = frozenset({ROLE_OFFICER})
 
 # Roles that may issue invites at all.
 INVITER_ROLES = frozenset(
@@ -66,13 +65,11 @@ INVITER_ROLES = frozenset(
 ROLE_LABELS = {
     "SUPER_ADMIN": "Global Administrator",
     "TENANT_ADMIN": "Safety Manager (Tenant Admin)",
-    "AIRLINE_ADMIN": "Safety Manager (Tenant Admin)",
     "DEPT_ADMIN": "Department Admin (HOD)",
     "SAFETY_OFFICER": "Officer",
     "OFFICER": "Officer",
-    "STAFF": "Staff / Employee",
     "USER": "Staff / Employee",
-    "CAAN_SMD": "State Safety Regulator",
+    "STATE_SMD": "State Safety Regulator",
     "ACCOUNTABLE_EXECUTIVE": "Accountable Executive",
     "SAG_MEMBER": "Safety Action Group Member",
 }
@@ -156,10 +153,10 @@ def create_invite(
     """Issue a department-scoped invite under the caller's tenant.
 
     RBAC (enforced strictly):
-      - TENANT_ADMIN / AIRLINE_ADMIN / SUPER_ADMIN: any applicable department,
-        assignable roles DEPT_ADMIN / SAFETY_OFFICER / OFFICER / STAFF.
+      - TENANT_ADMIN / SUPER_ADMIN: any applicable department,
+        assignable roles DEPT_ADMIN / SAFETY_OFFICER / OFFICER.
       - DEPT_ADMIN: target department MUST equal the caller's department and
-        the role MUST be STAFF (no cross-department invites, no escalation).
+        the role MUST be OFFICER (no cross-department invites, no escalation).
     """
     tid = caller.get("tenant_id")
     if not tid:

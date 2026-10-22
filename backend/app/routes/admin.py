@@ -310,7 +310,7 @@ async def provision_20_airlines(
                     raise
 
             uid = user.uid
-            auth.update_user(uid, custom_claims={"role": "AIRLINE_ADMIN", "tenant_id": tid})
+            auth.update_user(uid, custom_claims={"role": "TENANT_ADMIN", "tenant_id": tid})
             upsert_user_doc(**user_doc_from_auth_record(auth.get_user(uid)))
 
             tenant_ref = db.collection("tenants").document(tid)
@@ -1765,14 +1765,14 @@ async def list_feedback(
 ):
     """List in-product feedback submissions for review.
 
-    Restricted to CROSS-TENANT (SUPER_ADMIN / CAAN_SMD) roles. Returns the most
+    Restricted to CROSS-TENANT (SUPER_ADMIN / STATE_SMD) roles. Returns the most
     recent feedback first, with the submitter's email, role, tenant, page
     context, optional 1-5 rating, and message body.
     """
     if user.get("role") not in settings.CROSS_TENANT_ROLES:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="SUPER_ADMIN or CAAN_SMD role required to review feedback",
+            detail="SUPER_ADMIN or STATE_SMD role required to review feedback",
         )
 
     try:
@@ -1982,7 +1982,7 @@ class UserCreateRequest(UserProfileCreate):
     """Create payload for a new operator user — extends ``UserProfileCreate``
     with the admin ``setup_key`` and legacy ``name``/``display_name`` aliases.
     ``tenant_id`` stays required for admin creation (LSP provisioning post-role
-    assignment), and the admin default role is ``AIRLINE_ADMIN``.
+    assignment), and the admin default role is ``TENANT_ADMIN``.
     """
 
     setup_key: str = Field(..., description="Admin setup key (SETUP_SECRET)")

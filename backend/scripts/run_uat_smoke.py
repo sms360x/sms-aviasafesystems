@@ -39,19 +39,19 @@ from app.middleware.auth import get_caan_user, get_tenant_user
 FAKE_CAAN_USER = {
     "uid": "uid-caan-smoke",
     "email": "caan@caanepal.gov.np",
-    "role": "CAAN_SMD",
+    "role": "STATE_SMD",
     "tenant_id": None,
     "department": None,
-    "claims": {"role": "CAAN_SMD", "tenant_id": None, "department": None},
+    "claims": {"role": "STATE_SMD", "tenant_id": None, "department": None},
 }
 
 FAKE_TENANT_USER = {
     "uid": "uid-tenant-smoke",
     "email": "safety@fishtail-air.com.np",
-    "role": "AIRLINE_ADMIN",
+    "role": "TENANT_ADMIN",
     "tenant_id": "fishtail-air",
     "department": None,
-    "claims": {"role": "AIRLINE_ADMIN", "tenant_id": "fishtail-air", "department": None},
+    "claims": {"role": "TENANT_ADMIN", "tenant_id": "fishtail-air", "department": None},
 }
 
 

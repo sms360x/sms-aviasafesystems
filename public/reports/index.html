@@ -161,7 +161,7 @@ firebase.auth().onAuthStateChanged(function(user) {
     // MOR access hint
     user.getIdTokenResult().then(r => {
         const role = (r.claims.role||'').toUpperCase();
-        if (!['CAMO_ADMIN','QA_ADMIN','CAMO_USER','QA_USER','AIRLINE_ADMIN','TENANT_ADMIN','SUPER_ADMIN'].includes(role)) {
+        if (!['CAMO_ADMIN','QA_ADMIN','CAMO_USER','QA_USER','TENANT_ADMIN','SUPER_ADMIN'].includes(role)) {
             const btn = document.getElementById('morSubmitBtn');
             if (btn) { btn.style.opacity='0.6'; btn.title='MOR restricted to CAMO/QA'; }
         }

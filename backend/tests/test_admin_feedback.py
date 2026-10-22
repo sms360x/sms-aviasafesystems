@@ -1,7 +1,7 @@
 """Admin feedback review endpoint tests.
 
 Covers GET /api/v1/admin/feedback: CROSS-TENANT role gating (SUPER_ADMIN /
-CAAN_SMD allowed, others rejected) and response shape.
+STATE_SMD allowed, others rejected) and response shape.
 """
 
 from datetime import datetime, timezone
@@ -95,7 +95,7 @@ def _seed(db):
         "f1": {
             "uid": "safety-buddha-air-001",
             "email": "safety@buddha-air.com",
-            "role": "AIRLINE_ADMIN",
+            "role": "TENANT_ADMIN",
             "tenant_id": "buddha-air",
             "subject": "SSM Risk Trends",
             "message": "Live verification feedback.",
@@ -107,7 +107,7 @@ def _seed(db):
         "f2": {
             "uid": "smd-caan-001",
             "email": "smd@caanepal.gov.np",
-            "role": "CAAN_SMD",
+            "role": "STATE_SMD",
             "tenant_id": "caan",
             "subject": "SSP Reporting",
             "message": "Reviewing dashboards.",
@@ -138,12 +138,12 @@ def test_admin_feedback_super_admin_allowed(monkeypatch):
         _clear()
 
 
-def test_admin_feedback_caan_smd_allowed(monkeypatch):
+def test_admin_feedback_state_smd_allowed(monkeypatch):
     db = _FakeDB()
     _seed(db)
     _patch(monkeypatch, db)
     try:
-        resp = _client(_user("CAAN_SMD")).get("/api/v1/admin/feedback")
+        resp = _client(_user("STATE_SMD")).get("/api/v1/admin/feedback")
         assert resp.status_code == 200
         assert resp.json()["count"] == 2
     finally:
@@ -165,12 +165,12 @@ def test_admin_feedback_status_filter(monkeypatch):
         _clear()
 
 
-def test_admin_feedback_airline_admin_denied(monkeypatch):
+def test_admin_feedback_tenant_admin_denied(monkeypatch):
     db = _FakeDB()
     _seed(db)
     _patch(monkeypatch, db)
     try:
-        resp = _client(_user("AIRLINE_ADMIN")).get("/api/v1/admin/feedback")
+        resp = _client(_user("TENANT_ADMIN")).get("/api/v1/admin/feedback")
         assert resp.status_code == 403
     finally:
         _clear()

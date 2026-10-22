@@ -57,7 +57,7 @@ def test_email_claim_fallback_sources_from_pg(monkeypatch):
 
     monkeypatch.setattr(auth_mod.pg, "fetch_all", _fake_fetch_all)
     resolved = auth_mod._lookup_tenant_by_email("sm@fixedwing.test")
-    assert resolved == {"tenant_id": "fixedwing", "role": "AIRLINE_ADMIN"}
+    assert resolved == {"tenant_id": "fixedwing", "role": "TENANT_ADMIN"}
     assert captured["limit"] == 50
     assert captured["where"]  # a real JSONB filter expression was built
 
@@ -71,7 +71,7 @@ def test_list_tenant_users_maps_doc_shape(monkeypatch):
             "uid": "u1",
             "email": "a@b.c",
             "display_name": "A B",
-            "role": "STAFF",
+            "role": "OFFICER",
             "department": "Flight Operations",
             "created_at": "2026-01-01T00:00:00+00:00",
             "last_login": "2026-02-01T00:00:00+00:00",
@@ -83,7 +83,7 @@ def test_list_tenant_users_maps_doc_shape(monkeypatch):
         "uid": "u1",
         "email": "a@b.c",
         "display_name": "A B",
-        "role": "STAFF",
+        "role": "OFFICER",
         "department": "Flight Operations",
         "tenant_id": None,
         "phone": None,
@@ -127,12 +127,12 @@ def test_upsert_user_doc_writes_through_pg(monkeypatch):
         users_mod.pg, "fetch_by",
         lambda model, col, value: {"uid": value, "email": "ops@x.test"},
     )
-    users_mod.upsert_user_doc("u9", email="ops@x.test", role="STAFF")
+    users_mod.upsert_user_doc("u9", email="ops@x.test", role="OFFICER")
     assert captured["col"] == "uid"
     assert captured["value"] == "u9"
     assert captured["data"]["uid"] == "u9"
     assert captured["data"]["email"] == "ops@x.test"
-    assert captured["data"]["role"] == "STAFF"
+    assert captured["data"]["role"] == "OFFICER"
     assert captured["data"]["is_developer"] is False
     assert captured["data"]["tenant_id"] is None
     assert captured["data"]["updated_at"] is not None
@@ -148,7 +148,7 @@ def test_upsert_user_doc_raises_when_mirror_not_verifiable(monkeypatch):
     with pytest.raises(
         RuntimeError, match="User mirror verification failed: u9"
     ):
-        users_mod.upsert_user_doc("u9", email="ops@x.test", role="STAFF")
+        users_mod.upsert_user_doc("u9", email="ops@x.test", role="OFFICER")
 
 
 # ---- regulator_service.py -------------------------------------------------

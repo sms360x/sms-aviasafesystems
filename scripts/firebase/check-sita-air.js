@@ -53,8 +53,8 @@ async function main() {
 
     const candidates = [
         'sm.sita-air@sitaair.com',            // the email that failed to log in
-        'safety.sita-air@sitaair.com.np',     // seeded AIRLINE_ADMIN (correct domain)
-        'ae.sita-air@sitaair.com.np',         // seeded AIRLINE_ADMIN
+        'safety.sita-air@sitaair.com.np',     // seeded TENANT_ADMIN (correct domain)
+        'ae.sita-air@sitaair.com.np',         // seeded TENANT_ADMIN
         'manager.sita-air@sitaair.com.np',    // seeded USER
     ];
 

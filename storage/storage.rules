@@ -6,7 +6,7 @@ rules_version = '2';
 // Objects are partitioned strictly by tenant path:
 //     /tenants/{tenantId}/<allPaths>
 // A principal may read/write only inside the tenant matching their
-// tenant_id custom-claim. CAAN_SMD / CAAN_INSPECTOR get READ-ONLY access
+// tenant_id custom-claim. STATE_SMD / CAAN_INSPECTOR get READ-ONLY access
 // across tenants for oversight evidence review; SUPER_ADMIN full access.
 //
 // Download URLs: objects are NOT public. Any shareable link must be a
@@ -34,7 +34,7 @@ service firebase.storage {
 
     function isCaanInspector() {
       return isAuthenticated() &&
-        (request.auth.token.role == 'CAAN_SMD' ||
+        (request.auth.token.role == 'STATE_SMD' ||
          request.auth.token.role == 'CAAN_INSPECTOR');
     }
 

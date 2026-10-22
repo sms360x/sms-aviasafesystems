@@ -1099,7 +1099,7 @@ class DashboardService:
         return ReportFilter(**params)
 
     def _caan_filter(self, days: int = DEFAULT_DAYS, **overrides) -> ReportFilter:
-        """Build a cross-tenant filter for CAAN_SMD / SUPER_ADMIN.
+        """Build a cross-tenant filter for STATE_SMD / SUPER_ADMIN.
 
         days=0 / days=None means "All Time" — no created_at cutoff is applied.
         """

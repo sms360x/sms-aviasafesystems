@@ -25,7 +25,7 @@ from app.services.audit_service import log_audit
 STATUSES = ("draft", "review", "published", "archived")
 
 # Publication approval gate (Module B §31; Safety Manager capability).
-SAFETY_MANAGER_ROLES = {"TENANT_ADMIN", "AIRLINE_ADMIN"}
+SAFETY_MANAGER_ROLES = {"TENANT_ADMIN"}
 
 # Allowed lifecycle transitions.
 _TRANSITIONS = {

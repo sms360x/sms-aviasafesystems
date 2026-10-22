@@ -17,7 +17,9 @@ def _user(role="OFFICER", tenant_id="air1"):
 
 
 def test_triage_requires_safety_role(monkeypatch):
-    app.dependency_overrides[get_current_user] = lambda: _user(role="STAFF")
+    """Step-3: the retired STAFF literal is gone; the least-privilege tenant
+    member (USER) is still below the safety-officer gate."""
+    app.dependency_overrides[get_current_user] = lambda: _user(role="USER")
     try:
         r = client.post("/api/v1/hazards/HZ-1/triage", json={"decision": "Accepted"})
         assert r.status_code == 403

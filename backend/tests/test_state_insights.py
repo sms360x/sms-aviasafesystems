@@ -42,7 +42,7 @@ def test_generate_and_list_insights():
     _seed_aggregate()
     try:
         svc = StateInsightsService()
-        result = svc.generate_insights(KEY, user={"role": "CAAN_SMD", "email": "caan@x.np"})
+        result = svc.generate_insights(KEY, user={"role": "STATE_SMD", "email": "caan@x.np"})
         payload = result["payload"]
         assert payload["narrative"]
         assert payload["source_metric"] == KEY

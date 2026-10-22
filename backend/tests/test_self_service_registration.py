@@ -281,7 +281,7 @@ def test_register_tenant_fixed_wing(monkeypatch):
 
     uid = list(auth.claims)[0]
     assert auth.claims[uid] == {
-        "role": "AIRLINE_ADMIN",
+        "role": "TENANT_ADMIN",
         "tenant_id": "summit-air",
         "department": "safety",
     }
@@ -298,7 +298,7 @@ def test_register_tenant_fixed_wing(monkeypatch):
     assert profile["applicable_departments"] == ["safety", "flight_ops", "camo", "qa"]
 
     user_doc = list(db.users.values())[0]
-    assert user_doc["role"] == "AIRLINE_ADMIN"
+    assert user_doc["role"] == "TENANT_ADMIN"
     assert str(user_doc["tenant_id"]) == "cbfc60c9-6210-5922-88ab-6601ee2e56d5"
     assert user_doc["department"] == "safety"
 
@@ -524,12 +524,12 @@ def test_join_team_by_invite_code(monkeypatch):
 
     uid = list(auth.claims)[0]
     assert auth.claims[uid] == {
-        "role": "STAFF",
+        "role": "OFFICER",
         "tenant_id": "yeti-airlines",
         "department": "flight_ops",
     }
     user_doc = list(db.users.values())[0]
-    assert user_doc["role"] == "STAFF"
+    assert user_doc["role"] == "OFFICER"
     assert user_doc["department"] == "flight_ops"
     assert db.audit and db.audit[0]["action"] == "TEAM_MEMBER_JOINED"
 

@@ -3,15 +3,15 @@
   "title": "Team Management & Department Admin (HOD) Delegation",
   "subtitle": "Roles, Department Scoping, Invite Codes",
   "overview": [
-    "Team management is role-aware. A Safety Manager (TENANT_ADMIN or the legacy AIRLINE_ADMIN) manages the whole organisation, while a Department Admin / Head of Department (DEPT_ADMIN) is scoped to a single department.",
+    "Team management is role-aware. A Safety Manager (TENANT_ADMIN) manages the whole organisation, while a Department Admin / Head of Department (DEPT_ADMIN) is scoped to a single department.",
     "Every new team member joins through an invite code. Scoped invites bind the invitee's department AND role directly from the invite document at the moment they join."
   ],
   "method": {
     "title": "Method & Scoring Rules",
     "paragraphs": [
-      "Safety Manager (TENANT_ADMIN / AIRLINE_ADMIN) — can invite users into any applicable department with any role (DEPT_ADMIN, SAFETY_OFFICER / OFFICER, STAFF), sees every department's members, and manages all invites.",
-      "Department Admin (DEPT_ADMIN / HOD) — scoped to their own department only: can invite STAFF into that department, and only sees their own department's members. Cross-department invites and granting DEPT_ADMIN / TENANT_ADMIN roles are denied.",
-      "STAFF / USER — least-privilege members who cannot invite.",
+      "Safety Manager (TENANT_ADMIN) — can invite users into any applicable department with any role (DEPT_ADMIN, SAFETY_OFFICER / OFFICER), sees every department's members, and manages all invites.",
+      "Department Admin (DEPT_ADMIN / HOD) — scoped to their own department only: can invite OFFICER into that department, and only sees their own department's members. Cross-department invites and granting DEPT_ADMIN / TENANT_ADMIN roles are denied.",
+      "OFFICER / USER — least-privilege members who cannot invite.",
       "Invite codes are single-use; a scoped invite carries tenant_id, department, department_label and role, and its status moves from ACTIVE to USED on join."
     ],
     "bullets": [
@@ -30,7 +30,7 @@
   "example": {
     "title": "Worked Example",
     "paragraphs": [
-      "The CAMO Safety Manager (TENANT_ADMIN) invites the CAMO HOD as a DEPT_ADMIN and a storekeeper as STAFF.",
+      "The CAMO Safety Manager (TENANT_ADMIN) invites the CAMO HOD as a DEPT_ADMIN and a storekeeper as OFFICER.",
       "The CAMO HOD then invites a new engineer into CAMO only — this succeeds.",
       "If the CAMO HOD tries to invite a pilot into Flight Operations, or to grant DEPT_ADMIN, the request is rejected with 403 — department and role authority are enforced server-side.",
       "The pilot joins Flight Operations later via a scoped invite created by the Safety Manager; their department and role are bound from the invite at join time."

@@ -101,8 +101,7 @@ def test_ae_can_accept_intolerable(monkeypatch):
 
 # T2 — A non-AE user cannot sign off an Intolerable risk acceptance.
 @pytest.mark.parametrize("role", [
-    "DEPT_ADMIN", "OFFICER", "SAFETY_OFFICER", "TENANT_ADMIN",
-    "AIRLINE_ADMIN", "SAG_MEMBER",
+    "DEPT_ADMIN", "OFFICER", "SAFETY_OFFICER", "TENANT_ADMIN", "SAG_MEMBER",
 ])
 def test_non_ae_cannot_accept_intolerable(monkeypatch, role):
     row = _entry("Intolerable")
@@ -156,13 +155,13 @@ def test_cross_tenant_role_cannot_accept(monkeypatch):
     with pytest.raises(HTTPException) as exc:
         _run(sram_service.accept_risk(
             "H-1", {"alarp_justification": "x" * 20}, "air1",
-            {"role": "CAAN_SMD", "uid": "c1", "email": "caan@x.com", "tenant_id": None},
+            {"role": "STATE_SMD", "uid": "c1", "email": "caan@x.com", "tenant_id": None},
         ))
     assert exc.value.status_code == 403
 
 
 def test_cross_tenant_route_requires_tenant():
-    _override("CAAN_SMD", tenant_id=None)
+    _override("STATE_SMD", tenant_id=None)
     try:
         r = client.post("/api/v1/sram/risk/accept",
                         json={"hazard_id": "H-1", "alarp_justification": "x" * 20})
@@ -175,7 +174,7 @@ def test_cross_tenant_route_requires_tenant():
 #      override audit to record. (Recorded in docs/step1/1C.2_ae_non_delegability.md.)
 def test_get_accountable_executive_admits_only_ae():
     """2B.4b closure fix: the closure dependency admits only an AE for its
-    owning tenant; denies the retired AIRLINE_ADMIN and cross-tenant callers."""
+    owning tenant; denies the retired TENANT_ADMIN and cross-tenant callers."""
     from app.middleware.auth import get_accountable_executive
 
     async def _run_gate():
@@ -184,7 +183,6 @@ def test_get_accountable_executive_admits_only_ae():
                 "role": "ACCOUNTABLE_EXECUTIVE", "tenant_id": "t1"}
         for denied in (
             {"role": "ACCOUNTABLE_EXECUTIVE", "tenant_id": None},
-            {"role": "AIRLINE_ADMIN", "tenant_id": "t1"},
             {"role": "TENANT_ADMIN", "tenant_id": "t1"},
             {"role": "STATE_SMD", "tenant_id": None},
             {"role": "SUPER_ADMIN", "tenant_id": None},

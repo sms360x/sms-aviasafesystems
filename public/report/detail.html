@@ -191,7 +191,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     if (!reportId) { showError('No report ID specified.'); return; }
 
     const role = user.role || 'USER';
-    const isSafetyManager = role === 'AIRLINE_ADMIN' || role === 'CAAN_SMD' || role === 'SUPER_ADMIN';
+    const isSafetyManager = role === 'TENANT_ADMIN' || role === 'STATE_SMD' || role === 'SUPER_ADMIN';
 
     try {
         const report = await getReport(reportId);

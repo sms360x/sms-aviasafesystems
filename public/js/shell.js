@@ -27,15 +27,6 @@
     }
     global.getLocalUser = getLocalUser;
 
-    // CAAN -> state transition: normalize the generalized STATE_SMD claim to
-    // the internal CAAN_SMD value at the boundary, so every role check below
-    // is unchanged. Remove once the internal vocabulary is migrated.
-    if (typeof global.normalizeRoleClaim !== 'function') {
-        global.normalizeRoleClaim = function (role) {
-            return role === 'STATE_SMD' ? 'CAAN_SMD' : role;
-        };
-    }
-
     // Returns the current user email: from an authenticated session if present,
     // otherwise the local mock user (localhost), otherwise a safe default.
     function getUserEmail() {
@@ -70,7 +61,7 @@
     //     nav: [                                    // optional: replaces the
     //       { href: '/safety.html', label: 'Key Indicators', icon: 'fa-chart-simple' },
     //       { href: '/settings/team.html', label: 'Team', icon: 'fa-users-gear',
-    //         roles: ['AIRLINE_ADMIN', 'TENANT_ADMIN'] },   // optional role gate
+    //         roles: ['TENANT_ADMIN'] },   // optional role gate
     //     ],
     //   }
     let cfg = global.SHELL_CONFIG || {};
@@ -159,9 +150,9 @@
     function normalizeRole(role) {
         const r = String(role || '').toLowerCase();
         if (r === 'super_admin' || r === 'system') return 'super_admin';
-        if (r === 'airline_admin' || r === 'tenant_admin' || r === 'admin' ||
+        if (r === 'tenant_admin' || r === 'admin' ||
             r === 'safety' || r === 'safety_manager') return 'admin';
-        if (r === 'caan_smd' || r === 'caan_regulator' || r === 'regulator') return 'regulator';
+        if (r === 'state_smd' || r === 'caan_regulator' || r === 'regulator') return 'regulator';
         return 'user';
     }
 
@@ -590,22 +581,22 @@
         applyRoleKeyedNav();
     }
 
-    // Department personas (DEPT_ADMIN + STAFF) must not see the Home link
+    // Department persona (DEPT_ADMIN) must not see the Home link
     // (it points at /safety.html, the Safety Manager landing page) and the
-    // brand logo routes them to My Tasks instead. Same for AE, whose home
+    // brand logo routes it to My Tasks instead. Same for AE, whose home
     // is the Executive dashboard. Runs inside
     // applyNavVisibility so it re-applies once auth claims resolve —
     // buildHeader itself runs before claims are available, so gating there
     // would never see the role. Fail-open: when nav-config is absent or the
     // role is still unknown, Home/brand stay as built (other roles
-    // unaffected — only DEPT_ADMIN/STAFF/AE are ever rewritten).
+    // unaffected — only DEPT_ADMIN/AE are ever rewritten).
     function applyDeptHeaderVisibility() {
         if (typeof getUserRoleType !== 'function') return;
         var roleType;
         try {
             roleType = getUserRoleType(buildNavUser());
         } catch (e) { return; }
-        var isDept = roleType === 'DEPT_ADMIN' || roleType === 'STAFF';
+        var isDept = roleType === 'DEPT_ADMIN';
         var isAE = roleType === 'AE';
         var home = document.getElementById('shellHomeLink');
         if (home) home.style.display = (isDept || isAE) ? 'none' : '';

@@ -241,7 +241,7 @@ async def get_master_register(
         # merge the caller's session overlays (masters stay immutable).
         scoped_user = dict(user)
         scoped_user["tenant_id"] = str(archetypeId).strip()
-        scoped_user["role"] = "AIRLINE_ADMIN"
+        scoped_user["role"] = "TENANT_ADMIN"
         with _perf_timed("firestore"):
             data = build_master_register(
                 scoped_user,

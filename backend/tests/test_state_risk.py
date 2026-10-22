@@ -156,7 +156,7 @@ def _svc(monkeypatch, hazards=None, reports=None, reference=None):
             return _FakeCollection([])
 
     patch_pg_through(monkeypatch, _DB())
-    return StateRiskService({"uid": "caan-user", "role": "CAAN_SMD"})
+    return StateRiskService({"uid": "caan-user", "role": "STATE_SMD"})
 
 
 def test_aggregate_state_risk(monkeypatch):
@@ -294,7 +294,7 @@ def _svc_with_risk_collection(monkeypatch, hazards, reference=None, register=Non
             raise AssertionError(f"unexpected collection: {name}")
 
     patch_pg_through(monkeypatch, _DB())
-    return coll, StateRiskService({"uid": "caan-user", "role": "CAAN_SMD"})
+    return coll, StateRiskService({"uid": "caan-user", "role": "STATE_SMD"})
 
 
 def test_sync_register_persists_entries(monkeypatch):
@@ -436,11 +436,11 @@ from app.middleware.auth import get_caan_user, get_admin_user
 class _CAANUser:
     def __init__(self):
         self._data = {
-            "role": "CAAN_SMD",
+            "role": "STATE_SMD",
             "tenant_id": None,
             "uid": "caan-test",
             "email": "caan@test.np",
-            "claims": {"role": "CAAN_SMD", "tenant_id": None},
+            "claims": {"role": "STATE_SMD", "tenant_id": None},
         }
 
     def get(self, key, default=None):
@@ -526,7 +526,7 @@ def test_update_ssp_target_requires_admin():
 def _survey_svc(monkeypatch, surveys):
     from app.services.dashboard_service import DashboardService, _PGSurveyDoc
 
-    svc = DashboardService({"uid": "caan-user", "role": "CAAN_SMD"})
+    svc = DashboardService({"uid": "caan-user", "role": "STATE_SMD"})
     # Surveys now come from Postgres; patch the service's data fetch to keep
     # this test focused on the aggregation math (the PG query path is covered
     # by dedicated integration tests that seed Survey rows).
@@ -634,7 +634,7 @@ def test_get_caan_survey_maturity_filters_by_days_cutoff():
     _seed()
     try:
         from app.services.dashboard_service import DashboardService
-        svc = DashboardService({"uid": "caan-user", "role": "CAAN_SMD"})
+        svc = DashboardService({"uid": "caan-user", "role": "STATE_SMD"})
         result = svc.get_caan_survey_maturity(days=90)
         assert result["state"]["response_count"] == 1
         by_id = {op["tenant_id"]: op for op in result["operators"]}
@@ -697,7 +697,7 @@ def test_survey_docs_reads_postgres_rows():
     asyncio.run(_go())
 
     try:
-        svc = DashboardService({"uid": "caan-user", "role": "CAAN_SMD"})
+        svc = DashboardService({"uid": "caan-user", "role": "STATE_SMD"})
         docs = svc._survey_docs(365)
         data = {d.to_dict()["tenant_id"]: d.to_dict() for d in docs}
         assert data["surv-pg-air1"]["safety_policy"] == 4
@@ -777,7 +777,7 @@ def test_universal_oversight_includes_all_tenant_types(monkeypatch):
         lambda rid: list(tenant_ids),
     )
 
-    svc = DashboardService({"uid": "caan-user", "role": "CAAN_SMD"})
+    svc = DashboardService({"uid": "caan-user", "role": "STATE_SMD"})
     # Survey data now comes from Postgres; patch the service's data fetches so
     # this test keeps focusing on tenant-type inclusivity of the aggregation.
     monkeypatch.setattr(
@@ -896,7 +896,7 @@ def test_get_caan_sms_maturity_assessment_low_pillars(monkeypatch):
     monkeypatch.setattr(sms_mod, "read_sms_maturity", _fake_read)
     monkeypatch.setattr(sms_mod, "enqueue_sms_maturity_analysis", lambda *a, **k: True)
 
-    svc = DashboardService({"uid": "caan-user", "role": "CAAN_SMD"})
+    svc = DashboardService({"uid": "caan-user", "role": "STATE_SMD"})
     monkeypatch.setattr(
         svc, "_survey_docs",
         lambda days=None: [_PGSurveyDoc(d) for d in surveys])
@@ -996,7 +996,7 @@ def test_get_airline_sms_maturity_tenant_scoped(monkeypatch):
         ],
     })
     monkeypatch.setattr(sms_mod, "enqueue_sms_maturity_analysis", lambda *a, **k: True)
-    svc = DashboardService({"uid": "air-officer", "role": "AIRLINE_ADMIN", "tenant_id": "air1"})
+    svc = DashboardService({"uid": "air-officer", "role": "TENANT_ADMIN", "tenant_id": "air1"})
     monkeypatch.setattr(
         svc, "_survey_docs",
         lambda days=None: [_PGSurveyDoc(d) for d in surveys])
@@ -1063,7 +1063,7 @@ def test_get_airline_sms_maturity_empty(monkeypatch):
             return _Coll([])
 
     monkeypatch.setattr("app.firebase.get_db", lambda: _DB())
-    svc = DashboardService({"uid": "air-officer", "role": "AIRLINE_ADMIN", "tenant_id": "air1"})
+    svc = DashboardService({"uid": "air-officer", "role": "TENANT_ADMIN", "tenant_id": "air1"})
     monkeypatch.setattr(svc, "_survey_docs", lambda days=None: [])
     result = svc.get_airline_sms_maturity(days=365)
 
@@ -1141,7 +1141,7 @@ def test_get_airline_sms_maturity_missing_pillars(monkeypatch):
     # owns analysis, so the enqueue is stubbed out here.
     import app.services.sms_maturity_service as sms_mod
     monkeypatch.setattr(sms_mod, "enqueue_sms_maturity_analysis", lambda *a, **k: True)
-    svc = DashboardService({"uid": "air-officer", "role": "AIRLINE_ADMIN", "tenant_id": "air1"})
+    svc = DashboardService({"uid": "air-officer", "role": "TENANT_ADMIN", "tenant_id": "air1"})
     monkeypatch.setattr(
         svc, "_survey_docs",
         lambda days=None: [_PGSurveyDoc(d) for d in surveys])
@@ -1215,7 +1215,7 @@ def test_get_airline_sms_maturity_history_ordering(monkeypatch):
          "submitted_at": datetime.now(timezone.utc)},
     ]
     monkeypatch.setattr("app.firebase.get_db", lambda: _DB(surveys))
-    svc = DashboardService({"uid": "air-officer", "role": "AIRLINE_ADMIN", "tenant_id": "air1"})
+    svc = DashboardService({"uid": "air-officer", "role": "TENANT_ADMIN", "tenant_id": "air1"})
     monkeypatch.setattr(
         svc, "_survey_docs",
         lambda days=None: [_PGSurveyDoc(d) for d in surveys])
@@ -1306,7 +1306,7 @@ def test_airline_sms_maturity_route_200_empty(monkeypatch):
 
     monkeypatch.setattr("app.firebase.get_db", lambda: _empty_firestore())
     app.dependency_overrides[get_current_user] = lambda: {
-        "uid": "officer", "role": "AIRLINE_ADMIN", "tenant_id": "air1",
+        "uid": "officer", "role": "TENANT_ADMIN", "tenant_id": "air1",
         "email": "officer@air1.com"}
     try:
         resp = TestClient(app).get("/api/v1/dashboard/airline/sms-maturity")

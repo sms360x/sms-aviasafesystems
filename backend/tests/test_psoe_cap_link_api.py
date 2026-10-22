@@ -18,7 +18,7 @@ def _manager(tenant="air1"):
 
 def test_link_requires_safety_manager():
     app.dependency_overrides[get_current_user] = lambda: {
-        "uid": "u", "email": "u@air.com", "role": "STAFF", "tenant_id": "air1"}
+        "uid": "u", "email": "u@air.com", "role": "OFFICER", "tenant_id": "air1"}
     try:
         r = client.post("/api/v1/supabase/psoe/findings/f1/link-cap",
                         json={"cap_id": "cap1"})

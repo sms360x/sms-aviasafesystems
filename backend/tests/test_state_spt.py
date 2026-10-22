@@ -10,7 +10,7 @@ from app.services.state_spt_service import StateSPTService
 
 from _mbb import cleanup, create_tenant, run, unique_slug
 
-CAAN = {"role": "CAAN_SMD", "email": "smd@caan.gov.np"}
+CAAN = {"role": "STATE_SMD", "email": "smd@caan.gov.np"}
 OFFICER = {"role": "SAFETY_OFFICER", "email": "so@air.com"}
 
 

@@ -449,7 +449,7 @@ async function updateTenantDisplay() {
 
 // ============================================================================
 // PRODUCTION TENANT-MEMBERSHIP VERIFICATION — a signed-in user must belong to
-// the tenant this subdomain is scoped to. SUPER_ADMIN / CAAN_SMD are
+// the tenant this subdomain is scoped to. SUPER_ADMIN / STATE_SMD are
 // cross-tenant by design and always allowed. Demo hosts (beta) are exempt so
 // persona switching keeps working.
 // ============================================================================
@@ -465,7 +465,7 @@ function isProductionHost() {
 function tenantMembershipError(user) {
     if (!isProductionHost()) return null;
     var role = (user && user.role) || '';
-    if (role === 'SUPER_ADMIN' || role === 'CAAN_SMD') return null;
+    if (role === 'SUPER_ADMIN' || role === 'STATE_SMD') return null;
     var activeTenant = getActiveTenant();
     if (!activeTenant) return null; // root production host — no subdomain scope
     if (user.tenantId && user.tenantId !== activeTenant) {
@@ -520,7 +520,7 @@ function onAuthStateChanged(user) {
         console.log('Authenticated as:', user.email, 'role:', role, 'tenant:', tenantId);
 
         // Production tenant-membership check: block cross-tenant sessions on a
-        // tenant-scoped subdomain (SUPER_ADMIN / CAAN_SMD are cross-tenant).
+        // tenant-scoped subdomain (SUPER_ADMIN / STATE_SMD are cross-tenant).
         var membershipErr = tenantMembershipError({ uid: user.uid, email: user.email, role: role, tenantId: tenantId, claims: claims });
         if (membershipErr) {
             authRedirectInProgress = false;

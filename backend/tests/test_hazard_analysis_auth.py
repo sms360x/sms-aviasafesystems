@@ -56,7 +56,7 @@ SAFETY_USER = {
 CROSS_TENANT_USER = {
     "uid": "u-caan",
     "email": "smd@caanepal.gov.np",
-    "role": "CAAN_SMD",
+    "role": "STATE_SMD",
     "tenant_id": None,
     "department": None,
 }

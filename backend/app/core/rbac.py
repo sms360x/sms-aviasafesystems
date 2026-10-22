@@ -59,16 +59,13 @@ def is_tenant_user(role: str) -> bool:
 def normalize_legacy_role(legacy_role: str) -> str:
     """Map legacy roles to new RBAC roles."""
     mapping = {
-        'AIRLINE_ADMIN': 'tenant_admin',
         'TENANT_ADMIN': 'tenant_admin',
         'SUPER_ADMIN': 'tenant_admin',  # super admin has tenant_admin + regulator via separate logic
-        'CAAN_SMD': 'regulator',
         'STATE_SMD': 'regulator',
         'SAFETY_OFFICER': 'safety_manager',
         'OFFICER': 'safety_manager',
         'DEPT_ADMIN': 'department_head',
         'USER': 'employee',
-        'STAFF': 'employee',
         'ACCOUNTABLE_EXECUTIVE': 'accountable_executive',
         'SAG_MEMBER': 'sag_member',
     }

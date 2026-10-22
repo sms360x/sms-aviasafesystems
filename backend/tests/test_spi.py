@@ -17,10 +17,10 @@ def _override_auth():
     app.dependency_overrides[get_current_user] = lambda: {
         "uid": "u-fw",
         "email": "safety@fixedwing.com.np",
-        "role": "AIRLINE_ADMIN",
+        "role": "TENANT_ADMIN",
         "tenant_id": "fixedwing",
         "department": "safety",
-        "claims": {"role": "AIRLINE_ADMIN", "tenant_id": "fixedwing"},
+        "claims": {"role": "TENANT_ADMIN", "tenant_id": "fixedwing"},
     }
     return get_current_user
 
@@ -30,10 +30,10 @@ def _override_caan_auth():
     app.dependency_overrides[get_current_user] = lambda: {
         "uid": "u-caan",
         "email": "smd@caanepal.gov.np",
-        "role": "CAAN_SMD",
+        "role": "STATE_SMD",
         "tenant_id": None,
         "department": None,
-        "claims": {"role": "CAAN_SMD", "tenant_id": None},
+        "claims": {"role": "STATE_SMD", "tenant_id": None},
     }
     return get_current_user
 

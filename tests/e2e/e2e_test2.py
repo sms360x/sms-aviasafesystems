@@ -5,8 +5,8 @@ FIREBASE_AUTH_URL = 'https://identitytoolkit.googleapis.com/v1/accounts:signInWi
 BASE_API = 'https://aviasafe-unified-platform.onrender.com'
 
 E2E_USERS = [
-    ('airline_admin', 'sal@aviasafesystems.com', os.environ.get('AVIASAFE_PW_AIRLINE', '')),
-    ('caan_smd', 'smd@caanepal.gov.np', os.environ.get('AVIASAFE_PW_CAAN', '')),
+    ('TENANT_ADMIN', 'sal@aviasafesystems.com', os.environ.get('AVIASAFE_PW_AIRLINE', '')),
+    ('STATE_SMD', 'smd@caanepal.gov.np', os.environ.get('AVIASAFE_PW_CAAN', '')),
     ('super_admin', 'admin@aviasafesystems.com', os.environ.get('AVIASAFE_PW_ADMIN', '')),
     ('safety', 'salsafety@aviasafesystems.com', os.environ.get('AVIASAFE_PW_SAFETY', '')),
 ]
@@ -71,7 +71,7 @@ print('\n' + '=' * 70)
 print('SCENARIO 1: VSR Submission')
 print('=' * 70)
 
-r = api('POST', '/api/v1/reports/vsr', t['airline_admin'], {
+r = api('POST', '/api/v1/reports/vsr', t['TENANT_ADMIN'], {
     'report_type': 'vsr',
     'anonymous': False,
     'reporter_name': 'Sal Test',
@@ -119,7 +119,7 @@ print('\n' + '=' * 70)
 print('SCENARIO 2: MOR Submission')
 print('=' * 70)
 
-r = api('POST', '/api/v1/reports/mor', t['airline_admin'], {
+r = api('POST', '/api/v1/reports/mor', t['TENANT_ADMIN'], {
     'report_type': 'mor',
     'reporter_name': 'Sal Test',
     'reporter_email': 'sal@aviasafesystems.com',
@@ -163,7 +163,7 @@ print('\n' + '=' * 70)
 print('SCENARIO 4: Hazard Register')
 print('=' * 70)
 
-r = api('GET', '/api/v1/hazards/stats', t['airline_admin'])
+r = api('GET', '/api/v1/hazards/stats', t['TENANT_ADMIN'])
 test('Hazard stats 200', r.status_code == 200, 'got ' + str(r.status_code))
 if r.status_code == 200:
     s = r.json()
@@ -171,7 +171,7 @@ if r.status_code == 200:
     test('Stats has by_status', 'by_status' in s, str(list(s.get('by_status', {}).keys())))
     test('Stats has by_priority', 'by_priority' in s, '')
 
-r = api('GET', '/api/v1/hazards/', t['airline_admin'])
+r = api('GET', '/api/v1/hazards/', t['TENANT_ADMIN'])
 test('Hazard list 200', r.status_code == 200, 'got ' + str(r.status_code))
 if r.status_code == 200:
     hazards = r.json()
@@ -186,14 +186,14 @@ print('\n' + '=' * 70)
 print('SCENARIO 5: CAN/CAP Workflow')
 print('=' * 70)
 
-r = api('GET', '/api/v1/cans/stats', t['airline_admin'])
+r = api('GET', '/api/v1/cans/stats', t['TENANT_ADMIN'])
 test('CAN stats 200', r.status_code == 200, 'got ' + str(r.status_code))
 if r.status_code == 200:
     cs = r.json()
     test('CAN stats has cans', 'cans' in cs, '')
     test('CAN stats has caps', 'caps' in cs, '')
 
-r = api('GET', '/api/v1/cans/', t['airline_admin'])
+r = api('GET', '/api/v1/cans/', t['TENANT_ADMIN'])
 test('CAN list 200', r.status_code == 200, 'got ' + str(r.status_code))
 
 # === SCENARIO 6: VERIFICATION ===
@@ -201,12 +201,12 @@ print('\n' + '=' * 70)
 print('SCENARIO 6: Verification & Closure')
 print('=' * 70)
 
-r = api('GET', '/api/v1/verification/verifications/stats', t['airline_admin'])
+r = api('GET', '/api/v1/verification/verifications/stats', t['TENANT_ADMIN'])
 test('Verification stats 200', r.status_code == 200, 'got ' + str(r.status_code))
 if r.status_code != 200:
     # Try alternate paths
     for alt in ['/api/verification/verifications/stats', '/api/v1/verification/stats']:
-        r2 = api('GET', alt, t['airline_admin'])
+        r2 = api('GET', alt, t['TENANT_ADMIN'])
         if r2.status_code == 200:
             test('Verification stats at alt path', True, alt)
             break
@@ -216,7 +216,7 @@ print('\n' + '=' * 70)
 print('SCENARIO 7: Reporting & PDF Export')
 print('=' * 70)
 
-r = api('POST', '/api/v1/reporting/quarterly', t['airline_admin'], {
+r = api('POST', '/api/v1/reporting/quarterly', t['TENANT_ADMIN'], {
     'year': 2026,
     'period': 'Q2',
     'tenant_id': 'sita-air',
@@ -228,15 +228,15 @@ if r.status_code in [200, 201]:
     rid = report.get('id', '')
     test('Report has id', bool(rid), rid)
     if rid:
-        r2 = api('GET', '/api/v1/reporting/quarterly/' + rid, t['airline_admin'])
+        r2 = api('GET', '/api/v1/reporting/quarterly/' + rid, t['TENANT_ADMIN'])
         test('Report retrieval 200', r2.status_code == 200, 'got ' + str(r2.status_code))
-        r3 = api('GET', '/api/v1/reporting/quarterly/' + rid + '/export', t['airline_admin'])
+        r3 = api('GET', '/api/v1/reporting/quarterly/' + rid + '/export', t['TENANT_ADMIN'])
         test('Report PDF export 200', r3.status_code == 200, 'got ' + str(r3.status_code))
 else:
     print('  Response:', r.text[:200])
 
 # CAAN reporting
-r = api('POST', '/api/v1/reporting/quarterly', t['caan_smd'], {
+r = api('POST', '/api/v1/reporting/quarterly', t['STATE_SMD'], {
     'year': 2026,
     'period': 'Q1',
 })
@@ -247,7 +247,7 @@ print('\n' + '=' * 70)
 print('SCENARIO 8: Flight Diversions')
 print('=' * 70)
 
-r = api('POST', '/api/v1/flight-diversions/', t['airline_admin'], {
+r = api('POST', '/api/v1/flight-diversions/', t['TENANT_ADMIN'], {
     'date': '2026-07-28',
     'flight_number': 'STA-101',
     'aircraft_registration': '9N-AKS',
@@ -271,14 +271,14 @@ if r.status_code in [200, 201]:
 else:
     print('  Response:', r.text[:200])
 
-r = api('GET', '/api/v1/flight-diversions/stats', t['airline_admin'])
+r = api('GET', '/api/v1/flight-diversions/stats', t['TENANT_ADMIN'])
 test('Diversion stats 200', r.status_code == 200, 'got ' + str(r.status_code))
 if r.status_code == 200:
     ds = r.json()
     test('Stats has by_reason', 'by_reason' in ds, '')
     test('Stats has total_diversions', 'total_diversions' in ds, str(ds.get('total_diversions')))
 
-r = api('GET', '/api/v1/flight-diversions/stats', t['caan_smd'])
+r = api('GET', '/api/v1/flight-diversions/stats', t['STATE_SMD'])
 test('CAAN diversion stats 200', r.status_code == 200, 'got ' + str(r.status_code))
 
 # === SCENARIO 9: DASHBOARDS ===
@@ -286,16 +286,16 @@ print('\n' + '=' * 70)
 print('SCENARIO 9: Dashboards')
 print('=' * 70)
 
-r = api('GET', '/api/v1/dashboard/caan/overview', t['caan_smd'])
+r = api('GET', '/api/v1/dashboard/caan/overview', t['STATE_SMD'])
 test('CAAN overview dashboard 200', r.status_code == 200, 'got ' + str(r.status_code))
 
-r = api('GET', '/api/v1/dashboard/caan/hazards', t['caan_smd'])
+r = api('GET', '/api/v1/dashboard/caan/hazards', t['STATE_SMD'])
 test('CAAN hazard dashboard 200', r.status_code == 200, 'got ' + str(r.status_code))
 
-r = api('GET', '/api/v1/dashboard/caan/risk', t['caan_smd'])
+r = api('GET', '/api/v1/dashboard/caan/risk', t['STATE_SMD'])
 test('CAAN risk dashboard 200', r.status_code == 200, 'got ' + str(r.status_code))
 
-r = api('GET', '/api/v1/dashboard/caan/trends', t['caan_smd'])
+r = api('GET', '/api/v1/dashboard/caan/trends', t['STATE_SMD'])
 test('CAAN trends dashboard 200', r.status_code == 200, 'got ' + str(r.status_code))
 
 # === SCENARIO 10: ROLE-BASED ACCESS ===
@@ -306,16 +306,16 @@ print('=' * 70)
 r = api('GET', '/api/v1/admin/risk-matrix', t['super_admin'])
 test('Super admin: risk matrix 200', r.status_code == 200, 'got ' + str(r.status_code))
 
-r = api('GET', '/api/v1/admin/risk-matrix', t['airline_admin'])
+r = api('GET', '/api/v1/admin/risk-matrix', t['TENANT_ADMIN'])
 test('Airline admin: risk matrix should work (safety manager)', r.status_code == 200, 'got ' + str(r.status_code))
 
-r = api('GET', '/api/v1/hazards/stats', t['airline_admin'])
+r = api('GET', '/api/v1/hazards/stats', t['TENANT_ADMIN'])
 test('Airline admin: own hazard stats 200', r.status_code == 200, 'got ' + str(r.status_code))
 
-r = api('GET', '/api/v1/hazards/stats', t['caan_smd'])
+r = api('GET', '/api/v1/hazards/stats', t['STATE_SMD'])
 test('CAAN SMD: cross-tenant hazard stats 200', r.status_code == 200, 'got ' + str(r.status_code))
 
-r = api('GET', '/api/v1/dashboard/caan/overview', t['caan_smd'])
+r = api('GET', '/api/v1/dashboard/caan/overview', t['STATE_SMD'])
 test('CAAN SMD: dashboard overview 200', r.status_code == 200, 'got ' + str(r.status_code))
 
 # === SUMMARY ===

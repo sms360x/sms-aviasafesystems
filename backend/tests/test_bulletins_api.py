@@ -15,7 +15,7 @@ def _user(role="OFFICER", tenant_id="air1"):
     return {"uid": "u1", "email": "so@air1.com", "role": role, "tenant_id": tenant_id}
 
 
-def test_bulletin_draft_allows_OFFICER(monkeypatch):
+def test_bulletin_draft_allows_officer(monkeypatch):
     monkeypatch.setattr(SafetyCommsService, "create_draft",
                         lambda self, user, title, body=None, audience=None, hids=None:
                         {"id": "b1", "status": "draft", "title": title})
@@ -28,8 +28,10 @@ def test_bulletin_draft_allows_OFFICER(monkeypatch):
         app.dependency_overrides.clear()
 
 
-def test_bulletin_draft_rejects_staff():
-    app.dependency_overrides[get_current_user] = lambda: _user(role="STAFF")
+def test_bulletin_draft_rejects_general_employee():
+    """Step-3: the retired STAFF literal is gone and OFFICER (safety officer)
+    authors drafts, so the least-privilege general-employee role is USER."""
+    app.dependency_overrides[get_current_user] = lambda: _user(role="USER")
     try:
         r = client.post("/api/v1/bulletins", json={"title": "x"})
         assert r.status_code == 403

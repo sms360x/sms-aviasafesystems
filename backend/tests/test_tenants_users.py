@@ -2,7 +2,7 @@
 
 Covers the Auth->Firestore user mirroring (user_doc_from_auth_record), the
 tenant-scoped query (list_tenant_users), and GET /api/v1/tenants/{id}/users
-(authz: AIRLINE_ADMIN of that tenant or SUPER_ADMIN).
+(authz: TENANT_ADMIN of that tenant or SUPER_ADMIN).
 """
 
 from datetime import datetime, timezone
@@ -38,7 +38,7 @@ class _FakeRecord:
         self.uid = uid
         self.email = email
         self.display_name = "Tara Safety"
-        self.custom_claims = claims or {"role": "AIRLINE_ADMIN", "tenant_id": "tara-air"}
+        self.custom_claims = claims or {"role": "TENANT_ADMIN", "tenant_id": "tara-air"}
         self.user_metadata = _FakeMeta(meta_ts, last_sign_in=last_login)
 
 
@@ -46,7 +46,7 @@ def test_user_doc_from_auth_record_full():
     doc = users.user_doc_from_auth_record(_FakeRecord())
     assert doc["uid"] == "u1"
     assert doc["email"] == "officer@taraair.com"
-    assert doc["role"] == "AIRLINE_ADMIN"
+    assert doc["role"] == "TENANT_ADMIN"
     assert doc["tenant_id"] == "tara-air"
     assert doc["created_at"] is not None
     assert doc["last_login"] is not None
@@ -81,11 +81,11 @@ BUDDHA_AIR_UUID = "d2f28d0d-5373-5ae1-ab38-50502cf25a5c"
 class _UsersDB:
     def __init__(self):
         self._users = {
-            "u2": {"uid": "u2", "email": "b@taraair.com", "role": "AIRLINE_ADMIN",
+            "u2": {"uid": "u2", "email": "b@taraair.com", "role": "TENANT_ADMIN",
                    "tenant_id": TARA_AIR_UUID, "created_at": _dt(2), "last_login": None},
             "u1": {"uid": "u1", "email": "a@taraair.com", "role": "USER",
                    "tenant_id": TARA_AIR_UUID, "created_at": _dt(1), "last_login": _dt(3)},
-            "u3": {"uid": "u3", "email": "x@buddhaair.com", "role": "AIRLINE_ADMIN",
+            "u3": {"uid": "u3", "email": "x@buddhaair.com", "role": "TENANT_ADMIN",
                    "tenant_id": BUDDHA_AIR_UUID, "created_at": _dt(1), "last_login": None},
         }
 
@@ -184,7 +184,7 @@ def _patch_user(monkeypatch, user):
     use_user(user)
 
 
-def _user(role="AIRLINE_ADMIN", tid="tara-air", uid="u-admin", email="admin@taraair.com"):
+def _user(role="TENANT_ADMIN", tid="tara-air", uid="u-admin", email="admin@taraair.com"):
     return {"uid": uid, "email": email, "role": role, "tenant_id": tid,
             "claims": {"role": role, "tenant_id": tid}}
 
@@ -196,9 +196,9 @@ def _get(tid, headers=None):
     return TestClient(app).get(f"/api/v1/tenants/{tid}/users", headers=req_headers)
 
 
-def test_get_users_airline_admin_own_tenant(monkeypatch):
+def test_get_users_tenant_admin_own_tenant(monkeypatch):
     db = _FakeDB()
-    db._users["u1"] = {"uid": "u1", "email": "officer@taraair.com", "role": "AIRLINE_ADMIN",
+    db._users["u1"] = {"uid": "u1", "email": "officer@taraair.com", "role": "TENANT_ADMIN",
                        "tenant_id": TARA_AIR_UUID, "created_at": _dt(1), "last_login": None,
                        "display_name": "Officer One"}
     _patch_db(monkeypatch, db)
@@ -211,7 +211,7 @@ def test_get_users_airline_admin_own_tenant(monkeypatch):
     assert body["data"]["tenant_id"] == "tara-air"
     assert len(body["data"]["users"]) == 1
     assert body["data"]["users"][0]["email"] == "officer@taraair.com"
-    assert body["data"]["users"][0]["role"] == "AIRLINE_ADMIN"
+    assert body["data"]["users"][0]["role"] == "TENANT_ADMIN"
     assert body["data"]["users"][0]["display_name"] == "Officer One"
 
 

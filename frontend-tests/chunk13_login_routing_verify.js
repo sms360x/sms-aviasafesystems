@@ -36,7 +36,7 @@ assert(typeof window.DEMO_PROSPECTS === 'object' &&
 
 // ── 2. getRoleDestination: AE detection + archetype resolution + routing ──
 storage['demoContext'] && delete storage['demoContext'];
-const dest = fb.getRoleDestination({ role: 'AIRLINE_ADMIN', email: 'ae@buddha-air.com' });
+const dest = fb.getRoleDestination({ role: 'TENANT_ADMIN', email: 'ae@buddha-air.com' });
 assert(dest === '/dashboard/ae-dashboard.html', '2. AE routes to ae-dashboard');
 assert(storage['aeArchetypeId'] === 'demo-fixed-wing', '2. archetypeId stored at login');
 

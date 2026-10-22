@@ -45,7 +45,7 @@ def get_tenant_slug_from_email(email: Optional[str]) -> Optional[str]:
 
     Returns None for unknown domains and for empty addresses. Public domains
     (gmail.com etc.) intentionally resolve to nothing so cross-tenant
-    (SUPER_ADMIN / CAAN_SMD) accounts are never pinned to an operator tenant.
+    (SUPER_ADMIN / STATE_SMD) accounts are never pinned to an operator tenant.
     """
     if not email:
         return None

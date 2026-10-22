@@ -1,5 +1,5 @@
 // Verify SSP report generation + PDF export on the live beta backend using a
-// CAAN_SMD account (state-level report, aggregated/anonymized data only).
+// STATE_SMD account (state-level report, aggregated/anonymized data only).
 'use strict';
 
 const fs = require('fs');

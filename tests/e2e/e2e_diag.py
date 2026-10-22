@@ -5,8 +5,8 @@ FIREBASE_AUTH_URL = 'https://identitytoolkit.googleapis.com/v1/accounts:signInWi
 BASE_API = 'https://aviasafe-unified-platform.onrender.com'
 
 E2E_USERS = [
-    ('airline_admin', 'sal@aviasafesystems.com', os.environ.get('AVIASAFE_PW_AIRLINE', '')),
-    ('caan_smd', 'smd@caanepal.gov.np', os.environ.get('AVIASAFE_PW_CAAN', '')),
+    ('TENANT_ADMIN', 'sal@aviasafesystems.com', os.environ.get('AVIASAFE_PW_AIRLINE', '')),
+    ('STATE_SMD', 'smd@caanepal.gov.np', os.environ.get('AVIASAFE_PW_CAAN', '')),
     ('super_admin', 'admin@aviasafesystems.com', os.environ.get('AVIASAFE_PW_ADMIN', '')),
     ('safety', 'salsafety@aviasafesystems.com', os.environ.get('AVIASAFE_PW_SAFETY', '')),
 ]
@@ -77,26 +77,26 @@ for name, email, pw in E2E_USERS:
 
 print('\n=== ENDPOINT DIAGNOSIS ===')
 # Test basic accessible endpoints
-check_endpoint('GET', '/api/v1/hazards/stats', 'airline_admin', 'Hazards stats (airline)')
+check_endpoint('GET', '/api/v1/hazards/stats', 'TENANT_ADMIN', 'Hazards stats (airline)')
 check_endpoint('GET', '/api/v1/hazards/stats', 'super_admin', 'Hazards stats (super)')
-check_endpoint('GET', '/api/v1/cans/stats', 'airline_admin', 'CAN stats (airline)')
+check_endpoint('GET', '/api/v1/cans/stats', 'TENANT_ADMIN', 'CAN stats (airline)')
 check_endpoint('GET', '/api/v1/cans/stats', 'super_admin', 'CAN stats (super)')
-check_endpoint('GET', '/api/v1/flight-diversions/stats', 'airline_admin', 'Diversion stats (airline)')
+check_endpoint('GET', '/api/v1/flight-diversions/stats', 'TENANT_ADMIN', 'Diversion stats (airline)')
 check_endpoint('GET', '/api/v1/flight-diversions/stats', 'super_admin', 'Diversion stats (super)')
 check_endpoint('GET', '/api/v1/dashboard/overview', 'super_admin', 'Dashboard overview (super)')
 check_endpoint('GET', '/api/v1/dashboard/caan/overview', 'super_admin', 'CAAN overview (super)')
-check_endpoint('GET', '/api/v1/dashboard/caan/overview', 'caan_smd', 'CAAN overview (caan)')
+check_endpoint('GET', '/api/v1/dashboard/caan/overview', 'STATE_SMD', 'CAAN overview (caan)')
 
 print('\n=== WRITE ENDPOINT DIAG ===')
 check_endpoint('POST', '/api/v1/reports/vsr', 'super_admin', 'VSR submit (super)')
-check_endpoint('POST', '/api/v1/reports/vsr', 'airline_admin', 'VSR submit (airline)')
+check_endpoint('POST', '/api/v1/reports/vsr', 'TENANT_ADMIN', 'VSR submit (airline)')
 
 # Check verification routes
-check_endpoint('GET', '/api/v1/verification/verifications/stats', 'airline_admin', 'Verification stats (airline)')
+check_endpoint('GET', '/api/v1/verification/verifications/stats', 'TENANT_ADMIN', 'Verification stats (airline)')
 check_endpoint('GET', '/api/v1/verification/verifications/stats', 'super_admin', 'Verification stats (super)')
 
 # Try the non-v1 routes
-check_endpoint('GET', '/api/hazards/stats', 'airline_admin', 'Non-v1 hazards stats')
+check_endpoint('GET', '/api/hazards/stats', 'TENANT_ADMIN', 'Non-v1 hazards stats')
 
 # Reporting
 check_endpoint('POST', '/api/v1/reporting/quarterly', 'super_admin', 'Quarterly report (super)')
@@ -105,7 +105,7 @@ check_endpoint('POST', '/api/v1/reporting/quarterly', 'super_admin', 'Quarterly 
 check_endpoint('POST', '/api/v1/flight-diversions/', 'super_admin', 'Diversion create (super)')
 
 # Airline admin admin endpoint
-check_endpoint('GET', '/api/v1/admin/risk-matrix', 'airline_admin', 'Admin: risk matrix (airline)')
+check_endpoint('GET', '/api/v1/admin/risk-matrix', 'TENANT_ADMIN', 'Admin: risk matrix (airline)')
 check_endpoint('GET', '/api/v1/admin/risk-matrix', 'super_admin', 'Admin: risk matrix (super)')
 
 # List endpoints

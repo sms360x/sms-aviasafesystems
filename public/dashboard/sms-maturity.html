@@ -199,7 +199,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     var claims = currentUser.claims || {};
-    if (claims.role !== 'SUPER_ADMIN' && claims.role !== 'AIRLINE_ADMIN' && claims.role !== 'TENANT_ADMIN' && claims.role !== 'SAFETY_OFFICER' && claims.role !== 'OFFICER') {
+    if (claims.role !== 'SUPER_ADMIN' && claims.role !== 'TENANT_ADMIN' && claims.role !== 'SAFETY_OFFICER' && claims.role !== 'OFFICER') {
         document.getElementById('authGuard').querySelector('h3').textContent = 'Access Denied';
         document.getElementById('authGuard').querySelector('p').innerHTML = 'Your role (' + (claims.role || 'USER') + ') does not have permission to view the airline SMS dashboard.';
         document.getElementById('authGuard').style.display = 'block';
@@ -210,7 +210,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('authGuard').style.display = 'none';
     document.getElementById('appContent').style.display = 'block';
 
-    var roleName = claims.role === 'SUPER_ADMIN' ? 'SUPER_ADMIN' : (claims.tenant_id ? (claims.tenant_id + ' · AIRLINE_ADMIN') : 'AIRLINE_ADMIN');
+    var roleName = claims.role === 'SUPER_ADMIN' ? 'SUPER_ADMIN' : (claims.tenant_id ? (claims.tenant_id + ' · TENANT_ADMIN') : 'TENANT_ADMIN');
     if (typeof window.updateShellTenant === 'function') {
         window.updateShellTenant('Airline SMS Dashboard', roleName);
     }
@@ -224,7 +224,7 @@ async function loadTenants() {
 
     try {
         var claims = currentUser.claims || {};
-        var isAirlineAdmin = claims.role === 'AIRLINE_ADMIN';
+        var isAirlineAdmin = claims.role === 'TENANT_ADMIN';
 
         if (isAirlineAdmin && claims.tenant_id) {
             // Scoped: only this airline, no selector

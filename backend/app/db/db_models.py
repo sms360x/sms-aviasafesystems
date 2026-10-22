@@ -285,9 +285,6 @@ class Report(Base):
     is_confidential: Mapped[bool] = mapped_column(
         Boolean, nullable=False, default=False, server_default=text("false")
     )
-    confidential_custodian_id: Mapped[object] = mapped_column(
-        Uuid(as_uuid=True), ForeignKey("users.id"), nullable=True
-    )
 
     is_demo: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
 

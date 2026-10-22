@@ -73,7 +73,7 @@ def _clear():
 
 @pytest.fixture()
 def ae_of_a():
-    _override({"uid": "ae-a", "email": "ae@a.com", "role": "AIRLINE_ADMIN",
+    _override({"uid": "ae-a", "email": "ae@a.com", "role": "TENANT_ADMIN",
                "tenant_id": TENANT_A})
     yield
     _clear()
@@ -87,7 +87,7 @@ def test_sec01_cross_tenant_can_read_is_isolated(monkeypatch):
     from app.routes import can_cap as cc
 
     monkeypatch.setattr(cc, "CanCapService", _RecordingCanCapService)
-    _override({"uid": "u-a", "email": "safety@a.com", "role": "AIRLINE_ADMIN",
+    _override({"uid": "u-a", "email": "safety@a.com", "role": "TENANT_ADMIN",
                "tenant_id": TENANT_A})
 
     c = TestClient(app)
@@ -113,7 +113,7 @@ def test_sec01_hazard_read_scoped_to_caller_tenant(monkeypatch):
             return None
 
     monkeypatch.setattr(hz, "HazardService", _HazSvc)
-    _override({"uid": "u-a", "email": "safety@a.com", "role": "AIRLINE_ADMIN",
+    _override({"uid": "u-a", "email": "safety@a.com", "role": "TENANT_ADMIN",
                "tenant_id": TENANT_A})
 
     c = TestClient(app)
@@ -225,12 +225,12 @@ def test_sec03_readonly_client_blocks_mutations(monkeypatch):
 
 INSPECTOR = {"uid": "insp-1", "email": "inspector@caanepal.gov.np",
              "role": "CAAN_INSPECTOR", "tenant_id": "caan"}
-CAAN_SMD = {"uid": "smd-1", "email": "smd@caanepal.gov.np",
-            "role": "CAAN_SMD", "tenant_id": "caan"}
+STATE_SMD = {"uid": "smd-1", "email": "smd@caanepal.gov.np",
+            "role": "STATE_SMD", "tenant_id": "caan"}
 
 
 def test_sec05_inspector_status_write_rejected_403():
-    _override(CAAN_SMD)
+    _override(STATE_SMD)
     try:
         c = TestClient(app)
         r = c.patch("/api/v1/cans/some-can/status", params={"status": "Closed"})
@@ -242,7 +242,7 @@ def test_sec05_inspector_status_write_rejected_403():
 
 
 def test_sec05_inspector_review_write_rejected_403():
-    _override(CAAN_SMD)
+    _override(STATE_SMD)
     try:
         c = TestClient(app)
         # DELETE has no request body, so the READ-ONLY guard inside the

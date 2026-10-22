@@ -271,7 +271,7 @@ def test_check_all_overdue_returns_summary(monkeypatch):
 # ============================================================================
 
 class _MRUser:
-    def __init__(self, role="AIRLINE_ADMIN", tenant_id="t1", uid="u1"):
+    def __init__(self, role="TENANT_ADMIN", tenant_id="t1", uid="u1"):
         self._u = {"role": role, "tenant_id": tenant_id, "uid": uid, "email": "a@t1.com"}
 
     def get(self, key):
@@ -376,7 +376,7 @@ def test_master_register_combines_types(monkeypatch):
     })])]
 
     db = _MRDB(hazards, cans)
-    user = {"role": "AIRLINE_ADMIN", "tenant_id": "t1", "uid": "u1", "email": "a@t1.com"}
+    user = {"role": "TENANT_ADMIN", "tenant_id": "t1", "uid": "u1", "email": "a@t1.com"}
     _patch_mr(monkeypatch, db, user)
 
     result = master_register.build_master_register(user)
@@ -408,7 +408,7 @@ def test_master_register_department_filter(monkeypatch):
         }),
     ]
     db = _MRDB(hazards, [])
-    user = {"role": "AIRLINE_ADMIN", "tenant_id": "t1", "uid": "u1", "email": "a@t1.com"}
+    user = {"role": "TENANT_ADMIN", "tenant_id": "t1", "uid": "u1", "email": "a@t1.com"}
     _patch_mr(monkeypatch, db, user)
 
     result = master_register.build_master_register(user, department="Flight Operations")
@@ -436,7 +436,7 @@ def test_master_register_assignee_filter(monkeypatch):
         }),
     ]
     db = _MRDB([], cans)
-    user = {"role": "AIRLINE_ADMIN", "tenant_id": "t1", "uid": "u1", "email": "a@t1.com"}
+    user = {"role": "TENANT_ADMIN", "tenant_id": "t1", "uid": "u1", "email": "a@t1.com"}
     _patch_mr(monkeypatch, db, user)
 
     result = master_register.build_master_register(user, assigned_to_uid="u2")

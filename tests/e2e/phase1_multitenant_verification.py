@@ -13,7 +13,7 @@ Accounts:
 
 Expected redirects (from firebase.js getRoleDestination):
   SUPER_ADMIN  -> /admin/production-setup.html
-  AIRLINE_ADMIN(safety@) -> /safety.html
+  TENANT_ADMIN(safety@) -> /safety.html
   USER(staff@) -> /safety.html  (or /dashboard/my-tasks.html if dept claim)
 
 Run:
@@ -48,7 +48,7 @@ ACCOUNTS = [
         "email": "safety@fixedwing.com",
         "password": "safety_fw_2026",
         "expected_path": "/safety.html",
-        "expected_role": "AIRLINE_ADMIN",
+        "expected_role": "TENANT_ADMIN",
         "tenant_scoped": True,
         "tenant_id": "fixedwing",
     },
@@ -66,7 +66,7 @@ ACCOUNTS = [
         "email": "safety@rotarywing.com",
         "password": "safety_rw_2026",
         "expected_path": "/safety.html",
-        "expected_role": "AIRLINE_ADMIN",
+        "expected_role": "TENANT_ADMIN",
         "tenant_scoped": True,
         "tenant_id": "rotarywing",
     },

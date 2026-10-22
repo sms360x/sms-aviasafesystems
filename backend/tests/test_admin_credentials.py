@@ -199,7 +199,7 @@ def _sample_tenant():
         "contract": {"date": "2026-08-01", "reference": "AVIA-NEW-2026-001",
                      "expiry": "2027-07-31", "type": "standard",
                      "signedBy": "Ram Sharma", "signedDate": "2026-08-01"},
-        "users": [{"email": "admin@newair.com", "role": "AIRLINE_ADMIN", "full_name": "New Air Admin"}],
+        "users": [{"email": "admin@newair.com", "role": "TENANT_ADMIN", "full_name": "New Air Admin"}],
     }
 
 
@@ -230,7 +230,7 @@ def test_get_tenant_credentials(monkeypatch):
     db, _ = _patch_all(monkeypatch)
     db._stores["tenants"]["new-air"] = {
         "tenant_id": "new-air", "name": "New Air", "contact": {"name": "Ram Sharma"},
-        "users": [{"email": "admin@newair.com", "role": "AIRLINE_ADMIN"}],
+        "users": [{"email": "admin@newair.com", "role": "TENANT_ADMIN"}],
     }
     from app.services.tenant_credentials import get_tenant_credentials
     creds = get_tenant_credentials("new-air")
@@ -251,7 +251,7 @@ def test_get_tenant_credentials_missing(monkeypatch):
 def test_reset_admin_password(monkeypatch):
     db, auth = _patch_all(monkeypatch)
     db._stores["tenants"]["new-air"] = {
-        "tenant_id": "new-air", "users": [{"email": "admin@newair.com", "role": "AIRLINE_ADMIN"}],
+        "tenant_id": "new-air", "users": [{"email": "admin@newair.com", "role": "TENANT_ADMIN"}],
     }
     auth.create_user(email="admin@newair.com", password="old-password-123")
     from app.services.tenant_credentials import reset_admin_password
@@ -267,7 +267,7 @@ def test_send_welcome_email_log_provider(monkeypatch):
     db._stores["tenants"]["new-air"] = {
         "tenant_id": "new-air", "name": "New Air",
         "contact": {"name": "Ram Sharma"},
-        "users": [{"email": "admin@newair.com", "role": "AIRLINE_ADMIN"}],
+        "users": [{"email": "admin@newair.com", "role": "TENANT_ADMIN"}],
     }
     auth.create_user(email="admin@newair.com", password="old-password-123")
     from app.services.tenant_credentials import send_welcome_email_for_tenant
@@ -294,7 +294,7 @@ def test_credentials_routes_require_token():
 
 def test_credentials_routes_403_non_super(monkeypatch):
     _patch_all(monkeypatch)
-    app.dependency_overrides[get_current_user] = lambda: _admin_user(role="AIRLINE_ADMIN")
+    app.dependency_overrides[get_current_user] = lambda: _admin_user(role="TENANT_ADMIN")
     try:
         resp = TestClient(app).get("/api/v1/admin/tenants/new-air/credentials?setup_key=test-setup-key")
         assert resp.status_code == 403
@@ -331,7 +331,7 @@ def test_get_credentials_route(monkeypatch):
     db, _ = _patch_all(monkeypatch)
     db._stores["tenants"]["new-air"] = {
         "tenant_id": "new-air", "name": "New Air",
-        "contact": {"name": "Ram Sharma"}, "users": [{"email": "admin@newair.com", "role": "AIRLINE_ADMIN"}],
+        "contact": {"name": "Ram Sharma"}, "users": [{"email": "admin@newair.com", "role": "TENANT_ADMIN"}],
     }
     try:
         resp = _client().get("/api/v1/admin/tenants/new-air/credentials?setup_key=test-setup-key")
@@ -346,7 +346,7 @@ def test_get_credentials_route(monkeypatch):
 def test_reset_password_route(monkeypatch):
     db, auth = _patch_all(monkeypatch)
     db._stores["tenants"]["new-air"] = {
-        "tenant_id": "new-air", "users": [{"email": "admin@newair.com", "role": "AIRLINE_ADMIN"}],
+        "tenant_id": "new-air", "users": [{"email": "admin@newair.com", "role": "TENANT_ADMIN"}],
     }
     auth.create_user(email="admin@newair.com", password="old-password-123")
     try:
@@ -364,7 +364,7 @@ def test_send_welcome_route(monkeypatch):
     db._stores["tenants"]["new-air"] = {
         "tenant_id": "new-air", "name": "New Air",
         "contact": {"name": "Ram Sharma"},
-        "users": [{"email": "admin@newair.com", "role": "AIRLINE_ADMIN"}],
+        "users": [{"email": "admin@newair.com", "role": "TENANT_ADMIN"}],
     }
     auth.create_user(email="admin@newair.com", password="old-password-123")
     try:
@@ -412,7 +412,7 @@ def test_create_tenant_route_without_users_still_works(monkeypatch):
 # Single-user creation (POST /api/v1/admin/users)
 # ============================================================================
 
-def _tenant_with_user(store, tid="new-air", email="admin@newair.com", role="AIRLINE_ADMIN"):
+def _tenant_with_user(store, tid="new-air", email="admin@newair.com", role="TENANT_ADMIN"):
     store["tenants"][tid] = {
         "tenant_id": tid, "name": "New Air",
         "contact": {"name": "Ram Sharma"},
@@ -540,18 +540,18 @@ def test_create_user_route_custom_role_rejected(monkeypatch):
         _clear_overrides()
 
 
-def test_create_user_route_caan_smd_with_tenant_rejected(monkeypatch):
-    """RBAC §7: CAAN_SMD cannot hold a tenant role — the create route must
+def test_create_user_route_state_smd_with_tenant_rejected(monkeypatch):
+    """RBAC §7: STATE_SMD cannot hold a tenant role — the create route must
     reject it with 400 (not swallow the validator's HTTPException into a 500)."""
     db, _ = _patch_all(monkeypatch)
     _tenant_with_user(db._stores)
     try:
         resp = _client().post("/api/v1/admin/users", json={
             "setup_key": "test-setup-key",
-            "email": "smd@newair.com", "role": "CAAN_SMD", "tenant_id": "new-air",
+            "email": "smd@newair.com", "role": "STATE_SMD", "tenant_id": "new-air",
         })
         assert resp.status_code == 400
-        assert "CAAN_SMD" in resp.json().get("detail", "")
+        assert "STATE_SMD" in resp.json().get("detail", "")
     finally:
         _clear_overrides()
 
@@ -562,7 +562,7 @@ def test_create_user_route_display_name_alias(monkeypatch):
     try:
         resp = _client().post("/api/v1/admin/users", json={
             "setup_key": "test-setup-key",
-            "email": "named@newair.com", "role": "STAFF", "tenant_id": "new-air",
+            "email": "named@newair.com", "role": "OFFICER", "tenant_id": "new-air",
             "display_name": "Jane Staff",
         })
         assert resp.status_code == 200

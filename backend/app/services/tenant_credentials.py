@@ -79,7 +79,7 @@ def check_email_available(email: str) -> Dict[str, Any]:
 def _create_auth_user(auth, u: Dict[str, Any], tid: str) -> Dict[str, Any]:
     """Create one Auth user with role/tenant claims. Returns per-user result."""
     email = (u.get("email") or "").strip().lower()
-    role = u.get("role") or "AIRLINE_ADMIN"
+    role = u.get("role") or "TENANT_ADMIN"
     password = u.get("password") or generate_password()
     full_name = (u.get("full_name") or "").strip()
     department = (u.get("department") or "").strip()
@@ -143,12 +143,12 @@ def create_user_for_tenant(data: Dict[str, Any], actor: Dict[str, Any]) -> Dict[
     # CAAN vs tenant, SUPER_ADMIN) before an Auth user is ever created.
     from app.services.role_validation import validate_role_assignment
 
-    validate_role_assignment(data.get("role") or "AIRLINE_ADMIN", tid)
+    validate_role_assignment(data.get("role") or "TENANT_ADMIN", tid)
 
     auth = get_auth()
     result = _create_auth_user(auth, {
         "email": email,
-        "role": data.get("role") or "AIRLINE_ADMIN",
+        "role": data.get("role") or "TENANT_ADMIN",
         "full_name": data.get("full_name") or "",
         "department": data.get("department") or "",
     }, tid)
@@ -223,7 +223,7 @@ def create_user_for_tenant(data: Dict[str, Any], actor: Dict[str, Any]) -> Dict[
 # Regulator admin creation (Production Setup Step 1 / Adm-2)
 # ============================================================================
 
-_REGULATOR_ADMIN_ROLES = frozenset({"CAAN_SMD", "STATE_SMD"})
+_REGULATOR_ADMIN_ROLES = frozenset({"STATE_SMD"})
 
 
 def create_user_for_regulator(data: Dict[str, Any], actor: Dict[str, Any]) -> Dict[str, Any]:
@@ -346,7 +346,7 @@ def _patch_tenant(tid: str, patch: Dict[str, Any]) -> Dict[str, Any]:
 
 def _admin_user_email(tenant_doc: Dict[str, Any], tid: str) -> str:
     for u in tenant_doc.get("users") or []:
-        if u.get("role") == "AIRLINE_ADMIN" and u.get("email"):
+        if u.get("role") == "TENANT_ADMIN" and u.get("email"):
             return u["email"]
     sm = tenant_doc.get("safety_manager") or {}
     if sm.get("email"):

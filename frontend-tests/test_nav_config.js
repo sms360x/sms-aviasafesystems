@@ -3,10 +3,11 @@
  *
  * Covers public/js/nav-config.js:
  *  - ACCOUNTABLE_EXECUTIVE → AE with the NARROW menu only
- *    (Dashboard/Executive, Action Queues/My Tasks, Trends)
+ *    (Dashboard/Executive — the AE trends + My Tasks surfaces are not in
+ *    scope for the AE persona)
  *  - SAG_MEMBER → hidden from nav (no dashboard in scope)
- *  - STAFF → STAFF, sharing the department Workspace nav with DEPT_ADMIN
- *    (Workspace/My Tasks + Master Register only, no Dashboard wrapper)
+ *  - STAFF retired (Step-3): the retired literal is no longer a dedicated
+ *    persona — OFFICER absorbed it and resolves to the SAFETY persona
  *  - Canonical role literals + legacy aliases resolve correctly
  *  - Module flag gating (canonical + legacy keys) hides tagged items
  *  - All canonical module flags recognized
@@ -26,14 +27,17 @@ const { NAV_CONFIG, NAV_MODULE_FLAGS, getUserRoleType, getVisibleNav, normalizeM
 
 function test_role_type_mapping() {
     assert.strictEqual(getUserRoleType({ role: 'SUPER_ADMIN' }), 'SUPER');
-    assert.strictEqual(getUserRoleType({ role: 'CAAN_SMD' }), 'CAAN');
+    assert.strictEqual(getUserRoleType({ role: 'STATE_SMD' }), 'CAAN');
     assert.strictEqual(getUserRoleType({ role: 'CAAN_ADMIN' }), 'CAAN');
     assert.strictEqual(getUserRoleType({ role: 'CAAN_AUDITOR' }), 'CAAN');
     assert.strictEqual(getUserRoleType({ role: 'TENANT_ADMIN' }), 'SAFETY');
-    assert.strictEqual(getUserRoleType({ role: 'AIRLINE_ADMIN' }), 'SAFETY');
     assert.strictEqual(getUserRoleType({ role: 'SAFETY_OFFICER' }), 'SAFETY');
     assert.strictEqual(getUserRoleType({ role: 'DEPT_ADMIN' }), 'DEPT_ADMIN');
-    assert.strictEqual(getUserRoleType({ role: 'STAFF' }), 'STAFF');
+    // Step-3: STAFF is retired and merged into OFFICER. OFFICER keeps the
+    // officer (SAFETY) persona; the retired literal is no longer special-cased
+    // and falls through to the wildcard exactly like USER.
+    assert.strictEqual(getUserRoleType({ role: 'OFFICER' }), 'SAFETY');
+    assert.strictEqual(getUserRoleType({ role: 'STAFF' }), 'ALL');
     assert.strictEqual(getUserRoleType({ role: 'ACCOUNTABLE_EXECUTIVE' }), 'AE');
     assert.strictEqual(getUserRoleType({ role: 'SAG_MEMBER' }), 'SAG');
     assert.strictEqual(getUserRoleType({ role: 'USER' }), 'ALL');
@@ -58,8 +62,8 @@ function test_ae_narrow_menu() {
     assert.deepStrictEqual(Object.keys(groups), ['Dashboard'], 'AE sees ONLY the Dashboard group');
     assert.deepStrictEqual(
         groups.Dashboard.sort(),
-        ['ae-dashboard', 'ae-trends', 'my-tasks'].sort(),
-        'AE menu = Executive dashboard + My Tasks (action queues) + Trends'
+        ['ae-dashboard'].sort(),
+        'AE menu = Executive dashboard only (AE trends / My Tasks are not AE surfaces)'
     );
     const exec = visible[0].items.find((i) => i.id === 'ae-dashboard');
     assert.strictEqual(exec.href, '/dashboard/ae-dashboard.html', 'AE dashboard target');
@@ -76,19 +80,20 @@ function test_ae_email_fallback_same_menu() {
 }
 
 // ---------------------------------------------------------------------------
-// Department Workspace (DEPT_ADMIN + STAFF share the same nav and scope;
-// both land on My Tasks; action-level authority differs, not navigation)
+// Department Workspace (DEPT_ADMIN owns the department persona; OFFICER
+// absorbed the retired STAFF role and now resolves to the SAFETY persona,
+// so the Workspace group is department-admin only)
 // ---------------------------------------------------------------------------
 
 function test_dept_workspace_nav() {
-    for (const role of ['DEPT_ADMIN', 'STAFF']) {
+    for (const role of ['DEPT_ADMIN']) {
         const visible = getVisibleNav({ role, email: 'camo@sitaair.com.np' });
         const groups = groupsOf(visible);
         assert.deepStrictEqual(Object.keys(groups), ['Workspace'], role + ' sees ONLY the Workspace group');
         assert.deepStrictEqual(
             groups.Workspace,
-            ['dept-tasks', 'dept-register'],
-            role + ' Workspace = My Tasks + Master Register'
+            ['dept-tasks', 'dept-register', 'dept-can-register', 'dept-cap-register'],
+            role + ' Workspace = My Tasks + Master Register + CAN/CAP registers'
         );
         assert.ok(!groups.Dashboard, role + ' does NOT see the Dashboard wrapper');
         const tasks = visible[0].items.find((i) => i.id === 'dept-tasks');
@@ -99,8 +104,13 @@ function test_dept_workspace_nav() {
     // Same nav with and without module filtering (Workspace module tag is
     // module_b_srm; department tenants carry it — but the group must also
     // render for callers that pass no moduleAccess, e.g. shell.js).
-    const noModules = groupsOf(getVisibleNav({ role: 'STAFF', email: 'camo@sitaair.com.np' }));
-    assert.deepStrictEqual(Object.keys(noModules), ['Workspace'], 'STAFF Workspace without moduleAccess');
+    const noModules = groupsOf(getVisibleNav({ role: 'DEPT_ADMIN', email: 'camo@sitaair.com.np' }));
+    assert.deepStrictEqual(Object.keys(noModules), ['Workspace'], 'DEPT_ADMIN Workspace without moduleAccess');
+    // Step-3: OFFICER absorbed the retired STAFF role — it is an officer
+    // persona now, so it does NOT get the department Workspace group.
+    const officer = groupsOf(getVisibleNav({ role: 'OFFICER', email: 'camo@sitaair.com.np' }));
+    assert.ok(!officer.Workspace, 'OFFICER does NOT see the department Workspace group');
+    assert.ok(officer.Dashboard, 'OFFICER keeps the safety Dashboard group');
 }
 
 // ---------------------------------------------------------------------------
@@ -183,7 +193,7 @@ function test_no_module_access_arg_backward_compatible() {
 }
 
 function test_regulator_untouched() {
-    const visible = groupsOf(getVisibleNav({ role: 'CAAN_SMD', email: 'smd@caanepal.gov.np' }));
+    const visible = groupsOf(getVisibleNav({ role: 'STATE_SMD', email: 'smd@caanepal.gov.np' }));
     assert.ok(visible.Dashboard && visible.Dashboard.includes('caan-dashboard'), 'CAAN oversight kept');
     assert.ok(visible.Regulator, 'Regulator group kept');
     assert.ok(!visible['Hazard Management'], 'CAAN never had hazard groups');

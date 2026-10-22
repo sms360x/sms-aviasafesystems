@@ -321,8 +321,8 @@ def mock_firebase_and_auth(monkeypatch):
         auth = request.headers.get("authorization", "")
         token = auth.split(" ", 1)[1].strip() if auth.lower().startswith("bearer ") else ""
         claims = {"role": "USER", "tenant_id": None}
-        if token == "AIRLINE_ADMIN_TOKEN":
-            claims = {"role": "AIRLINE_ADMIN", "tenant_id": "test_airline"}
+        if token == "TENANT_ADMIN_TOKEN":
+            claims = {"role": "TENANT_ADMIN", "tenant_id": "test_airline"}
         elif token == "SAFETY_MANAGER_TOKEN":
             claims = {"role": "SAFETY_MANAGER", "tenant_id": "test_airline"}
         return {"uid": "mock_user", "email": "test@aviasafe.com", "department": None,
@@ -359,7 +359,7 @@ def _cleanup_srm_hazards():
     asyncio.run(_wipe())
 
 
-def _auth_header(token="AIRLINE_ADMIN_TOKEN"):
+def _auth_header(token="TENANT_ADMIN_TOKEN"):
     return {"Authorization": f"Bearer {token}"}
 
 

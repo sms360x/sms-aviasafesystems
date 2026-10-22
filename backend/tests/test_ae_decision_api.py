@@ -178,7 +178,7 @@ def test_ae_decision_pdf_tenant_admin_200(monkeypatch):
 def test_ae_decision_pdf_forbidden_roles(monkeypatch):
     _patch_decision_pdf(monkeypatch, _decided_cap())
     try:
-        for role in ("DEPT_ADMIN", "OFFICER", "CAAN_SMD"):
+        for role in ("DEPT_ADMIN", "OFFICER", "STATE_SMD"):
             app.dependency_overrides[get_current_user] = lambda r=role: _user(role=r)
             r = client.get("/api/v1/cans/caps/cap1/decision.pdf")
             assert r.status_code == 403, (role, r.text)

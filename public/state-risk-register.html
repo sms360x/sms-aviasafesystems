@@ -288,8 +288,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             window.location.href = '/login.html?tenant=caan';
             return;
         }
-        if (currentUser.role !== 'CAAN_SMD' && currentUser.role !== 'SUPER_ADMIN') {
-            alert('Access denied. CAAN_SMD or SUPER_ADMIN role required.');
+        if (currentUser.role !== 'STATE_SMD' && currentUser.role !== 'SUPER_ADMIN') {
+            alert('Access denied. STATE_SMD or SUPER_ADMIN role required.');
             window.location.href = '/';
             return;
         }
@@ -302,7 +302,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const regShort = regulatorMeta?.short_name || 'State Regulator';
         window.updateShellTenant(
             regShort + ' — State Safety Programme',
-            'Safety Management Division · ' + (isSuperAdmin ? 'SUPER_ADMIN' : 'CAAN_SMD')
+            'Safety Management Division · ' + (isSuperAdmin ? 'SUPER_ADMIN' : 'STATE_SMD')
         );
         populateYearSelects();
         await Promise.all([loadRegister(), loadAggregation()]);

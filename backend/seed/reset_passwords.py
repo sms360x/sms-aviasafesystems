@@ -76,8 +76,8 @@ def build_user_specs():
     for u in DEMO_USERS:
         role_label = {
             "SUPER_ADMIN": "Super Admin",
-            "CAAN_SMD": "CAAN SMD",
-            "AIRLINE_ADMIN": "Admin",
+            "STATE_SMD": "State SMD",
+            "TENANT_ADMIN": "Admin",
             "USER": "User",
         }.get(u["role"], u["role"])
         specs.append(

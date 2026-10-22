@@ -42,7 +42,7 @@ def _call(path, user, monkeypatch):
 
 
 TENANT = {"role": "TENANT_ADMIN", "tenant_id": "air1"}
-REGULATOR = {"role": "CAAN_SMD", "tenant_id": None}
+REGULATOR = {"role": "STATE_SMD", "tenant_id": None}
 
 
 def test_new_map_entries():

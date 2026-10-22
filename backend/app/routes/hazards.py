@@ -298,11 +298,11 @@ async def list_hazards(
         effective_tenant = str(archetypeId).strip()
         svc_user = dict(user)
         svc_user["tenant_id"] = effective_tenant
-        svc_user["role"] = "AIRLINE_ADMIN"
+        svc_user["role"] = "TENANT_ADMIN"
     else:
         effective_tenant = user.get("tenant_id")
         # 3C.2C: honor cross-tenant scoping for the canonical STATE_SMD via
-        # CROSS_TENANT_ROLES (previously only the legacy CAAN_SMD literal).
+        # CROSS_TENANT_ROLES (previously only the legacy STATE_SMD literal).
         if user.get("role") in settings.CROSS_TENANT_ROLES and tenant_id:
             effective_tenant = tenant_id
 

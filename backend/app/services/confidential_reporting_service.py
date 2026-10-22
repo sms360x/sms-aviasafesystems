@@ -35,11 +35,6 @@ from app.services.audit_service import log_audit
 # The only role that may hold custody of a VSR reporter contact.
 CUSTODIAN_ROLE = "TENANT_ADMIN"
 
-# DEPRECATED (2D.2): retained for callers/tests that import it. Custody is no
-# longer role-set based — it is CUSTODIAN_ROLE + the report's own tenant (§16
-# Q4). The retired `AIRLINE_ADMIN`/`SUPER_ADMIN` members must not be used.
-CUSTODIAN_ROLES = {"TENANT_ADMIN", "AIRLINE_ADMIN", "SUPER_ADMIN"}
-
 # Reporter-identity fields stripped by de-identification.
 _IDENTITY_FIELDS = ("reporter_name", "reporter_email", "reporter_phone",
                     "reporter_role", "reporter_organisation")
@@ -174,13 +169,11 @@ class ConfidentialReportingService:
             if not row:
                 raise ValueError(f"Report {report_id!r} not found")
             row.is_confidential = True
-            row.confidential_custodian_id = cid
             row.updated_at = now
             await session.flush()
             result = {
                 "id": str(row.id),
                 "is_confidential": True,
-                "confidential_custodian_id": str(cid) if cid else None,
             }
         log_audit(
             action="REPORT_MARKED_CONFIDENTIAL",
@@ -188,7 +181,7 @@ class ConfidentialReportingService:
             tenant_id=self.tenant_id,
             target_type="report",
             target_id=str(report_id),
-            metadata={"custodian_id": result["confidential_custodian_id"]},
+            metadata={"custodian_id": str(cid) if cid else None},
         )
         logger.info(f"Report {report_id} marked confidential (custodian={cid})")
         return result
@@ -211,7 +204,7 @@ class ConfidentialReportingService:
             return {}
 
         # 2D.2.1: all writes go through the SECURITY DEFINER function. The
-        # submitter may be any authenticated tenant member (STAFF/public
+        # submitter may be any authenticated tenant member (OFFICER/public
         # intake), so a direct INSERT cannot satisfy the custodial RLS policy.
         # The function re-validates that the report is a VSR, belongs to the
         # supplied tenant, and (when a request identity is present) that the

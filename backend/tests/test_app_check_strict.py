@@ -118,7 +118,7 @@ def test_register_rejected_without_app_check_token():
             "password": "Good-Pass-2026",
             "full_name": "Test User",
             "organization": "Summit Air",
-            "role": "AIRLINE_ADMIN",
+            "role": "TENANT_ADMIN",
         },
     )
     assert resp.status_code == 403

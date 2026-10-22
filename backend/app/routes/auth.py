@@ -238,7 +238,7 @@ async def register_tenant_endpoint(
 ):
     """Self-service tenant registration (beta portal).
 
-    Provisions the primary administrator (AIRLINE_ADMIN / safety), initialises
+    Provisions the primary administrator (TENANT_ADMIN / safety), initialises
     the operational profile at ``tenants/{tenant_id}/profile/operational`` and
     issues a unique team invite code for colleague onboarding.
 
@@ -324,7 +324,7 @@ class JoinTeamRequest(BaseModel):
 
 class InviteRequest(BaseModel):
     department: str = Field(..., min_length=1, description="Target department code or label")
-    role: str = Field(default="STAFF", max_length=50, description="Role to assign on join")
+    role: str = Field(default="OFFICER", max_length=50, description="Role to assign on join")
 
 
 @router.post("/invite")
@@ -337,10 +337,10 @@ async def invite_endpoint(
     """Issue a department-scoped team invite (TENANT_ADMIN / DEPT_ADMIN).
 
     Role-aware enforcement:
-      - TENANT_ADMIN / AIRLINE_ADMIN / SUPER_ADMIN: invite into any applicable
-        department with DEPT_ADMIN / SAFETY_OFFICER / OFFICER / STAFF.
+      - TENANT_ADMIN / SUPER_ADMIN: invite into any applicable
+        department with DEPT_ADMIN / SAFETY_OFFICER / OFFICER.
       - DEPT_ADMIN: target department must equal the caller's department and
-        only the STAFF role may be assigned (403 otherwise).
+        only the OFFICER role may be assigned (403 otherwise).
     """
     try:
         result = create_invite(

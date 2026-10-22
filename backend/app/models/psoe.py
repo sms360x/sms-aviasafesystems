@@ -88,7 +88,7 @@ class PSOEAssessmentCreate(BaseModel):
     """Payload to draft a new PSOE assessment."""
 
     title: str = Field(..., min_length=3, max_length=200)
-    tenant_id: Optional[str] = Field(None, description="Target tenant (required for CAAN_SMD / SUPER_ADMIN; ignored for tenant-bound roles)")
+    tenant_id: Optional[str] = Field(None, description="Target tenant (required for STATE_SMD / SUPER_ADMIN; ignored for tenant-bound roles)")
     department: Optional[str] = None
     scope: Optional[str] = None
     auditor_name: Optional[str] = None

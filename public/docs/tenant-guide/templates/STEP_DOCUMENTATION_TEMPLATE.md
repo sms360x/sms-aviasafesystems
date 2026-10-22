@@ -2,7 +2,7 @@
 
 **Step:** XX — Human-readable Step Name  
 **Guide:** AviaSAFE Tenant Onboarding Guide  
-**Applies to:** [role(s): AIRLINE_ADMIN / CAAN_SMD / USER]  
+**Applies to:** [role(s): TENANT_ADMIN / STATE_SMD / USER]  
 **Prerequisites:** [list any prior steps or required conditions]
 
 ---

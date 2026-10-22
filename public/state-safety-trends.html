@@ -106,8 +106,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         window.location.href = '/login.html?tenant=caan';
         return;
     }
-    if (currentUser.role !== 'CAAN_SMD' && currentUser.role !== 'SUPER_ADMIN') {
-        alert('Access denied. CAAN_SMD or SUPER_ADMIN role required.');
+    if (currentUser.role !== 'STATE_SMD' && currentUser.role !== 'SUPER_ADMIN') {
+        alert('Access denied. STATE_SMD or SUPER_ADMIN role required.');
         window.location.href = '/';
         return;
     }

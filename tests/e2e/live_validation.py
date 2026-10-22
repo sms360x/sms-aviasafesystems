@@ -94,13 +94,13 @@ def main():
     tokens = {}
     uid_for = {
         "super_admin": "super-admin-001",
-        "caan_smd": "caan-smd-001",
-        "airline_admin": "sm-sita-air-001",
+        "STATE_SMD": "caan-smd-001",
+        "TENANT_ADMIN": "sm-sita-air-001",
     }
     claims_for = {
         "super_admin": {"role": "SUPER_ADMIN", "tenant_id": None},
-        "caan_smd": {"role": "CAAN_SMD", "tenant_id": None},
-        "airline_admin": {"role": "AIRLINE_ADMIN", "tenant_id": "sita-air"},
+        "STATE_SMD": {"role": "STATE_SMD", "tenant_id": None},
+        "TENANT_ADMIN": {"role": "TENANT_ADMIN", "tenant_id": "sita-air"},
     }
     for name, uid in uid_for.items():
         try:
@@ -179,7 +179,7 @@ def main():
         "reporter_email": "sal@aviasafesystems.com",
         "reporter_organisation": "Sita Air",
     }
-    r4 = api("POST", "/api/v1/reports/vsr", tokens["airline_admin"], payload, origin=ORIGIN)
+    r4 = api("POST", "/api/v1/reports/vsr", tokens["TENANT_ADMIN"], payload, origin=ORIGIN)
     acao4 = r4.headers.get("access-control-allow-origin", "")
     record("Authenticated POST from allowed origin succeeds", r4.status_code == 201, f"status={r4.status_code}")
     record("Response ACAO echoes allowed origin", acao4 == ORIGIN, f"acao='{acao4}'")
@@ -188,7 +188,7 @@ def main():
         vsr_id = r4.json().get("id", "")
 
     # 1e. Authenticated POST from disallowed origin must be REJECTED by CORS
-    r5 = api("POST", "/api/v1/reports/vsr", tokens["airline_admin"], payload, origin=EVIL_ORIGIN)
+    r5 = api("POST", "/api/v1/reports/vsr", tokens["TENANT_ADMIN"], payload, origin=EVIL_ORIGIN)
     acao5 = r5.headers.get("access-control-allow-origin", "")
     record("Disallowed-origin request gets no ACAO (browser blocks)", acao5 != EVIL_ORIGIN, f"acao='{acao5}'")
 
@@ -207,10 +207,10 @@ def main():
     record("No token on CAAN dashboard rejected", r.status_code in (401, 403), f"status={r.status_code}")
 
     # 2b. Admin endpoints require SUPER_ADMIN (RBAC)
-    r = api("GET", "/api/v1/admin/risk-matrix", tokens["airline_admin"])
-    record("AIRLINE_ADMIN on /admin/risk-matrix (get_safety_manager path) allowed", r.status_code == 200, f"status={r.status_code}")
-    r = api("GET", "/api/v1/admin/risk-matrix", tokens["caan_smd"])
-    record("CAAN_SMD on /admin/risk-matrix allowed", r.status_code == 200, f"status={r.status_code}")
+    r = api("GET", "/api/v1/admin/risk-matrix", tokens["TENANT_ADMIN"])
+    record("TENANT_ADMIN on /admin/risk-matrix (get_safety_manager path) allowed", r.status_code == 200, f"status={r.status_code}")
+    r = api("GET", "/api/v1/admin/risk-matrix", tokens["STATE_SMD"])
+    record("STATE_SMD on /admin/risk-matrix allowed", r.status_code == 200, f"status={r.status_code}")
 
     # 2c. Destructive/seed endpoints gated — no-token probe must be 401/403/404
     for path in ("/api/v1/admin/setup-claims", "/api/v1/admin/seed-demo-data", "/api/v1/admin/provision-airlines"):
@@ -223,10 +223,10 @@ def main():
         record(f"Legacy {path} absent", r.status_code == 404, f"status={r.status_code}")
 
     # 2e. Tenant-scoped reads for airline admin; CAAN cross-tenant read
-    r = api("GET", "/api/v1/hazards/", tokens["airline_admin"])
-    record("AIRLINE_ADMIN hazard list (own tenant)", r.status_code == 200, f"status={r.status_code}, items={len(r.json()) if r.status_code == 200 else '-'}")
-    r = api("GET", "/api/v1/hazards/?tenant_id=sita-air", tokens["caan_smd"])
-    record("CAAN_SMD cross-tenant hazard read", r.status_code == 200, f"status={r.status_code}")
+    r = api("GET", "/api/v1/hazards/", tokens["TENANT_ADMIN"])
+    record("TENANT_ADMIN hazard list (own tenant)", r.status_code == 200, f"status={r.status_code}, items={len(r.json()) if r.status_code == 200 else '-'}")
+    r = api("GET", "/api/v1/hazards/?tenant_id=sita-air", tokens["STATE_SMD"])
+    record("STATE_SMD cross-tenant hazard read", r.status_code == 200, f"status={r.status_code}")
 
     # 2f. Token issuance path (register disabled, verify endpoint exists)
     r = api("POST", "/api/v1/auth/verify", data={"id_token": tokens["super_admin"]})
@@ -236,7 +236,7 @@ def main():
     section("PART 3 — RISK MATRIX ENGINE (canonical 5/9/15 mapping)")
 
     # 3a. Read current risk matrix for sita-air
-    r = api("GET", "/api/v1/admin/risk-matrix", tokens["airline_admin"])
+    r = api("GET", "/api/v1/admin/risk-matrix", tokens["TENANT_ADMIN"])
     record("GET /admin/risk-matrix returns config", r.status_code == 200, f"status={r.status_code}")
     matrix = r.json() if r.status_code == 200 else {}
     thresholds = (matrix.get("thresholds") or {}).get("low_max") is not None
@@ -244,10 +244,10 @@ def main():
 
     # 3b. PUT risk-matrix with a valid config (idempotent, non-destructive to data)
     probe_thresholds = {"low_max": 5, "medium_max": 9, "high_max": 15}
-    r = api("PUT", "/api/v1/admin/risk-matrix", tokens["airline_admin"],
+    r = api("PUT", "/api/v1/admin/risk-matrix", tokens["TENANT_ADMIN"],
             {"thresholds": probe_thresholds, "updated_by": "sm-sita-air-001"})
     record("PUT /admin/risk-matrix succeeds (canonical thresholds)", r.status_code == 200, f"status={r.status_code}")
-    r = api("PUT", "/api/v1/admin/risk-matrix", tokens["airline_admin"],
+    r = api("PUT", "/api/v1/admin/risk-matrix", tokens["TENANT_ADMIN"],
             {"thresholds": {"low_max": 9, "medium_max": 5, "high_max": 15}})
     record("PUT invalid threshold ordering rejected (400)", r.status_code == 400, f"status={r.status_code}")
 
@@ -265,7 +265,7 @@ def main():
         "recommendation": "Schedule friction test",
         "detected_by": "Safety Manager",
     }
-    r = api("POST", "/api/v1/hazards/", tokens["airline_admin"], hazard_payload)
+    r = api("POST", "/api/v1/hazards/", tokens["TENANT_ADMIN"], hazard_payload)
     record("Hazard creation returns 201", r.status_code == 201, f"status={r.status_code}")
     hazard_id = r.json().get("id", "") if r.status_code == 201 else ""
     if r.status_code == 201:
@@ -278,7 +278,7 @@ def main():
 
     # 3d. VSR-created report risk mapping (from PART 1)
     if vsr_id:
-        r = api("GET", "/api/v1/reports/" + vsr_id, tokens["airline_admin"])
+        r = api("GET", "/api/v1/reports/" + vsr_id, tokens["TENANT_ADMIN"])
         if r.status_code == 200:
             rr = r.json()
             record("VSR risk_index canonical (S2×P2=4 -> Low)",
@@ -288,7 +288,7 @@ def main():
             record("VSR risk read-back", False, f"status={r.status_code}")
 
     # 3e. report list includes hazard linkage
-    r = api("GET", "/api/v1/hazards/", tokens["airline_admin"])
+    r = api("GET", "/api/v1/hazards/", tokens["TENANT_ADMIN"])
     if r.status_code == 200:
         ids = [x.get("id") or x.get("hazard_id") for x in r.json()]
         record("New hazard appears in list", hazard_id in ids, f"found={hazard_id in ids}")
@@ -298,7 +298,7 @@ def main():
 
     # 4a. Created objects carry timestamps + audit fields
     if hazard_id:
-        r = api("GET", "/api/v1/hazards/" + hazard_id, tokens["airline_admin"])
+        r = api("GET", "/api/v1/hazards/" + hazard_id, tokens["TENANT_ADMIN"])
         if r.status_code == 200:
             h = r.json()
             record("Hazard persisted with created_at", bool(h.get("created_at")), f"created_at={h.get('created_at')}")
@@ -308,19 +308,19 @@ def main():
 
     # 4b. Update hazard status -> write path (status is a query param)
     if hazard_id:
-        r = api("PATCH", f"/api/v1/hazards/{hazard_id}/status?status=Under%20Review", tokens["airline_admin"])
+        r = api("PATCH", f"/api/v1/hazards/{hazard_id}/status?status=Under%20Review", tokens["TENANT_ADMIN"])
         record("Hazard status update (PATCH) succeeds", r.status_code == 200, f"status={r.status_code}")
         if r.status_code == 200:
-            r2 = api("GET", "/api/v1/hazards/" + hazard_id, tokens["airline_admin"])
+            r2 = api("GET", "/api/v1/hazards/" + hazard_id, tokens["TENANT_ADMIN"])
             got = r2.json().get("status") if r2.status_code == 200 else None
             record("Status change persisted (read-back confirms)", got == "Under Review", f"status={got}")
 
     # 4c. Reporting list reflects tenant data (aggregation reads from sms-db)
-    r = api("GET", "/api/v1/reports/", tokens["airline_admin"])
+    r = api("GET", "/api/v1/reports/", tokens["TENANT_ADMIN"])
     record("Tenant report list (aggregation read)", r.status_code == 200, f"status={r.status_code}")
 
     # 4d. Dashboard overview returns aggregated data (reads persisted records)
-    r = api("GET", "/api/v1/dashboard/overview", tokens["airline_admin"])
+    r = api("GET", "/api/v1/dashboard/overview", tokens["TENANT_ADMIN"])
     record("Dashboard overview endpoint reachable", r.status_code == 200, f"status={r.status_code}")
 
     # ------------------------------------------------------------------

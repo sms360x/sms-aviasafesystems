@@ -143,11 +143,13 @@ def test_non_custodian_roles_denied(monkeypatch):
         svc.save_reporter_contact(rid, tid, {"reporter_name": "Jane"}, None)
         actions = _audit_actions(monkeypatch)
 
-        for role in ("SUPER_ADMIN", "STATE_SMD", "CAAN_SMD", "OFFICER",
-                     "DEPT_ADMIN", "STAFF", "ACCOUNTABLE_EXECUTIVE"):
+        # Step-3: CAAN_SMD is retired (unified on STATE_SMD) and STAFF is merged
+        # into OFFICER, so the distinct non-custodian roles are the five below.
+        for role in ("SUPER_ADMIN", "STATE_SMD", "OFFICER",
+                     "DEPT_ADMIN", "ACCOUNTABLE_EXECUTIVE"):
             assert svc.get_reporter_contact(
                 rid, {"role": role, "tenant_id": slug, "uid": "x"}) is None, role
-        assert actions.count(AUDIT_CONTACT_DENIED) == 7
+        assert actions.count(AUDIT_CONTACT_DENIED) == 5
     finally:
         cleanup(slug, TABLES)
 
@@ -193,7 +195,7 @@ def test_can_view_reporter_identity_is_tenant_custodian_only():
 
     # Non-confidential reports are unprotected.
     assert svc.can_view_reporter_identity(
-        {"is_confidential": False}, {"role": "STAFF"}) is True
+        {"is_confidential": False}, {"role": "OFFICER"}) is True
 
     # SUPER_ADMIN is denied outright (Q5) — no break-glass in 2D.2.
     assert svc.can_view_reporter_identity(
@@ -321,7 +323,7 @@ def _audit_rows_for(report_id):
 
 def test_vsr_anonymous_created_by_is_null():
     """SME Q1/Q2: every VSR is anonymous at the DB layer, even when the
-    submitter is a logged-in STAFF user."""
+    submitter is a logged-in OFFICER user."""
     from app.services.report_service import ReportService
 
     slug = unique_slug("rc-anon")
@@ -338,7 +340,7 @@ def test_vsr_anonymous_created_by_is_null():
                 "reporter_phone": None,
                 "is_anonymous": True,
             },
-            {"uid": "staff-uid", "email": "staff@x.test", "role": "STAFF",
+            {"uid": "staff-uid", "email": "staff@x.test", "role": "OFFICER",
              "tenant_id": slug},
         )
         assert _created_by(stored["id"]) is None
@@ -362,7 +364,7 @@ def test_vsr_identified_created_by_is_still_null():
                 "reporter_name": "Jane Reporter",
                 "reporter_email": "jane@x.com",
             },
-            {"uid": "staff-uid", "email": "staff@x.test", "role": "STAFF",
+            {"uid": "staff-uid", "email": "staff@x.test", "role": "OFFICER",
              "tenant_id": slug},
         )
         assert _created_by(stored["id"]) is None
@@ -416,7 +418,7 @@ def test_vsr_anonymous_no_contact_row():
                 "reporter_email": None,
                 "reporter_phone": None,
             },
-            {"uid": "staff-uid", "email": "staff@x.test", "role": "STAFF",
+            {"uid": "staff-uid", "email": "staff@x.test", "role": "OFFICER",
              "tenant_id": slug},
         )
         assert _contact_row(stored["id"]) is None
@@ -424,8 +426,8 @@ def test_vsr_anonymous_no_contact_row():
         cleanup(slug, TABLES)
 
 
-def test_vsr_staff_can_submit():
-    """A STAFF user can file a VSR (post-office model) via the legacy route."""
+def test_vsr_officer_can_submit():
+    """An OFFICER user can file a VSR (post-office model) via the legacy route."""
     from fastapi.testclient import TestClient
 
     from app.main import app
@@ -435,7 +437,7 @@ def test_vsr_staff_can_submit():
     tid = create_tenant(slug)
     submitter = "staff-" + uuid.uuid4().hex[:8]
     app.dependency_overrides[get_tenant_user] = lambda: {
-        "uid": submitter, "email": f"{submitter}@x.test", "role": "STAFF",
+        "uid": submitter, "email": f"{submitter}@x.test", "role": "OFFICER",
         "tenant_id": slug, "department": "flight_ops",
     }
     try:
@@ -567,7 +569,7 @@ def test_direct_insert_denied_and_definer_allowed():
             async with session_scope() as s:
                 await s.execute(text("SET LOCAL ROLE authenticated"))
                 await s.execute(text(
-                    "select set_config('app.current_role', 'STAFF', true)"))
+                    "select set_config('app.current_role', 'OFFICER', true)"))
                 await s.execute(text(
                     "select set_config('app.current_tenant', :t, true)"), {"t": tid})
                 await s.execute(text(
@@ -586,7 +588,7 @@ def test_direct_insert_denied_and_definer_allowed():
             async with session_scope() as s:
                 await s.execute(text("SET LOCAL ROLE authenticated"))
                 await s.execute(text(
-                    "select set_config('app.current_role', 'STAFF', true)"))
+                    "select set_config('app.current_role', 'OFFICER', true)"))
                 await s.execute(text(
                     "select set_config('app.current_tenant', :t, true)"), {"t": tid})
                 await s.execute(text(

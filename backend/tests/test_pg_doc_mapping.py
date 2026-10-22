@@ -50,7 +50,7 @@ def test_row_to_doc_regulator_id_is_slug():
 
 
 def test_row_to_doc_user_id_is_uid():
-    row = UserProfile(uid="u1", email="a@b.c", role="STAFF", is_developer=True)
+    row = UserProfile(uid="u1", email="a@b.c", role="OFFICER", is_developer=True)
     doc = pg.row_to_doc(row)
     assert doc["id"] == "u1"
     assert doc["is_developer"] is True

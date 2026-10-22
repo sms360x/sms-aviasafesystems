@@ -388,7 +388,7 @@ def gov_env():
                 {"i": factor_id, "t": ids["op"], "e": rca_id})
             await s.execute(text(
                 "INSERT INTO public.invites (id, email, tenant_id, role, code, status) "
-                "VALUES (:i, 'inv@x.com', :t, 'STAFF', :c, 'pending')"),
+                "VALUES (:i, 'inv@x.com', :t, 'OFFICER', :c, 'pending')"),
                 {"i": invite_id, "t": ids["op"], "c": invite_code})
 
     asyncio.run(_setup())

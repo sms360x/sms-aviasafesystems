@@ -190,7 +190,7 @@ def test_mor_route_still_schedules_ai(monkeypatch):
     monkeypatch.setattr("app.services.report_service.analyze_report", lambda n: {})
     monkeypatch.setattr("app.services.report_service.classify_mandatory", lambda n: {})
 
-    app.dependency_overrides[get_tenant_user] = lambda: _user("AIRLINE_ADMIN")
+    app.dependency_overrides[get_tenant_user] = lambda: _user("TENANT_ADMIN")
     try:
         body = {
             "reporter_name": "Jane Reporter",

@@ -3,10 +3,10 @@
    PATH: public/js/team.js
    PURPOSE: Team Management page (public/settings/team.html). Role-aware for the
             delegated admin hierarchy:
-              - TENANT_ADMIN / AIRLINE_ADMIN: full visibility, any applicable
-                department, assignable roles DEPT_ADMIN / SAFETY_OFFICER / STAFF.
+              - TENANT_ADMIN: full visibility, any applicable
+                department, assignable roles DEPT_ADMIN / SAFETY_OFFICER / OFFICER.
               - DEPT_ADMIN: department selector locked to the caller's own
-                department; role locked to STAFF / Employee.
+                department; role locked to OFFICER.
             Uses GET /api/v1/tenants/{tenantId}/users, GET /api/v1/auth/invites
             and POST /api/v1/auth/invite via ApiClient.
    AUTHOR: AviaSAFE Systems
@@ -15,31 +15,27 @@
 (function (global) {
     'use strict';
 
-    var INVITER_ROLES = ['SUPER_ADMIN', 'AIRLINE_ADMIN', 'TENANT_ADMIN', 'DEPT_ADMIN'];
-    var TENANT_WIDE_ROLES = ['SUPER_ADMIN', 'AIRLINE_ADMIN', 'TENANT_ADMIN'];
+    var INVITER_ROLES = ['SUPER_ADMIN', 'TENANT_ADMIN', 'DEPT_ADMIN'];
+    var TENANT_WIDE_ROLES = ['SUPER_ADMIN', 'TENANT_ADMIN'];
 
     var ROLE_LABELS = {
         SUPER_ADMIN: 'Global Administrator',
         TENANT_ADMIN: 'Safety Manager (Tenant Admin)',
-        AIRLINE_ADMIN: 'Safety Manager (Tenant Admin)',
         DEPT_ADMIN: 'Department Admin (HOD)',
         SAFETY_OFFICER: 'Officer',
         OFFICER: 'Officer',
-        STAFF: 'Staff / Employee',
         USER: 'Staff / Employee',
-        CAAN_SMD: 'State Safety Regulator',
+        STATE_SMD: 'State Safety Regulator',
     };
 
     var ROLE_CLASSES = {
         SUPER_ADMIN: 'role-admin',
         TENANT_ADMIN: 'role-admin',
-        AIRLINE_ADMIN: 'role-admin',
         DEPT_ADMIN: 'role-hod',
         SAFETY_OFFICER: 'role-officer',
         OFFICER: 'role-officer',
-        STAFF: 'role-staff',
         USER: 'role-staff',
-        CAAN_SMD: 'role-admin',
+        STATE_SMD: 'role-admin',
     };
 
     function esc(value) {
@@ -116,14 +112,13 @@
         select.innerHTML = '';
         var options;
         if (session.role === 'DEPT_ADMIN') {
-            options = [{ value: 'STAFF', label: 'Staff / Employee' }];
+            options = [{ value: 'OFFICER', label: 'Officer' }];
             select.disabled = true;
         } else {
             options = [
                 { value: 'DEPT_ADMIN', label: 'Department Admin (HOD)' },
                 { value: 'SAFETY_OFFICER', label: 'Officer' },
                 { value: 'OFFICER', label: 'Officer' },
-                { value: 'STAFF', label: 'Staff / Employee' },
             ];
             select.disabled = false;
         }

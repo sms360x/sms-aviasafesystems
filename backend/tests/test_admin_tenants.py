@@ -158,7 +158,7 @@ def test_governance_list_developer_email_200(monkeypatch):
 def test_governance_list_denied_for_tenant_admin(monkeypatch):
     _patch_admin_db(monkeypatch, _FakeDB(_seed_tenants()))
     try:
-        resp = _client(_user("AIRLINE_ADMIN", "safety@acmeair.com", "acme-air")).get(
+        resp = _client(_user("TENANT_ADMIN", "safety@acmeair.com", "acme-air")).get(
             "/api/v1/admin/tenants/governance"
         )
         assert resp.status_code == 403
@@ -232,7 +232,7 @@ def test_patch_status_not_found(monkeypatch):
 def test_patch_status_denied_for_tenant_admin(monkeypatch):
     _patch_admin_db(monkeypatch, _FakeDB(_seed_tenants()))
     try:
-        resp = _client(_user("AIRLINE_ADMIN", "safety@acmeair.com", "acme-air")).patch(
+        resp = _client(_user("TENANT_ADMIN", "safety@acmeair.com", "acme-air")).patch(
             "/api/v1/admin/tenants/acme-air/status", json={"status": "SUSPENDED"}
         )
         assert resp.status_code == 403
@@ -250,7 +250,7 @@ class _Creds:
         self.scheme = "Bearer"
 
 
-def _patch_auth(monkeypatch, db, *, role="AIRLINE_ADMIN", tenant_id="acme-air"):
+def _patch_auth(monkeypatch, db, *, role="TENANT_ADMIN", tenant_id="acme-air"):
     # 2A.5: get_current_user resolves role/tenant via resolve_user_context from
     # the users row. These tests exercise the SUSPENDED-tenant gate, so the
     # resolved context is patched directly; the token decode still runs.
@@ -292,10 +292,10 @@ def test_active_tenant_user_allowed(monkeypatch):
 def test_suspended_check_skipped_for_cross_tenant_roles(monkeypatch):
     db = _FakeDB(_seed_tenants())
     db._stores["tenants"]["acme-air"]["status"] = "SUSPENDED"
-    _patch_auth(monkeypatch, db, role="CAAN_SMD", tenant_id=None)
+    _patch_auth(monkeypatch, db, role="STATE_SMD", tenant_id=None)
 
     user = asyncio.run(get_current_user(_Creds("token")))
-    assert user["role"] == "CAAN_SMD"
+    assert user["role"] == "STATE_SMD"
 
 
 def test_suspended_check_fail_open_on_db_error(monkeypatch):
@@ -305,10 +305,10 @@ def test_suspended_check_fail_open_on_db_error(monkeypatch):
     monkeypatch.setattr(
         "app.middleware.auth.verify_firebase_token",
         lambda token: {"uid": "u-1", "email": "safety@acmeair.com",
-                       "role": "AIRLINE_ADMIN", "tenant_id": "acme-air"},
+                       "role": "TENANT_ADMIN", "tenant_id": "acme-air"},
     )
     monkeypatch.setattr(auth_mod, "resolve_user_context",
-                        lambda email: {"role": "AIRLINE_ADMIN", "tenant_id": "acme-air"})
+                        lambda email: {"role": "TENANT_ADMIN", "tenant_id": "acme-air"})
     monkeypatch.setattr("app.middleware.auth.pg.fetch_by", _boom)
 
     user = asyncio.run(get_current_user(_Creds("token")))

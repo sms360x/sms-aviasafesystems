@@ -510,7 +510,7 @@ def test_admin_routes_403_non_super(monkeypatch):
     _patch_db(monkeypatch)
     # Override the *underlying* get_current_user so get_admin_user's real check
     # runs and rejects a non-SUPER_ADMIN role.
-    app.dependency_overrides[get_current_user] = lambda: _admin_user(role="AIRLINE_ADMIN")
+    app.dependency_overrides[get_current_user] = lambda: _admin_user(role="TENANT_ADMIN")
     try:
         resp = TestClient(app).get("/api/v1/admin/seed/logs")
     finally:

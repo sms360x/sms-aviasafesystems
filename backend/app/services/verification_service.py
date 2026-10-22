@@ -94,7 +94,7 @@ class VerificationService:
         stored["cap_id"] = cap_uuid
         pg.upsert(Verification, "id", doc_data["id"], stored)
 
-        svc_user = {"uid": user["uid"], "role": "AIRLINE_ADMIN", "tenant_id": self.tenant_id}
+        svc_user = {"uid": user["uid"], "role": "TENANT_ADMIN", "tenant_id": self.tenant_id}
 
         if outcome == "Accepted":
             HazardService(self.tenant_id).update_status(hazard_id, "Pending Closure", svc_user)
@@ -214,7 +214,7 @@ class VerificationService:
         return cd
 
     def reopen_hazard(self, hazard_id: str, reason: str, user: dict) -> Optional[dict]:
-        svc_user = {"uid": user["uid"], "role": "AIRLINE_ADMIN", "tenant_id": self.tenant_id}
+        svc_user = {"uid": user["uid"], "role": "TENANT_ADMIN", "tenant_id": self.tenant_id}
         logger.info(f"Hazard {hazard_id} reopened: {reason}")
         updated = HazardService(self.tenant_id).update_status(hazard_id, "Reopened", svc_user)
         haz_row = self._resolve_hazard(hazard_id)

@@ -163,7 +163,7 @@ class _CollectionGroupMock:
     """Collection group mock that traverses tenant sub-collections.
 
     This makes cross-tenant (collection_group) queries observable in tests so
-    the CAAN_SMD / SUPER_ADMIN cross-tenant paths are actually exercised.
+    the STATE_SMD / SUPER_ADMIN cross-tenant paths are actually exercised.
     """
     def __init__(self, collection_name: str, client: MockFirestoreClient):
         self._name = collection_name
@@ -220,12 +220,12 @@ def mock_firebase_and_gemini(monkeypatch):
 
     def fake_verify(token: str) -> Dict[str, Any]:
         claims = {"role": "USER", "tenant_id": None}
-        if token == "AIRLINE_ADMIN_TOKEN":
-            claims = {"role": "AIRLINE_ADMIN", "tenant_id": "test_airline"}
+        if token == "TENANT_ADMIN_TOKEN":
+            claims = {"role": "TENANT_ADMIN", "tenant_id": "test_airline"}
         elif token == "SUPER_ADMIN_TOKEN":
             claims = {"role": "SUPER_ADMIN", "tenant_id": None}
-        elif token == "CAAN_SMD_TOKEN":
-            claims = {"role": "CAAN_SMD", "tenant_id": None}
+        elif token == "STATE_SMD_TOKEN":
+            claims = {"role": "STATE_SMD", "tenant_id": None}
         elif token == "USER_TOKEN":
             claims = {"role": "USER", "tenant_id": None}
         return {"uid": "mock_user", "email": "test@aviasafe.com", **claims}
@@ -261,7 +261,7 @@ def mock_firebase_and_gemini(monkeypatch):
 def _cleanup_postgres_lifecycle_rows():
     """Remove reports + auto-created hazards persisted to Postgres per tenant."""
     yield
-    # NOTE: auth normalises the AIRLINE_ADMIN_TOKEN tenant claim 'test_airline'
+    # NOTE: auth normalises the TENANT_ADMIN_TOKEN tenant claim 'test_airline'
     # to the hyphenated slug 'test-airline', so the app persists every row
     # under that slug's uuid. Clean up BOTH slopes so leftover CAN/CAP stubs
     # (e.g. the auto-created 'haz-sra-1' hazard) never collide on re-runs.
@@ -307,7 +307,7 @@ class TestSubmissionAutoCalculation:
             "probability_level": 3,
         }
         resp = client.post("/api/v1/reports/", json=body,
-                           headers=_auth_header("AIRLINE_ADMIN_TOKEN"))
+                           headers=_auth_header("TENANT_ADMIN_TOKEN"))
 
         assert resp.status_code == 201, f"Expected 201, got {resp.status_code}: {resp.text}"
         data = resp.json()
@@ -330,7 +330,7 @@ class TestSubmissionAutoCalculation:
             "probability_level": 5,
         }
         resp = client.post("/api/v1/reports/", json=body,
-                           headers=_auth_header("AIRLINE_ADMIN_TOKEN"))
+                           headers=_auth_header("TENANT_ADMIN_TOKEN"))
         assert resp.status_code == 201, f"Expected 201, got {resp.status_code}: {resp.text}"
         data = resp.json()
         assert data["risk_index"] == 25, f"Expected risk_index=25 (5×5), got {data.get('risk_index')}"
@@ -346,7 +346,7 @@ class TestSubmissionAutoCalculation:
             "probability_level": 1,
         }
         resp = client.post("/api/v1/reports/", json=body,
-                           headers=_auth_header("AIRLINE_ADMIN_TOKEN"))
+                           headers=_auth_header("TENANT_ADMIN_TOKEN"))
         assert resp.status_code == 201, f"Expected 201, got {resp.status_code}: {resp.text}"
         data = resp.json()
         assert data["severity_level"] == 3, f"Expected auto-severity 3, got {data.get('severity_level')}"
@@ -361,7 +361,7 @@ class TestSubmissionAutoCalculation:
             "report_type": "voluntary",
         }
         resp = client.post("/api/v1/reports/", json=body,
-                           headers=_auth_header("AIRLINE_ADMIN_TOKEN"))
+                           headers=_auth_header("TENANT_ADMIN_TOKEN"))
         assert resp.status_code == 201, f"Expected 201, got {resp.status_code}: {resp.text}"
         data = resp.json()
         assert data.get("severity_level") == 3, f"Expected auto-severity 3, got {data.get('severity_level')}"
@@ -376,7 +376,7 @@ class TestSubmissionAutoCalculation:
             "severity_level": 6,
         }
         resp = client.post("/api/v1/reports/", json=body,
-                           headers=_auth_header("AIRLINE_ADMIN_TOKEN"))
+                           headers=_auth_header("TENANT_ADMIN_TOKEN"))
         assert resp.status_code == 422, f"Expected 422 for invalid severity, got {resp.status_code}"
 
     def test_submission_with_invalid_probability_rejected(self, client):
@@ -388,7 +388,7 @@ class TestSubmissionAutoCalculation:
             "probability_level": 0,
         }
         resp = client.post("/api/v1/reports/", json=body,
-                           headers=_auth_header("AIRLINE_ADMIN_TOKEN"))
+                           headers=_auth_header("TENANT_ADMIN_TOKEN"))
         assert resp.status_code == 422, f"Expected 422 for invalid probability, got {resp.status_code}"
 
 
@@ -408,7 +408,7 @@ class TestAiGroundingAndSuggestion:
             "report_type": "mandatory",
         }
         resp = client.post("/api/v1/reports/", json=body,
-                           headers=_auth_header("AIRLINE_ADMIN_TOKEN"))
+                           headers=_auth_header("TENANT_ADMIN_TOKEN"))
         assert resp.status_code == 201
         report = resp.json()
         report_id = report["id"]
@@ -420,7 +420,7 @@ class TestAiGroundingAndSuggestion:
 
         # Retrieve updated report
         resp2 = client.get(f"/api/v1/reports/{report_id}",
-                           headers=_auth_header("AIRLINE_ADMIN_TOKEN"))
+                           headers=_auth_header("TENANT_ADMIN_TOKEN"))
         assert resp2.status_code == 200
         updated = resp2.json()
 
@@ -452,7 +452,7 @@ class TestAiGroundingAndSuggestion:
             "report_type": "mandatory",
         }
         resp = client.post("/api/v1/reports/", json=body,
-                           headers=_auth_header("AIRLINE_ADMIN_TOKEN"))
+                           headers=_auth_header("TENANT_ADMIN_TOKEN"))
         assert resp.status_code == 201
         report = resp.json()
 
@@ -461,7 +461,7 @@ class TestAiGroundingAndSuggestion:
         svc.run_ai_analysis(report["id"], body["narrative"])
 
         resp2 = client.get(f"/api/v1/reports/{report['id']}",
-                           headers=_auth_header("AIRLINE_ADMIN_TOKEN"))
+                           headers=_auth_header("TENANT_ADMIN_TOKEN"))
         updated = resp2.json()
         ai = updated["ai_suggested_assessment"]
 
@@ -479,7 +479,7 @@ class TestAiGroundingAndSuggestion:
 class TestSafetyManagerOverride:
     """Verify Safety Manager can override assessment and RBAC is enforced."""
 
-    def test_airline_admin_can_confirm_risk_assessment(self, client):
+    def test_tenant_admin_can_confirm_risk_assessment(self, client):
         body = {
             "narrative": "Report requiring Safety Manager assessment confirmation.",
             "location": "KTM",
@@ -489,7 +489,7 @@ class TestSafetyManagerOverride:
             "probability_level": 3,
         }
         resp = client.post("/api/v1/reports/", json=body,
-                           headers=_auth_header("AIRLINE_ADMIN_TOKEN"))
+                           headers=_auth_header("TENANT_ADMIN_TOKEN"))
         assert resp.status_code == 201
         report = resp.json()
         assert report["severity_level"] == 3
@@ -502,7 +502,7 @@ class TestSafetyManagerOverride:
         override = {"severity": 4, "probability": 4, "notes": "Safety Manager override: actual severity higher based on flight data analysis."}
         resp2 = client.put(f"/api/v1/reports/{report_id}/risk-assessment",
                            json=override,
-                           headers=_auth_header("AIRLINE_ADMIN_TOKEN"))
+                           headers=_auth_header("TENANT_ADMIN_TOKEN"))
 
         assert resp2.status_code == 200, f"Expected 200, got {resp2.status_code}: {resp2.text}"
         updated = resp2.json()
@@ -532,7 +532,7 @@ class TestSafetyManagerOverride:
             "report_type": "voluntary",
         }
         resp = client.post("/api/v1/reports/", json=body,
-                           headers=_auth_header("AIRLINE_ADMIN_TOKEN"))
+                           headers=_auth_header("TENANT_ADMIN_TOKEN"))
         assert resp.status_code == 201
         report_id = resp.json()["id"]
 
@@ -544,8 +544,8 @@ class TestSafetyManagerOverride:
 
         assert resp2.status_code == 403, f"Expected 403 for USER role, got {resp2.status_code}: {resp2.text}"
 
-    def test_caan_smd_can_confirm_risk_assessment(self, client):
-        """CAAN_SMD should have same authority as AIRLINE_ADMIN."""
+    def test_state_smd_can_confirm_risk_assessment(self, client):
+        """STATE_SMD should have same authority as TENANT_ADMIN."""
         body = {
             "narrative": "Report assessed by regulator.",
             "location": "KTM",
@@ -553,15 +553,15 @@ class TestSafetyManagerOverride:
             "report_type": "mandatory",
         }
         resp = client.post("/api/v1/reports/", json=body,
-                           headers=_auth_header("AIRLINE_ADMIN_TOKEN"))
+                           headers=_auth_header("TENANT_ADMIN_TOKEN"))
         assert resp.status_code == 201
         report_id = resp.json()["id"]
 
         override = {"severity": 5, "probability": 3}
         resp2 = client.put(f"/api/v1/reports/{report_id}/risk-assessment",
                            json=override,
-                           headers=_auth_header("CAAN_SMD_TOKEN"))
-        assert resp2.status_code == 200, f"Expected 200 for CAAN_SMD, got {resp2.status_code}: {resp2.text}"
+                           headers=_auth_header("STATE_SMD_TOKEN"))
+        assert resp2.status_code == 200, f"Expected 200 for STATE_SMD, got {resp2.status_code}: {resp2.text}"
         data = resp2.json()
         assert data["risk_index"] == 15, f"Expected 15 (5×3), got {data.get('risk_index')}"
         assert data["risk_level"] == "High", f"Expected High, got {data.get('risk_level')}"
@@ -575,7 +575,7 @@ class TestSafetyManagerOverride:
             "report_type": "voluntary",
         }
         resp = client.post("/api/v1/reports/", json=body,
-                           headers=_auth_header("AIRLINE_ADMIN_TOKEN"))
+                           headers=_auth_header("TENANT_ADMIN_TOKEN"))
         assert resp.status_code == 201
         report_id = resp.json()["id"]
 
@@ -606,7 +606,7 @@ class TestFullLifecycle:
             "probability_level": 3,
         }
         resp = client.post("/api/v1/reports/", json=body,
-                           headers=_auth_header("AIRLINE_ADMIN_TOKEN"))
+                           headers=_auth_header("TENANT_ADMIN_TOKEN"))
         assert resp.status_code == 201
         report = resp.json()
         assert report["risk_index"] == 9
@@ -619,7 +619,7 @@ class TestFullLifecycle:
         svc.run_ai_analysis(report_id, body["narrative"])
 
         resp2 = client.get(f"/api/v1/reports/{report_id}",
-                           headers=_auth_header("AIRLINE_ADMIN_TOKEN"))
+                           headers=_auth_header("TENANT_ADMIN_TOKEN"))
         updated = resp2.json()
         ai = updated["ai_suggested_assessment"]
         assert ai["suggested_severity"] == 4
@@ -636,7 +636,7 @@ class TestFullLifecycle:
         }
         resp3 = client.put(f"/api/v1/reports/{report_id}/risk-assessment",
                            json=override,
-                           headers=_auth_header("AIRLINE_ADMIN_TOKEN"))
+                           headers=_auth_header("TENANT_ADMIN_TOKEN"))
         assert resp3.status_code == 200
         final = resp3.json()
 
@@ -686,20 +686,20 @@ class TestCrossTenantAndAuthorization:
             "report_type": "mandatory",
         }
         resp = client.post("/api/v1/reports/", json=body,
-                           headers=_auth_header("AIRLINE_ADMIN_TOKEN"))
+                           headers=_auth_header("TENANT_ADMIN_TOKEN"))
         assert resp.status_code == 201, resp.text
         report_id = resp.json()["id"]
 
         override = {"severity": 4, "probability": 2, "notes": "CAAN cross-tenant confirmation."}
         resp2 = client.put(f"/api/v1/reports/{report_id}/risk-assessment",
                            json=override,
-                           headers=_auth_header("CAAN_SMD_TOKEN"))
+                           headers=_auth_header("STATE_SMD_TOKEN"))
         assert resp2.status_code == 200, f"Expected 200, got {resp2.status_code}: {resp2.text}"
         assert resp2.json()["risk_index"] == 8, resp2.text
 
         # The owner airline must now see the CAAN-confirmed assessment
         resp3 = client.get(f"/api/v1/reports/{report_id}",
-                           headers=_auth_header("AIRLINE_ADMIN_TOKEN"))
+                           headers=_auth_header("TENANT_ADMIN_TOKEN"))
         assert resp3.status_code == 200, resp3.text
         confirmed = resp3.json()
         assert confirmed["risk_assessment"]["severity"] == 4, resp3.text
@@ -709,7 +709,7 @@ class TestCrossTenantAndAuthorization:
         """CAAN (no tenant claim) can list reports across tenants (regression for
         the 403 thrown when GET /api/v1/reports used get_tenant_user)."""
         resp = client.get("/api/v1/reports/",
-                          headers=_auth_header("CAAN_SMD_TOKEN"))
+                          headers=_auth_header("STATE_SMD_TOKEN"))
         assert resp.status_code == 200, f"Expected 200, got {resp.status_code}: {resp.text}"
 
     def test_caan_reads_can_caps_across_tenants(self, client):
@@ -725,7 +725,7 @@ class TestCrossTenantAndAuthorization:
             "priority": "High",
         }
         resp = client.post("/api/v1/cans/", json=can_body,
-                           headers=_auth_header("AIRLINE_ADMIN_TOKEN"))
+                           headers=_auth_header("TENANT_ADMIN_TOKEN"))
         assert resp.status_code == 201, f"Expected 201, got {resp.status_code}: {resp.text}"
         can_id = resp.json()["id"]
 
@@ -737,17 +737,17 @@ class TestCrossTenantAndAuthorization:
             "target_completion_date": "2026-12-31T00:00:00Z",
         }
         resp2 = client.post(f"/api/v1/cans/{can_id}/caps", json=cap_body,
-                            headers=_auth_header("AIRLINE_ADMIN_TOKEN"))
+                            headers=_auth_header("TENANT_ADMIN_TOKEN"))
         assert resp2.status_code == 201, f"Expected 201, got {resp2.status_code}: {resp2.text}"
         cap_id = resp2.json()["id"]
 
         resp3 = client.get(f"/api/v1/cans/{can_id}",
-                           headers=_auth_header("CAAN_SMD_TOKEN"))
+                           headers=_auth_header("STATE_SMD_TOKEN"))
         assert resp3.status_code == 200, resp3.text
         assert resp3.json().get("latest_cap") is not None, "latest_cap should be present for CAAN"
 
         resp4 = client.get(f"/api/v1/cans/{can_id}/caps",
-                           headers=_auth_header("CAAN_SMD_TOKEN"))
+                           headers=_auth_header("STATE_SMD_TOKEN"))
         assert resp4.status_code == 200, resp4.text
         caps = resp4.json()
         assert any(c["id"] == cap_id for c in caps), f"CAAN should see the CAP, got {caps}"
@@ -765,7 +765,7 @@ class TestCrossTenantAndAuthorization:
             "priority": "High",
         }
         resp = client.post("/api/v1/cans/", json=body,
-                           headers=_auth_header("CAAN_SMD_TOKEN"))
+                           headers=_auth_header("STATE_SMD_TOKEN"))
         assert resp.status_code == 403, f"Expected 403, got {resp.status_code}: {resp.text}"
 
     def test_user_cannot_override_tenant_for_report(self, client):
@@ -778,12 +778,12 @@ class TestCrossTenantAndAuthorization:
         # USER has no tenant claim and must not be able to reach another tenant
         assert resp.status_code == 403, f"Expected 403, got {resp.status_code}: {resp.text}"
 
-    def test_airline_admin_still_generates_own_tenant_report(self, client):
-        """AIRLINE_ADMIN report generation for their own tenant still works."""
+    def test_tenant_admin_still_generates_own_tenant_report(self, client):
+        """TENANT_ADMIN report generation for their own tenant still works."""
         resp = client.post(
             "/api/v1/reporting/quarterly?year=2026&quarter=1",
             json={},
-            headers=_auth_header("AIRLINE_ADMIN_TOKEN"),
+            headers=_auth_header("TENANT_ADMIN_TOKEN"),
         )
         assert resp.status_code == 201, f"Expected 201, got {resp.status_code}: {resp.text}"
         data = resp.json()
@@ -794,7 +794,7 @@ class TestCrossTenantAndAuthorization:
         resp = client.post(
             "/api/v1/reporting/quarterly?year=2026&quarter=1",
             json={},
-            headers=_auth_header("CAAN_SMD_TOKEN"),
+            headers=_auth_header("STATE_SMD_TOKEN"),
         )
         assert resp.status_code == 201, f"Expected 201, got {resp.status_code}: {resp.text}"
         data = resp.json()
@@ -807,14 +807,14 @@ class TestCrossTenantAndAuthorization:
         gen = client.post(
             "/api/v1/reporting/quarterly?year=2026&quarter=2",
             json={},
-            headers=_auth_header("CAAN_SMD_TOKEN"),
+            headers=_auth_header("STATE_SMD_TOKEN"),
         )
         assert gen.status_code == 201, gen.text
         report_id = gen.json()["id"]
 
         exp = client.get(
             f"/api/v1/reporting/quarterly/{report_id}/export",
-            headers=_auth_header("CAAN_SMD_TOKEN"),
+            headers=_auth_header("STATE_SMD_TOKEN"),
         )
         assert exp.status_code == 200, exp.text
         content_type = exp.headers.get("content-type", "")
@@ -859,7 +859,7 @@ class TestSraAndFishboneIntegration:
             },
         }
         body.update(overrides)
-        return client.post("/api/v1/cans/", json=body, headers=_auth_header("AIRLINE_ADMIN_TOKEN"))
+        return client.post("/api/v1/cans/", json=body, headers=_auth_header("TENANT_ADMIN_TOKEN"))
 
     def test_can_issue_persists_structured_initial_sra(self, client):
         resp = self._create_can(client)
@@ -934,7 +934,7 @@ class TestSraAndFishboneIntegration:
                 {"id": "ai_1", "description": "Replace master cylinder seals", "root_cause_id": "rc_1", "owner": "Maint Lead", "target_date": "2026-12-20"},
             ],
         }
-        resp = client.post(f"/api/v1/cans/{can_id}/caps", json=cap_body, headers=_auth_header("AIRLINE_ADMIN_TOKEN"))
+        resp = client.post(f"/api/v1/cans/{can_id}/caps", json=cap_body, headers=_auth_header("TENANT_ADMIN_TOKEN"))
         assert resp.status_code == 201, resp.text
         cap = resp.json()
 
@@ -961,7 +961,7 @@ class TestSraAndFishboneIntegration:
             "timeline": "7 days",
             "target_completion_date": "2026-12-31T00:00:00Z",
         }
-        resp = client.post(f"/api/v1/cans/{can_id}/caps", json=cap_body, headers=_auth_header("AIRLINE_ADMIN_TOKEN"))
+        resp = client.post(f"/api/v1/cans/{can_id}/caps", json=cap_body, headers=_auth_header("TENANT_ADMIN_TOKEN"))
         assert resp.status_code == 201, resp.text
         cap = resp.json()
         assert cap.get("root_causes") is None
@@ -983,7 +983,7 @@ class TestSraAndFishboneIntegration:
                 "residual_probability": 3,
                 "residual_sra": {"severity": 3, "probability": 3, "risk_index": 9, "risk_level": "High", "risk_outcome": "Tolerable"},
             },
-            headers=_auth_header("AIRLINE_ADMIN_TOKEN"),
+            headers=_auth_header("TENANT_ADMIN_TOKEN"),
         )
         cap_id = cap_resp.json()["id"]
 
@@ -995,7 +995,7 @@ class TestSraAndFishboneIntegration:
             "residual_probability": 2,
             "residual_sra": {"severity": 2, "probability": 2, "risk_index": 4, "risk_level": "Low", "risk_outcome": "Acceptable"},
         }
-        resp = client.patch(f"/api/v1/cans/caps/{cap_id}/review", json=review, headers=_auth_header("AIRLINE_ADMIN_TOKEN"))
+        resp = client.patch(f"/api/v1/cans/caps/{cap_id}/review", json=review, headers=_auth_header("TENANT_ADMIN_TOKEN"))
         assert resp.status_code == 200, resp.text
         cap = resp.json()
         assert cap["status"] == "Completed"

@@ -190,7 +190,7 @@
         badge.textContent = completed ? 'COMPLETED' : 'DRAFT';
         badge.className = 'status-badge ' + (completed ? 'badge-completed' : 'badge-draft');
 
-        // Cross-tenant (CAAN_SMD / SUPER_ADMIN) target-operator selector.
+        // Cross-tenant (STATE_SMD / SUPER_ADMIN) target-operator selector.
         var targetWrap = $('targetTenantWrap');
         if (targetWrap) {
             targetWrap.style.display = state.isAdmin && !state.user.tenantId ? 'block' : 'none';
@@ -658,7 +658,7 @@
 
         var role = String(state.user.role || '').toLowerCase();
         var email = String(state.user.email || '').toLowerCase();
-        state.isAdmin = ['airline_admin', 'tenant_admin', 'caan_smd', 'super_admin', 'safety'].indexOf(role) !== -1 ||
+        state.isAdmin = ['tenant_admin', 'state_smd', 'super_admin', 'safety'].indexOf(role) !== -1 ||
             email.indexOf('safety') === 0;
 
         if (!state.isAdmin) {

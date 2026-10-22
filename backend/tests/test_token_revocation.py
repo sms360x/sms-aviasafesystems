@@ -35,7 +35,7 @@ PROTECTED_URL = "/api/v1/nhrc/mapping-rules"
 VALID_CLAIMS = {
     "uid": "u-tok",
     "email": "smd@caanepal.gov.np",
-    "role": "CAAN_SMD",
+    "role": "STATE_SMD",
     "tenant_id": None,
 }
 

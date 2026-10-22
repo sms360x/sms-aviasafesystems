@@ -69,7 +69,7 @@ def test_onboard_with_wrong_beta_key_returns_403(monkeypatch):
 
 def test_onboard_with_correct_beta_key_but_no_admin_role_returns_403(monkeypatch):
     monkeypatch.setattr(settings, "BETA_ACCESS_KEY", BETA_KEY)
-    app.dependency_overrides[get_current_user] = lambda: _admin_user(role="AIRLINE_ADMIN")
+    app.dependency_overrides[get_current_user] = lambda: _admin_user(role="TENANT_ADMIN")
     try:
         resp = TestClient(app).post(ENDPOINT, json=_body())
     finally:

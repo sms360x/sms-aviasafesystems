@@ -12,11 +12,11 @@ function safeArray(data) {
 // the header banner subtitle, below the tenant header title. The user's email
 // stays visible only in the top-right user menu.
 function getDepartmentDisplayName(user) {
-    if (user.role === 'CAAN_SMD') return 'State Aviation Safety Oversight';
+    if (user.role === 'STATE_SMD') return 'State Aviation Safety Oversight';
     if (user.department === 'CAMO' || user.role === 'CAMO') return 'CAMO Department';
     if (user.department === 'Part-145' || user.role === '145') return 'Part-145 Maintenance Department';
     if (user.department === 'Flight Operations' || user.role === 'ops') return 'Flight Operations Department';
-    return 'Corporate Safety Department'; // Default for safety / AIRLINE_ADMIN
+    return 'Corporate Safety Department'; // Default for safety / TENANT_ADMIN
 }
 
 function waitForFirebase() {
@@ -88,7 +88,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     window.currentTenantSlug = currentTenantSlug;
     window.currentTenantName = currentTenantSlug ? currentTenantSlug.toUpperCase() : null;
 
-    if (role !== 'AIRLINE_ADMIN' && role !== 'TENANT_ADMIN' && role !== 'SAFETY_OFFICER' && role !== 'OFFICER' && role !== 'CAAN_SMD' && role !== 'SUPER_ADMIN') {
+    if (role !== 'TENANT_ADMIN' && role !== 'SAFETY_OFFICER' && role !== 'OFFICER' && role !== 'STATE_SMD' && role !== 'SUPER_ADMIN') {
         showError('Unauthorized role. Contact your administrator.');
         return;
     }

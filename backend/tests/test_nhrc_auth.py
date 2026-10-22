@@ -6,7 +6,7 @@ read per-tenant or State-aggregated KPIs cross-tenant. Now:
   * Every route requires a valid Firebase ID token (Depends(get_current_user)).
   * GET /nhrc/tenant/{tenant_id}/kpis additionally requires the caller's
     tenant_id to match {tenant_id} unless the role is cross-tenant
-    (CAAN_SMD / SUPER_ADMIN) — shared require_tenant_access helper.
+    (STATE_SMD / SUPER_ADMIN) — shared require_tenant_access helper.
   * GET /nhrc/state/kpis is a State aggregate and requires the CAAN role
     (Depends(get_caan_user)).
 
@@ -41,7 +41,7 @@ NHRC_URLS = [
 # Helpers
 # ---------------------------------------------------------------------------
 
-def _airline_user(role="AIRLINE_ADMIN", tenant_id="fixedwing"):
+def _airline_user(role="TENANT_ADMIN", tenant_id="fixedwing"):
     return {
         "uid": "u-fw",
         "email": "safety@fixedwing.com.np",
@@ -56,10 +56,10 @@ def _caan_user():
     return {
         "uid": "u-caan",
         "email": "smd@caanepal.gov.np",
-        "role": "CAAN_SMD",
+        "role": "STATE_SMD",
         "tenant_id": None,
         "department": None,
-        "claims": {"role": "CAAN_SMD", "tenant_id": None},
+        "claims": {"role": "STATE_SMD", "tenant_id": None},
     }
 
 
@@ -143,7 +143,7 @@ def test_tenant_kpis_allow_super_admin_any_tenant(monkeypatch):
 
 
 # ---------------------------------------------------------------------------
-# GET /state/kpis — CAAN role only (state-level aggregate)
+# GET /state/kpis — STATE_SMD role only (state-level aggregate)
 # ---------------------------------------------------------------------------
 
 def test_state_kpis_reject_airline_user(monkeypatch):
@@ -154,7 +154,7 @@ def test_state_kpis_reject_airline_user(monkeypatch):
     finally:
         app.dependency_overrides.clear()
     assert resp.status_code == 403
-    assert "CAAN" in resp.json()["detail"]
+    assert "STATE_SMD" in resp.json()["detail"]
 
 
 def test_state_kpis_allow_caan_user(monkeypatch):

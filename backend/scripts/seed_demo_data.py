@@ -306,7 +306,7 @@ def main():
                   "saurya-airlines": "saurya.com.np"}[slug]
         row = pg.fetch_by(UserProfile, "email", f"safety@{domain}")
         if row is None or row.get("role") not in (
-                "TENANT_ADMIN", "AIRLINE_ADMIN"):
+                "TENANT_ADMIN"):
             raise RuntimeError(f"no safety user for {slug}")
         return {"uid": row["uid"], "email": row["email"],
                 "role": "TENANT_ADMIN", "tenant_id": slug}

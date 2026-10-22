@@ -16,7 +16,7 @@ def _user(role="TENANT_ADMIN", tenant_id="air1"):
 
 
 def test_meeting_routes_require_safety_manager():
-    app.dependency_overrides[get_current_user] = lambda: _user(role="STAFF")
+    app.dependency_overrides[get_current_user] = lambda: _user(role="OFFICER")
     try:
         assert client.get("/api/v1/sag/meetings").status_code == 403
         assert client.get("/api/v1/srb/meetings").status_code == 403

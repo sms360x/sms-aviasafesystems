@@ -167,12 +167,13 @@ firebase.auth().onAuthStateChanged(async function(user) {
         myEmail = user.email;
         myDepartment = (tokenResult.claims && tokenResult.claims.department) || '';
         const myRole = (tokenResult.claims && tokenResult.claims.role) || '';
-        // Role-conditional header actions: department personas (DEPT_ADMIN +
-        // STAFF, same nav and scope) work on the department register and
-        // submit MOR only via /report/mor.html; everyone else uses the
-        // unified register. Submit MOR stays department-only.
+        // Role-conditional header actions: department personas (DEPT_ADMIN,
+        // plus OFFICER which absorbed the retired STAFF role) work on the
+        // department register and submit MOR only via /report/mor.html;
+        // everyone else uses the unified register. Submit MOR stays
+        // department-only.
         const repBtn = document.getElementById('submitReportBtn');
-        if (repBtn && (myRole === 'DEPT_ADMIN' || myRole === 'STAFF')) repBtn.style.display = '';
+        if (repBtn && (myRole === 'DEPT_ADMIN' || myRole === 'OFFICER')) repBtn.style.display = '';
         const t = (tokenResult.claims && tokenResult.claims.tenant_id) || '';
         if (t && typeof updateShellTenant === 'function') {
             updateShellTenant(t.replace(/-/g, ' ').toUpperCase(), myDepartment || undefined);

@@ -1213,7 +1213,7 @@ class CanCapService:
     def _update_hazard_status(self, hazard_id: str, status: str):
         try:
             service = HazardService(self.tenant_id)
-            user = {"uid": "system", "role": "AIRLINE_ADMIN", "tenant_id": self.tenant_id}
+            user = {"uid": "system", "role": "TENANT_ADMIN", "tenant_id": self.tenant_id}
             service.update_status(hazard_id, status, user)
             logger.info(f"Hazard {hazard_id} status updated to {status} via CAN/CAP")
         except Exception as e:

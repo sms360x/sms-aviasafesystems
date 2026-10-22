@@ -1,5 +1,5 @@
 // k6 scenario: 10 concurrent CAAN users viewing aggregated cross-tenant dashboards.
-// Requires a CAAN_SMD (or SUPER_ADMIN) Firebase ID token.
+// Requires a STATE_SMD (or SUPER_ADMIN) Firebase ID token.
 //
 // Run:
 //   LOADTEST_TOKEN=$(node load-tests/get-token.mjs caan@example.com <password>)

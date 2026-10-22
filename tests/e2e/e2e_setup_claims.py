@@ -13,9 +13,9 @@ payload = {
     'setup_key': SETUP_KEY,
     'users': [
         {'email': 'admin@aviasafesystems.com', 'role': 'SUPER_ADMIN'},
-        {'email': 'sal@aviasafesystems.com', 'role': 'AIRLINE_ADMIN', 'tenant_id': 'sita-air'},
-        {'email': 'salsafety@aviasafesystems.com', 'role': 'AIRLINE_ADMIN', 'tenant_id': 'sita-air'},
-        {'email': 'smd@caanepal.gov.np', 'role': 'CAAN_SMD'},
+        {'email': 'sal@aviasafesystems.com', 'role': 'TENANT_ADMIN', 'tenant_id': 'sita-air'},
+        {'email': 'salsafety@aviasafesystems.com', 'role': 'TENANT_ADMIN', 'tenant_id': 'sita-air'},
+        {'email': 'smd@caanepal.gov.np', 'role': 'STATE_SMD'},
     ]
 }
 

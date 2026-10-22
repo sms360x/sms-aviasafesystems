@@ -731,7 +731,7 @@ _MODULE_C_DDL = [
     "OR tenant_id = NULLIF(current_setting('app.current_tenant', true), '')::uuid) "
     "WITH CHECK (current_setting('app.current_role', true) = 'SUPER_ADMIN' "
     "OR tenant_id = NULLIF(current_setting('app.current_tenant', true), '')::uuid);",
-    # P1-27: national NULL-tenant rows visible only to CAAN_SMD.
+    # P1-27: national NULL-tenant rows visible only to STATE_SMD.
     "DROP POLICY IF EXISTS p_module_c_aggregates_national "
     "ON public.module_c_aggregates;",
     "CREATE POLICY p_module_c_aggregates_national "
@@ -866,21 +866,8 @@ _MODULE_C_DDL = [
     "ON caps (source_psoe_finding_id);",
     # -- P2-25 (DP-4): reports confidential reporting class ----------------
     "ALTER TABLE reports ADD COLUMN IF NOT EXISTS is_confidential BOOLEAN NOT NULL DEFAULT false;",
-    "ALTER TABLE reports ADD COLUMN IF NOT EXISTS confidential_custodian_id UUID;",
-    """
-    DO $$
-    BEGIN
-        IF NOT EXISTS (
-            SELECT 1 FROM pg_constraint
-            WHERE conname = 'fk_reports_confidential_custodian'
-        ) THEN
-            ALTER TABLE reports ADD CONSTRAINT fk_reports_confidential_custodian
-                FOREIGN KEY (confidential_custodian_id) REFERENCES users (id);
-        END IF;
-    END $$;
-    """,
     "CREATE INDEX IF NOT EXISTS ix_reports_confidential "
-    "ON reports (is_confidential, confidential_custodian_id);",
+    "ON reports (is_confidential);",
     # -- P1-26: RLS on caan_reports (text tenant_id) ------------------------
     "ALTER TABLE caan_reports ENABLE ROW LEVEL SECURITY;",
     "DROP POLICY IF EXISTS p_caan_reports_tenant_isolation ON public.caan_reports;",

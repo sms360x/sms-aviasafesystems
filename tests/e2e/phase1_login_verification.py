@@ -46,7 +46,7 @@ TESTS = [
         "label": "Fixed-Wing Admin (safety@)",
         "email": "safety@fixedwing.com",
         "password": "safety_fw_2026",
-        "expected_role": "AIRLINE_ADMIN",
+        "expected_role": "TENANT_ADMIN",
         "expected_path": "/safety.html",
     },
     {

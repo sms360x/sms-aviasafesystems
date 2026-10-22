@@ -44,7 +44,7 @@ MINIMAL_TENANT_USERS = [
         "organization": "Yeti Airlines",
         "users": [
             {"prefix": "safety", "email": "safety@yetiairlines.com",
-             "role": "AIRLINE_ADMIN", "full_name": "Yeti Airlines Safety Manager",
+             "role": "TENANT_ADMIN", "full_name": "Yeti Airlines Safety Manager",
              "department": "Safety"},
             {"prefix": "ops", "email": "ops@yetiairlines.com",
              "role": "USER", "full_name": "Yeti Airlines Ops",
@@ -56,7 +56,7 @@ MINIMAL_TENANT_USERS = [
         "organization": "Buddha Air",
         "users": [
             {"prefix": "safety", "email": "safety@buddhaair.com",
-             "role": "AIRLINE_ADMIN", "full_name": "Buddha Air Safety Manager",
+             "role": "TENANT_ADMIN", "full_name": "Buddha Air Safety Manager",
              "department": "Safety"},
             {"prefix": "ops", "email": "ops@buddhaair.com",
              "role": "USER", "full_name": "Buddha Air Ops",
@@ -171,13 +171,13 @@ GENERIC_TENANT_CONFIG = [
 # role_token -> (display role, full_name, department). Used to build each
 # tenant's role-based user set.
 _GENERIC_ROLE_META = {
-    "ae": {"role": "AIRLINE_ADMIN", "full_name": "Accountable Executive", "department": ""},
-    "safety": {"role": "AIRLINE_ADMIN", "full_name": "Safety Manager", "department": "Safety"},
+    "ae": {"role": "TENANT_ADMIN", "full_name": "Accountable Executive", "department": ""},
+    "safety": {"role": "TENANT_ADMIN", "full_name": "Safety Manager", "department": "Safety"},
     "camo": {"role": "DEPT_ADMIN", "full_name": "CAMO Manager", "department": "CAMO"},
     "145": {"role": "DEPT_ADMIN", "full_name": "Part-145 Maintenance Manager", "department": "Part-145"},
     "ops": {"role": "DEPT_ADMIN", "full_name": "Operations Manager", "department": "Flight Operations"},
     "staff": {"role": "USER", "full_name": "Staff Member", "department": ""},
-    "smd": {"role": "CAAN_SMD", "full_name": "State Regulator (SMD)", "department": ""},
+    "smd": {"role": "STATE_SMD", "full_name": "State Regulator (SMD)", "department": ""},
     "regulator": {"role": "regulator", "full_name": "Regulator", "department": ""},
 }
 
@@ -192,7 +192,7 @@ GENERIC_TENANT_USERS = {
 # Additional regulator demo accounts (Module 5 only, anonymized view)
 REGULATOR_DEMO_USERS = [
     {"email": "regulator@demo.com", "password": "Demo@123", "role": "regulator", "tenant_id": "demostate", "full_name": "Regulator Demo", "department": ""},
-    {"email": "smd@caan.gov.np", "password": "Demo@123", "role": "CAAN_SMD", "tenant_id": "demostate", "full_name": "CAAN SMD Demo", "department": ""},
+    {"email": "smd@caan.gov.np", "password": "Demo@123", "role": "STATE_SMD", "tenant_id": "demostate", "full_name": "CAAN SMD Demo", "department": ""},
 ]
 
 

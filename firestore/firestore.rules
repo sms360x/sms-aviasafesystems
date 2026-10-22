@@ -15,11 +15,11 @@ service cloud.firestore {
     }
 
     function isCaanSMD() {
-      return isAuthenticated() && request.auth.token.role == 'CAAN_SMD';
+      return isAuthenticated() && request.auth.token.role == 'STATE_SMD';
     }
 
     function isAirlineAdmin() {
-      return isAuthenticated() && request.auth.token.role == 'AIRLINE_ADMIN';
+      return isAuthenticated() && request.auth.token.role == 'TENANT_ADMIN';
     }
 
     function getTenantId() {
@@ -35,11 +35,11 @@ service cloud.firestore {
     }
 
     // Headway audit alias: state-inspector aggregate READ-ONLY role.
-    // CAAN_SMD is the deployed role token; CAAN_INSPECTOR accepted for
+    // STATE_SMD is the deployed role token; CAAN_INSPECTOR accepted for
     // forward-compatibility with the SSP inspector provisioning spec.
     function isCaanInspector() {
       return isAuthenticated() &&
-        (request.auth.token.role == 'CAAN_SMD' ||
+        (request.auth.token.role == 'STATE_SMD' ||
          request.auth.token.role == 'CAAN_INSPECTOR');
     }
 
@@ -189,7 +189,7 @@ service cloud.firestore {
     }
 
     // ========================================================================
-    // ANALYTICS — CAAN_SMD + SUPER_ADMIN only
+    // ANALYTICS — STATE_SMD + SUPER_ADMIN only
     // ========================================================================
 
     // ========================================================================
@@ -197,7 +197,7 @@ service cloud.firestore {
     // caan-sms-maturity.html) read these subcollections cross-tenant via
     // collectionGroup(). Firestore rules only match collection-group queries
     // when the rule uses the recursive wildcard `{path=**}`. Only State
-    // inspectors (CAAN_SMD / CAAN_INSPECTOR) and SUPER_ADMIN may read across
+    // inspectors (STATE_SMD / CAAN_INSPECTOR) and SUPER_ADMIN may read across
     // tenants, READ-ONLY, for aggregate analytics. Just Culture identity
     // masking (anonymous VSR originators) is applied server-side before
     // any row reaches the inspector dashboards.

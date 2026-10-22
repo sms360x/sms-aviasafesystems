@@ -215,7 +215,7 @@ function isAdministrationAllowed(session) {
     if (email.startsWith('safety')) return true;
     // Super-admin / airline-admin escape hatch.
     if (session.role === 'SUPER_ADMIN') return true;
-    if (session.role === 'AIRLINE_ADMIN' || session.role === 'safety') return true;
+    if (session.role === 'TENANT_ADMIN' || session.role === 'safety') return true;
     return false;
 }
 

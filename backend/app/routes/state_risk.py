@@ -3,7 +3,7 @@
 # PATH: backend/app/routes/state_risk.py
 # VERSION: 1.0.0
 # DATE CREATED: 2026-08-04
-# PURPOSE: State-level risk register endpoints. CAAN_SMD / SUPER_ADMIN view the
+# PURPOSE: State-level risk register endpoints. STATE_SMD / SUPER_ADMIN view the
 #          state risk profile (aggregated across tenants, measured against
 #          SSP targets). SUPER_ADMIN maintains SSP targets.
 # AUTHOR: Ghanshyam Acharya

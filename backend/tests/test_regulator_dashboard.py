@@ -222,7 +222,7 @@ def test_maturity_missing_tenant_skipped(monkeypatch):
 # ============================================================================
 
 def _caan_user():
-    return {"role": "CAAN_SMD", "tenant_id": None, "uid": "caan", "email": "caan@test.np"}
+    return {"role": "STATE_SMD", "tenant_id": None, "uid": "caan", "email": "caan@test.np"}
 
 
 def test_regulator_dashboard_requires_auth():

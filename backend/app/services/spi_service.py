@@ -594,7 +594,7 @@ class SPIService:
 
         if tenant_id is None:
             service = FlightDiversionService(tenant_id="*")
-            user = {"uid": "spi-service", "role": "CAAN_SMD"}
+            user = {"uid": "spi-service", "role": "STATE_SMD"}
         else:
             service = FlightDiversionService(tenant_id=tenant_id)
             user = {"uid": "spi-service", "role": "SPI_SERVICE"}

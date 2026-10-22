@@ -202,8 +202,8 @@ def _patch_user(monkeypatch, user):
 def _admin(tid="tara-air"):
     return {
         "uid": "u1", "email": "officer@taraair.com",
-        "role": "AIRLINE_ADMIN", "tenant_id": tid,
-        "claims": {"role": "AIRLINE_ADMIN", "tenant_id": tid},
+        "role": "TENANT_ADMIN", "tenant_id": tid,
+        "claims": {"role": "TENANT_ADMIN", "tenant_id": tid},
     }
 
 
@@ -540,8 +540,8 @@ def test_put_config_buddha_air_manager_tenant_isolation(monkeypatch):
     _patch_db(monkeypatch, db)
     _patch_user(monkeypatch, {
         "uid": "u-buddha", "email": "safety@buddha-air.com",
-        "role": "AIRLINE_ADMIN", "tenant_id": "buddha-air",
-        "claims": {"role": "AIRLINE_ADMIN", "tenant_id": "buddha-air"},
+        "role": "TENANT_ADMIN", "tenant_id": "buddha-air",
+        "claims": {"role": "TENANT_ADMIN", "tenant_id": "buddha-air"},
     })
 
     # Opens their own survey.

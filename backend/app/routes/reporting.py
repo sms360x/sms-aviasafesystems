@@ -34,7 +34,7 @@ def _get_tenant_name(tenant_id: str) -> Optional[str]:
 def _effective_tenant(user: Dict[str, Any], tenant_id: Optional[str] = None) -> Optional[str]:
     """Resolve the report scope for the authenticated user.
 
-    Cross-tenant roles (CAAN_SMD / SUPER_ADMIN) are state by default and may
+    Cross-tenant roles (STATE_SMD / SUPER_ADMIN) are state by default and may
     only scope to an operator when an explicit ``tenant_id`` query param is given.
     Tenant roles always use their own tenant (query param is already nulled).
     """

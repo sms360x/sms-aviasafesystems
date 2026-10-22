@@ -96,7 +96,7 @@ def test_extended_role_scheme_for_commercial_operators():
 
         ae = next(r for r in EXTENDED_SIMPLIFIED_ROLE_ACCOUNTS if r["token"] == "ae")
         pilot = next(r for r in EXTENDED_SIMPLIFIED_ROLE_ACCOUNTS if r["token"] == "pilot")
-        assert ae["app_role"] == "AIRLINE_ADMIN" and ae["department"] == ""
+        assert ae["app_role"] == "TENANT_ADMIN" and ae["department"] == ""
         assert pilot["app_role"] == "USER" and pilot["department"] == "Line Crew"
 
         assert simplified_email("ae", tid) == f"ae@{domain}"

@@ -7,7 +7,7 @@ services) that:
     to the virtual archetype tenant;
   * non-demo values are IGNORED (caller falls back to their own tenant) —
     cross-operator access stays impossible;
-  * CAAN_SMD may target archetypes explicitly.
+  * STATE_SMD may target archetypes explicitly.
 """
 
 import pytest
@@ -57,7 +57,7 @@ def _clear():
 def test_cans_archetype_scopes_to_virtual_tenant(monkeypatch):
     from app.routes import can_cap as cc
     monkeypatch.setattr(cc, "CanCapService", _CaptureService)
-    _override({"uid": "ae1", "email": AE_EMAIL, "role": "AIRLINE_ADMIN",
+    _override({"uid": "ae1", "email": AE_EMAIL, "role": "TENANT_ADMIN",
                "tenant_id": "buddha-air"})
     try:
         c = TestClient(app)
@@ -72,7 +72,7 @@ def test_cans_archetype_scopes_to_virtual_tenant(monkeypatch):
 def test_cans_non_demo_value_is_ignored_safe_fallback(monkeypatch):
     from app.routes import can_cap as cc
     monkeypatch.setattr(cc, "CanCapService", _CaptureService)
-    _override({"uid": "ae1", "email": AE_EMAIL, "role": "AIRLINE_ADMIN",
+    _override({"uid": "ae1", "email": AE_EMAIL, "role": "TENANT_ADMIN",
                "tenant_id": "buddha-air"})
     try:
         r = TestClient(app).get("/api/v1/cans/",
@@ -89,7 +89,7 @@ def test_cans_non_demo_value_is_ignored_safe_fallback(monkeypatch):
 def test_caps_safe_fallback_ignores_non_demo_value(monkeypatch):
     from app.routes import can_cap as cc
     monkeypatch.setattr(cc, "CanCapService", _CaptureService)
-    _override({"uid": "ae1", "email": AE_EMAIL, "role": "AIRLINE_ADMIN",
+    _override({"uid": "ae1", "email": AE_EMAIL, "role": "TENANT_ADMIN",
                "tenant_id": "buddha-air"})
     try:
         r = TestClient(app).get("/api/v1/cans/caps",
@@ -103,17 +103,44 @@ def test_caps_safe_fallback_ignores_non_demo_value(monkeypatch):
 # ── Hazards ─────────────────────────────────────────────────────────────────
 
 def test_hazards_demo_scope_beats_cross_tenant_role(monkeypatch):
+    """A cross-tenant reader asking for a demo archetype is scoped to the
+    virtual tenant, not to its own tenant.
+
+    Step-3: the legacy ``CAAN_SMD`` literal is retired. The canonical
+    ``STATE_SMD`` regulator is aggregate-only for raw operational lists (see
+    ``AGGREGATE_ONLY_ROLES``), so the surviving cross-tenant raw-list reader
+    is ``SUPER_ADMIN``; the regulator denial is asserted separately below.
+    """
     from app.routes import hazards as hz
     monkeypatch.setattr(hz, "HazardService", _CaptureService)
 
-    caan = {"uid": "smd", "email": "smd@caanepal.gov.np", "role": "CAAN_SMD",
-            "tenant_id": "caan"}
-    _override(caan)
+    cross_tenant = {"uid": "sa", "email": "sa@aviasafesystems.com",
+                     "role": "SUPER_ADMIN", "tenant_id": "caan"}
+    _override(cross_tenant)
     try:
         c = TestClient(app)
         r = c.get("/api/v1/hazards/", params={"archetypeId": "demo-rotary-wing"})
         assert r.status_code == 200
         assert _CaptureService.last_tenant == "demo-rotary-wing"
+    finally:
+        _clear()
+
+
+def test_hazards_demo_scope_denied_for_aggregate_only_regulator(monkeypatch):
+    """Step-3: with CAAN_SMD unified onto STATE_SMD, the state regulator is
+    aggregate-only and is denied the raw hazard list even for a demo
+    archetype (the legacy CAAN_SMD carve-out is gone)."""
+    from app.routes import hazards as hz
+    monkeypatch.setattr(hz, "HazardService", _CaptureService)
+
+    caan = {"uid": "smd", "email": "smd@caanepal.gov.np", "role": "STATE_SMD",
+            "tenant_id": "caan"}
+    _override(caan)
+    try:
+        c = TestClient(app)
+        r = c.get("/api/v1/hazards/", params={"archetypeId": "demo-rotary-wing"})
+        assert r.status_code == 403
+        assert "aggregate-only" in r.json()["detail"]
     finally:
         _clear()
 
@@ -124,7 +151,7 @@ def test_hazards_ae_email_demo_scope_via_department_guard(monkeypatch):
     from app.routes import hazards as hz
     monkeypatch.setattr(hz, "HazardService", _CaptureService)
 
-    ae = {"uid": "ae2", "email": AE_EMAIL, "role": "AIRLINE_ADMIN",
+    ae = {"uid": "ae2", "email": AE_EMAIL, "role": "TENANT_ADMIN",
           "tenant_id": "fishtail-air"}
     _override(ae)
     try:
@@ -181,7 +208,7 @@ def test_psoe_assessments_archetype_scope(monkeypatch):
     monkeypatch.setattr(pg_mod, "fetch_all", fake_fetch_all)
     monkeypatch.setattr(pg_mod, "fetch_by", lambda model, col, value: None)
     _override({"uid": "smd", "email": "smd@caanepal.gov.np",
-               "role": "CAAN_SMD", "tenant_id": "caan"})
+               "role": "STATE_SMD", "tenant_id": "caan"})
     try:
         c = TestClient(app)
         r = c.get("/api/v1/psoe/assessments",
@@ -213,7 +240,7 @@ def test_master_register_archetype_scopes_user(monkeypatch):
     monkeypatch.setattr(
         "app.middleware.auth.get_department_scope", lambda u: None)
 
-    caan = {"uid": "smd", "email": "smd@caanepal.gov.np", "role": "CAAN_SMD",
+    caan = {"uid": "smd", "email": "smd@caanepal.gov.np", "role": "STATE_SMD",
             "tenant_id": "caan"}
     _override(caan)
     try:

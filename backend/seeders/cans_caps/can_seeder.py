@@ -278,7 +278,7 @@ class CanSeeder(BaseSeeder):
         issuer_user = {
             "uid": _uid_for(issuer["email"]),
             "email": issuer["email"],
-            "role": "AIRLINE_ADMIN",
+            "role": "TENANT_ADMIN",
             "tenant_id": tenant_id,
         }
 

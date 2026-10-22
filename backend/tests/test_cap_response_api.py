@@ -11,7 +11,7 @@ from app.services.can_cap_service import CanCapService
 client = TestClient(app)
 
 
-def _user(role="STAFF", tenant_id="air1", email="camo@air1.com"):
+def _user(role="OFFICER", tenant_id="air1", email="camo@air1.com"):
     return {"uid": "u1", "email": email, "role": role, "tenant_id": tenant_id}
 
 

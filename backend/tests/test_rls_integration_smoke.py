@@ -140,10 +140,10 @@ def test_t26_cross_tenant_read_over_http(smoke_env):
     code_a = f"INVA{uuid.uuid4().hex[:8].upper()}"
     code_b = f"INVB{uuid.uuid4().hex[:8].upper()}"
     _owner("INSERT INTO public.invites (id, email, tenant_id, role, code, status) "
-           "VALUES (:i, 'a@x.com', :t, 'STAFF', :c, 'pending')",
+           "VALUES (:i, 'a@x.com', :t, 'OFFICER', :c, 'pending')",
            {"i": uuid.uuid4(), "t": ids["a"], "c": code_a})
     _owner("INSERT INTO public.invites (id, email, tenant_id, role, code, status) "
-           "VALUES (:i, 'b@x.com', :t, 'STAFF', :c, 'pending')",
+           "VALUES (:i, 'b@x.com', :t, 'OFFICER', :c, 'pending')",
            {"i": uuid.uuid4(), "t": ids["b"], "c": code_b})
 
     ra = client.get("/api/v1/auth/invites", headers=_auth(tokens, "a"))

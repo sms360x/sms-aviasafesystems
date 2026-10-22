@@ -36,7 +36,7 @@ const MATRIX = [
 ];
 let fails = 0;
 for (const [email, dest, archetype, company, iata] of MATRIX) {
-    const d = fb.getRoleDestination({ role: 'AIRLINE_ADMIN', email });
+    const d = fb.getRoleDestination({ role: 'TENANT_ADMIN', email });
     const ctx = fb.resolveTenantContext({ email });
     // ICAO hazard references carry no tenant code and must pass through
     // unchanged (only legacy CAN/CAP FW-/RW- prefixes get swapped to IATA).
@@ -52,9 +52,9 @@ for (const [email, dest, archetype, company, iata] of MATRIX) {
 
 // Standard tenants unaffected.
 const std = [
-    [{ role: 'AIRLINE_ADMIN', email: 'safety@buddha-air.com' }, '/safety.html'],
+    [{ role: 'TENANT_ADMIN', email: 'safety@buddha-air.com' }, '/safety.html'],
     [{ role: 'USER', email: '145@fishtailair.com', claims: { department: 'Part-145' } }, '/dashboard/my-tasks.html'],
-    [{ role: 'CAAN_SMD', email: 'smd@caanepal.gov.np' }, '/caan.html'],
+    [{ role: 'STATE_SMD', email: 'smd@caanepal.gov.np' }, '/state-oversight.html'],
 ];
 for (const [u, expected] of std) {
     const d = fb.getRoleDestination(u);

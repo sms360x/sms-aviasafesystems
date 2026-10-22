@@ -170,7 +170,7 @@ def test_filter_department_firestore(monkeypatch):
         MockDoc("h2", {"hazard_id": "H2", "title": "Maint", "status": "Open", "department": "maintenance_145", "created_at": _dt(1)}),
     ]
     haz_coll, can_coll, db = _patch_master(monkeypatch, hazards, [])
-    user = {"role": "AIRLINE_ADMIN", "tenant_id": "t1", "uid": "u1", "email": "a@t1.com"}
+    user = {"role": "TENANT_ADMIN", "tenant_id": "t1", "uid": "u1", "email": "a@t1.com"}
     result = master_register.build_master_register(user, department="flight_ops")
     assert len([r for r in result["rows"] if r["type"]=="Hazard"]) == 1
     assert result["rows"][0]["department"] == "flight_ops"
@@ -183,7 +183,7 @@ def test_filter_assignee_firestore(monkeypatch):
         MockDoc("c2", {"can_reference": "CAN-002", "title": "Other", "status": "Open", "assigned_to_uid": "u9", "department": "", "created_at": _dt(1)}),
     ]
     haz_coll, can_coll, db = _patch_master(monkeypatch, [], cans)
-    user = {"role": "AIRLINE_ADMIN", "tenant_id": "t1", "uid": "u1", "email": "a@t1.com"}
+    user = {"role": "TENANT_ADMIN", "tenant_id": "t1", "uid": "u1", "email": "a@t1.com"}
     result = master_register.build_master_register(user, assigned_to_uid="u2")
     assert len([r for r in result["rows"] if r["type"]=="CAN"]) == 1
     assert result["rows"][0]["reference"] == "CAN-001"
@@ -192,7 +192,7 @@ def test_filter_date_range(monkeypatch):
     old = MockDoc("h1", {"hazard_id": "H1", "title": "Old", "status": "Open", "department": "", "created_at": _dt(10)})
     recent = MockDoc("h2", {"hazard_id": "H2", "title": "Recent", "status": "Open", "department": "", "created_at": _dt(1)})
     haz_coll, can_coll, db = _patch_master(monkeypatch, [old, recent], [])
-    user = {"role": "AIRLINE_ADMIN", "tenant_id": "t1", "uid": "u1", "email": "a@t1.com"}
+    user = {"role": "TENANT_ADMIN", "tenant_id": "t1", "uid": "u1", "email": "a@t1.com"}
     result = master_register.build_master_register(user, days=5)
     refs = {r["reference"] for r in result["rows"]}
     assert "H2" in refs
@@ -201,7 +201,7 @@ def test_filter_date_range(monkeypatch):
 def test_pagination_page_size_default_and_max(monkeypatch):
     hazards = [MockDoc(f"h{i}", {"hazard_id": f"H{i}", "title": f"T{i}", "status": "Open", "department": "", "created_at": _dt(i)}) for i in range(10)]
     haz_coll, can_coll, db = _patch_master(monkeypatch, hazards, [])
-    user = {"role": "AIRLINE_ADMIN", "tenant_id": "t1", "uid": "u1", "email": "a@t1.com"}
+    user = {"role": "TENANT_ADMIN", "tenant_id": "t1", "uid": "u1", "email": "a@t1.com"}
     # default 50
     r1 = master_register.build_master_register(user)
     assert r1["pagination"]["page_size"] == 50
@@ -221,7 +221,7 @@ def test_cursor_pagination_uses_start_after(monkeypatch):
     # Create 5 hazards with distinct dates descending
     hazards = [MockDoc(f"h{i}", {"hazard_id": f"H{i}", "title": f"T{i}", "status": "Open", "department": "", "created_at": _dt(i)}) for i in range(5)]
     haz_coll, can_coll, db = _patch_master(monkeypatch, hazards, [])
-    user = {"role": "AIRLINE_ADMIN", "tenant_id": "t1", "uid": "u1", "email": "a@t1.com"}
+    user = {"role": "TENANT_ADMIN", "tenant_id": "t1", "uid": "u1", "email": "a@t1.com"}
     first = master_register.build_master_register(user, page_size=2)
     assert len(first["rows"]) == 2
     cursor = first["pagination"]["next_cursor"]
@@ -241,19 +241,19 @@ def test_tenant_isolation(monkeypatch):
     hazards_t2 = [MockDoc("h2", {"hazard_id": "H2", "title": "T2", "status": "Open", "department": "", "created_at": _dt(1), "tenant_id": "t2"})]
     # For tenant t1 user, only t1 hazards should be returned via get_tenant_collection (we mock to return only t1)
     haz_coll, can_coll, db = _patch_master(monkeypatch, hazards_t1, [])
-    user = {"role": "AIRLINE_ADMIN", "tenant_id": "t1", "uid": "u1", "email": "a@t1.com"}
+    user = {"role": "TENANT_ADMIN", "tenant_id": "t1", "uid": "u1", "email": "a@t1.com"}
     result = master_register.build_master_register(user)
     assert all(r["reference"] != "H2" for r in result["rows"])
     # Cross-tenant should see both if we mock cross to return both
     cross_coll = MockColl(hazards_t1 + hazards_t2)
     monkeypatch.setattr("app.services.master_register.get_cross_tenant_collection", lambda name: cross_coll)
-    user_caan = {"role": "CAAN_SMD", "tenant_id": None, "uid": "u2", "email": "caan@t.com"}
+    user_caan = {"role": "STATE_SMD", "tenant_id": None, "uid": "u2", "email": "caan@t.com"}
     result2 = master_register.build_master_register(user_caan)
     assert len([r for r in result2["rows"] if r["reference"] in ("H1","H2")]) == 2
 
 def test_empty_results(monkeypatch):
     haz_coll, can_coll, db = _patch_master(monkeypatch, [], [])
-    user = {"role": "AIRLINE_ADMIN", "tenant_id": "t1", "uid": "u1", "email": "a@t1.com"}
+    user = {"role": "TENANT_ADMIN", "tenant_id": "t1", "uid": "u1", "email": "a@t1.com"}
     result = master_register.build_master_register(user)
     assert result["rows"] == []
     assert result["total"] == 0
@@ -273,7 +273,7 @@ def test_cap_batch_no_n_plus_one(monkeypatch):
     can1.reference = MockRef(can1, [cap1])
     can2.reference = MockRef(can2, [cap2])
     haz_coll, can_coll, db = _patch_master(monkeypatch, [], [can1, can2], caps_group=[cap1, cap2])
-    user = {"role": "AIRLINE_ADMIN", "tenant_id": "t1", "uid": "u1", "email": "a@t1.com"}
+    user = {"role": "TENANT_ADMIN", "tenant_id": "t1", "uid": "u1", "email": "a@t1.com"}
     result = master_register.build_master_register(user)
     caps = [r for r in result["rows"] if r["type"]=="CAP"]
     assert len(caps) == 2
@@ -291,7 +291,7 @@ def test_total_equals_sum_by_type_across_all_types(monkeypatch):
         MockDoc("cap3", {"cap_reference": "CAN-1-CAP-2", "action_plan": "F3", "status": "In Progress", "department": "", "created_at": _dt(1), "tenant_id": "t1", "can_id": "c1"}, path="tenants/t1/can_cap/c1/caps/cap3"),
     ]
     haz_coll, can_coll, db = _patch_master(monkeypatch, hazards, cans, caps_group=caps)
-    user = {"role": "AIRLINE_ADMIN", "tenant_id": "t1", "uid": "u1", "email": "a@t1.com"}
+    user = {"role": "TENANT_ADMIN", "tenant_id": "t1", "uid": "u1", "email": "a@t1.com"}
     result = master_register.build_master_register(user, page_size=3)
     assert result["total"] == 8
     assert result["by_type"] == {"Hazard": 3, "CAN": 2, "CAP": 3}
@@ -312,7 +312,7 @@ def test_total_falls_back_when_caps_count_fails(monkeypatch):
         orig_group(name)
         return BrokenCountColl([])
     monkeypatch.setattr(db, "collection_group", broken_group)
-    user = {"role": "AIRLINE_ADMIN", "tenant_id": "t1", "uid": "u1", "email": "a@t1.com"}
+    user = {"role": "TENANT_ADMIN", "tenant_id": "t1", "uid": "u1", "email": "a@t1.com"}
     result = master_register.build_master_register(user)
     # Aggregation must be abandoned entirely (no haz+can+0 masking); fallback keeps invariant
     assert result["total"] == len(result["rows"])
@@ -333,7 +333,7 @@ def test_api_route_pagination(monkeypatch):
         client = TestClient(app)
         # 2A.4-pre: install the authenticated user via the dependency override.
         from app.middleware.auth import get_current_user
-        use_user({"uid": "u1", "email": "a@t1.com", "role": "AIRLINE_ADMIN",
+        use_user({"uid": "u1", "email": "a@t1.com", "role": "TENANT_ADMIN",
                   "tenant_id": "t1", "department": None, "claims": {}})
         try:
             resp = client.get("/api/v1/dashboard/master-register?page_size=25&cursor=abc", headers={"Authorization": "Bearer test"})

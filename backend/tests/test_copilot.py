@@ -120,7 +120,7 @@ def _patch_env(monkeypatch, db=None, groq=True, api_key="gsk_test_key"):
     use_user({
         "uid": "u-admin",
         "email": "admin@yeti.com.np",
-        "role": "AIRLINE_ADMIN",
+        "role": "TENANT_ADMIN",
         "tenant_id": "yeti-airlines",
         "department": "safety",
         "claims": {},
@@ -187,7 +187,7 @@ def test_chat_injects_context_into_groq_payload(monkeypatch):
     messages = kwargs["messages"]
     system_content = messages[0]["content"]
     assert "AIRLINE_FIXED_WING" in system_content
-    assert "AIRLINE_ADMIN" in system_content
+    assert "TENANT_ADMIN" in system_content
     assert "safety" in system_content
     assert "Corrective Action Plans" in system_content
     assert messages[-1]["role"] == "user"
@@ -360,7 +360,7 @@ def test_guest_chat_injects_page_context_into_groq_payload(monkeypatch):
     assert "STRICT PAGE-SCOPE BOUNDARY" in system_content
     assert "register.html" in system_content
     assert "AIRLINE_ROTARY" in system_content or "Helicopter" in system_content or "Rotary" in system_content
-    assert "AIRLINE_ADMIN" not in system_content
+    assert "TENANT_ADMIN" not in system_content
 
 
 def test_guest_chat_requires_valid_message(monkeypatch):

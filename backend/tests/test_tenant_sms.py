@@ -328,10 +328,10 @@ from app.middleware.auth import get_tenant_user
 _FAKE_TENANT_USER = {
     "uid": "uid-tenant-001",
     "email": "safety@fishtail.com.np",
-    "role": "AIRLINE_ADMIN",
+    "role": "TENANT_ADMIN",
     "tenant_id": "fishtail-air",
     "department": None,
-    "claims": {"role": "AIRLINE_ADMIN", "tenant_id": "fishtail-air", "department": None},
+    "claims": {"role": "TENANT_ADMIN", "tenant_id": "fishtail-air", "department": None},
 }
 
 

@@ -165,7 +165,7 @@ async def submit_survey(
         raise HTTPException(status_code=422, detail="tenantId is required")
 
     # An authenticated user with a tenant may only submit to their own tenant
-    # (cross-tenant roles such as CAAN_SMD may submit anywhere).
+    # (cross-tenant roles such as STATE_SMD may submit anywhere).
     if user:
         user_tenant = user.get("tenant_id")
         if user_tenant and user_tenant != tenant_id:

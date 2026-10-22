@@ -21,7 +21,7 @@
 --     * Users whose JWT has no app_metadata.tenant_id (or malformed uuid)
 --       match zero rows -> default deny.
 --     * See the OPTIONAL section at the bottom for cross-tenant regulator
---       access (CAAN_SMD / SUPER_ADMIN).
+--       access (STATE_SMD / SUPER_ADMIN).
 -- ============================================================================
 
 -- ── 1. hazards ─────────────────────────────────────────────────────────────
@@ -223,7 +223,7 @@ CREATE POLICY p_regulatory_reports_tenant_isolation
 -- OPTIONAL: CROSS-TENANT REGULATOR ACCESS
 -- ----------------------------------------------------------------------------
 -- The tenant-scoped policies above deny cross-tenant reads. The operational
--- regulator roles (CAAN_SMD, SUPER_ADMIN) are intended to view / write across
+-- regulator roles (STATE_SMD, SUPER_ADMIN) are intended to view / write across
 -- all operator tenants. If the JWT exposes the role in app_metadata, uncomment
 -- a per-table override of the form:
 --
@@ -232,8 +232,8 @@ CREATE POLICY p_regulatory_reports_tenant_isolation
 --       AS PERMISSIVE
 --       FOR ALL
 --       TO authenticated
---       USING ((auth.jwt() -> 'app_metadata' ->> 'role') IN ('CAAN_SMD', 'SUPER_ADMIN'))
---       WITH CHECK ((auth.jwt() -> 'app_metadata' ->> 'role') IN ('CAAN_SMD', 'SUPER_ADMIN'));
+--       USING ((auth.jwt() -> 'app_metadata' ->> 'role') IN ('STATE_SMD', 'SUPER_ADMIN'))
+--       WITH CHECK ((auth.jwt() -> 'app_metadata' ->> 'role') IN ('STATE_SMD', 'SUPER_ADMIN'));
 --
 -- Repeat for every table above. Apply these only AFTER confirming the exact
 -- key path ('role' vs 'roles') used during Firebase -> Supabase JWT claims

@@ -45,13 +45,10 @@ def test_flag_custodian_and_deidentify():
             rid, {"uid": custodian_uid, "email": f"{custodian_uid}@test.local"},
             {"role": "TENANT_ADMIN", "uid": custodian_uid})
         assert marked["is_confidential"] is True
-        assert marked["confidential_custodian_id"] == custodian_id
 
         # 2D.2 / 2D.1 §16 Q4: custody is the TENANT_ADMIN of the report's own
-        # tenant. The named-custodian column is retained but no longer grants
-        # access, and the department branch is retired.
-        report = {"is_confidential": True, "tenant_id": tid,
-                  "confidential_custodian_id": custodian_id}
+        # tenant. The named-custodian column is retired.
+        report = {"is_confidential": True, "tenant_id": tid}
         assert svc.can_view_reporter_identity(
             report, {"role": "TENANT_ADMIN", "tenant_id": slug,
                      "uid": custodian_uid, "email": f"{custodian_uid}@test.local"}) is True

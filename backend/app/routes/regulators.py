@@ -3,7 +3,7 @@
 # PATH: backend/app/routes/regulators.py
 # PURPOSE: State Regulator API. Enumerates State Regulators (CAAN for Nepal,
 #          DGCA for India, ...) and their overseen operator tenants. Only
-#          CAAN_SMD / SUPER_ADMIN (cross-tenant roles) may read.
+#          STATE_SMD / SUPER_ADMIN (cross-tenant roles) may read.
 # ============================================================================
 
 from datetime import datetime
