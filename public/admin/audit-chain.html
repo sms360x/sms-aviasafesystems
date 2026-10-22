@@ -1,0 +1,420 @@
+<!-- ============================================================================
+FILE: audit-chain.html
+PATH: public/admin/audit-chain.html
+PURPOSE: Audit Chain Viewer (SUPER_ADMIN only) — read-only inspection of the
+         durable, HMAC hash-chained audit trail (public.durable_audit_logs).
+         Shows per-tenant chain status, a filtered/paginated event list and a
+         per-event integrity verdict computed server-side.
+         The trail is append-only: this page exposes no mutation, no reorder
+         and no "repair chain" action, and the HMAC secret never reaches the
+         browser.
+AUTHOR: AviaSAFE Systems
+=========================================================================== -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audit Chain Viewer — AviaSAFE Admin</title>
+    <link rel="stylesheet" href="/css/variables.css">
+    <link rel="stylesheet" href="/css/admin.css">
+    <link rel="stylesheet" href="/css/admin-setup.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-check-compat.js"></script>
+    <script src="/js/firebase.js?v=4.0.1"></script>
+    <script src="/js/api/client.js"></script>
+    <script src="/js/admin.js"></script>
+    <script src="/js/admin-setup-core.js"></script>
+    <style>
+        .chain-grid { display: grid; grid-template-columns: 1fr; gap: 16px; }
+        .hash-cell { font-family: 'Consolas', monospace; font-size: .72rem; color: #64748b; white-space: nowrap; }
+        .verdict-valid { background: #e6f4ea; color: #1e7e34; }
+        .verdict-broken { background: #fce8e6; color: #c5221f; }
+        .verdict-unlinked { background: #fef3c7; color: #b45309; }
+        .verdict { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: .72rem; font-weight: 600; }
+        .mono { font-family: 'Consolas', monospace; font-size: .78rem; }
+        .muted { color: #64748b; font-size: .78rem; }
+        .row-click { cursor: pointer; }
+        .detail-pre { background: #0f172a; color: #e2e8f0; padding: 12px; border-radius: 8px; overflow: auto; max-height: 320px; font-size: .76rem; }
+        .kv { display: grid; grid-template-columns: 160px 1fr; gap: 4px 10px; font-size: .82rem; }
+        .kv div:nth-child(odd) { color: #64748b; }
+        .filter-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
+        .pill { display: inline-block; padding: 2px 8px; border-radius: 999px; background: var(--color-gray-50); border: 1px solid var(--color-border); font-size: .72rem; margin: 2px 4px 2px 0; }
+    </style>
+</head>
+<body class="admin-body">
+
+<div class="admin-shell">
+    <div class="topbar">
+        <div class="tb-left">
+            <a href="/admin/production-setup.html" class="back-link"><i class="fas fa-arrow-left"></i> Back to Setup</a>
+            <span class="tb-brand"><i class="fas fa-plane"></i> AviaSAFE Admin</span>
+            <span class="page-title">Audit Chain Viewer</span>
+        </div>
+        <div class="tb-actions" id="topNav">
+            <a href="/admin/production-setup.html" class="nav-link" style="color:#cbd5e1; text-decoration:none; font-size:.82rem; padding:6px 12px; border-radius:8px;"><i class="fas fa-cogs" style="color:#4fc3f7;"></i> Production Setup</a>
+            <a href="/admin/system-config.html" class="nav-link" style="color:#cbd5e1; text-decoration:none; font-size:.82rem; padding:6px 12px; border-radius:8px;"><i class="fas fa-sliders" style="color:#4fc3f7;"></i> System Configs</a>
+            <span class="user-badge"><span class="role-chip">SUPER_ADMIN</span><span id="userDisplay">—</span></span>
+            <button class="btn btn-danger btn-sm" onclick="logout()">Logout</button>
+        </div>
+    </div>
+
+    <div class="content-area">
+        <div class="page-head">
+            <h1><i class="fas fa-link" style="color:var(--color-brand-600);"></i> Audit Chain Viewer</h1>
+            <div class="sub">Read-only inspection of the append-only, per-tenant HMAC hash chain. Integrity verdicts are computed on the server — the signing key never leaves the backend.</div>
+        </div>
+
+        <div class="status-box" id="scopeNotice" style="background:#eef6fb; border-left:4px solid var(--color-brand-600); color:#1e3a5f;">
+            <i class="fas fa-globe"></i> <strong>Cross-tenant view.</strong> Every row is labelled with the tenant it belongs to. Reading across tenants is a SUPER_ADMIN capability and is read-only.
+        </div>
+
+        <div class="chain-grid">
+
+            <!-- ============ PER-TENANT CHAINS ============ -->
+            <div class="admin-card">
+                <div class="card-head">
+                    <span class="step-badge">Chains</span>
+                    <h2 style="margin:0 14px 0 12px;"><i class="fas fa-diagram-project"></i> Per-tenant chain status</h2>
+                    <span style="margin-left:auto;"><button class="btn btn-outline btn-sm" onclick="loadChains()"><i class="fas fa-rotate"></i> Refresh</button></span>
+                </div>
+                <p class="card-sub">One chain per tenant partition. <em>Segments</em> = chain roots, <em>forks</em> = links with more than one successor (ambiguous order), <em>dangling</em> = links whose predecessor is missing.</p>
+                <div id="chainArea" style="overflow-x:auto;"><div class="loading"><i class="fas fa-spinner fa-spin"></i> Loading chains...</div></div>
+            </div>
+
+            <!-- ============ EVENTS ============ -->
+            <div class="admin-card">
+                <div class="card-head">
+                    <span class="step-badge">Events</span>
+                    <h2 style="margin:0 14px 0 12px;"><i class="fas fa-list-check"></i> Audit events</h2>
+                    <span style="margin-left:auto;font-size:.78rem;color:#94a3b8;" id="eventCount">—</span>
+                </div>
+
+                <div class="filter-grid" style="margin-bottom:14px;">
+                    <div class="form-group" style="margin:0;">
+                        <label for="fTenant">Tenant</label>
+                        <select id="fTenant"><option value="">All tenants (cross-tenant)</option></select>
+                    </div>
+                    <div class="form-group" style="margin:0;">
+                        <label for="fAction">Event type</label>
+                        <input id="fAction" type="text" placeholder="e.g. SYSTEM_CONFIG_UPDATED" autocomplete="off">
+                    </div>
+                    <div class="form-group" style="margin:0;">
+                        <label for="fRole">Actor role</label>
+                        <select id="fRole"><option value="">Any role</option></select>
+                    </div>
+                    <div class="form-group" style="margin:0;">
+                        <label for="fVerification">Verification</label>
+                        <select id="fVerification">
+                            <option value="">All verdicts</option>
+                            <option value="valid">valid</option>
+                            <option value="broken">broken</option>
+                            <option value="unlinked">unlinked</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="margin:0;">
+                        <label for="fFrom">From (date/time)</label>
+                        <input id="fFrom" type="datetime-local">
+                    </div>
+                    <div class="form-group" style="margin:0;">
+                        <label for="fTo">To (date/time)</label>
+                        <input id="fTo" type="datetime-local">
+                    </div>
+                    <div class="form-group" style="margin:0;">
+                        <label for="fLimit">Page size</label>
+                        <select id="fLimit">
+                            <option value="25">25</option>
+                            <option value="50" selected>50</option>
+                            <option value="100">100</option>
+                            <option value="200">200</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="margin:0;display:flex;align-items:flex-end;gap:8px;">
+                        <button class="btn btn-primary btn-sm" onclick="applyFilters()"><i class="fas fa-filter"></i> Apply</button>
+                        <button class="btn btn-outline btn-sm" onclick="resetFilters()"><i class="fas fa-rotate-left"></i> Reset</button>
+                    </div>
+                </div>
+
+                <div id="eventArea" style="overflow-x:auto;"><div class="loading"><i class="fas fa-spinner fa-spin"></i> Loading events...</div></div>
+
+                <div class="btn-row" style="margin-top:12px;">
+                    <button class="btn btn-outline btn-sm" id="prevPage" onclick="page(-1)"><i class="fas fa-chevron-left"></i> Previous</button>
+                    <span class="muted" id="pageInfo">—</span>
+                    <button class="btn btn-outline btn-sm" id="nextPage" onclick="page(1)">Next <i class="fas fa-chevron-right"></i></button>
+                </div>
+            </div>
+
+            <!-- ============ EVENT DETAIL ============ -->
+            <div class="admin-card" id="detailCard" style="display:none;">
+                <div class="card-head">
+                    <span class="step-badge">Detail</span>
+                    <h2 style="margin:0 14px 0 12px;"><i class="fas fa-fingerprint"></i> Event detail</h2>
+                    <span style="margin-left:auto;"><button class="btn btn-outline btn-sm" onclick="closeDetail()">Close</button></span>
+                </div>
+                <div id="detailBody"></div>
+            </div>
+
+        </div>
+
+        <div class="side-foot">Made with <i class="fas fa-heart"></i> from Nepal</div>
+    </div>
+</div>
+
+<script>
+// ============================================================================
+// AUTH — SUPER_ADMIN only
+// ============================================================================
+document.addEventListener('DOMContentLoaded', async function () {
+    var user = await AdminUI.requireAdmin();
+    if (!user) return;
+    document.getElementById('userDisplay').textContent = user.email || user.uid || '—';
+    await loadChains();
+    await loadEvents();
+});
+
+var CHAIN_CACHE = [];
+var PAGE_OFFSET = 0;
+var PAGE_LIMIT = 50;
+var PAGE_TOTAL = 0;
+
+// ============================================================================
+// HELPERS
+// ============================================================================
+function shortHash(value) {
+    if (!value) return '—';
+    var v = String(value);
+    if (v === 'GENESIS') return 'GENESIS';
+    return v.slice(0, 10) + '…';
+}
+
+function verdictBadge(verdict) {
+    var cls = 'verdict-valid';
+    if (verdict === 'broken') cls = 'verdict-broken';
+    else if (verdict === 'unlinked') cls = 'verdict-unlinked';
+    return '<span class="verdict ' + cls + '">' + AdminUI.esc(verdict || 'unknown') + '</span>';
+}
+
+function tenantLabelOf(event) {
+    if (event.tenant_label) return event.tenant_label;
+    if (event.tenant_slug) return event.tenant_slug;
+    return '—';
+}
+
+// ============================================================================
+// PER-TENANT CHAINS
+// ============================================================================
+async function loadChains() {
+    var area = document.getElementById('chainArea');
+    area.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> Loading chains...</div>';
+    try {
+        var data = await AdminUI.apiGet('/api/v1/audit/tenants');
+        CHAIN_CACHE = data.tenants || [];
+        renderChains();
+        renderTenantFilter();
+        renderRoleFilter();
+    } catch (e) {
+        area.innerHTML = '<div class="empty-state"><i class="fas fa-triangle-exclamation"></i> ' + AdminUI.esc(e.message) + '</div>';
+    }
+}
+
+function renderChains() {
+    var area = document.getElementById('chainArea');
+    if (!CHAIN_CACHE.length) {
+        area.innerHTML = '<div class="empty-state">No audit chains recorded yet.</div>';
+        return;
+    }
+    var rows = CHAIN_CACHE.slice(0, 25).map(function (c) {
+        var label = c.tenant_label || c.tenant_slug || ('tenant ' + String(c.tenant_id).slice(0, 8));
+        var badge = c.status === 'valid'
+            ? '<span class="verdict verdict-valid">valid</span>'
+            : '<span class="verdict verdict-broken">broken</span>';
+        return '<tr>' +
+            '<td>' + AdminUI.esc(label) + (c.tenant_name ? '<div class="muted">' + AdminUI.esc(c.tenant_name) + '</div>' : '') + '</td>' +
+            '<td>' + c.events + '</td>' +
+            '<td>' + c.chain_segments + '</td>' +
+            '<td>' + c.forked_links + '</td>' +
+            '<td>' + c.dangling_links + '</td>' +
+            '<td>' + badge + '<div class="muted">' + AdminUI.esc(c.status_detail || '') + '</div></td>' +
+            '<td class="muted">' + AdminUI.esc(c.first_event_at || '—') + '<br>' + AdminUI.esc(c.last_event_at || '—') + '</td>' +
+            '</tr>';
+    }).join('');
+
+    area.innerHTML =
+        '<table class="admin-table"><thead><tr>' +
+        '<th>Tenant</th><th>Events</th><th>Segments</th><th>Forks</th><th>Dangling</th><th>Status</th><th>First / last event</th>' +
+        '</tr></thead><tbody>' + rows + '</tbody></table>' +
+        (CHAIN_CACHE.length > 25 ? '<p class="muted" style="margin-top:8px;">Showing the 25 largest chains of ' + CHAIN_CACHE.length + '. Filter the event list by tenant to inspect any other chain.</p>' : '');
+}
+
+function renderTenantFilter() {
+    var select = document.getElementById('fTenant');
+    var current = select.value;
+    var seen = {};
+    var options = ['<option value="">All tenants (cross-tenant)</option>'];
+    CHAIN_CACHE.forEach(function (c) {
+        var slug = c.tenant_slug;
+        if (!slug || seen[slug]) return;
+        seen[slug] = true;
+        options.push('<option value="' + AdminUI.esc(slug) + '">' + AdminUI.esc(slug) + '</option>');
+    });
+    select.innerHTML = options.join('');
+    select.value = current;
+}
+
+function renderRoleFilter() {
+    var select = document.getElementById('fRole');
+    var current = select.value;
+    var roles = {};
+    CHAIN_CACHE.forEach(function (c) { /* chains carry no role; roles come from events */ });
+    var known = ['SUPER_ADMIN', 'STATE_SMD', 'TENANT_ADMIN', 'DEPT_ADMIN', 'OFFICER', 'ACCOUNTABLE_EXECUTIVE'];
+    known.forEach(function (r) { roles[r] = true; });
+    var options = ['<option value="">Any role</option>'];
+    Object.keys(roles).forEach(function (r) {
+        options.push('<option value="' + AdminUI.esc(r) + '">' + AdminUI.esc(r) + '</option>');
+    });
+    select.innerHTML = options.join('');
+    select.value = current;
+}
+
+// ============================================================================
+// EVENTS
+// ============================================================================
+function filterParams() {
+    var params = [];
+    var tenant = document.getElementById('fTenant').value;
+    var action = document.getElementById('fAction').value.trim();
+    var role = document.getElementById('fRole').value;
+    var verification = document.getElementById('fVerification').value;
+    var from = document.getElementById('fFrom').value;
+    var to = document.getElementById('fTo').value;
+
+    if (tenant) params.push('tenant_id=' + encodeURIComponent(tenant));
+    if (action) params.push('action=' + encodeURIComponent(action));
+    if (role) params.push('actor_role=' + encodeURIComponent(role));
+    if (verification) params.push('verification=' + encodeURIComponent(verification));
+    if (from) params.push('date_from=' + encodeURIComponent(new Date(from).toISOString()));
+    if (to) params.push('date_to=' + encodeURIComponent(new Date(to).toISOString()));
+    params.push('limit=' + PAGE_LIMIT);
+    params.push('offset=' + PAGE_OFFSET);
+    return params.join('&');
+}
+
+function applyFilters() {
+    PAGE_OFFSET = 0;
+    PAGE_LIMIT = parseInt(document.getElementById('fLimit').value, 10) || 50;
+    loadEvents();
+}
+
+function resetFilters() {
+    document.getElementById('fTenant').value = '';
+    document.getElementById('fAction').value = '';
+    document.getElementById('fRole').value = '';
+    document.getElementById('fVerification').value = '';
+    document.getElementById('fFrom').value = '';
+    document.getElementById('fTo').value = '';
+    PAGE_OFFSET = 0;
+    loadEvents();
+}
+
+async function loadEvents() {
+    var area = document.getElementById('eventArea');
+    area.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> Verifying chain integrity...</div>';
+    try {
+        var data = await AdminUI.apiGet('/api/v1/audit/events?' + filterParams());
+        PAGE_TOTAL = data.total || 0;
+        document.getElementById('eventCount').textContent =
+            PAGE_TOTAL + ' event' + (PAGE_TOTAL === 1 ? '' : 's') + ' matched';
+        document.getElementById('scopeNotice').innerHTML = data.cross_tenant
+            ? '<i class="fas fa-globe"></i> <strong>Cross-tenant view.</strong> Every row is labelled with the tenant it belongs to. Reading across tenants is a SUPER_ADMIN capability and is read-only.'
+            : '<i class="fas fa-building"></i> <strong>Single-tenant view.</strong> Showing the chain of <strong>' + AdminUI.esc(document.getElementById('fTenant').value) + '</strong> only.';
+        renderEvents(data.events || []);
+        renderPageInfo();
+    } catch (e) {
+        area.innerHTML = '<div class="empty-state"><i class="fas fa-triangle-exclamation"></i> ' + AdminUI.esc(e.message) + '</div>';
+    }
+}
+
+function renderEvents(events) {
+    var area = document.getElementById('eventArea');
+    if (!events.length) {
+        area.innerHTML = '<div class="empty-state">No audit events match the current filters.</div>';
+        return;
+    }
+    var rows = events.map(function (e) {
+        return '<tr class="row-click" onclick="showDetail(\'' + AdminUI.esc(e.id) + '\')">' +
+            '<td class="muted">' + AdminUI.esc(e.timestamp) + '</td>' +
+            '<td>' + AdminUI.esc(tenantLabelOf(e)) + '</td>' +
+            '<td class="mono">' + AdminUI.esc(e.action) + '</td>' +
+            '<td>' + AdminUI.esc(e.actor_role || '—') + '</td>' +
+            '<td class="muted">' + AdminUI.esc(e.resource_type || '—') + (e.resource_id ? ' / ' + AdminUI.esc(e.resource_id) : '') + '</td>' +
+            '<td>' + verdictBadge(e.verification) + '</td>' +
+            '<td class="hash-cell">' + AdminUI.esc(shortHash(e.prev_hash)) + ' → ' + AdminUI.esc(shortHash(e.current_hash)) + '</td>' +
+            '</tr>';
+    }).join('');
+
+    area.innerHTML =
+        '<table class="admin-table"><thead><tr>' +
+        '<th>Timestamp</th><th>Tenant</th><th>Event type</th><th>Actor role</th><th>Resource</th><th>Verification</th><th>Chain link</th>' +
+        '</tr></thead><tbody>' + rows + '</tbody></table>';
+}
+
+function renderPageInfo() {
+    var from = PAGE_TOTAL ? PAGE_OFFSET + 1 : 0;
+    var to = Math.min(PAGE_OFFSET + PAGE_LIMIT, PAGE_TOTAL);
+    document.getElementById('pageInfo').textContent = from + '–' + to + ' of ' + PAGE_TOTAL;
+    document.getElementById('prevPage').disabled = PAGE_OFFSET <= 0;
+    document.getElementById('nextPage').disabled = PAGE_OFFSET + PAGE_LIMIT >= PAGE_TOTAL;
+}
+
+function page(delta) {
+    var next = PAGE_OFFSET + (delta * PAGE_LIMIT);
+    if (next < 0) return;
+    PAGE_OFFSET = next;
+    loadEvents();
+}
+
+// ============================================================================
+// EVENT DETAIL
+// ============================================================================
+async function showDetail(eventId) {
+    var card = document.getElementById('detailCard');
+    var body = document.getElementById('detailBody');
+    card.style.display = 'block';
+    body.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> Loading event...</div>';
+    card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    try {
+        var e = await AdminUI.apiGet('/api/v1/audit/events/' + encodeURIComponent(eventId));
+        body.innerHTML =
+            '<div class="kv">' +
+            '<div>Event id</div><div class="mono">' + AdminUI.esc(e.id) + '</div>' +
+            '<div>Timestamp</div><div>' + AdminUI.esc(e.timestamp) + '</div>' +
+            '<div>Tenant</div><div>' + AdminUI.esc(tenantLabelOf(e)) + (e.tenant_name ? ' — ' + AdminUI.esc(e.tenant_name) : '') + '</div>' +
+            '<div>Event type</div><div class="mono">' + AdminUI.esc(e.action) + '</div>' +
+            '<div>Actor role</div><div>' + AdminUI.esc(e.actor_role || '— (tenantless / anonymous event)') + '</div>' +
+            '<div>Actor</div><div class="mono">' + AdminUI.esc(e.actor_fingerprint || '—') + (e.actor_fingerprint ? ' <span class="muted">(pseudonymous fingerprint)</span>' : '') + '</div>' +
+            '<div>Resource</div><div>' + AdminUI.esc(e.resource_type || '—') + (e.resource_id ? ' / ' + AdminUI.esc(e.resource_id) : '') + '</div>' +
+            '<div>Verification</div><div>' + verdictBadge(e.verification) + '</div>' +
+            '<div>Chain link</div><div class="hash-cell">' + AdminUI.esc(e.prev_hash || '—') + '<br>→ ' + AdminUI.esc(e.current_hash || '—') + '</div>' +
+            '<div>Predecessor / successors</div><div class="mono">' + AdminUI.esc(e.chain && e.chain.predecessor_id ? e.chain.predecessor_id : 'none (chain root)') + ' / ' + (e.chain ? e.chain.successor_count : 0) + '</div>' +
+            '</div>' +
+            '<h3 style="margin-top:14px;">Payload summary <span class="muted">(PII masked server-side)</span></h3>' +
+            '<pre class="detail-pre">' + AdminUI.esc(JSON.stringify(e.payload || {}, null, 2)) + '</pre>';
+    } catch (err) {
+        body.innerHTML = '<div class="empty-state"><i class="fas fa-triangle-exclamation"></i> ' + AdminUI.esc(err.message) + '</div>';
+    }
+}
+
+function closeDetail() {
+    document.getElementById('detailCard').style.display = 'none';
+}
+</script>
+
+</body>
+</html>

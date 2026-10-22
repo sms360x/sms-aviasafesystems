@@ -14,7 +14,7 @@ from app.core.metrics import router as metrics_router
 from app.core.security import SecurityHeadersMiddleware, RateLimitMiddleware
 from app.core.cors import ManualCORSMiddleware
 from app.firebase import initialize_firebase, is_firebase_ready
-from app.routes import reports, dashboard, auth, admin, hazards, can_cap, verification, reporting, flight_diversions, state_risk, surveys, sms_maturity, tenants, regulators, contact, feedback, copilot, psoe, sdc, data, scheduled_jobs, regulator_dashboard, meetings, bulletins, audit
+from app.routes import reports, dashboard, auth, admin, hazards, can_cap, verification, reporting, flight_diversions, state_risk, surveys, sms_maturity, tenants, regulators, contact, feedback, copilot, psoe, sdc, data, scheduled_jobs, regulator_dashboard, meetings, bulletins, audit, system_config
 from app.routes import demo as demo_routes
 from app.api.v1.router import router as v1_router
 
@@ -245,6 +245,7 @@ async def unhandled_exception_handler(request: Request, exc: Exception):
 
 app.include_router(auth.router, prefix=settings.API_PREFIX_AUTH, tags=["Authentication"])
 app.include_router(audit.router, prefix="/api/v1/audit", tags=["Durable Audit"])
+app.include_router(system_config.router, prefix="/api/v1/system-config", tags=["System Configs"])
 app.include_router(reports.router, prefix=settings.API_PREFIX_REPORTS, tags=["Reports"])
 app.include_router(dashboard.router, prefix=settings.API_PREFIX_DASHBOARD, tags=["Dashboard"])
 app.include_router(admin.router, prefix=settings.API_PREFIX_ADMIN, tags=["Admin"])

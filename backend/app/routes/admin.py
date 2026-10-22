@@ -26,6 +26,7 @@ from app.services.risk_matrix import (
     set_risk_matrix_config,
     THRESHOLDS_DEFAULT,
 )
+from app.services.setup_key import verify_setup_key
 from app.services.users import upsert_user_doc, user_doc_from_auth_record
 from app.services.audit_service import log_audit, request_context
 from app.schemas.user import (
@@ -97,14 +98,11 @@ def _verify_admin_setup(setup_key: str) -> None:
     The setup key is a defense-in-depth secret loaded from the environment. It
     never grants access by itself — callers must also present a SUPER_ADMIN
     Firebase ID token (enforced via the `get_admin_user` dependency).
+
+    The implementation lives in app/services/setup_key.py so that other
+    SUPER_ADMIN surfaces share exactly the same check.
     """
-    if not settings.SETUP_SECRET:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Admin setup is not configured on this server",
-        )
-    if not setup_key or not secrets.compare_digest(setup_key, settings.SETUP_SECRET):
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid setup key")
+    verify_setup_key(setup_key)
 
 
 def verify_task_auth(request: Request) -> Dict[str, Any]:

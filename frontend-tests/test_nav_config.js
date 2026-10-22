@@ -213,6 +213,37 @@ function test_regulator_untouched() {
 }
 
 // ---------------------------------------------------------------------------
+// SUPER_ADMIN-only governance surfaces (Phase 3A.2)
+// ---------------------------------------------------------------------------
+
+function test_super_admin_only_governance_items() {
+    const superGroups = groupsOf(getVisibleNav({ role: 'SUPER_ADMIN', email: 'root@aviasafe.local' }));
+    assert.ok(superGroups.Administration, 'SUPER_ADMIN sees the Administration group');
+    assert.ok(superGroups.Administration.includes('audit-chain'),
+        'SUPER_ADMIN sees the Audit Chain Viewer');
+    assert.ok(superGroups.Administration.includes('system-config'),
+        'SUPER_ADMIN sees System Configs');
+    assert.ok(superGroups.Administration.includes('production'),
+        'SUPER_ADMIN still sees Production Setup');
+
+    // Every other role must be denied the two new governance surfaces.
+    const denied = [
+        { role: 'TENANT_ADMIN', email: 'safety@airline.com' },
+        { role: 'STATE_SMD', email: 'smd@caanepal.gov.np' },
+        { role: 'DEPT_ADMIN', email: 'camo@sitaair.com.np' },
+        { role: 'OFFICER', department: 'safety', email: 'so@airline.com' },
+        { role: 'OFFICER', department: 'flight_ops', email: 'fo@airline.com' },
+        { role: 'ACCOUNTABLE_EXECUTIVE', email: 'boss@airline.com' },
+    ];
+    denied.forEach((user) => {
+        const groups = groupsOf(getVisibleNav(user));
+        const ids = Object.keys(groups).map((g) => groups[g]).join(' ');
+        assert.ok(!ids.includes('audit-chain'), user.role + ' does NOT see the Audit Chain Viewer');
+        assert.ok(!ids.includes('system-config'), user.role + ' does NOT see System Configs');
+    });
+}
+
+// ---------------------------------------------------------------------------
 
 function main() {
     test_role_type_mapping();
@@ -226,7 +257,8 @@ function main() {
     test_legacy_module_keys_mapped();
     test_no_module_access_arg_backward_compatible();
     test_regulator_untouched();
-    console.log('test_nav_config: 11 tests passed (AE narrow menu, dept Workspace, SAG hidden, canonical flags, module gating, back-compat, department-scoped OFFICER)');
+    test_super_admin_only_governance_items();
+    console.log('test_nav_config: 12 tests passed (AE narrow menu, dept Workspace, SAG hidden, canonical flags, module gating, back-compat, department-scoped OFFICER, SUPER-only governance nav)');
 }
 
 main();

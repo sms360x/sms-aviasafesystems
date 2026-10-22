@@ -6,6 +6,7 @@ from sqlalchemy import text
 
 from app.core.config import settings
 from app.db.ids import tenant_uuid
+from app.db.rls import get_current_identity
 from app.db.runner import run
 from app.db.session import session_scope
 from app.firebase import get_db
@@ -77,10 +78,28 @@ def _redact(action: str, user: Optional[str], metadata: Optional[Dict[str, Any]]
     return actor_uid, meta
 
 
+def _resolve_actor_role(actor_role: Optional[str]) -> Optional[str]:
+    """Resolve the role the actor held when the event was recorded.
+
+    Explicit ``actor_role`` wins; otherwise the role is taken from the
+    request-scoped RLS identity (Phase 3A.2) so every request-scoped event
+    records who acted in what capacity without touching the call sites.
+    """
+    if actor_role:
+        return str(actor_role)
+    identity = get_current_identity()
+    if identity:
+        role = identity.get("role")
+        if role:
+            return str(role)
+    return None
+
+
 def _append_event(
     tenant_id: Optional[str],
     action: str,
     actor_uid: Optional[str],
+    actor_role: Optional[str],
     resource_type: Optional[str],
     resource_id: Optional[str],
     metadata: Dict[str, Any],
@@ -97,7 +116,7 @@ def _append_event(
             result = await session.execute(
                 text(
                     "SELECT public.append_audit_event("
-                    ":tid, :action, :actor, :rtype, :rid, (:meta)::jsonb, :key)"
+                    ":tid, :action, :actor, :rtype, :rid, (:meta)::jsonb, :role, :key)"
                 ),
                 {
                     "tid": tid,
@@ -106,6 +125,7 @@ def _append_event(
                     "rtype": resource_type,
                     "rid": resource_id,
                     "meta": meta_json,
+                    "role": actor_role,
                     "key": key,
                 },
             )
@@ -124,6 +144,7 @@ def log_audit(
     ip: Optional[str] = None,
     request_id: Optional[str] = None,
     metadata: Optional[Dict[str, Any]] = None,
+    actor_role: Optional[str] = None,
 ) -> None:
     """Append an entry to the durable audit trail (Postgres primary).
 
@@ -132,10 +153,16 @@ def log_audit(
     an audit entry must never break the business request, so both writes are
     best-effort and only logged as a warning. IP is dropped entirely (2E.1
     Q-PII-1) — `ip` is accepted for signature compatibility but not stored.
+
+    Phase 3A.2: `actor_role` records the role the actor held at append time
+    (it is evidence alongside the event, not part of the signed body, so
+    existing chains keep verifying). It is derived from the request identity
+    when not supplied, and is never set for anonymous VSR actions.
     """
     actor_uid, meta = _redact(action, user, metadata)
+    role = None if action in _ANONYMOUS_ACTIONS else _resolve_actor_role(actor_role)
     try:
-        _append_event(tenant_id, action, actor_uid, target_type, target_id, meta)
+        _append_event(tenant_id, action, actor_uid, role, target_type, target_id, meta)
     except Exception as e:
         logger.warning(f"Durable audit append failed for action={action}: {e}")
 

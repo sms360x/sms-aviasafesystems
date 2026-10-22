@@ -1,0 +1,326 @@
+<!-- ============================================================================
+FILE: system-config.html
+PATH: public/admin/system-config.html
+PURPOSE: System Configs (SUPER_ADMIN only) — view and edit the permitted
+         configuration keys: tenant feature flags (module_a_survey,
+         module_b_srm, module_c_regulator) and tenant survey settings.
+         Every change is written through the backend's SECURITY DEFINER path
+         and lands in the durable audit trail as a SYSTEM_CONFIG_UPDATED event.
+         Out of scope by design: the audit trail, reporter contacts, tenant
+         lifecycle status, impersonation.
+AUTHOR: AviaSAFE Systems
+=========================================================================== -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Configs — AviaSAFE Admin</title>
+    <link rel="stylesheet" href="/css/variables.css">
+    <link rel="stylesheet" href="/css/admin.css">
+    <link rel="stylesheet" href="/css/admin-setup.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-check-compat.js"></script>
+    <script src="/js/firebase.js?v=4.0.1"></script>
+    <script src="/js/api/client.js"></script>
+    <script src="/js/admin.js"></script>
+    <script src="/js/admin-setup-core.js"></script>
+    <style>
+        .cfg-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+        .cfg-item { border: 1px solid var(--color-border); border-radius: 10px; padding: 14px; background: #fff; }
+        .cfg-item h3 { margin: 0 0 4px; font-size: .92rem; color: var(--color-deep-teal-900); }
+        .cfg-item p { margin: 0 0 10px; font-size: .78rem; color: #64748b; }
+        .cfg-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+        .cfg-row .value { font-family: 'Consolas', monospace; font-size: .8rem; color: #334155; }
+        .pill { display: inline-block; padding: 2px 8px; border-radius: 999px; background: var(--color-gray-50); border: 1px solid var(--color-border); font-size: .72rem; margin: 2px 4px 2px 0; }
+        .ro { opacity: .85; }
+        .ro-note { font-size: .72rem; color: #94a3b8; font-style: italic; }
+        .policy-list { margin: 0; padding-left: 18px; font-size: .82rem; color: #334155; }
+        .policy-list li { margin-bottom: 4px; }
+    </style>
+</head>
+<body class="admin-body">
+
+<div class="admin-shell">
+    <div class="topbar">
+        <div class="tb-left">
+            <a href="/admin/production-setup.html" class="back-link"><i class="fas fa-arrow-left"></i> Back to Setup</a>
+            <span class="tb-brand"><i class="fas fa-plane"></i> AviaSAFE Admin</span>
+            <span class="page-title">System Configs</span>
+        </div>
+        <div class="tb-actions" id="topNav">
+            <a href="/admin/production-setup.html" class="nav-link" style="color:#cbd5e1; text-decoration:none; font-size:.82rem; padding:6px 12px; border-radius:8px;"><i class="fas fa-cogs" style="color:#4fc3f7;"></i> Production Setup</a>
+            <a href="/admin/audit-chain.html" class="nav-link" style="color:#cbd5e1; text-decoration:none; font-size:.82rem; padding:6px 12px; border-radius:8px;"><i class="fas fa-link" style="color:#4fc3f7;"></i> Audit Chain Viewer</a>
+            <span class="user-badge"><span class="role-chip">SUPER_ADMIN</span><span id="userDisplay">—</span></span>
+            <button class="btn btn-danger btn-sm" onclick="logout()">Logout</button>
+        </div>
+    </div>
+
+    <div class="content-area">
+        <div class="page-head">
+            <h1><i class="fas fa-sliders" style="color:var(--color-brand-600);"></i> System Configs</h1>
+            <div class="sub">Permitted configuration keys only. Every change is written through the audited backend path and recorded in the durable audit chain.</div>
+        </div>
+
+        <div class="status-box" style="background:#eef6fb; border-left:4px solid var(--color-brand-600); color:#1e3a5f;">
+            <i class="fas fa-shield-halved"></i> Changes require the admin setup key and are recorded as <span class="mono">SYSTEM_CONFIG_UPDATED</span> events in the append-only audit trail.
+        </div>
+
+        <div class="admin-card">
+            <div class="card-head">
+                <span class="step-badge">Tenant</span>
+                <h2 style="margin:0 14px 0 12px;"><i class="fas fa-building"></i> Select a tenant</h2>
+                <span style="margin-left:auto;"><button class="btn btn-outline btn-sm" onclick="loadRegistry()"><i class="fas fa-rotate"></i> Refresh</button></span>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="tenantSelect">Tenant</label>
+                    <select id="tenantSelect" onchange="selectTenant(this.value)"></select>
+                </div>
+                <div class="form-group">
+                    <label>&nbsp;</label>
+                    <div class="muted" id="tenantMeta">—</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="admin-card">
+            <div class="card-head">
+                <span class="step-badge">Flags</span>
+                <h2 style="margin:0 14px 0 12px;"><i class="fas fa-toggle-on"></i> Feature flags</h2>
+            </div>
+            <p class="card-sub">Module access for the selected tenant. The CAN/CAP add-on inherits Module B and is shown for reference only.</p>
+            <div class="cfg-grid" id="flagArea"><div class="loading"><i class="fas fa-spinner fa-spin"></i> Loading configuration...</div></div>
+        </div>
+
+        <div class="admin-card">
+            <div class="card-head">
+                <span class="step-badge">Settings</span>
+                <h2 style="margin:0 14px 0 12px;"><i class="fas fa-cog"></i> Tenant settings</h2>
+            </div>
+            <p class="card-sub">Survey-management settings owned by the tenant's survey portal.</p>
+            <div class="cfg-grid" id="settingArea"><div class="loading"><i class="fas fa-spinner fa-spin"></i> Loading configuration...</div></div>
+        </div>
+
+        <div class="admin-card">
+            <div class="card-head">
+                <span class="step-badge">Platform</span>
+                <h2 style="margin:0 14px 0 12px;"><i class="fas fa-eye"></i> Platform configuration <span class="ro-note">(read-only)</span></h2>
+            </div>
+            <div id="platformArea"><div class="loading"><i class="fas fa-spinner fa-spin"></i> Loading platform configuration...</div></div>
+        </div>
+
+        <div class="side-foot">Made with <i class="fas fa-heart"></i> from Nepal</div>
+    </div>
+</div>
+
+<script>
+// ============================================================================
+// AUTH — SUPER_ADMIN only
+// ============================================================================
+document.addEventListener('DOMContentLoaded', async function () {
+    var user = await AdminUI.requireAdmin();
+    if (!user) return;
+    document.getElementById('userDisplay').textContent = user.email || user.uid || '—';
+    await loadRegistry();
+});
+
+var REGISTRY = [];
+var TENANTS = [];
+var CURRENT_TENANT = null;
+
+// ============================================================================
+// LOAD
+// ============================================================================
+async function loadRegistry() {
+    var flagArea = document.getElementById('flagArea');
+    var settingArea = document.getElementById('settingArea');
+    try {
+        var data = await AdminUI.apiGet('/api/v1/system-config/registry');
+        REGISTRY = data.keys || [];
+        renderPlatform(data.platform || {});
+        await loadTenants();
+    } catch (e) {
+        flagArea.innerHTML = '<div class="empty-state"><i class="fas fa-triangle-exclamation"></i> ' + AdminUI.esc(e.message) + '</div>';
+        settingArea.innerHTML = '';
+    }
+}
+
+async function loadTenants() {
+    try {
+        var data = await AdminUI.apiGet('/api/v1/system-config/tenants');
+        TENANTS = data.tenants || [];
+        var select = document.getElementById('tenantSelect');
+        var operators = TENANTS.filter(function (t) { return t.kind === 'operator'; });
+        var others = TENANTS.filter(function (t) { return t.kind !== 'operator'; });
+        var html = '<option value="">— select a tenant —</option>';
+        html += '<optgroup label="Operators">';
+        operators.forEach(function (t) {
+            html += '<option value="' + AdminUI.esc(t.slug) + '">' + AdminUI.esc(t.slug) + ' — ' + AdminUI.esc(t.name || '') + '</option>';
+        });
+        html += '</optgroup>';
+        if (others.length) {
+            html += '<optgroup label="Other kinds">';
+            others.forEach(function (t) {
+                html += '<option value="' + AdminUI.esc(t.slug) + '">' + AdminUI.esc(t.slug) + ' — ' + AdminUI.esc(t.name || '') + '</option>';
+            });
+            html += '</optgroup>';
+        }
+        select.innerHTML = html;
+        renderConfigItems();
+    } catch (e) {
+        document.getElementById('flagArea').innerHTML = '<div class="empty-state"><i class="fas fa-triangle-exclamation"></i> ' + AdminUI.esc(e.message) + '</div>';
+    }
+}
+
+function selectTenant(slug) {
+    CURRENT_TENANT = TENANTS.find(function (t) { return t.slug === slug; }) || null;
+    var meta = document.getElementById('tenantMeta');
+    if (!CURRENT_TENANT) {
+        meta.textContent = '—';
+        renderConfigItems();
+        return;
+    }
+    meta.textContent = 'kind: ' + (CURRENT_TENANT.kind || '—') + ' · status: ' + (CURRENT_TENANT.status || '—') + ' · partition: ' + CURRENT_TENANT.tenant_id;
+    renderConfigItems();
+}
+
+// ============================================================================
+// RENDER
+// ============================================================================
+function renderConfigItems() {
+    var flags = REGISTRY.filter(function (k) { return k.group === 'feature_flags'; });
+    var settings = REGISTRY.filter(function (k) { return k.group === 'tenant_settings'; });
+    renderGroup(document.getElementById('flagArea'), flags);
+    renderGroup(document.getElementById('settingArea'), settings);
+}
+
+function renderGroup(area, keys) {
+    if (!keys.length) {
+        area.innerHTML = '<div class="empty-state">No keys registered.</div>';
+        return;
+    }
+    area.innerHTML = keys.map(function (spec) {
+        if (!CURRENT_TENANT) {
+            return '<div class="cfg-item"><h3>' + AdminUI.esc(spec.label) + '</h3>' +
+                '<p>' + AdminUI.esc(spec.description) + '</p>' +
+                '<div class="ro-note">Select a tenant to view and edit this key.</div></div>';
+        }
+        var value = CURRENT_TENANT.values ? CURRENT_TENANT.values[spec.key] : null;
+        var editable = spec.editable !== false;
+        var control = '';
+        if (spec.value_type === 'bool') {
+            control = '<label style="font-size:.82rem;"><input type="checkbox" id="cfg_' + AdminUI.esc(spec.key) + '"' +
+                (value ? ' checked' : '') + (editable ? '' : ' disabled') + '> <span class="value">' +
+                (value ? 'enabled' : 'disabled') + '</span></label>';
+        } else if (spec.value_type === 'int' && spec.options && spec.options.length) {
+            control = '<select id="cfg_' + AdminUI.esc(spec.key) + '"' + (editable ? '' : ' disabled') + '>' +
+                '<option value=""' + ((value === null || value === undefined) ? ' selected' : '') + '>not set (platform default)</option>' +
+                spec.options.map(function (o) {
+                    return '<option value="' + AdminUI.esc(o) + '"' + (String(o) === String(value) ? ' selected' : '') + '>' + AdminUI.esc(o) + '</option>';
+                }).join('') + '</select>';
+        } else if (spec.value_type === 'date') {
+            control = '<input type="date" id="cfg_' + AdminUI.esc(spec.key) + '" value="' + AdminUI.esc(value || '') + '"' + (editable ? '' : ' disabled') + '>';
+        } else if (spec.value_type === 'text') {
+            control = '<textarea id="cfg_' + AdminUI.esc(spec.key) + '" style="min-height:90px;width:100%;"' + (editable ? '' : ' disabled') + '>' + AdminUI.esc(value || '') + '</textarea>';
+        } else {
+            control = '<span class="value">' + AdminUI.esc(value === null || value === undefined ? '—' : value) + '</span>';
+        }
+
+        var action = editable
+            ? '<button class="btn btn-primary btn-sm" onclick="saveKey(\'' + AdminUI.esc(spec.key) + '\')"><i class="fas fa-save"></i> Save</button>'
+            : '<span class="pill">read-only</span>';
+        var note = spec.derived_from
+            ? '<div class="ro-note">Derived from ' + AdminUI.esc(spec.derived_from) + '.</div>'
+            : '';
+
+        return '<div class="cfg-item' + (editable ? '' : ' ro') + '">' +
+            '<h3>' + AdminUI.esc(spec.label) + '</h3>' +
+            '<p>' + AdminUI.esc(spec.description) + '</p>' +
+            '<div class="cfg-row">' + control + action + '</div>' +
+            '<div class="muted" style="margin-top:6px;">key: <span class="mono">' + AdminUI.esc(spec.key) + '</span>' +
+            (spec.storage_keys && spec.storage_keys.length ? ' · stored as <span class="mono">' + AdminUI.esc(spec.storage_keys.join(', ')) + '</span>' : '') +
+            '</div>' + note + '</div>';
+    }).join('');
+}
+
+function renderPlatform(platform) {
+    var chain = platform.audit_chain || {};
+    var html = '<div class="cfg-grid">' +
+        '<div class="cfg-item"><h3>Canonical roles</h3><p>The six canonical role literals (RBAC_MODEL §1).</p><div>' +
+        (platform.canonical_roles || []).map(function (r) { return '<span class="pill">' + AdminUI.esc(r) + '</span>'; }).join('') +
+        '</div></div>' +
+        '<div class="cfg-item"><h3>Cross-tenant roles</h3><p>Roles permitted to act beyond a single tenant.</p><div>' +
+        (platform.cross_tenant_roles || []).map(function (r) { return '<span class="pill">' + AdminUI.esc(r) + '</span>'; }).join('') +
+        '</div></div>' +
+        '<div class="cfg-item"><h3>Department codes</h3><p>Canonical department vocabulary used by the nav and role scoping.</p><div>' +
+        (platform.department_codes || []).map(function (d) { return '<span class="pill">' + AdminUI.esc(d.code) + '</span>'; }).join('') +
+        '</div></div>' +
+        '<div class="cfg-item"><h3>Audit chain policy</h3><p>How the durable trail is written and read.</p><ul class="policy-list">' +
+        '<li>' + AdminUI.esc(chain.policy || '—') + '</li>' +
+        '<li>storage: <span class="mono">' + AdminUI.esc(chain.storage || '—') + '</span></li>' +
+        '<li>read access: <span class="mono">' + AdminUI.esc(chain.read_access || '—') + '</span></li>' +
+        '<li>write path: <span class="mono">' + AdminUI.esc(chain.write_path || '—') + '</span></li>' +
+        '<li>mutation: ' + AdminUI.esc(chain.mutation || '—') + '</li>' +
+        '<li>signing key configured: <span class="mono">' + (chain.hmac_key_configured ? 'yes' : 'no (dev fallback)') + '</span></li>' +
+        '</ul></div>' +
+        '<div class="cfg-item"><h3>Environment</h3><p>Runtime posture of this deployment.</p><ul class="policy-list">' +
+        '<li>environment: <span class="mono">' + AdminUI.esc(platform.environment || '—') + '</span></li>' +
+        '<li>RLS enforcement: <span class="mono">' + (platform.rls_enforcement_enabled ? 'enabled' : 'disabled') + '</span></li>' +
+        '</ul></div>' +
+        '</div>';
+    document.getElementById('platformArea').innerHTML = html;
+}
+
+// ============================================================================
+// WRITE
+// ============================================================================
+function readControl(spec) {
+    var el = document.getElementById('cfg_' + spec.key);
+    if (!el) return null;
+    if (spec.value_type === 'bool') return el.checked;
+    var raw = (el.value === null || el.value === undefined) ? '' : String(el.value).trim();
+    if (raw === '') return null;          // empty means "clear the value"
+    if (spec.value_type === 'int') {
+        var n = parseInt(raw, 10);
+        return isNaN(n) ? null : n;
+    }
+    return raw;
+}
+
+async function saveKey(key) {
+    var spec = REGISTRY.find(function (k) { return k.key === key; });
+    if (!spec || !CURRENT_TENANT) return;
+    var value = readControl(spec);
+    var setupKey;
+    try {
+        setupKey = AdminUI.ensureSetupKey();
+    } catch (e) {
+        AdminUI.toast('Setup key required to change configuration.', 'error');
+        return;
+    }
+    try {
+        var result = await AdminUI.apiPut(
+            '/api/v1/system-config/' + encodeURIComponent(CURRENT_TENANT.slug) + '/keys/' + encodeURIComponent(key),
+            { setup_key: setupKey, value: value }
+        );
+        if (result && result.tenant) {
+            CURRENT_TENANT = result.tenant;
+            renderConfigItems();
+        }
+        AdminUI.toast('Saved ' + key + ' for ' + CURRENT_TENANT.slug + ' (audited).', 'success');
+    } catch (e) {
+        AdminUI.toast(e.message, 'error');
+    }
+}
+</script>
+
+</body>
+</html>

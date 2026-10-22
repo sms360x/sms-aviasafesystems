@@ -149,6 +149,9 @@ var NAV_CONFIG = {
             { id: 'team', href: '/settings/team.html', label: 'Team Management' },
             { id: 'settings', href: '/administration.html', label: 'System Settings' },
             { id: 'production', href: '/admin/production-setup.html', label: 'Production Setup', roles: ['SUPER'] },
+            // Phase 3A.2 — SUPER_ADMIN-only governance surfaces.
+            { id: 'audit-chain', href: '/admin/audit-chain.html', label: 'Audit Chain', roles: ['SUPER'] },
+            { id: 'system-config', href: '/admin/system-config.html', label: 'System Configs', roles: ['SUPER'] },
         ]
     },
 };
