@@ -16,6 +16,7 @@ from typing import Dict, Any, Optional
 from loguru import logger
 
 from app.core.config import settings
+from app.core.rbac import is_safety_officer
 from app.db import pg
 from app.db.db_models import Tenant, UserProfile
 from app.db.rls import clear_current_identity, identity_from_user, set_current_identity
@@ -298,12 +299,27 @@ def get_department_scope(user: Dict[str, Any]) -> Optional[str]:
 async def get_responsible_manager(
     user: Dict[str, Any] = Depends(get_current_user)
 ) -> Dict[str, Any]:
+    """Responsible Manager / Safety Manager gate (CAN / CAP workflow).
+
+    Admitted:
+        - the cross-tenant roles and the Tenant Admin (the Safety Manager);
+        - a Safety Officer — an OFFICER **of the Safety department** (or the
+          legacy SAFETY_OFFICER literal);
+        - a department-scoped operator (P3-9: 145@ / camo@ / ops@ accounts),
+          who may only act on the CANs / CAPs of their own department.
+
+    An officer of any other department (Flight Ops, Maintenance, CAMO, ...)
+    without a department scope does not hold this privilege.
+    """
     allowed = (
         settings.CROSS_TENANT_ROLES
         + settings.TENANT_ADMIN_ROLES
-        + settings.SAFETY_OFFICER_ROLES
     )
-    if user.get('role') not in allowed:
+    if (
+        user.get('role') not in allowed
+        and not is_safety_officer(user)
+        and not (user.get('role') == settings.ROLE_OFFICER and get_department_scope(user))
+    ):
         raise HTTPException(
             status_code=403,
             detail="Responsible Manager, Safety Manager, or STATE_SMD role required"

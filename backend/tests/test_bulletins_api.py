@@ -11,8 +11,11 @@ from app.services.safety_comms_service import SafetyCommsService
 client = TestClient(app)
 
 
-def _user(role="OFFICER", tenant_id="air1"):
-    return {"uid": "u1", "email": "so@air1.com", "role": role, "tenant_id": tenant_id}
+def _user(role="OFFICER", tenant_id="air1", department="safety"):
+    # so@ is the Safety Department account: only an officer of the Safety
+    # department is a Safety Officer.
+    return {"uid": "u1", "email": "so@air1.com", "role": role,
+            "tenant_id": tenant_id, "department": department}
 
 
 def test_bulletin_draft_allows_officer(monkeypatch):
@@ -24,6 +27,17 @@ def test_bulletin_draft_allows_officer(monkeypatch):
         r = client.post("/api/v1/bulletins", json={"title": "Runway safety"})
         assert r.status_code == 201, r.text
         assert r.json()["data"]["status"] == "draft"
+    finally:
+        app.dependency_overrides.clear()
+
+
+def test_bulletin_draft_rejects_officer_outside_safety_department():
+    """A Flight Ops officer is not a Safety Officer (Step-3 RBAC hardening)."""
+    app.dependency_overrides[get_current_user] = lambda: _user(
+        role="OFFICER", department="flight_ops")
+    try:
+        r = client.post("/api/v1/bulletins", json={"title": "x"})
+        assert r.status_code == 403
     finally:
         app.dependency_overrides.clear()
 

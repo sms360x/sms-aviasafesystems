@@ -24,6 +24,7 @@ from app.models.hazard import (
 )
 from app.middleware.auth import get_current_user, get_tenant_user, get_safety_manager, require_not_aggregate_only
 from app.core.config import settings
+from app.core.rbac import is_safety_officer
 from app.db.ids import register_tenant
 from app.services.report_service import ReportService, external_ai_blocked_for_report_type
 from app.services.audit_service import log_audit, request_context, log_report_read
@@ -50,26 +51,43 @@ def can_view_raw_vsr(user: Dict[str, Any]) -> bool:
 
     'safety' is the universal department code for the Safety Department.
     Display labels (e.g. "Corporate Safety Department") are cosmetic and not
-    consulted.
+    consulted. The rule is single-sourced in app/core/rbac.py
+    (``is_safety_officer``) so that the RBAC layer and the route layer agree.
     """
     role = user.get("role")
     if role in settings.TENANT_ADMIN_ROLES:
         return True
-    if role == settings.ROLE_SAFETY_OFFICER:
-        return True
-    if role == settings.ROLE_OFFICER:
-        if user.get("department") == "safety":
-            return True
-    return False
+    return is_safety_officer(user)
+
+
+# Departments whose Department Admin may file a Mandatory Occurrence Report.
+# The pre-2B.3 role literals (CAMO_ADMIN / QA_ADMIN / CAMO_USER / QA_USER)
+# are retired: those accounts are the DEPT_ADMINs of the CAMO / QA
+# departments, so the gate is now role + department (SME ruling).
+MOR_SUBMIT_DEPARTMENTS = frozenset({"camo", "qa"})
 
 
 def can_submit_mor(user: Dict[str, Any]) -> bool:
-    """Check if user has permission to submit MOR (CAMO/QA restricted)."""
+    """Check if user has permission to submit MOR (CAMO/QA Department Admins).
+
+    Allowed:
+        - TENANT_ADMIN / SUPER_ADMIN / STATE_SMD
+        - DEPT_ADMIN of the CAMO or the QA department
+        - the legacy e-mail-prefix fallback (local part ``camo`` / ``qa``),
+          kept so that accounts provisioned before the department column was
+          populated keep working.
+
+    The retired literals CAMO_ADMIN / QA_ADMIN / CAMO_USER / QA_USER are
+    gone: a CAMO/QA account is identified by its role and department, not by
+    a dedicated role name.
+    """
     if not user:
         return False
-    allowed_roles = ['CAMO_ADMIN', 'QA_ADMIN', 'CAMO_USER', 'QA_USER', 'TENANT_ADMIN', 'SUPER_ADMIN', 'STATE_SMD']
     role = (user.get('role') or '').strip().upper()
-    if role in [r.upper() for r in allowed_roles]:
+    if role in ('TENANT_ADMIN', 'SUPER_ADMIN', 'STATE_SMD'):
+        return True
+    dept = (user.get('department') or '').strip().lower()
+    if role == 'DEPT_ADMIN' and dept in MOR_SUBMIT_DEPARTMENTS:
         return True
     # Email pattern fallback — local part camo/qa
     email = (user.get('email') or '').strip().lower()
@@ -77,14 +95,6 @@ def can_submit_mor(user: Dict[str, Any]) -> bool:
         local = email.split('@')[0].lower()
         if local in ['camo', 'qa'] or local.startswith('camo.') or local.startswith('qa.'):
             return True
-        # Also check domain prefix
-        if 'camo' in local or 'qa' in local:
-            # Be permissive for demo: allow camo/qa in any part
-            pass
-    # Department fallback
-    dept = (user.get('department') or '').strip().lower()
-    if dept in ['camo', 'qa', 'part-145', 'quality']:
-        return True
     return False
 
 # ICAO ADREP occurrence category -> hazard taxonomy. Values align to the
@@ -172,7 +182,7 @@ async def submit_mor(
       - INVESTIGATION (optional tracking)
     """
     if not can_submit_mor(user):
-        raise HTTPException(status_code=403, detail="MOR access restricted to CAMO and QA personnel")
+        raise HTTPException(status_code=403, detail="MOR access restricted to CAMO and QA Department Admins")
     tenant_id = user["tenant_id"]
     service = ReportService(tenant_id)
     payload = report.model_dump()

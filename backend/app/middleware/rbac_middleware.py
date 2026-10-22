@@ -57,11 +57,11 @@ def get_module_for_path(path: str) -> str:
     return ""
 
 
-def _normalize(role: Optional[str]) -> str:
+def _normalize(role: Optional[str], department: Optional[str] = None) -> str:
     from app.core.rbac import normalize_legacy_role
 
     role = role or "employee"
-    return normalize_legacy_role(role) if role in _NORMALIZE_ROLES else role
+    return normalize_legacy_role(role, department) if role in _NORMALIZE_ROLES else role
 
 
 def _user_from_request(request: Request) -> Optional[Dict[str, Any]]:
@@ -84,6 +84,9 @@ def _user_from_request(request: Request) -> Optional[Dict[str, Any]]:
         "email": decoded.get("email"),
         "role": decoded.get("role", settings.ROLE_DEFAULT),
         "tenant_id": decoded.get("tenant_id"),
+        # The department is part of the RBAC decision: OFFICER only holds
+        # Safety Manager privileges inside the Safety department.
+        "department": decoded.get("department"),
     }
 
 
@@ -127,7 +130,7 @@ async def rbac_middleware(request: Request, call_next):
     role = user.get("role")
     # Cross-tenant roles bypass the module gate (but not tenant isolation).
     if role not in settings.CROSS_TENANT_ROLES:
-        if not has_permission(_normalize(role), module):
+        if not has_permission(_normalize(role, user.get("department")), module):
             return _forbidden(f"Insufficient permissions: role {role} cannot access {module}")
         tenant_id = user.get("tenant_id")
         if tenant_id and not _tenant_module_enabled(tenant_id, module):
@@ -148,4 +151,4 @@ class RBACMiddleware(BaseHTTPMiddleware):
 
 
 def has_permission_for_user(user: Dict[str, Any], module: str) -> bool:
-    return has_permission(_normalize(user.get("role")), module)
+    return has_permission(_normalize(user.get("role"), user.get("department")), module)

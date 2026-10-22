@@ -7,6 +7,7 @@ from datetime import datetime, timezone
 from loguru import logger
 
 from app.core.config import settings
+from app.core.rbac import is_safety_officer
 
 from app.models.hazard import (
     HazardCreate,
@@ -76,13 +77,17 @@ class EnrichmentRequest(BaseModel):
 
 
 def _require_safety_officer(user: Dict[str, Any]) -> None:
-    """Triage/enrich are operational safety roles (§26/§27)."""
+    """Triage/enrich are operational safety roles (§26/§27).
+
+    Only an OFFICER of the Safety (Corporate Safety) department is a Safety
+    Officer; an officer of any other department (Flight Ops, Maintenance,
+    CAMO, ...) does not hold this privilege.
+    """
     allowed = (
-        settings.SAFETY_OFFICER_ROLES
-        + settings.TENANT_ADMIN_ROLES
+        settings.TENANT_ADMIN_ROLES
         + ["SUPER_ADMIN"]
     )
-    if user.get("role") not in allowed:
+    if user.get("role") not in allowed and not is_safety_officer(user):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Safety Officer or higher role required",

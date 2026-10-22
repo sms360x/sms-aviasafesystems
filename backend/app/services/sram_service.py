@@ -20,6 +20,7 @@ from fastapi import HTTPException
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.rbac import is_safety_officer
 from app.db.db_models import (
     BarrierRegisterEntry,
     BowTieAnalysis,
@@ -581,7 +582,14 @@ async def accept_risk(risk_id_or_hazard: str, acceptance_data: dict,
                 detail=f"Unknown initial risk tolerability {initial_tol!r}",
             )
         acting_role = (user or {}).get("role")
-        if acting_role not in required_roles:
+        # OFFICER is a Safety Officer only inside the Safety department: an
+        # officer of any other department (Flight Ops, Maintenance, CAMO, ...)
+        # does not hold the risk-acceptance authority.
+        if acting_role == "OFFICER":
+            authorised = is_safety_officer(user)
+        else:
+            authorised = acting_role in required_roles
+        if not authorised:
             raise HTTPException(
                 status_code=403,
                 detail=(

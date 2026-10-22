@@ -170,6 +170,32 @@ def test_cross_tenant_route_requires_tenant():
         _clear()
 
 
+# T6 — The OFFICER entry of the authority table is a Safety Officer entry: it
+#      only applies to an officer of the Safety (Corporate Safety) department.
+#      A Flight Ops officer may not accept a Tolerable risk.
+def test_officer_authority_is_scoped_to_the_safety_department(monkeypatch):
+    row = _entry("Tolerable")
+    _patch_service(monkeypatch, row)
+
+    # A Flight Ops officer is not a Safety Officer -> denied.
+    with pytest.raises(HTTPException) as exc:
+        _run(sram_service.accept_risk(
+            "H-1", {"alarp_justification": "x" * 20}, "air1",
+            {"role": "OFFICER", "uid": "u1", "email": "u1@air1.com",
+             "department": "flight_ops"},
+        ))
+    assert exc.value.status_code == 403
+    assert row.accepted is not True
+
+    # An officer of the Safety department is a Safety Officer -> allowed.
+    out = _run(sram_service.accept_risk(
+        "H-1", {"alarp_justification": "x" * 20}, "air1",
+        {"role": "OFFICER", "uid": "u2", "email": "so@air1.com",
+         "department": "safety"},
+    ))
+    assert out["accepted"] is True
+
+
 # T5 — No override / delegation path exists for risk acceptance, so there is no
 #      override audit to record. (Recorded in docs/step1/1C.2_ae_non_delegability.md.)
 def test_get_accountable_executive_admits_only_ae():

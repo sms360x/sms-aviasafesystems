@@ -11,14 +11,28 @@ from app.services.hazard_enrichment_service import HazardEnrichmentService
 client = TestClient(app)
 
 
-def _user(role="OFFICER", tenant_id="air1"):
-    return {"uid": "u1", "email": "so@air1.com", "role": role, "tenant_id": tenant_id}
+def _user(role="OFFICER", tenant_id="air1", department="safety"):
+    # so@ is the Safety Department account: only an officer of the Safety
+    # department is a Safety Officer.
+    return {"uid": "u1", "email": "so@air1.com", "role": role,
+            "tenant_id": tenant_id, "department": department}
 
 
 def test_enrich_requires_safety_role():
     """Step-3: the retired STAFF literal is gone; the least-privilege tenant
     member (USER) is still below the safety-officer gate."""
     app.dependency_overrides[get_current_user] = lambda: _user(role="USER")
+    try:
+        r = client.post("/api/v1/hazards/HZ-1/enrich", json={"description": "x"})
+        assert r.status_code == 403
+    finally:
+        app.dependency_overrides.clear()
+
+
+def test_enrich_rejects_officer_outside_safety_department():
+    """A Flight Ops officer is not a Safety Officer (Step-3 RBAC hardening)."""
+    app.dependency_overrides[get_current_user] = lambda: _user(
+        role="OFFICER", department="flight_ops")
     try:
         r = client.post("/api/v1/hazards/HZ-1/enrich", json={"description": "x"})
         assert r.status_code == 403

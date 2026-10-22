@@ -12,6 +12,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, Field
 
 from app.core.config import settings
+from app.core.rbac import is_safety_officer
 from app.middleware.auth import get_safety_manager, get_current_user
 from app.services.safety_comms_service import SafetyCommsService
 
@@ -41,8 +42,8 @@ def _service(user: Dict[str, Any]) -> SafetyCommsService:
 async def create_bulletin(payload: BulletinCreate,
                           user: Dict[str, Any] = Depends(get_current_user)):
     """Create a bulletin draft. Safety Officer or higher may author drafts."""
-    allowed = settings.SAFETY_OFFICER_ROLES + settings.TENANT_ADMIN_ROLES + ["SUPER_ADMIN"]
-    if user.get("role") not in allowed:
+    allowed = settings.TENANT_ADMIN_ROLES + ["SUPER_ADMIN"]
+    if user.get("role") not in allowed and not is_safety_officer(user):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
                             detail="Safety Officer or higher role required")
     svc = _service(user)

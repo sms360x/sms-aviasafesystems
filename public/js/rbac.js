@@ -78,13 +78,17 @@ if (typeof firebase !== 'undefined' && firebase.auth) {
                 const role = (typeof window !== 'undefined' && typeof window.normalizeRoleClaim === 'function')
                     ? window.normalizeRoleClaim(rawRole)
                     : rawRole;
-                // Normalize legacy roles
+                // Normalize legacy roles. OFFICER is department-scoped: only an
+                // officer of the Safety (Corporate Safety) department is a
+                // Safety Manager; every other officer is an employee.
+                const dept = (tokenResult.claims.department || '').trim().toLowerCase();
+                const isSafetyDept = dept === 'safety' || dept === 'corporate_safety';
                 const normalized = {
                     'TENANT_ADMIN': 'tenant_admin',
                     'STATE_SMD': 'regulator',
                     'DEPT_ADMIN': 'department_head',
                     'USER': 'employee',
-                    'OFFICER': 'safety_manager'
+                    'OFFICER': isSafetyDept ? 'safety_manager' : 'employee'
                 }[role] || role;
                 window.currentUser = { ...window.currentUser, role: normalized, claims: tokenResult.claims };
                 renderMenu(normalized);

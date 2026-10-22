@@ -4,6 +4,7 @@
 
 import asyncio
 
+import pytest
 from starlette.requests import Request
 
 from app.main import app
@@ -109,6 +110,133 @@ def test_unauthenticated_passthrough(monkeypatch):
 def test_has_permission_for_user_helper():
     assert mw.has_permission_for_user({"role": "TENANT_ADMIN"}, "module2") is True
     assert mw.has_permission_for_user({"role": "OFFICER"}, "module5") is False
+
+
+# ============================================================================
+# OFFICER is department-scoped (Step-3 RBAC hardening).
+#
+# Only an OFFICER of the Safety (Corporate Safety) department is a Safety
+# Officer. A Flight Ops / Maintenance / CAMO officer must not inherit the
+# Safety Manager privileges (Module 1 and Module 3).
+# ============================================================================
+
+
+def test_safety_officer_has_safety_manager_permissions():
+    """An OFFICER of the Safety department keeps Safety Manager access."""
+    from app.core.rbac import normalize_legacy_role
+
+    assert normalize_legacy_role("OFFICER", "safety") == "safety_manager"
+    assert mw.has_permission_for_user(
+        {"role": "OFFICER", "department": "safety"}, "module1") is True
+    assert mw.has_permission_for_user(
+        {"role": "OFFICER", "department": "safety"}, "module2") is True
+    assert mw.has_permission_for_user(
+        {"role": "OFFICER", "department": "safety"}, "module3") is True
+
+
+@pytest.mark.parametrize("department", ["flight_ops", "maintenance_145", "camo",
+                                        "qa", "ground_ops", None])
+def test_officer_outside_safety_department_is_employee_only(department):
+    """A non-Safety officer falls back to the least-privilege employee profile."""
+    from app.core.rbac import normalize_legacy_role
+
+    assert normalize_legacy_role("OFFICER", department) == "employee"
+    assert mw.has_permission_for_user(
+        {"role": "OFFICER", "department": department}, "module1") is False
+    assert mw.has_permission_for_user(
+        {"role": "OFFICER", "department": department}, "module3") is False
+    assert mw.has_permission_for_user(
+        {"role": "OFFICER", "department": department}, "module2") is True
+
+
+@pytest.mark.parametrize("department", ["safety", "SAFETY", " safety ", "corporate_safety"])
+def test_safety_department_code_is_tolerated(department):
+    """The department code is compared case- and whitespace-insensitively."""
+    from app.core.rbac import normalize_legacy_role
+
+    assert normalize_legacy_role("OFFICER", department) == "safety_manager"
+
+
+def test_legacy_safety_officer_literal_still_is_safety_manager():
+    """The legacy SAFETY_OFFICER literal keeps Safety Manager access."""
+    from app.core.rbac import is_safety_officer, normalize_legacy_role
+
+    assert normalize_legacy_role("SAFETY_OFFICER") == "safety_manager"
+    assert is_safety_officer({"role": "SAFETY_OFFICER"}) is True
+    assert is_safety_officer({"role": "OFFICER", "department": "safety"}) is True
+    assert is_safety_officer({"role": "OFFICER", "department": "flight_ops"}) is False
+    assert is_safety_officer({"role": "DEPT_ADMIN", "department": "safety"}) is False
+
+
+def test_middleware_denies_module1_to_flight_ops_officer(monkeypatch):
+    monkeypatch.setattr(mw, "_user_from_request", lambda r: {
+        "role": "OFFICER", "tenant_id": "air1", "department": "flight_ops"})
+    monkeypatch.setattr(mw, "_tenant_module_enabled", lambda t, m: True)
+    resp = _call(mw.rbac_middleware, "/api/v1/surveys/",
+                 {"role": "OFFICER"}, monkeypatch)
+    assert getattr(resp, "status_code", None) == 403
+
+
+def test_middleware_allows_module1_to_safety_officer(monkeypatch):
+    monkeypatch.setattr(mw, "_user_from_request", lambda r: {
+        "role": "OFFICER", "tenant_id": "air1", "department": "safety"})
+    monkeypatch.setattr(mw, "_tenant_module_enabled", lambda t, m: True)
+    resp = _call(mw.rbac_middleware, "/api/v1/surveys/",
+                 {"role": "OFFICER"}, monkeypatch)
+    assert resp == {"ok": True}
+
+
+def test_middleware_allows_module2_to_any_officer(monkeypatch):
+    """Module 2 stays open to every officer (employee profile)."""
+    monkeypatch.setattr(mw, "_user_from_request", lambda r: {
+        "role": "OFFICER", "tenant_id": "air1", "department": "flight_ops"})
+    monkeypatch.setattr(mw, "_tenant_module_enabled", lambda t, m: True)
+    resp = _call(mw.rbac_middleware, "/api/v1/hazards/",
+                 {"role": "OFFICER"}, monkeypatch)
+    assert resp == {"ok": True}
+
+
+# ============================================================================
+# Responsible Manager gate (CAN / CAP workflow) — department-scoped.
+# ============================================================================
+
+
+def _responsible_manager(user):
+    from app.middleware.auth import get_responsible_manager
+
+    return asyncio.run(get_responsible_manager(user=user))
+
+
+def test_responsible_manager_admits_safety_officer():
+    assert _responsible_manager(
+        {"role": "OFFICER", "department": "safety", "tenant_id": "air1",
+         "email": "so@air1.com"})["role"] == "OFFICER"
+
+
+def test_responsible_manager_denies_officer_without_scope():
+    """A Flight Ops officer without a department scope is not a manager."""
+    from fastapi import HTTPException
+
+    with pytest.raises(HTTPException) as exc:
+        _responsible_manager(
+            {"role": "OFFICER", "department": "flight_ops", "tenant_id": "air1",
+             "email": "john@air1.com"})
+    assert exc.value.status_code == 403
+
+
+def test_responsible_manager_admits_department_scoped_officer():
+    """P3-9: a department account (camo@) acts on its own department only."""
+    assert _responsible_manager(
+        {"role": "OFFICER", "tenant_id": "air1", "email": "camo@air1.com"})["role"] == "OFFICER"
+
+
+def test_responsible_manager_denies_general_employee():
+    from fastapi import HTTPException
+
+    with pytest.raises(HTTPException) as exc:
+        _responsible_manager(
+            {"role": "USER", "tenant_id": "air1", "email": "jane@air1.com"})
+    assert exc.value.status_code == 403
 
 
 # ============================================================================

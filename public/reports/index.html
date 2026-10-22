@@ -83,8 +83,8 @@
         </div>
 
         <div id="opMor" class="op-tab-content">
-            <p style="font-size:0.85rem;color:#475569;margin-bottom:0.75rem;"><strong>Mandatory Occurrence Report (MOR)</strong> — ECCAIRS-aligned, for CAMO/QA personnel. Requires aircraft, flight, and reporter identification.</p>
-            <p style="font-size:0.8rem;color:#991b1b;background:#fef2f2;padding:0.5rem 0.75rem;border-radius:6px;border:1px solid #fecaca;margin-bottom:1rem;"><i class="fas fa-lock"></i> Restricted to <strong>CAMO</strong> and <strong>QA</strong> (role or email local part `camo`/`qa`). Other users will be blocked (403).</p>
+            <p style="font-size:0.85rem;color:#475569;margin-bottom:0.75rem;"><strong>Mandatory Occurrence Report (MOR)</strong> — ECCAIRS-aligned, for CAMO/QA Department Admins. Requires aircraft, flight, and reporter identification.</p>
+            <p style="font-size:0.8rem;color:#991b1b;background:#fef2f2;padding:0.5rem 0.75rem;border-radius:6px;border:1px solid #fecaca;margin-bottom:1rem;"><i class="fas fa-lock"></i> Restricted to <strong>CAMO</strong> and <strong>QA</strong> Department Admins (department code <code>camo</code>/<code>qa</code>, or email local part `camo`/`qa`). Other users will be blocked (403).</p>
             <a href="/reports/new.html?type=mor" class="btn btn-primary" id="morSubmitBtn"><i class="fas fa-arrow-right"></i> Submit MOR</a>
             <a href="/reports/new.html?type=mor" class="btn btn-outline" style="margin-left:0.5rem;">Learn More</a>
         </div>
@@ -158,12 +158,21 @@ let currentTab = 'quarterly';
 firebase.auth().onAuthStateChanged(function(user) {
     if (!user) { window.location.href = '/login.html'; return; }
     loadQuarterly(); loadAnnual();
-    // MOR access hint
+    // MOR access hint — MOR filing is restricted to the CAMO/QA Department
+    // Admins (the retired CAMO_ADMIN/QA_ADMIN/CAMO_USER/QA_USER literals are
+    // gone; the gate is role + department, with the legacy e-mail fallback).
     user.getIdTokenResult().then(r => {
         const role = (r.claims.role||'').toUpperCase();
-        if (!['CAMO_ADMIN','QA_ADMIN','CAMO_USER','QA_USER','TENANT_ADMIN','SUPER_ADMIN'].includes(role)) {
+        const dept = (r.claims.department||'').trim().toLowerCase();
+        const email = (r.claims.email || user.email || '').trim().toLowerCase();
+        const local = email.includes('@') ? email.split('@')[0] : '';
+        const roleOk = ['TENANT_ADMIN','SUPER_ADMIN','STATE_SMD'].includes(role)
+            || (role === 'DEPT_ADMIN' && ['camo','qa'].includes(dept));
+        const emailOk = local === 'camo' || local === 'qa'
+            || local.startsWith('camo.') || local.startsWith('qa.');
+        if (!roleOk && !emailOk) {
             const btn = document.getElementById('morSubmitBtn');
-            if (btn) { btn.style.opacity='0.6'; btn.title='MOR restricted to CAMO/QA'; }
+            if (btn) { btn.style.opacity='0.6'; btn.title='MOR restricted to CAMO/QA Department Admins'; }
         }
     }).catch(()=>{});
 });
