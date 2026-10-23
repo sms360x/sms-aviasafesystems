@@ -415,10 +415,18 @@ function prettifyTenantName(slug) {
 
 function getActiveTenant() {
     var tenantId = null;
-    if (typeof TenantResolver !== 'undefined' && TenantResolver.getCurrentTenant) {
-        tenantId = TenantResolver.getCurrentTenant();
-    } else {
-        tenantId = getTenantFromSubdomain();
+    // Support ?tenant= param for subdomain routing flow
+    try {
+        var params = new URLSearchParams(window.location.search);
+        var q = params.get('tenant');
+        if (q) tenantId = q;
+    } catch (e) {}
+    if (!tenantId) {
+        if (typeof TenantResolver !== 'undefined' && TenantResolver.getCurrentTenant) {
+            tenantId = TenantResolver.getCurrentTenant();
+        } else {
+            tenantId = getTenantFromSubdomain();
+        }
     }
     if (tenantId && RESERVED_TENANT_KEYWORDS.indexOf(tenantId) !== -1) return null;
     return tenantId || null;

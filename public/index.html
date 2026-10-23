@@ -7,6 +7,22 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <script>
+      (function(){
+        var flag = (window.location.hostname === 'localhost') ? true : false; // SUBDOMAIN_ROUTING_ENABLED default false in prod
+        if(!flag) return;
+        var host = window.location.hostname.toLowerCase();
+        var reserved = ['www','api','admin','app','mail','sms','login','auth'];
+        var apexes = ['sms360x.com','aviasafesystems.com'];
+        var apex = apexes.find(function(d){return host===d||host.endsWith('.'+d);});
+        if(!apex) return;
+        var prefix = host.slice(0, host.length-apex.length).replace(/\.$/,'');
+        if(!prefix) return;
+        var label = prefix.split('.')[0];
+        if(reserved.indexOf(label) !== -1) return;
+        window.location.replace('/login.html?tenant=' + encodeURIComponent(label));
+      })();
+    </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AviaSAFE SMS — Aviation Safety Management & State Oversight Platform</title>
     <meta name="description" content="AviaSAFE SMS is an aviation safety management and state oversight platform engineered for ICAO Annex 19 (3rd Edition), Doc 9859 and Doc 10159 compliance — turning safety data into safety intelligence.">
