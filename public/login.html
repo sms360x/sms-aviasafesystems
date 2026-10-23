@@ -17,6 +17,17 @@ AUTHOR: AviaSAFE Systems
     <link rel="stylesheet" href="/css/variables.css">
     <link rel="stylesheet" href="/css/main.css">
     <link rel="stylesheet" href="/css/tenant-overrides.css">
+    <style>
+      .login-split{display:grid;grid-template-columns:1fr 1fr;min-height:100vh}
+      .login-right{background:linear-gradient(135deg,#073042,#0A2540);color:#fff;padding:3rem;display:flex;flex-direction:column;justify-content:center}
+      .login-right h1{font-size:2rem;font-weight:800;margin-bottom:1rem}
+      .login-right p{opacity:.85;line-height:1.6;margin-bottom:2rem}
+      .pillar{display:flex;gap:1rem;margin-bottom:1.25rem}
+      .pillar i{color:#7DD3FC;font-size:1.2rem;margin-top:.2rem}
+      .pillar h3{margin:0 0 .25rem;font-size:1rem}
+      .pillar p{margin:0;font-size:.85rem;opacity:.8}
+      @media(max-width:900px){.login-right{display:none}}
+    </style>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         /* ========== LAYOUT ONLY — colors handled by /styles/global.css ========== */
@@ -95,7 +106,9 @@ AUTHOR: AviaSAFE Systems
     </head>
 <body>
 
-<div class="login-page">
+<div class="login-split">
+  <div class="login-left">
+    <div class="login-page">
     <div class="login-container">
         <div class="logo">
             <i class="fas fa-shield-alt"></i>
@@ -150,6 +163,14 @@ AUTHOR: AviaSAFE Systems
             <a href="/join.html">Join Your Team</a>
         </div>
     </div>
+  </div>
+  <div class="login-right">
+    <h1>Safety intelligence for modern aviation.</h1>
+    <p>SMS360X turns safety data into safety information, and safety information into safety intelligence — so operators, regulators, and states can make defensible decisions.</p>
+    <div class="pillar"><i class="fas fa-inbox"></i><div><h3>Capture</h3><p>Occurrences, hazards, risks, and barriers in a single coherent model, aligned with ICAO Annex 19 and Doc 9859.</p></div></div>
+    <div class="pillar"><i class="fas fa-link"></i><div><h3>Connect</h3><p>Safety data linked across State, Regulator, Operator, and User, with tenant isolation by design.</p></div></div>
+    <div class="pillar"><i class="fas fa-chart-line"></i><div><h3>Decide</h3><p>Dashboards and intelligence for safety managers, accountable executives, regulators, and state safety programmes.</p></div></div>
+  </div>
 </div>
 
 <!-- ===== FIREBASE SDK ===== -->
