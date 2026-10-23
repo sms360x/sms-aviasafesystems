@@ -23,11 +23,16 @@ async function loadSortingCenter() {
     const items = Array.isArray(data) ? data : (data.items || []);
     if (!items.length) { el.textContent = 'No items in sorting center.'; return; }
     el.innerHTML = items.map(h => `
-      <div class="item">
-        <strong>${h.taxonomy || 'Hazard'}</strong>
-        <div>${h.title || ''}</div>
-        ${isSafetyOfficer(window.__user) && h.reporter_contact ? `<div class="contact">Reporter: ${h.reporter_contact}</div>` : ''}
-      </div>
+      <tr>
+        <td>${h.id || ''}</td>
+        <td>${h.taxonomy || ''}</td>
+        <td>${h.title || ''}</td>
+        <td>
+          ${isSafetyOfficer(window.__user) && h.reporter_contact
+            ? `<button class="btn btn-outline" onclick="toggleContact(this, '${String(h.reporter_contact).replace(/'/g, "\\'")}')">View Contact</button>`
+            : '<span class="empty">—</span>'}
+        </td>
+      </tr>
     `).join('');
   } catch (e) {
     el.textContent = 'Failed to load sorting center.';
@@ -40,7 +45,18 @@ async function loadCapQueue() {
     const data = await fetchJson('/api/v1/caps?status=open');
     const items = Array.isArray(data) ? data : (data.items || []);
     if (!items.length) { el.textContent = 'No open CAPs.'; return; }
-    el.innerHTML = items.map(c => `<div class="item"><strong>${c.id || ''}</strong> — ${c.status || ''}</div>`).join('');
+    el.innerHTML = items.map(c => `
+      <tr>
+        <td>${c.id || ''}</td>
+        <td>${c.hazard_taxonomy || c.taxonomy || ''}</td>
+        <td>${c.status || ''}</td>
+        <td>
+          ${isSafetyOfficer(window.__user) && c.reporter_contact
+            ? `<button class="btn btn-outline" onclick="toggleContact(this, '${String(c.reporter_contact).replace(/'/g, "\\'")}')">View Contact</button>`
+            : '<span class="empty">—</span>'}
+        </td>
+      </tr>
+    `).join('');
   } catch (e) {
     el.textContent = 'Failed to load CAP queue.';
   }
@@ -53,6 +69,22 @@ if (typeof document !== 'undefined') {
   loadSortingCenter();
   loadCapQueue();
   });
+}
+
+function toggleContact(btn, contact) {
+  if (btn.dataset.shown === '1') {
+    btn.textContent = 'View Contact';
+    btn.dataset.shown = '0';
+    const next = btn.nextElementSibling;
+    if (next && next.classList.contains('contact')) next.remove();
+  } else {
+    btn.textContent = 'Hide Contact';
+    btn.dataset.shown = '1';
+    const span = document.createElement('div');
+    span.className = 'contact';
+    span.textContent = contact;
+    btn.insertAdjacentElement('afterend', span);
+  }
 }
 
 if (typeof module !== 'undefined') {
