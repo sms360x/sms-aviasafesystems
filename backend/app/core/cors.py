@@ -56,6 +56,17 @@ EXPOSE_HEADERS = (
 )
 
 
+import re as _re
+
+_SMS360X_ORIGIN_RE = _re.compile(r"^https://([a-z0-9-]+\.)?sms360x\.com$")
+
+def _origin_allowed(origin: str) -> bool:
+    if not origin:
+        return False
+    if origin in _allowed_origins():
+        return True
+    return bool(_SMS360X_ORIGIN_RE.match(origin))
+
 def _allowed_origins() -> list:
     raw = settings.CORS_ORIGINS if (settings.CORS_ORIGINS and settings.CORS_ORIGINS.strip()) else settings.ALLOWED_ORIGINS
     configured = [o.strip() for o in raw.split(",") if o.strip()]
@@ -73,7 +84,7 @@ class ManualCORSMiddleware(BaseHTTPMiddleware):
         if not origin:
             return response
 
-        if origin not in _allowed_origins():
+        if not _origin_allowed(origin):
             return response
 
         response.headers["Access-Control-Allow-Origin"] = origin
