@@ -7,21 +7,26 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AviaSAFE SMS</title>
+    
+    <!-- DEFINE THE FLAG HERE -->
     <script>
-      (function(){
-        var flag = (window.location.hostname === 'localhost') ? true : false; // SUBDOMAIN_ROUTING_ENABLED default false in prod
-        if(!flag) return;
-        var host = window.location.hostname.toLowerCase();
-        var reserved = ['www','api','admin','app','mail','sms','login','auth'];
-        var apexes = ['sms360x.com','aviasafesystems.com'];
-        var apex = apexes.find(function(d){return host===d||host.endsWith('.'+d);});
-        if(!apex) return;
-        var prefix = host.slice(0, host.length-apex.length).replace(/\.$/,'');
-        if(!prefix) return;
-        var label = prefix.split('.')[0];
-        if(reserved.indexOf(label) !== -1) return;
-        window.location.replace('/login.html?tenant=' + encodeURIComponent(label));
-      })();
+        window.__SUBDOMAIN_ROUTING_ENABLED = true;
+    </script>
+    
+    <!-- Load the resolver -->
+    <script src="/js/domain-resolver.js"></script>
+    
+    <!-- The Redirect IIFE -->
+    <script>
+        (function() {
+            if (!window.__SUBDOMAIN_ROUTING_ENABLED) return;
+            const tenant = window.DomainResolver.getTenantFromSubdomain(window.location.hostname);
+            if (tenant) {
+                window.location.replace('/login.html?tenant=' + encodeURIComponent(tenant));
+            }
+        })();
     </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AviaSAFE SMS — Aviation Safety Management & State Oversight Platform</title>
