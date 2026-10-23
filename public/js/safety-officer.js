@@ -28,8 +28,8 @@ async function loadSortingCenter() {
         <td>${h.taxonomy || ''}</td>
         <td>${h.title || ''}</td>
         <td>
-          ${isSafetyOfficer(window.__user) && h.reporter_contact
-            ? `<button class="btn btn-outline" onclick="toggleContact(this, '${String(h.reporter_contact).replace(/'/g, "\\'")}')">View Contact</button>`
+          ${isSafetyOfficer(window.__user)
+            ? `<button class="btn btn-outline" onclick="viewContact('${h.id}')">View Contact</button><span class="contact" style="display:none;"></span>`
             : '<span class="empty">—</span>'}
         </td>
       </tr>
@@ -51,8 +51,8 @@ async function loadCapQueue() {
         <td>${c.hazard_taxonomy || c.taxonomy || ''}</td>
         <td>${c.status || ''}</td>
         <td>
-          ${isSafetyOfficer(window.__user) && c.reporter_contact
-            ? `<button class="btn btn-outline" onclick="toggleContact(this, '${String(c.reporter_contact).replace(/'/g, "\\'")}')">View Contact</button>`
+          ${isSafetyOfficer(window.__user)
+            ? `<button class="btn btn-outline" onclick="viewContact('${c.id}', this)">View Contact</button><span class="contact" style="display:none;"></span>`
             : '<span class="empty">—</span>'}
         </td>
       </tr>
@@ -71,19 +71,20 @@ if (typeof document !== 'undefined') {
   });
 }
 
-function toggleContact(btn, contact) {
-  if (btn.dataset.shown === '1') {
-    btn.textContent = 'View Contact';
-    btn.dataset.shown = '0';
-    const next = btn.nextElementSibling;
-    if (next && next.classList.contains('contact')) next.remove();
-  } else {
-    btn.textContent = 'Hide Contact';
-    btn.dataset.shown = '1';
-    const span = document.createElement('div');
-    span.className = 'contact';
-    span.textContent = contact;
-    btn.insertAdjacentElement('afterend', span);
+async function viewContact(id, btn) {
+  const span = btn ? btn.nextElementSibling : null;
+  if (span && span.style.display !== 'none') {
+    span.style.display = 'none';
+    if (btn) btn.textContent = 'View Contact';
+    return;
+  }
+  try {
+    const data = await fetchJson(`/api/v1/reports/${encodeURIComponent(id)}/contact`);
+    const contact = data && (data.contact || data.reporter_contact || JSON.stringify(data));
+    if (span) { span.textContent = contact; span.style.display = 'block'; }
+    if (btn) btn.textContent = 'Hide Contact';
+  } catch (e) {
+    if (span) { span.textContent = 'Unable to load contact'; span.style.display = 'block'; }
   }
 }
 
