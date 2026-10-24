@@ -21,6 +21,9 @@ from app.core.config import settings
 # ALLOWED_ORIGINS so a stale environment variable can never break the
 # browser -> API calls.
 CANONICAL_ALLOWED_ORIGINS = (
+    "https://sms360x.com",
+    "https://sita.sms360x.com",
+    "https://tara.sms360x.com",
     "https://sms.aviasafesystems.com",
     "https://aerosafety-sms-prod.web.app",
     "https://demo.aviasafesystems.com",

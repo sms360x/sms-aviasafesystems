@@ -77,9 +77,8 @@
             <p class="text-lg md:text-xl text-slate-600 max-w-xl mb-10 leading-relaxed">SMS360X turns safety data into safety information, and safety information into safety intelligence — so operators, regulators, and states can make defensible decisions.</p>
             <button type="button" class="bg-[#0A3A50] hover:bg-[#0E4E6C] text-white font-semibold text-lg px-8 py-4 rounded-lg transition-all shadow-lg" onclick="document.getElementById('demo-modal').showModal()">Request an early demo</button>
         </div>
-        <div class="relative">
-            <img src="/Hero Image.png" alt="SMS360X safety intelligence card" class="rounded-2xl shadow-2xl w-full">
-            <div class="absolute bottom-4 right-4 bg-black/60 text-white text-xs px-3 py-1.5 rounded-full">Data is not information, and information is not yet intelligence.</div>
+        <div class="relative w-full max-h-[480px] overflow-hidden rounded-2xl shadow-2xl">
+            <img src="/Hero Image.png" alt="SMS360X safety intelligence card" class="w-full h-full object-cover">
         </div>
     </div>
 </section>
@@ -198,12 +197,30 @@
         const reserved = ['www', 'sms', 'app', 'api', 'caan', 'admin', 'auth', 'docs', 'betasms', 'gap-analysis-ssp'];
 
         if (!reserved.includes(subdomain) && subdomain !== 'sms360x') {
+            // Map short subdomain slugs to full tenant IDs (e.g. 'sita' -> 'sita-air')
+            const SUBDOMAIN_TO_TENANT_ID = {
+                'buddhaair': 'buddha-air', 'airdynasty': 'air-dynasty', 'ktmmro': 'ktm-mro',
+                'pokhara': 'pokhara-aerodrome', 'himalayaground': 'himalaya-ground-services',
+                'yeti': 'yeti-airlines', 'summit': 'summit-air', 'sita': 'sita-air',
+                'simrik': 'simrik-air', 'tara': 'tara-air', 'buddha-air': 'buddha-air',
+                'air-dynasty': 'air-dynasty', 'ktm-mro': 'ktm-mro',
+                'pokhara-aerodrome': 'pokhara-aerodrome',
+                'himalaya-ground-services': 'himalaya-ground-services',
+                'yeti-airlines': 'yeti-airlines', 'summit-air': 'summit-air',
+                'sita-air': 'sita-air', 'simrik-air': 'simrik-air', 'tara-air': 'tara-air'
+            };
+            const tenantId = SUBDOMAIN_TO_TENANT_ID[subdomain] || subdomain;
+
             const isBetaHost = /beta/.test(hostname);
             const user = localStorage.getItem('aviasafe:' + (isBetaHost ? 'beta' : 'prod') + ':user');
             if (user) {
                 window.location.href = '/safety.html';
             } else {
-                window.location.href = '/login.html?tenant=' + subdomain;
+                var redirectUrl = '/login.html?tenant=' + encodeURIComponent(tenantId);
+                if (window.location.search.includes('debug=true')) {
+                    redirectUrl += '&debug=true';
+                }
+                window.location.href = redirectUrl;
             }
         }
     }

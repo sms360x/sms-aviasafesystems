@@ -158,6 +158,10 @@ function loadFirebaseSDK() {
 function initializeFirebase() {
     if (typeof firebase !== 'undefined' && firebase.initializeApp) {
         try {
+            // Bypass App Check for testing on all sms360x domains
+            if (window.location.hostname.includes('sms360x.com') || window.location.hostname.includes('web.app')) {
+                self.FIREBASE_APPCHECK_DEBUG_TOKEN = "F000A02C-8AC3-4E61-A5E9-E3F1C9DFD7BF";
+            }
             // Check if already initialized
             if (!firebase.apps || firebase.apps.length === 0) {
                 firebase.initializeApp(firebaseConfig);
