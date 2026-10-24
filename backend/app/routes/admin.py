@@ -2366,6 +2366,7 @@ async def admin_reset_user_password(uid: str, user=Depends(get_admin_user)):
     new_password = ''.join(secrets.choice(alphabet) for _ in range(16))
 
     try:
+        auth = get_auth()
         auth.update_user(uid, password=new_password)
         try:
             fb_user = auth.get_user(uid)
