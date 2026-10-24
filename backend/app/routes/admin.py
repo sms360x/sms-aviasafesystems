@@ -2352,32 +2352,3 @@ async def admin_create_user(
         logger.error(f"Create user failed for {req.email}: {e}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
-
-from firebase_admin import auth as firebase_auth
-
-
-@router.post('/debug/purge-firebase-users')
-async def purge_firebase_users(user=Depends(get_admin_user)):
-    if user.get('role') != 'SUPER_ADMIN':
-        raise HTTPException(status_code=403, detail='SUPER_ADMIN required')
-
-    KEEP_EMAIL = 'ezondiza.dhf@gmail.com'
-    deleted = []
-    errors = []
-
-    try:
-        page = firebase_auth.list_users()
-        while page:
-            for u in page.users:
-                if u.email == KEEP_EMAIL:
-                    continue
-                try:
-                    firebase_auth.delete_user(u.uid)
-                    deleted.append(u.email or u.uid)
-                except Exception as e:
-                    errors.append(f'{u.email or u.uid}: {str(e)}')
-            page = page.get_next_page()
-
-        return {'success': True, 'deleted_count': len(deleted), 'deleted': deleted, 'errors': errors}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
