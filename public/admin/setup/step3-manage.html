@@ -657,7 +657,7 @@ function renderUserTable() {
             '<td><code>' + esc(u.tenant_id || '—') + '</code></td>' +
             '<td>' + esc(u.department || '—') + '</td>' +
             '<td style="font-size:.72rem;color:#64748b;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="' + uidEsc + '">' + uidEsc + '</td>' +
-            '<td><div style="display:flex;gap:6px;flex-wrap:wrap;"><button class="btn btn-outline btn-sm" onclick="openEditUserModal(\'' + esc(u.uid).replace(/'/g, "\\'") + '\', \'' + emailEsc.replace(/'/g, "\\'") + '\', \'' + esc(u.role || '').replace(/'/g, "\\'") + '\', \'' + esc(u.tenant_id || '').replace(/'/g, "\\'") + '\', \'' + esc(u.department || '').replace(/'/g, "\\'") + '\', \'' + esc(u.display_name || '').replace(/'/g, "\\'") + '\')"><i class="fas fa-pen"></i> Edit</button><button class="btn btn-danger btn-sm" onclick="requestDeleteUser(\'' + emailEsc.replace(/'/g, "\\'") + '\', \'' + uidEsc.replace(/'/g, "\\'") + '\')"><i class="fas fa-trash"></i> Delete</button></div></td></tr>';
+            '<td><div style="display:flex;gap:6px;flex-wrap:wrap;"><button class="btn btn-outline btn-sm" onclick="openEditUserModal(\'' + esc(u.uid).replace(/'/g, "\\'") + '\', \'' + emailEsc.replace(/'/g, "\\'") + '\', \'' + esc(u.role || '').replace(/'/g, "\\'") + '\', \'' + esc(u.tenant_id || '').replace(/'/g, "\\'") + '\', \'' + esc(u.department || '').replace(/'/g, "\\'") + '\', \'' + esc(u.display_name || '').replace(/'/g, "\\'") + '\')"><i class="fas fa-pen"></i> Edit</button><button class="btn btn-outline btn-sm" onclick="requestResetPassword(\'' + emailEsc.replace(/'/g, "\\'") + '\', \'' + uidEsc.replace(/'/g, "\\'") + '\')"><i class="fas fa-key"></i> Reset Password</button><button class="btn btn-danger btn-sm" onclick="requestDeleteUser(\'' + emailEsc.replace(/'/g, "\\'") + '\', \'' + uidEsc.replace(/'/g, "\\'") + '\')"><i class="fas fa-trash"></i> Delete</button></div></td></tr>';
     });
     html += '</tbody></table></div><div style="margin-top:8px;color:#94a3b8;font-size:.75rem;">' + filtered.length + ' of ' + CACHED_USERS.length + ' users shown.</div>';
     el.innerHTML = html;
@@ -1182,6 +1182,44 @@ function requestDeleteUser(email, uid) {
         '<span style="color:#b91c1c;">This cannot be undone.</span> An audit log entry <code>USER_DELETED</code> will be written.',
         { type: 'deleteUser', email: email, uid: uid }
     );
+}
+
+function requestResetPassword(email, uid) {
+    var label = email || uid || 'this user';
+    openConfirm(
+        'Reset Password',
+        'Generate a new password for <strong>' + esc(label) + '</strong>?<br><br>' +
+        'The new password will be shown ONCE. Copy it and share it securely.<br>' +
+        '<span style="color:#b91c1c;">The user will be required to change it on next login.</span>',
+        { type: 'resetPassword', email: email, uid: uid }
+    );
+}
+
+async function execResetPassword(email, uid, setupKeyFromModal) {
+    var setup_key = (setupKeyFromModal || '').trim();
+    if (!setup_key) {
+        try { setup_key = AdminUI.getSetupKey() || ''; } catch (e) { setup_key = ''; }
+    }
+    if (!setup_key) {
+        toast('Reset cancelled — setup key is required', 'error');
+        return;
+    }
+    try {
+        var resp = await AdminUI.apiPost('/api/v1/admin/users/' + uid + '/reset-password', {
+            setup_key: setup_key
+        });
+        if (!resp || !resp.success) {
+            throw new Error((resp && resp.detail) || 'Reset failed');
+        }
+        var msg = 'Password reset successful for ' + (resp.email || email) + '.\n\n' +
+                  'New password:\n' + resp.password + '\n\n' +
+                  'Copy this now. It will not be shown again.';
+        window.alert(msg);
+        toast('Password reset for ' + (resp.email || email), 'success');
+        await loadUsers();
+    } catch (err) {
+        toast('Reset failed: ' + (err.message || String(err)), 'error');
+    }
 }
 
 async function execDeleteUser(email, uid, setupKeyFromModal) {

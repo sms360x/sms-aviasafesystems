@@ -77,7 +77,7 @@ function bindConfirmOkBtn() {
         var action = pendingConfirm;
         if (!action) return;
         // For destructive actions, require setup key from the modal input
-        var needsKey = action.type === 'demo' || action.type === 'psoe' || action.type === 'stateRisk' || action.type === 'purgeUnified' || action.type === 'purgePsoeDemo' || action.type === 'purgeStateRiskDemo' || action.type === 'deleteDemoTenants' || action.type === 'deleteUser';
+        var needsKey = action.type === 'demo' || action.type === 'psoe' || action.type === 'stateRisk' || action.type === 'purgeUnified' || action.type === 'purgePsoeDemo' || action.type === 'purgeStateRiskDemo' || action.type === 'deleteDemoTenants' || action.type === 'deleteUser' || action.type === 'resetPassword';
         var setupKey = '';
         if (needsKey) {
             var input = document.getElementById('confirmSetupKey');
@@ -95,6 +95,9 @@ function bindConfirmOkBtn() {
                 // deleteUser stores email/uid separately; also inject for exec
                 action.setup_key = setupKey;
             }
+            if (action.type === 'resetPassword') {
+                action.setup_key = setupKey;
+            }
             if (action.type === 'psoe' || action.type === 'stateRisk') {
                 action.body.setup_key = setupKey;
             }
@@ -110,6 +113,7 @@ function bindConfirmOkBtn() {
         else if (action.type === 'purgeStateRiskDemo') execPurgeStateRiskDemo(action.body);
         else if (action.type === 'deleteDemoTenants') execDeleteDemoTenants(action.body);
         else if (action.type === 'deleteUser') execDeleteUser(action.email, action.uid, action.setup_key);
+        else if (action.type === 'resetPassword') execResetPassword(action.email, action.uid, action.setup_key);
     });
 }
 
