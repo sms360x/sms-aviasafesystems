@@ -200,6 +200,53 @@ AUTHOR: AviaSAFE Systems
 <!-- ===== LOGIN LOGIC ===== -->
 <script>
 // ============================================================================
+// CUSTOM MODAL HELPERS (replaces alert/confirm)
+// ============================================================================
+function showModal(title, message, iconClass = 'fa-info-circle', isConfirm = false) {
+    return new Promise((resolve) => {
+        const modal = document.getElementById('uiModal');
+        const titleEl = document.getElementById('uiModalTitle');
+        const msgEl = document.getElementById('uiModalMessage');
+        const iconEl = document.getElementById('uiModalIcon');
+        const btnConfirm = document.getElementById('uiModalConfirm');
+        const btnCancel = document.getElementById('uiModalCancel');
+
+        if (!modal || !titleEl) {
+            if (isConfirm) resolve(confirm(title + '\n\n' + message));
+            else { alert(title + '\n\n' + message); resolve(true); }
+            return;
+        }
+
+        titleEl.textContent = title;
+        msgEl.textContent = message;
+        iconEl.className = 'fas ' + iconClass;
+
+        if (iconClass.includes('check') || iconClass.includes('envelope')) iconEl.style.color = '#0e7490';
+        else if (iconClass.includes('exclamation') || iconClass.includes('triangle')) iconEl.style.color = '#d97706';
+        else if (iconClass.includes('times') || iconClass.includes('ban')) iconEl.style.color = '#dc2626';
+        else iconEl.style.color = '#0e7490';
+
+        btnCancel.style.display = isConfirm ? 'inline-block' : 'none';
+        btnConfirm.textContent = isConfirm ? 'Confirm' : 'OK';
+        modal.style.display = 'flex';
+
+        const newConfirm = btnConfirm.cloneNode(true);
+        const newCancel = btnCancel.cloneNode(true);
+        btnConfirm.parentNode.replaceChild(newConfirm, btnConfirm);
+        btnCancel.parentNode.replaceChild(newCancel, btnCancel);
+
+        newConfirm.addEventListener('click', () => {
+            modal.style.display = 'none';
+            resolve(true);
+        });
+        newCancel.addEventListener('click', () => {
+            modal.style.display = 'none';
+            resolve(false);
+        });
+    });
+}
+
+// ============================================================================
 // WAIT FOR FIREBASE SDK
 // ============================================================================
 
@@ -705,29 +752,36 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
 document.getElementById('forgotPasswordLink').addEventListener('click', async function(e) {
     e.preventDefault();
     var email = (document.getElementById('email').value || '').trim();
+
     if (!email) {
-        alert('Please enter your email address first, then click Forgot Password.');
+        await showModal('Email Required', 'Please enter your email address in the field above, then click Forgot Password.', 'fa-exclamation-circle');
         return;
     }
-    if (!confirm('Send a password reset email to ' + email + '?')) {
-        return;
-    }
+
+    var confirmed = await showModal(
+        'Reset Password',
+        'Send a password reset email to ' + email + '?',
+        'fa-envelope',
+        true
+    );
+    if (!confirmed) return;
+
     try {
         await firebase.auth().sendPasswordResetEmail(email);
-        alert('Password reset email sent to ' + email + '.\n\nCheck your inbox (and spam folder) for the reset link. The link expires in 1 hour.');
+        await showModal(
+            'Email Sent',
+            'A password reset link has been sent to ' + email + '. Please check your inbox (and spam folder).',
+            'fa-check-circle'
+        );
     } catch (err) {
         console.error('[Forgot Password] error:', err);
         var msg = 'Could not send reset email. ';
-        if (err && err.code === 'auth/user-not-found') {
-            msg += 'No account exists with that email address.';
-        } else if (err && err.code === 'auth/invalid-email') {
-            msg += 'The email address is not valid.';
-        } else if (err && err.code === 'auth/too-many-requests') {
-            msg += 'Too many attempts. Please try again later.';
-        } else {
-            msg += (err && err.message) || 'Please try again.';
-        }
-        alert(msg);
+        if (err && err.code === 'auth/user-not-found') msg += 'No account exists with that email address.';
+        else if (err && err.code === 'auth/invalid-email') msg += 'The email address is not valid.';
+        else if (err && err.code === 'auth/too-many-requests') msg += 'Too many attempts. Please try again later.';
+        else msg += (err && err.message) || 'Please try again.';
+
+        await showModal('Error', msg, 'fa-times-circle');
     }
 });
 
@@ -735,5 +789,19 @@ document.getElementById('forgotPasswordLink').addEventListener('click', async fu
 
 <script src="/js/main.js"></script>
 
+<!-- Custom Modal for Alerts and Confirmations -->
+<div id="uiModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:9999;justify-content:center;align-items:center;">
+    <div style="background:white;padding:24px;border-radius:12px;max-width:400px;width:90%;box-shadow:0 10px 25px rgba(0,0,0,0.2);text-align:center;">
+        <div id="uiModalIcon" style="font-size:2.5rem;color:#0e7490;margin-bottom:12px;">
+            <i class="fas fa-envelope"></i>
+        </div>
+        <h3 id="uiModalTitle" style="margin:0 0 8px;color:#0f172a;font-size:1.25rem;font-weight:700;">Title</h3>
+        <p id="uiModalMessage" style="margin:0 0 20px;color:#475569;font-size:0.95rem;line-height:1.5;">Message</p>
+        <div style="display:flex;gap:10px;justify-content:center;">
+            <button type="button" id="uiModalCancel" style="display:none;padding:8px 16px;border:1px solid #cbd5e1;background:white;color:#475569;border-radius:8px;cursor:pointer;font-weight:600;">Cancel</button>
+            <button type="button" id="uiModalConfirm" style="padding:8px 16px;border:none;background:#0e7490;color:white;border-radius:8px;cursor:pointer;font-weight:600;">OK</button>
+        </div>
+    </div>
+</div>
 </body>
 </html>
