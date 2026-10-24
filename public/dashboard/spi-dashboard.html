@@ -1,90 +1,149 @@
-<!-- public/dashboard/spi-dashboard.html -->
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SPI/SPT Dashboard - AviaSAFE</title>
+    <title>SPI/SPT Dashboard - SMS360X</title>
+
     <link rel="stylesheet" href="/css/variables.css">
+    <link rel="stylesheet" href="/css/dashboard-responsive.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
     <link rel="stylesheet" href="/css/shell.css">
     <link rel="stylesheet" href="/css/spi-dashboard.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="/css/dashboard-responsive.css">
-    
+
+    <link rel="stylesheet" href="/css/executive-ui.css">
+
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="/js/chart-theme.js"></script>
 </head>
 <body>
-    <div class="app-shell">
-        <div id="authGate" style="padding:3rem;text-align:center;color:#64748b;">
-            <i class="fas fa-spinner fa-spin" style="font-size:2rem;"></i>
-            <p>Loading SPI/SPT Dashboard...</p>
+    <div id="authGate" style="padding:3rem;text-align:center;color:#64748b;">
+        <i class="fas fa-spinner fa-spin" style="font-size:2rem;"></i>
+        <p>Loading SPI/SPT Dashboard...</p>
+    </div>
+
+    <div id="spiContent" style="display:none;">
+        <div class="exec-page-header">
+            <h1><i class="fas fa-gauge-high" style="color:var(--exec-accent);"></i> SPI/SPT Dashboard</h1>
+            <p>Safety Performance Indicators &amp; Targets — Leading &amp; Lagging</p>
         </div>
 
-        <div id="spiContent" style="display:none;">
-            <div class="section-head">
-                <div>
-                    <h2><i class="fas fa-gauge-high" style="color:#1a6b8a;"></i> SPI/SPT Dashboard</h2>
-                    <div class="section-sub">Safety Performance Indicators & Targets — Leading & Lagging</div>
-                </div>
-                <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-                    <button class="btn btn-primary btn-sm" onclick="loadSpiData()"><i class="fas fa-rotate"></i> Refresh</button>
-                </div>
+        <div style="margin-bottom:1rem;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+            <button class="btn btn-primary btn-sm" onclick="loadSpiData()" style="background:var(--exec-accent);color:#fff;border:none;padding:0.5rem 1rem;border-radius:8px;cursor:pointer;font-weight:600;font-size:0.85rem;">
+                <i class="fas fa-rotate"></i> Refresh
+            </button>
+        </div>
+
+        <div class="spi-summary" id="spiSummary" style="margin-bottom:1.25rem;"></div>
+
+        <div class="exec-card" style="margin-bottom:1rem;">
+            <div class="exec-card-header">
+                <h3 class="exec-card-title">
+                    <i class="fas fa-arrow-trend-up" style="color:var(--exec-success);"></i> Leading Indicators
+                </h3>
             </div>
+            <div class="spi-grid" id="leadingIndicators"></div>
+        </div>
 
-            <!-- SPI Summary -->
-            <div class="spi-summary" id="spiSummary"></div>
-
-            <!-- Leading Indicators -->
-            <div class="card">
-                <h3><i class="fas fa-arrow-trend-up" style="color:#34a853;"></i> Leading Indicators</h3>
-                <div class="spi-grid" id="leadingIndicators"></div>
+        <div class="exec-card" style="margin-bottom:1rem;">
+            <div class="exec-card-header">
+                <h3 class="exec-card-title">
+                    <i class="fas fa-arrow-trend-down" style="color:var(--exec-danger);"></i> Lagging Indicators
+                </h3>
             </div>
+            <div class="spi-grid" id="laggingIndicators"></div>
+        </div>
 
-            <!-- Lagging Indicators -->
-            <div class="card">
-                <h3><i class="fas fa-arrow-trend-down" style="color:#dc3545;"></i> Lagging Indicators</h3>
-                <div class="spi-grid" id="laggingIndicators"></div>
+        <div class="exec-card" style="margin-bottom:1rem;">
+            <div class="exec-card-header">
+                <h3 class="exec-card-title">
+                    <i class="fas fa-chart-line" style="color:var(--exec-accent);"></i> SPI Trend (Last 6 Months)
+                </h3>
             </div>
-
-            <!-- SPI Trend Chart -->
-            <div class="card">
-                <h3><i class="fas fa-chart-line" style="color:#1a6b8a;"></i> SPI Trend (Last 6 Months)</h3>
-                <div class="chart-wrap"><canvas id="spiTrendChart"></canvas></div>
+            <div style="position:relative;height:280px;">
+                <canvas id="spiTrendChart"></canvas>
             </div>
+        </div>
 
-            <!-- State Comparison -->
-            <div class="card">
-                <h3><i class="fas fa-building" style="color:#1a6b8a;"></i> Operator vs State Average</h3>
-                <div class="chart-wrap"><canvas id="spiComparisonChart"></canvas></div>
+        <div class="exec-card" style="margin-bottom:1rem;">
+            <div class="exec-card-header">
+                <h3 class="exec-card-title">
+                    <i class="fas fa-building" style="color:var(--exec-accent);"></i> Operator vs State Average
+                </h3>
+            </div>
+            <div style="position:relative;height:280px;">
+                <canvas id="spiComparisonChart"></canvas>
             </div>
         </div>
     </div>
 
     <script>
-    var STATE_REGULATOR_NAV = [
-        { href: '/state-oversight.html', label: 'Home', icon: 'fa-house' },
-        { href: '/dashboard/state-sms-maturity.html', label: 'SMS Maturity', icon: 'fa-heart-pulse' },
-        { href: '/state-safety-trends.html', label: 'Safety Trends', icon: 'fa-chart-line' },
-        { href: '/psoe-audit.html', label: 'PSOE', icon: 'fa-clipboard-check' },
-    ];
     window.SHELL_CONFIG = {
-        brand: 'AviaSAFE',
+        brand: 'SMS360X',
         roleLabel: 'Operator SPI/SPT Dashboard',
         navByRole: {
-            CAAN: STATE_REGULATOR_NAV,
-            SUPER: STATE_REGULATOR_NAV,
-        },
+            CAAN: [
+                { href: '/state-oversight.html', label: 'Home', icon: 'fa-house' },
+                { href: '/dashboard/state-sms-maturity.html', label: 'SMS Maturity', icon: 'fa-heart-pulse' },
+                { href: '/state-safety-trends.html', label: 'Safety Trends', icon: 'fa-chart-line' },
+                { href: '/psoe-audit.html', label: 'PSOE', icon: 'fa-clipboard-check' }
+            ],
+            SUPER: [
+                { href: '/state-oversight.html', label: 'Home', icon: 'fa-house' },
+                { href: '/dashboard/state-sms-maturity.html', label: 'SMS Maturity', icon: 'fa-heart-pulse' },
+                { href: '/state-safety-trends.html', label: 'Safety Trends', icon: 'fa-chart-line' },
+                { href: '/psoe-audit.html', label: 'PSOE', icon: 'fa-clipboard-check' }
+            ]
+        }
     };
     </script>
+
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-check-compat.js"></script>
     <script src="/js/firebase.js?v=4.0.1"></script>
     <script src="/js/api/client.js"></script>
     <script src="/js/nav-config.js"></script>
-<script src="/js/shell.js"></script>
+    <script src="/js/shell.js"></script>
     <script src="/js/spi-dashboard.js"></script>
+    <script src="/js/executive-shell.js"></script>
+
+    <script>
+    (function () {
+        function initExec() {
+            try {
+                if (typeof ExecutiveShell === 'undefined') { setTimeout(initExec, 100); return; }
+                if (typeof firebase === 'undefined' || !firebase.auth) { setTimeout(initExec, 100); return; }
+                firebase.auth().onAuthStateChanged(function (user) {
+                    if (!user) return;
+                    user.getIdTokenResult().then(function (tok) {
+                        var role = (tok.claims && tok.claims.role) || 'USER';
+                        var nav = [];
+                        try {
+                            var cfg = window.SHELL_CONFIG || {};
+                            var navByRole = cfg.navByRole || {};
+                            nav = navByRole[role] || navByRole.CAAN || navByRole.SUPER || [];
+                        } catch (e) {}
+                        ExecutiveShell.init({
+                            brand: 'SMS360X',
+                            role: (window.SHELL_CONFIG && window.SHELL_CONFIG.roleLabel) || 'User',
+                            tenant: (tok.claims && tok.claims.tenant_id) || '',
+                            activeNav: 'spi',
+                            nav: nav.map(function (n) {
+                                return { id: (n.href || '').split('/').pop().replace('.html','') || 'home', label: n.label, icon: n.icon || 'fa-circle', href: n.href };
+                            })
+                        });
+                        var pc = document.getElementById('spiContent');
+                        if (pc) pc.style.display = 'block';
+                        var gate = document.getElementById('authGate');
+                        if (gate) gate.style.display = 'none';
+                    }).catch(function () {});
+                });
+            } catch (e) { setTimeout(initExec, 100); }
+        }
+        initExec();
+    })();
+    </script>
 </body>
 </html>
