@@ -659,7 +659,7 @@
         brand.className = 'header-brand';
         brand.id = 'shellBrandLink';
         brand.href = '/safety.html';
-        brand.innerHTML = '<span class="logo-icon">\u2708\uFE0F</span> AviaSAFE';
+        brand.innerHTML = '<img src="/images/sms360x-logo.png" alt="SMS360X" style="height: 36px; width: 36px; border-radius: 50%; margin-right: 10px; vertical-align: middle;"> <span style="font-size: 1.25rem; font-weight: 700; vertical-align: middle;">sms360x</span>';
         left.appendChild(brand);
         top.appendChild(left);
 

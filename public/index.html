@@ -24,6 +24,7 @@
     <title>SMS360X — Safety intelligence for modern aviation</title>
     <meta name="description" content="SMS360X turns safety data into safety information, and safety information into safety intelligence — so operators, regulators, and states can make defensible decisions.">
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         html { scroll-behavior: smooth; font-family: 'Inter', sans-serif; }
@@ -75,7 +76,7 @@
         <div>
             <h1 class="text-4xl md:text-6xl font-extrabold tracking-tight text-slate-900 mb-6 leading-tight">Safety intelligence for modern aviation.</h1>
             <p class="text-lg md:text-xl text-slate-600 max-w-xl mb-10 leading-relaxed">SMS360X turns safety data into safety information, and safety information into safety intelligence — so operators, regulators, and states can make defensible decisions.</p>
-            <button type="button" class="bg-[#0A3A50] hover:bg-[#0E4E6C] text-white font-semibold text-lg px-8 py-4 rounded-lg transition-all shadow-lg" onclick="document.getElementById('demo-modal').showModal()">Request an early demo</button>
+            <div style="display:flex;justify-content:flex-end;"><button type="button" class="bg-[#0A3A50] hover:bg-[#0E4E6C] text-white font-semibold text-lg px-8 py-4 rounded-lg transition-all shadow-lg" onclick="document.getElementById('demo-modal').showModal()">Request an early demo</button></div>
         </div>
         <div class="relative w-full max-h-[480px] overflow-hidden rounded-2xl shadow-2xl">
             <img src="/Hero Image.png" alt="SMS360X safety intelligence card" class="w-full h-full object-cover">
@@ -143,11 +144,44 @@
 <section class="py-20 bg-slate-50">
     <div class="max-w-5xl mx-auto px-6">
         <h2 class="text-2xl md:text-4xl font-bold text-slate-900 mb-12 text-center">Who it is for</h2>
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div class="px-6 py-4 rounded-xl bg-white border border-slate-200 shadow-sm text-center font-semibold text-slate-800">Safety Managers</div>
-            <div class="px-6 py-4 rounded-xl bg-white border border-slate-200 shadow-sm text-center font-semibold text-slate-800">Accountable Executives</div>
-            <div class="px-6 py-4 rounded-xl bg-white border border-slate-200 shadow-sm text-center font-semibold text-slate-800">Regulators</div>
-            <div class="px-6 py-4 rounded-xl bg-white border border-slate-200 shadow-sm text-center font-semibold text-slate-800">State Safety Programmes</div>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto mt-10">
+
+            <!-- Airlines -->
+            <div class="bg-white p-8 rounded-2xl shadow-sm border border-slate-200 hover:shadow-lg transition-all duration-300 group">
+                <div class="w-12 h-12 rounded-full bg-sky-50 text-sky-600 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                    <i class="fa-solid fa-plane text-xl"></i>
+                </div>
+                <h3 class="text-xl font-bold text-slate-900 mb-3">Airlines</h3>
+                <p class="text-sm text-slate-600 leading-relaxed">Manage flight safety, cabin occurrences, and pilot reports (MOR/VSR) with real-time risk assessment and Just Culture protection.</p>
+            </div>
+
+            <!-- ATO -->
+            <div class="bg-white p-8 rounded-2xl shadow-sm border border-slate-200 hover:shadow-lg transition-all duration-300 group">
+                <div class="w-12 h-12 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                    <i class="fa-solid fa-graduation-cap text-xl"></i>
+                </div>
+                <h3 class="text-xl font-bold text-slate-900 mb-3">ATO</h3>
+                <p class="text-sm text-slate-600 leading-relaxed">Monitor trainee safety culture, incident reports, and compliance with training regulations.</p>
+            </div>
+
+            <!-- MRO -->
+            <div class="bg-white p-8 rounded-2xl shadow-sm border border-slate-200 hover:shadow-lg transition-all duration-300 group">
+                <div class="w-12 h-12 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                    <i class="fa-solid fa-wrench text-xl"></i>
+                </div>
+                <h3 class="text-xl font-bold text-slate-900 mb-3">MRO</h3>
+                <p class="text-sm text-slate-600 leading-relaxed">Track maintenance errors, human factors, and safety assurance in the hangar or shop floor.</p>
+            </div>
+
+            <!-- State Regulators -->
+            <div class="bg-white p-8 rounded-2xl shadow-sm border border-slate-200 hover:shadow-lg transition-all duration-300 group">
+                <div class="w-12 h-12 rounded-full bg-purple-50 text-purple-600 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                    <i class="fa-solid fa-landmark text-xl"></i>
+                </div>
+                <h3 class="text-xl font-bold text-slate-900 mb-3">State Regulators</h3>
+                <p class="text-sm text-slate-600 leading-relaxed">Enforce ICAO Annex 19 compliance, review operator SPIs, and oversee national safety programmes.</p>
+            </div>
+
         </div>
     </div>
 </section>

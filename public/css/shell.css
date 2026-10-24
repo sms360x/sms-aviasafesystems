@@ -136,12 +136,13 @@ body {
 /* Bottom Row - Navigation */
 .header-nav {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     gap: 8px;
     padding: 6px 20px;
-    height: 44px;
+    min-height: 44px;
     background: var(--shell-navy);
-    overflow-x: auto;
+    overflow-x: hidden;
     justify-content: center;
 }
 
@@ -254,7 +255,7 @@ body {
     position: absolute;
     top: calc(100% + 6px);
     left: 0;
-    min-width: 230px;
+    min-width: 0;
     background: #ffffff;
     color: #0b2a42;
     border-radius: 8px;
@@ -539,4 +540,18 @@ body {
     margin-left: 5px;
     vertical-align: middle;
     box-shadow: 0 0 0 2px rgba(255, 82, 82, 0.25);
+}
+
+@media (max-width: 768px) {
+    .header-left,
+    .header-right {
+        flex-wrap: wrap;
+        width: 100%;
+    }
+    .header-left {
+        margin-bottom: 0.5rem;
+    }
+    .nav-container {
+        overflow-x: visible;
+    }
 }
