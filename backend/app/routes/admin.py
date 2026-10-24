@@ -2352,3 +2352,35 @@ async def admin_create_user(
         logger.error(f"Create user failed for {req.email}: {e}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
+
+
+@router.post('/users/{uid}/reset-password')
+async def admin_reset_user_password(uid: str, user=Depends(get_admin_user)):
+    if user.get('role') != 'SUPER_ADMIN':
+        raise HTTPException(status_code=403, detail='SUPER_ADMIN required')
+
+    import secrets
+    import string
+
+    alphabet = string.ascii_letters + string.digits + '!@#$%^&*'
+    new_password = ''.join(secrets.choice(alphabet) for _ in range(16))
+
+    try:
+        auth.update_user(uid, password=new_password)
+        try:
+            fb_user = auth.get_user(uid)
+            email = fb_user.email
+        except Exception:
+            email = None
+
+        return {
+            'success': True,
+            'uid': uid,
+            'email': email,
+            'password': new_password,
+            'note': 'Password shown once. Copy now.'
+        }
+    except auth.UserNotFoundError:
+        raise HTTPException(status_code=404, detail='User not found in Firebase Auth')
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f'Password reset failed: {str(e)}')
