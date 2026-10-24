@@ -64,6 +64,8 @@
   text-transform: uppercase;
   letter-spacing: 0.6px;
   color: #64748b;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .kpi-metric-strip .kpi-card .kpi-value {
@@ -249,4 +251,8 @@
   display: flex;
   gap: 8px;
   justify-content: flex-end;
+}
+
+@media (max-width: 640px) {
+  .kpi-metric-strip { grid-template-columns: 1fr; }
 }
