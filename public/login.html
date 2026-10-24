@@ -509,7 +509,12 @@ function tenantMembershipError(user) {
     if (role === 'SUPER_ADMIN' || role === 'STATE_SMD') return null;
     var activeTenant = getActiveTenant();
     if (!activeTenant) return null; // root production host — no subdomain scope
-    if (user.tenantId && user.tenantId !== activeTenant) {
+    // Allow if the user's tenantId matches the active tenant OR if the active tenant is a prefix/alias of the user's tenant (e.g., 'sita' -> 'sita-air')
+    var isMatch = (user.tenantId === activeTenant) ||
+                  (user.tenantId && user.tenantId.startsWith(activeTenant + '-')) ||
+                  (activeTenant && user.tenantId && activeTenant.startsWith(user.tenantId + '-'));
+
+    if (user.tenantId && !isMatch) {
         return 'Your account is registered under "' + user.tenantId + '". This portal is scoped to "' +
             activeTenant + '". Please sign in through your own organization\'s portal.';
     }
