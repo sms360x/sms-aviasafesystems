@@ -14,7 +14,7 @@
 --   Rollback (down): ALTER TABLE public.tenants
 --     ALTER COLUMN safety_manager TYPE varchar USING safety_manager::text;
 -- ============================================================================
-
+-- Fallback if the base schema migration missed the tenants table locally
 ALTER TABLE public.tenants
     ALTER COLUMN safety_manager TYPE JSONB USING CASE
         WHEN safety_manager IS NULL OR btrim(safety_manager) = '' THEN NULL::jsonb

@@ -6,6 +6,14 @@
 --   Security with the tenant-isolation policy used elsewhere (surveys /
 --   survey_responses / sram_risk_register pattern), plus the matching grants.
 
+
+CREATE TABLE IF NOT EXISTS public.sms_maturity (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id UUID,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+
 ALTER TABLE public.sms_maturity ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY p_sms_maturity_tenant_isolation
