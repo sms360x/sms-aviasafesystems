@@ -69,6 +69,8 @@ if (uploadBtn) uploadBtn.addEventListener('click', async () => {
     uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Uploading...';
     const formData = new FormData();
     formData.append('file', currentFile);
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000);
     try {
         const headers = await getAuthHeaders();
         let res;
@@ -76,11 +78,17 @@ if (uploadBtn) uploadBtn.addEventListener('click', async () => {
             res = await fetch(`${API_URL}/api/v1/imports/master-logsheet`, {
                 method: 'POST',
                 headers: headers,
-                body: formData
+                body: formData,
+                signal: controller.signal
             });
         } catch (netErr) {
+            clearTimeout(timeoutId);
+            if (netErr.name === 'AbortError') {
+                throw new Error('The server took too long to respond. This may be due to a large file or a server error.');
+            }
             throw new Error('Network error: ' + netErr.message);
         }
+        clearTimeout(timeoutId);
         if (!res.ok) {
             const contentType = res.headers.get('content-type') || '';
             if (contentType.indexOf('application/json') !== -1) {
@@ -95,6 +103,7 @@ if (uploadBtn) uploadBtn.addEventListener('click', async () => {
         renderPreview(data);
         showStep(2);
     } catch (err) {
+        clearTimeout(timeoutId);
         showModal('Error', err.message, 'error');
     } finally {
         uploadBtn.disabled = false;
