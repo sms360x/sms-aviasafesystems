@@ -1,11 +1,12 @@
 """Master Logsheet import endpoints."""
-from fastapi import APIRouter, File, UploadFile, Depends, HTTPException
+from fastapi import APIRouter, File, UploadFile, Depends, HTTPException, BackgroundTasks
 import uuid
 import datetime
 from app.services.import_service import parse_batch
 from app.middleware.auth import get_current_user, get_safety_manager
 from app.db import pg
 from app.db.db_models import MasterLogsheetStaging, Occurrence, Hazard, FlightDiversion, SafetyDeficiency, Report
+from app.db.rls import set_current_identity, identity_from_user
 
 router = APIRouter(prefix="/api/v1/imports", tags=["imports"])
 
@@ -83,45 +84,42 @@ async def preview_import(batch_id: str, user=Depends(get_safety_manager)):
     return {"rows": rows}
 
 
-@router.post("/{batch_id}/promote")
-async def promote_import(batch_id: str, user=Depends(get_safety_manager)):
-    tenant_id_raw = user.get("tenant_id")
-    if not tenant_id_raw:
-        raise HTTPException(400, "No tenant context")
-    tenant_id = tenant_id_raw
-    if isinstance(tenant_id_raw, str):
-        try:
-            tenant_uuid = uuid.UUID(tenant_id_raw)
-        except ValueError:
-            tenant_uuid = uuid.uuid5(uuid.NAMESPACE_DNS, f"tenant:{tenant_id_raw}")
-    else:
-        tenant_uuid = tenant_id_raw
-
-    rows = pg.fetch_all(
-        MasterLogsheetStaging,
-        where=[
-            MasterLogsheetStaging.batch_id == batch_id,
-            MasterLogsheetStaging.tenant_id == tenant_id,
-            MasterLogsheetStaging.validation_status == "pending",
-        ],
-    )
-    if not rows:
-        raise HTTPException(404, "No pending rows found.")
-
-    existing_diversions = pg.fetch_all(
-        FlightDiversion,
-        where=[FlightDiversion.tenant_id == tenant_uuid],
-    )
-    existing_diversion_ids = {r.get("diversion_id") for r in existing_diversions}
-
-    hazards_to_insert = []
-    occurrences_to_insert = []
-    diversions_to_insert = []
-    deficiencies_to_insert = []
-    reports_to_insert = []
-    staging_ids = []
-
+def process_promote_batch(batch_id: str, tenant_id_raw):
     try:
+        set_current_identity(identity_from_user({"tenant_id": tenant_id_raw, "role": "TENANT_ADMIN"}))
+        if isinstance(tenant_id_raw, str):
+            try:
+                tenant_uuid = uuid.UUID(tenant_id_raw)
+            except ValueError:
+                tenant_uuid = uuid.uuid5(uuid.NAMESPACE_DNS, f"tenant:{tenant_id_raw}")
+        else:
+            tenant_uuid = tenant_id_raw
+
+        rows = pg.fetch_all(
+            MasterLogsheetStaging,
+            where=[
+                MasterLogsheetStaging.batch_id == batch_id,
+                MasterLogsheetStaging.tenant_id == tenant_id_raw,
+                MasterLogsheetStaging.validation_status == "pending",
+            ],
+        )
+        if not rows:
+            print(f"No pending rows for batch {batch_id}")
+            return
+
+        existing_diversions = pg.fetch_all(
+            FlightDiversion,
+            where=[FlightDiversion.tenant_id == tenant_uuid],
+        )
+        existing_diversion_ids = {r.get("diversion_id") for r in existing_diversions}
+
+        hazards_to_insert = []
+        occurrences_to_insert = []
+        diversions_to_insert = []
+        deficiencies_to_insert = []
+        reports_to_insert = []
+        staging_ids = []
+
         for row in rows:
             mapped = row.get("mapped_data") or {}
             dests = row.get("destination_tables") or []
@@ -221,10 +219,7 @@ async def promote_import(batch_id: str, user=Depends(get_safety_manager)):
                         "location": val("concerned_department", "Unknown"),
                         "occurrence_date": _parse_dt(val("occurrence_date") or val("reported_date")) or datetime.datetime.now(datetime.timezone.utc),
                     })
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed while building promote data: {str(e)}")
 
-    try:
         if occurrences_to_insert:
             pg.bulk_insert(Occurrence, occurrences_to_insert)
         if hazards_to_insert:
@@ -235,19 +230,46 @@ async def promote_import(batch_id: str, user=Depends(get_safety_manager)):
             pg.bulk_insert(SafetyDeficiency, deficiencies_to_insert)
         if reports_to_insert:
             pg.bulk_insert(Report, reports_to_insert)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed during bulk insert: {str(e)}")
 
-    try:
-        pg.bulk_update(
-            MasterLogsheetStaging,
-            staging_ids,
-            {"validation_status": "promoted", "promoted_at": datetime.datetime.now(datetime.timezone.utc)},
-        )
+        for sid in staging_ids:
+            pg.update(
+                MasterLogsheetStaging,
+                "id",
+                sid,
+                {"validation_status": "promoted", "promoted_at": datetime.datetime.now(datetime.timezone.utc)},
+            )
+        print(f"Background promote complete for batch {batch_id}")
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed during staging update: {str(e)}")
+        print(f"Background promote failed for batch {batch_id}: {str(e)}")
 
-    return {"success": True, "batch_id": batch_id, "promoted_rows": len(staging_ids)}
+
+@router.post("/{batch_id}/promote")
+async def promote_import(
+    batch_id: str,
+    background_tasks: BackgroundTasks,
+    user=Depends(get_safety_manager),
+):
+    tenant_id = user.get("tenant_id")
+    if not tenant_id:
+        raise HTTPException(400, "No tenant context")
+    rows = pg.fetch_all(
+        MasterLogsheetStaging,
+        where=[
+            MasterLogsheetStaging.batch_id == batch_id,
+            MasterLogsheetStaging.tenant_id == tenant_id,
+            MasterLogsheetStaging.validation_status == "pending",
+        ],
+    )
+    if not rows:
+        raise HTTPException(404, "No pending rows found.")
+
+    background_tasks.add_task(process_promote_batch, batch_id, tenant_id)
+    return {
+        "success": True,
+        "batch_id": batch_id,
+        "message": "Import started in background. Check the register in a few minutes.",
+        "promoted_rows": len(rows),
+    }
 
 
 @router.delete("/{batch_id}")
