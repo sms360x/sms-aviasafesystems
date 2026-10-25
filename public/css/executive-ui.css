@@ -222,3 +222,12 @@ body.executive-layout {
     .exec-topbar { padding: 0 1rem; }
 }
 ```<|end|><|start|>write to<|channel|>assistant<|channel|>analysis<|message|>Created file successfully: public/css/executive-ui.css
+/* Historical import wizard */
+.dropzone { border: 2px dashed #cbd5e1; border-radius: 12px; padding: 40px; text-align: center; cursor: pointer; transition: .2s; }
+.dropzone:hover, .dropzone.drag { border-color: #2563eb; background: #eff6ff; }
+.wizard-step { display: none; }
+.wizard-step.active { display: block; }
+.data-table { width: 100%; border-collapse: collapse; }
+.data-table th, .data-table td { border: 1px solid #e2e8f0; padding: 8px; font-size: 13px; }
+.data-table th { background: #f1f5f9; }
+.data-table tbody tr:nth-child(even) { background: #f8fafc; }

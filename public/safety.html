@@ -501,6 +501,46 @@
 
         </div>
 
+        <!-- ==================== VIEW: HISTORICAL IMPORT ==================== -->
+        <div id="historical-import-section" class="dashboard-view" data-dashboard-view style="display:none;">
+            <div class="page-header" style="margin-bottom:1rem;">
+                <h2 style="font-size:1.25rem;"><i class="fas fa-file-import"></i> Historical Data Import</h2>
+            </div>
+            <div class="dropzone" id="dropzone">
+                <i class="fas fa-cloud-upload-alt" style="font-size: 3rem; color: #1a6b8a; margin-bottom: 1rem;"></i>
+                <h3>Upload Master Logsheet</h3>
+                <p>Drag and drop your Excel (.xlsx) or CSV file here, or click to browse.</p>
+                <input type="file" id="fileInput" accept=".xlsx,.csv" style="display: none;">
+                <button class="btn btn-primary" id="browseBtn" style="margin-top: 1rem;">Browse Files</button>
+            </div>
+            <div id="fileInfo" style="margin-top: 1rem; display: none;">
+                <p><strong>Selected File:</strong> <span id="fileName"></span></p>
+                <button class="btn btn-primary" id="uploadBtn">Upload & Preview</button>
+            </div>
+            <div id="import-step-2" class="wizard-step" style="display:none; margin-top:1rem;">
+                <div class="table-card">
+                    <div class="filter-bar" style="border-radius:0;box-shadow:none;border-bottom:1px solid #e2e8f0;margin-bottom:0;">
+                        <span style="font-size:0.85rem;color:#475569;"><i class="fas fa-list"></i> Previewing <strong id="previewCount">0</strong> rows</span>
+                        <button class="btn btn-outline" id="cancelUploadBtn" style="margin-left:auto;">Cancel</button>
+                        <button class="btn btn-primary" id="promoteBtn" style="margin-left:1rem;">Confirm & Import</button>
+                    </div>
+                    <table class="data-table">
+                        <thead><tr><th>Row</th><th>Description</th><th>Destination</th></tr></thead>
+                        <tbody id="previewTableBody"></tbody>
+                    </table>
+                </div>
+                <div id="unmappedWarning" style="margin-top: 1rem; display: none; background: #fff3e0; padding: 1rem; border-radius: 8px; color: #e65100;">
+                    <i class="fas fa-exclamation-triangle"></i> <strong>Warning:</strong> The following columns could not be mapped: <span id="unmappedCols"></span>
+                </div>
+            </div>
+            <div id="import-step-3" class="wizard-step" style="display:none; text-align: center; padding: 3rem;">
+                <i class="fas fa-check-circle" style="font-size: 4rem; color: #2e7d32; margin-bottom: 1rem;"></i>
+                <h2>Import Successful</h2>
+                <p style="color: #64748b; margin-bottom: 1.5rem;"><strong id="successCount">0</strong> records have been successfully promoted to the database.</p>
+                <button class="btn btn-primary" id="resetImportBtn">Import Another File</button>
+            </div>
+        </div>
+
     </div>
 </div>
 
@@ -531,5 +571,6 @@ window.SHELL_CONFIG = {
 <script src="/js/reports.js"></script>
 <script src="/js/flight_diversions.js"></script>
 <script src="/js/dashboard.js"></script>
+<script src="/js/historical_import.js"></script>
 </body>
 </html>

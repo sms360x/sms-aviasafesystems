@@ -152,6 +152,7 @@ var NAV_CONFIG = {
             // Phase 3A.2 — SUPER_ADMIN-only governance surfaces.
             { id: 'audit-chain', href: '/admin/audit-chain.html', label: 'Audit Chain', roles: ['SUPER'] },
             { id: 'system-config', href: '/admin/system-config.html', label: 'System Configs', roles: ['SUPER'] },
+            { id: 'historical-import', href: '/safety.html#historical-import-section', label: 'Historical Import', roles: ['SAFETY', 'SUPER'] },
         ]
     },
 };
