@@ -57,6 +57,13 @@
         init();
     }
 
+    window.addEventListener('hashchange', function () {
+        const hashView = window.location.hash ? window.location.hash.slice(1) : '';
+        if (hashView && document.getElementById(hashView)) {
+            switchDashboardView(hashView);
+        }
+    });
+
     window.switchDashboardView = switchDashboardView;
     window.DashboardNav = { switchDashboardView: switchDashboardView };
 })();
