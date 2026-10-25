@@ -8,34 +8,42 @@ import uuid
 from typing import Optional
 
 MASTER_LOGSHEET_CANONICAL = {
-    "sequence_number": ["S.N", "SN", "Serial", "#", "SN."],
-    "reported_date": ["Reported Date", "Reported Date to CSD (dd/mm/yy)", "Date Reported"],
+    "sequence_number": ["S.N", "SN", "Serial", "#"],
+    "reported_date": ["Reported Date", "Reported Date to CSD (dd/mm/yy)", "Date Reported", "Reported Date/Occurrence date", "Reported Date/ Date of Occ", "Reported Date/Occurrence date"],
     "occurrence_date": ["Occurrence Date", "Occurance Date of report (dd/mm/yy)", "Date of Occurrence"],
-    "source": ["Sources of Information", "Source", "Report Source", "Sources of information"],
-    "description": ["Report Description", "Description", "Narrative", "Unsafe Event", "Report Description"],
+    "source": ["Sources of Information", "Source", "Report Source"],
+    "description": ["Report Description", "Description", "Narrative", "Unsafe Event", "Unsafe Event (Reported/Projected)", "Unsafe Event (UE) (Reported/Projected)"],
     "classification_occurrence": ["Occurrence"],
-    "classification_hazard": ["Hazard"],
+    "classification_hazard": ["Hazard", "Hazard (H)", "Hazard(H)"],
     "classification_deficiency": ["Safety deficiency", "Safety Deficiency"],
     "classification_diversion": ["Diversion"],
-    "status": ["Status"],
-    "concerned_department": ["Concerned department/Personnel", "Concerned Department"],
-    "remarks": ["Remarks", "CSD Remarks"],
-    "hazard_id": ["Hazard code/ID", "Hazard Code/ID", "Hazard ID"],
-    "taxonomy": ["Taxonomy", "Hazard Taxonomy", "Taxonomy- Type of Area/ Operation/ Equipment"],
-    "threat": ["Threat", "Threat of Hazard"],
-    "consequence": ["Potential Consequence", "Consequence", "Ultimate Consequence"],
-    "top_event": ["Top Event", "Unsafe Event"],
-    "flight_sector": ["Flight Sector (From-To)", "Flight Sector"],
+    "status": ["Status", "Status open", "Status (Open/ Closed) Date completed", "Status (Open/ Closed Date completed"],
+    "concerned_department": ["Concerned department/Personnel", "Concerned Department", "Concerned Department/ Personnel", "Responsible for mitigating Action"],
+    "remarks": ["Remarks", "CSD Remarks", "nan Remarks"],
     "flight_number": ["Flight Number"],
+    "flight_sector": ["Flight Sector (From-To)", "Flight Sector"],
     "diverted_to": ["Diverted to"],
-    "aircraft_registration": ["Aircraft Registration"],
-    "reason": ["Reason of diversion", "Reason"],
-    "taxonomy_specific": ["Specific components", "Specific Components"],
-    "priority": ["Report priority Level", "Report priority", "Report Priority"],
+    "aircraft_registration": ["Aircraft Registration", "A/c Registration"],
+    "reason": ["Reason of diversion", "Reason of Diversion"],
+    "hazard_id": ["Hazard ID", "Hazard Code/ID", "Hazard ID nan"],
+    "taxonomy": ["Taxonomy", "Hazard Taxonomy", "Taxonomy- Type of Area/ Operation/ Equipment", "Occ/ Hazrad Taxonomy"],
+    "threat": ["Threat of Hazard", "Threats"],
+    "top_event": ["Top Event", "Unsafe Event (UE)"],
+    "consequence": ["Consequence", "Potential Consequence", "Potential Consequence (Reported/Projected)"],
+    "priority": ["Report priority Level", "Initial Priority Level", "Report prority Level", "Report Priority Level (H/M/L)", "Report prority Level (H/M/L)"],
     "recommended_action": ["Recommended Action"],
-    "corrective_action": ["Corrective Action"],
-    "assigned_to": ["Responsible for mitigating Action", "Responsible"],
-    "follow_up_date": ["Follow-up Date", "Follow-up"],
+    "follow_up_date": ["Follow-up Date", "Follow-up", "nan Follow-up"],
+    "srm_status": ["SRM Action", "SRM (Yes/No)", "SRM Date nan"],
+    "corrective_action": ["Corrective Action", "Corrective Action (Yes/No)"],
+    "existing_severity": ["Existing Risk Severity"],
+    "existing_probability": ["Existing Risk Probability"],
+    "existing_risk_index": ["Existing Risk Risk Index"],
+    "existing_risk_tolerability": ["Existing Risk Risk Tolerability"],
+    "resultant_severity": ["Resultant Risk Severity"],
+    "resultant_probability": ["Resultant Risk Probability"],
+    "resultant_risk_index": ["Resultant Risk Risk Index"],
+    "resultant_risk_tolerability": ["Resultant Risk Risk Tolerability"],
+    "ultimate_consequence": ["Ultimate Consequence nan"],
 }
 
 
@@ -124,7 +132,6 @@ def route_row(mapped: dict, sheet_name: str) -> list[str]:
         return ["hazards"]
     if "diversion" in low:
         return ["flight_diversions"]
-    # fallback to checkbox routing for single master sheet
     tables = []
     if mapped.get("classification_occurrence"):
         tables.append("occurrences")
@@ -150,6 +157,7 @@ def parse_batch(file_obj, filename: str):
         cols, data_start = _flatten_columns(raw, header_idx, multi)
         df = raw.iloc[data_start:].copy()
         df.columns = cols
+        df.columns = [str(c).strip().replace('  ', ' ') for c in df.columns]
         df = df.dropna(how="all")
         mapping = auto_map_columns(list(df.columns))
         if not all_mapping:
@@ -159,10 +167,8 @@ def parse_batch(file_obj, filename: str):
                 unmapped_set.add(c)
         for idx, row in df.iterrows():
             mapped = {mapping[k]: v for k, v in row.items() if k in mapping and pd.notna(v)}
-            # For multi-tab sheets, stage all rows that route somewhere
             dest = route_row(mapped, sheet_name)
             if not dest:
-                # single master sheet: require classification
                 if not row_has_classification(mapped):
                     continue
                 dest = route_row(mapped, sheet_name)
