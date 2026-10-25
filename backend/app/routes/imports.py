@@ -140,6 +140,17 @@ async def promote_import(batch_id: str, user=Depends(get_safety_manager)):
                         "remarks": mapped.get("remarks"),
                     })
                 elif dest == "flight_diversions":
+                    diversion_id_val = mapped.get("sequence_number") or f"IMP-{uuid.uuid4()}"
+                    existing = pg.fetch_all(
+                        FlightDiversion,
+                        where=[
+                            FlightDiversion.tenant_id == tenant_uuid,
+                            FlightDiversion.diversion_id == diversion_id_val,
+                        ],
+                        limit=1,
+                    )
+                    if existing:
+                        continue
                     sector = mapped.get("flight_sector") or ""
                     if "-" in str(sector):
                         parts = [p.strip() for p in str(sector).split("-", 1)]
@@ -147,7 +158,7 @@ async def promote_import(batch_id: str, user=Depends(get_safety_manager)):
                         parts = [str(sector).strip(), str(sector).strip()]
                     pg.insert(FlightDiversion, {
                         "tenant_id": tenant_uuid,
-                        "diversion_id": mapped.get("sequence_number") or f"IMP-{uuid.uuid4()}",
+                        "diversion_id": diversion_id_val,
                         "date": _parse_dt(mapped.get("occurrence_date") or mapped.get("reported_date")) or datetime.datetime.now(datetime.timezone.utc),
                         "flight_number": mapped.get("flight_number") or "UNKNOWN",
                         "aircraft_registration": mapped.get("aircraft_registration") or "UNKNOWN",
