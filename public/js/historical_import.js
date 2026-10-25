@@ -70,7 +70,7 @@ if (uploadBtn) uploadBtn.addEventListener('click', async () => {
     const formData = new FormData();
     formData.append('file', currentFile);
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 15000);
+    const timeoutId = setTimeout(() => controller.abort(), 60000);
     try {
         const headers = await getAuthHeaders();
         let res;
