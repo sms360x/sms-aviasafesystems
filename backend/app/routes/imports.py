@@ -58,6 +58,17 @@ async def preview_import(batch_id: str, user=Depends(get_safety_manager)):
     return {"rows": rows}
 
 
+def sanitize_taxonomy(tax):
+    allowed = {"Organizational", "Technical", "Human", "Environmental"}
+    if not tax:
+        return "Organizational"
+    tax_lower = str(tax).lower()
+    for a in allowed:
+        if a.lower() in tax_lower:
+            return a
+    return "Organizational"
+
+
 def _parse_dt(value):
     if value is None:
         return None
@@ -73,10 +84,17 @@ def _parse_dt(value):
 
 @router.post("/{batch_id}/promote")
 async def promote_import(batch_id: str, user=Depends(get_safety_manager)):
-    tenant_id = user.get("tenant_id")
-    if not tenant_id:
+    tenant_id_raw = user.get("tenant_id")
+    if not tenant_id_raw:
         raise HTTPException(400, "No tenant context")
-    tenant_uuid = uuid.UUID(str(tenant_id))
+    tenant_id = tenant_id_raw
+    if isinstance(tenant_id_raw, str):
+        try:
+            tenant_uuid = uuid.UUID(tenant_id_raw)
+        except ValueError:
+            tenant_uuid = uuid.uuid5(uuid.NAMESPACE_DNS, tenant_id_raw)
+    else:
+        tenant_uuid = tenant_id_raw
     rows = pg.fetch_all(
         MasterLogsheetStaging,
         where=[
@@ -98,7 +116,7 @@ async def promote_import(batch_id: str, user=Depends(get_safety_manager)):
                     pg.insert(Occurrence, {
                         "tenant_id": tenant_id,
                         "occurrence_id": mapped.get("sequence_number"),
-                        "date": _parse_dt(mapped.get("occurrence_date") or mapped.get("reported_date")),
+                        "date": _parse_dt(mapped.get("occurrence_date") or mapped.get("reported_date")) or datetime.datetime.now(datetime.timezone.utc),
                         "source": mapped.get("source"),
                         "description": mapped.get("description"),
                         "status": mapped.get("status") or "Open",
@@ -113,7 +131,7 @@ async def promote_import(batch_id: str, user=Depends(get_safety_manager)):
                         "description": mapped.get("description") or "",
                         "source": mapped.get("source") or "Import",
                         "source_id": "",
-                        "taxonomy": mapped.get("taxonomy") or "Organizational",
+                        "taxonomy": sanitize_taxonomy(mapped.get("taxonomy")),
                         "priority": "M",
                         "status": mapped.get("status") or "Open",
                         "threat": mapped.get("threat"),
@@ -130,7 +148,7 @@ async def promote_import(batch_id: str, user=Depends(get_safety_manager)):
                     pg.insert(FlightDiversion, {
                         "tenant_id": tenant_uuid,
                         "diversion_id": mapped.get("sequence_number") or f"IMP-{uuid.uuid4()}",
-                        "date": _parse_dt(mapped.get("occurrence_date") or mapped.get("reported_date")),
+                        "date": _parse_dt(mapped.get("occurrence_date") or mapped.get("reported_date")) or datetime.datetime.now(datetime.timezone.utc),
                         "flight_number": mapped.get("flight_number") or "UNKNOWN",
                         "aircraft_registration": mapped.get("aircraft_registration") or "UNKNOWN",
                         "sector_from": parts[0] or "UNKNOWN",
