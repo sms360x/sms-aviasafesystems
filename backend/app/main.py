@@ -14,7 +14,7 @@ from app.core.metrics import router as metrics_router
 from app.core.security import SecurityHeadersMiddleware, RateLimitMiddleware
 from app.core.cors import ManualCORSMiddleware
 from app.firebase import initialize_firebase, is_firebase_ready
-from app.routes import reports, dashboard, auth, admin, hazards, can_cap, verification, reporting, flight_diversions, state_risk, surveys, sms_maturity, tenants, regulators, contact, feedback, copilot, psoe, sdc, data, scheduled_jobs, regulator_dashboard, meetings, bulletins, audit, system_config
+from app.routes import reports, dashboard, auth, admin, hazards, can_cap, verification, reporting, flight_diversions, state_risk, surveys, sms_maturity, tenants, regulators, contact, feedback, copilot, psoe, sdc, data, scheduled_jobs, regulator_dashboard, meetings, bulletins, audit, system_config, imports
 from app.routes import demo as demo_routes
 from app.api.v1.router import router as v1_router
 
@@ -253,6 +253,7 @@ app.include_router(admin.router, prefix=settings.API_PREFIX_ADMIN, tags=["Admin"
 app.include_router(hazards.router, prefix=settings.API_PREFIX_HAZARDS, tags=["Hazards"])
 app.include_router(can_cap.router, prefix=settings.API_PREFIX_CAN_CAP, tags=["CAN/CAP"])
 app.include_router(demo_routes.router, prefix="/api/v1/demo", tags=["Demo Sessions & Analytics"])
+app.include_router(imports.router, tags=["Imports"])
 
 app.include_router(auth.router, prefix=settings.API_PREFIX_AUTH_LEGACY, tags=["Authentication (Legacy)"], include_in_schema=False)
 app.include_router(reports.router, prefix=settings.API_PREFIX_REPORTS_LEGACY, tags=["Reports (Legacy)"], include_in_schema=False)

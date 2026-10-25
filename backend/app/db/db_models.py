@@ -2547,3 +2547,18 @@ class OversightRelationship(Base):
         Index("oversight_relationships_regulator", "regulator_tenant_id"),
         Index("oversight_relationships_operator", "operator_tenant_id"),
     )
+
+class MasterLogsheetStaging(Base):
+    __tablename__ = 'master_logsheet_staging'
+
+    id: Mapped[object] = mapped_column(Uuid(as_uuid=True), primary_key=True, server_default=text('gen_random_uuid()'))
+    batch_id: Mapped[object] = mapped_column(Uuid(as_uuid=True), nullable=False)
+    tenant_id: Mapped[str] = mapped_column(Text, nullable=False)
+    row_number: Mapped[int] = mapped_column(Integer, nullable=False)
+    raw_data: Mapped[object] = mapped_column(JSONB, nullable=False)
+    mapped_data: Mapped[object] = mapped_column(JSONB, nullable=False)
+    destination_tables: Mapped[object] = mapped_column(ARRAY(Text), nullable=False)
+    validation_status: Mapped[str] = mapped_column(Text, nullable=False, server_default=text(chr(39)+'pending'+chr(39)))
+    validation_errors: Mapped[object] = mapped_column(JSONB, nullable=True)
+    promoted_at: Mapped[object] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=text('NOW()'))
