@@ -76,7 +76,7 @@ async def promote_import(batch_id: str, user=Depends(get_safety_manager)):
     tenant_id = user.get("tenant_id")
     if not tenant_id:
         raise HTTPException(400, "No tenant context")
-    tenant_uuid = uuid.UUID(tenant_id)
+    tenant_uuid = uuid.UUID(str(tenant_id))
     rows = pg.fetch_all(
         MasterLogsheetStaging,
         where=[
@@ -150,12 +150,15 @@ async def promote_import(batch_id: str, user=Depends(get_safety_manager)):
                     })
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Failed to insert into {dest} for row {row.get('row_number')}: {str(e)}")
-        pg.update(
-            MasterLogsheetStaging,
-            "id",
-            row.get("id"),
-            {"validation_status": "promoted", "promoted_at": datetime.datetime.now(datetime.timezone.utc)},
-        )
+        try:
+            pg.update(
+                MasterLogsheetStaging,
+                "id",
+                row.get("id"),
+                {"validation_status": "promoted", "promoted_at": datetime.datetime.now(datetime.timezone.utc)},
+            )
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Failed to update staging row {row.get('row_number')}: {str(e)}")
         promoted += 1
     return {"success": True, "batch_id": batch_id, "promoted_rows": promoted}
 

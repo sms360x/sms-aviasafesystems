@@ -76,6 +76,7 @@ _ID_COLUMNS: Dict[str, str] = {
     "hazard_triage": "id",
     "import_batches": "id",
     "import_rows": "id",
+    "master_logsheet_staging": "id",
     "import_mappings": "id",
     "import_links": "id",
     "sag_meetings": "id",
