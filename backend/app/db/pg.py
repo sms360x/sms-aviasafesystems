@@ -356,6 +356,42 @@ def insert(model: type, doc: Dict[str, Any]) -> None:
     _record_db("insert", model, lambda: _run_on_bridge(_go))
 
 
+def bulk_insert(model: type, docs: List[Dict[str, Any]]) -> None:
+    if not docs:
+        return
+
+    async def _go(session) -> None:
+        from sqlalchemy import insert as sa_insert
+
+        kwargs_list = []
+        for doc in docs:
+            kwargs = _split_doc(model, dict(doc))
+            _deterministic_tenant_id(kwargs)
+            if "id" in model.__table__.columns:
+                kwargs.setdefault("id", uuid.uuid4())
+            kwargs_list.append(kwargs)
+        await session.execute(
+            sa_insert(model).values(kwargs_list).execution_options(implicit_returning=False)
+        )
+
+    _record_db("bulk_insert", model, lambda: _run_on_bridge(_go))
+
+
+def bulk_update(model: type, ids: Sequence[Any], doc: Dict[str, Any]) -> None:
+    if not ids:
+        return
+
+    async def _go(session) -> None:
+        from sqlalchemy import update as sa_update
+
+        kwargs = _split_doc(model, dict(doc))
+        await session.execute(
+            sa_update(model).where(model.id.in_(list(ids))).values(**kwargs)
+        )
+
+    _record_db("bulk_update", model, lambda: _run_on_bridge(_go))
+
+
 def upsert(model: type, key_column: str, key_value: Any, doc: Dict[str, Any]) -> None:
     """Insert-or-merge a document keyed by `key_column` (in one transaction)."""
 
