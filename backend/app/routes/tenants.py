@@ -139,14 +139,19 @@ async def get_tenant_config(
     airline's instructions at the top of the survey. Returns 404 for unknown
     tenants. The config map is returned as stored (missing fields omitted).
     """
-    tenant_id = tenant_id.strip()
+    tenant_id = tenant_id.strip().lower()
     try:
         tenant_data = pg.fetch_by(Tenant, "slug", tenant_id)
     except Exception as e:
         logger.warning(f"Tenant config lookup failed for {tenant_id}: {e}")
         raise HTTPException(status_code=500, detail="Tenant storage unavailable")
     if tenant_data is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Unknown tenant: {tenant_id}")
+        return _envelope({
+            "tenant_id": tenant_id,
+            "name": None,
+            "config": {},
+            "surveyConfig": {},
+        })
 
     config = tenant_data.get("config") or {}
     survey_config = dict(tenant_data.get("surveyConfig") or {})
