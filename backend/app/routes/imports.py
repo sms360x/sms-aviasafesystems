@@ -6,7 +6,7 @@ from app.services.import_service import parse_batch
 from app.middleware.auth import get_current_user, get_safety_manager
 from app.db import pg
 from app.db.db_models import MasterLogsheetStaging, Occurrence, Hazard, FlightDiversion, SafetyDeficiency, Report
-from app.db.rls import set_current_identity, identity_from_user
+from app.db.rls import set_current_identity, identity_from_user, clear_current_identity
 
 router = APIRouter(prefix="/api/v1/imports", tags=["imports"])
 
@@ -43,6 +43,7 @@ async def import_master_logsheet(
     tenant_id = user.get("tenant_id")
     if not tenant_id:
         raise HTTPException(400, "No tenant context")
+    set_current_identity(identity_from_user(user))
     try:
         mapping, unmapped, staged = parse_batch(file.file, file.filename or "")
     except ValueError as e:
@@ -74,6 +75,7 @@ async def import_master_logsheet(
 @router.get("/{batch_id}/preview")
 async def preview_import(batch_id: str, user=Depends(get_safety_manager)):
     tenant_id = user.get("tenant_id")
+    set_current_identity(identity_from_user(user))
     rows = pg.fetch_all(
         MasterLogsheetStaging,
         where=[
@@ -252,6 +254,7 @@ async def promote_import(
     tenant_id = user.get("tenant_id")
     if not tenant_id:
         raise HTTPException(400, "No tenant context")
+    set_current_identity(identity_from_user(user))
     rows = pg.fetch_all(
         MasterLogsheetStaging,
         where=[
