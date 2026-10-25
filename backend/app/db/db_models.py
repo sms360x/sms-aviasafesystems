@@ -2562,3 +2562,18 @@ class MasterLogsheetStaging(Base):
     validation_errors: Mapped[object] = mapped_column(JSONB, nullable=True)
     promoted_at: Mapped[object] = mapped_column(DateTime(timezone=True), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=text('NOW()'))
+
+class Occurrence(Base):
+    __tablename__ = "occurrences"
+
+    id: Mapped[object] = _uuid_pk()
+    tenant_id: Mapped[str] = mapped_column(Text, nullable=False)
+    occurrence_id: Mapped[object] = mapped_column(Text, nullable=True)
+    date: Mapped[object] = mapped_column(DateTime(timezone=True), nullable=True)
+    source: Mapped[object] = mapped_column(Text, nullable=True)
+    description: Mapped[object] = mapped_column(Text, nullable=True)
+    aircraft_registration: Mapped[object] = mapped_column(Text, nullable=True)
+    status: Mapped[str] = mapped_column(Text, nullable=False, default="Open")
+    department: Mapped[object] = mapped_column(Text, nullable=True)
+    remarks: Mapped[object] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=datetime.utcnow)

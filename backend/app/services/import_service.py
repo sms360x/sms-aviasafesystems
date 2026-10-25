@@ -20,6 +20,12 @@ MASTER_LOGSHEET_CANONICAL = {
     "status": ["Status"],
     "concerned_department": ["Concerned department/Personnel", "Concerned Department"],
     "remarks": ["Remarks"],
+    "flight_sector": ["Flight Sector (From-To)", "Flight Sector"],
+    "flight_number": ["Flight Number"],
+    "diverted_to": ["Diverted to"],
+    "aircraft_registration": ["Aircraft Registration"],
+    "reason": ["Reason of diversion"],
+    "taxonomy": ["Taxonomy", "Hazard Taxonomy", "Taxonomy- Type of Area/ Operation/ Equipment"],
 }
 
 
