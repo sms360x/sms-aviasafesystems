@@ -4,7 +4,7 @@ import uuid
 from app.services.import_service import parse_batch
 from app.middleware.auth import get_current_user, get_safety_manager
 from app.db import pg
-from app.db.db_models import MasterLogsheetStaging, Occurrence, Hazard, FlightDiversion, SafetyDeficiency
+from app.db.db_models import MasterLogsheetStaging, Occurrence, Hazard, FlightDiversion, SafetyDeficiency, Report
 import datetime
 router = APIRouter(prefix="/api/v1/imports", tags=["imports"])
 
@@ -165,6 +165,22 @@ async def promote_import(batch_id: str, user=Depends(get_safety_manager)):
                         "source": mapped.get("source") or "Import",
                         "description": mapped.get("description") or "",
                         "status": mapped.get("status") or "Open",
+                    })
+                if dest in ("hazards", "occurrences", "safety_deficiencies", "flight_diversions"):
+                    rpt_type = "VSR"
+                    if dest == "occurrences":
+                        rpt_type = "MOR"
+                    elif dest == "flight_diversions":
+                        rpt_type = "Diversion"
+                    elif dest == "safety_deficiencies":
+                        rpt_type = "Safety Deficiency"
+                    pg.insert(Report, {
+                        "tenant_id": tenant_uuid,
+                        "report_type": rpt_type,
+                        "status": mapped.get("status") or "Open",
+                        "narrative": mapped.get("description") or "Imported",
+                        "location": mapped.get("concerned_department") or "Unknown",
+                        "occurrence_date": _parse_dt(mapped.get("occurrence_date") or mapped.get("reported_date")) or datetime.datetime.now(datetime.timezone.utc),
                     })
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Failed to insert into {dest} for row {row.get('row_number')}: {str(e)}")
