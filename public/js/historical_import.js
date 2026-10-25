@@ -1,3 +1,4 @@
+const API_URL = 'https://aviasafe-unified-platform.onrender.com';
 let currentBatchId = null;
 let currentFile = null;
 
@@ -10,6 +11,19 @@ const browseBtn = document.getElementById('browseBtn');
 const promoteBtn = document.getElementById('promoteBtn');
 const cancelUploadBtn = document.getElementById('cancelUploadBtn');
 const resetImportBtn = document.getElementById('resetImportBtn');
+
+function showModal(title, message, type = "error") {
+    const modal = document.getElementById('customAlertModal');
+    const icon = document.getElementById('modalIcon');
+    document.getElementById('modalTitle').textContent = title;
+    document.getElementById('modalMessage').textContent = message;
+    if (type === "error") {
+        icon.innerHTML = '<i class="fas fa-times-circle" style="color: #dc3545;"></i>';
+    } else {
+        icon.innerHTML = '<i class="fas fa-check-circle" style="color: #2e7d32;"></i>';
+    }
+    modal.style.display = 'flex';
+}
 
 function showStep(step) {
     document.querySelectorAll('.wizard-step').forEach(el => el.style.display = 'none');
@@ -57,18 +71,31 @@ if (uploadBtn) uploadBtn.addEventListener('click', async () => {
     formData.append('file', currentFile);
     try {
         const headers = await getAuthHeaders();
-        const res = await fetch('/api/v1/imports/master-logsheet', {
-            method: 'POST',
-            headers: headers,
-            body: formData
-        });
+        let res;
+        try {
+            res = await fetch(`${API_URL}/api/v1/imports/master-logsheet`, {
+                method: 'POST',
+                headers: headers,
+                body: formData
+            });
+        } catch (netErr) {
+            throw new Error('Network error: ' + netErr.message);
+        }
+        if (!res.ok) {
+            const contentType = res.headers.get('content-type') || '';
+            if (contentType.indexOf('application/json') !== -1) {
+                const data = await res.json();
+                throw new Error(data.detail || data.message || 'Request failed');
+            } else {
+                throw new Error(`Server error: ${res.status} ${res.statusText}`);
+            }
+        }
         const data = await res.json();
-        if (!res.ok) throw new Error(data.detail || data.message || 'Upload failed');
         currentBatchId = data.batch_id;
         renderPreview(data);
         showStep(2);
     } catch (err) {
-        alert('Error: ' + err.message);
+        showModal('Error', err.message, 'error');
     } finally {
         uploadBtn.disabled = false;
         uploadBtn.textContent = 'Upload & Preview';
@@ -98,16 +125,29 @@ if (promoteBtn) promoteBtn.addEventListener('click', async () => {
     promoteBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Importing...';
     try {
         const headers = await getAuthHeaders();
-        const res = await fetch(`/api/v1/imports/${currentBatchId}/promote`, {
-            method: 'POST',
-            headers: headers
-        });
+        let res;
+        try {
+            res = await fetch(`${API_URL}/api/v1/imports/${currentBatchId}/promote`, {
+                method: 'POST',
+                headers: headers
+            });
+        } catch (netErr) {
+            throw new Error('Network error: ' + netErr.message);
+        }
+        if (!res.ok) {
+            const contentType = res.headers.get('content-type') || '';
+            if (contentType.indexOf('application/json') !== -1) {
+                const data = await res.json();
+                throw new Error(data.detail || data.message || 'Request failed');
+            } else {
+                throw new Error(`Server error: ${res.status} ${res.statusText}`);
+            }
+        }
         const data = await res.json();
-        if (!res.ok) throw new Error(data.detail || data.message || 'Promote failed');
         document.getElementById('successCount').textContent = data.promoted_rows;
         showStep(3);
     } catch (err) {
-        alert('Error: ' + err.message);
+        showModal('Error', err.message, 'error');
     } finally {
         promoteBtn.disabled = false;
         promoteBtn.textContent = 'Confirm & Import';

@@ -571,6 +571,15 @@ window.SHELL_CONFIG = {
 <script src="/js/reports.js"></script>
 <script src="/js/flight_diversions.js"></script>
 <script src="/js/dashboard.js"></script>
+<!-- Custom Alert Modal -->
+<div id="customAlertModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+    <div style="background: #fff; padding: 2rem; border-radius: 12px; max-width: 400px; width: 90%; box-shadow: 0 4px 12px rgba(0,0,0,0.15); text-align: center;">
+        <div id="modalIcon" style="font-size: 2.5rem; margin-bottom: 1rem;"></div>
+        <h3 id="modalTitle" style="margin-bottom: 0.5rem; color: #0b2a42;">Alert</h3>
+        <p id="modalMessage" style="color: #64748b; margin-bottom: 1.5rem;"></p>
+        <button onclick="document.getElementById('customAlertModal').style.display='none'" style="background: #1a6b8a; color: #fff; border: none; padding: 0.5rem 1.5rem; border-radius: 6px; cursor: pointer; font-weight: 600;">OK</button>
+    </div>
+</div>
 <script src="/js/historical_import.js"></script>
 </body>
 </html>
