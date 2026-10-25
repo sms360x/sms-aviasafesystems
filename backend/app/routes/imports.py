@@ -92,61 +92,64 @@ async def promote_import(batch_id: str, user=Depends(get_safety_manager)):
             continue
         mapped = row.get("mapped_data") or {}
         dests = row.get("destination_tables") or []
-        for dest in dests:
-            if dest == "occurrences":
-                pg.insert(Occurrence, {
-                    "tenant_id": tenant_id,
-                    "occurrence_id": mapped.get("sequence_number"),
-                    "date": _parse_dt(mapped.get("occurrence_date") or mapped.get("reported_date")),
-                    "source": mapped.get("source"),
-                    "description": mapped.get("description"),
-                    "status": mapped.get("status") or "Open",
-                    "department": mapped.get("concerned_department"),
-                    "remarks": mapped.get("remarks"),
-                })
-            elif dest == "hazards":
-                pg.insert(Hazard, {
-                    "tenant_id": tenant_uuid,
-                    "hazard_id": mapped.get("sequence_number") or f"IMP-{uuid.uuid4()}",
-                    "title": mapped.get("description") or "Imported hazard",
-                    "description": mapped.get("description") or "",
-                    "source": mapped.get("source") or "Import",
-                    "source_id": "",
-                    "taxonomy": mapped.get("taxonomy") or "Organizational",
-                    "priority": "M",
-                    "status": mapped.get("status") or "Open",
-                    "threat": mapped.get("threat"),
-                    "consequence": mapped.get("consequence"),
-                    "top_event": mapped.get("top_event"),
-                    "remarks": mapped.get("remarks"),
-                })
-            elif dest == "flight_diversions":
-                sector = mapped.get("flight_sector") or ""
-                if "-" in str(sector):
-                    parts = [p.strip() for p in str(sector).split("-", 1)]
-                else:
-                    parts = [str(sector).strip(), str(sector).strip()]
-                pg.insert(FlightDiversion, {
-                    "tenant_id": tenant_uuid,
-                    "diversion_id": mapped.get("sequence_number") or f"IMP-{uuid.uuid4()}",
-                    "date": _parse_dt(mapped.get("occurrence_date") or mapped.get("reported_date")),
-                    "flight_number": mapped.get("flight_number") or "UNKNOWN",
-                    "aircraft_registration": mapped.get("aircraft_registration") or "UNKNOWN",
-                    "sector_from": parts[0] or "UNKNOWN",
-                    "sector_to": parts[1] if len(parts) > 1 else (parts[0] or "UNKNOWN"),
-                    "diverted_to": mapped.get("diverted_to") or "UNKNOWN",
-                    "reason": mapped.get("reason") or "Imported",
-                    "description": mapped.get("description") or "",
-                    "status": mapped.get("status") or "Open",
-                    "remarks": mapped.get("remarks"),
-                })
-            elif dest == "safety_deficiencies":
-                pg.insert(SafetyDeficiency, {
-                    "tenant_id": tenant_uuid,
-                    "source": mapped.get("source") or "Import",
-                    "description": mapped.get("description") or "",
-                    "status": mapped.get("status") or "Open",
-                })
+        try:
+            for dest in dests:
+                if dest == "occurrences":
+                    pg.insert(Occurrence, {
+                        "tenant_id": tenant_id,
+                        "occurrence_id": mapped.get("sequence_number"),
+                        "date": _parse_dt(mapped.get("occurrence_date") or mapped.get("reported_date")),
+                        "source": mapped.get("source"),
+                        "description": mapped.get("description"),
+                        "status": mapped.get("status") or "Open",
+                        "department": mapped.get("concerned_department"),
+                        "remarks": mapped.get("remarks"),
+                    })
+                elif dest == "hazards":
+                    pg.insert(Hazard, {
+                        "tenant_id": tenant_uuid,
+                        "hazard_id": mapped.get("sequence_number") or f"IMP-{uuid.uuid4()}",
+                        "title": mapped.get("description") or "Imported hazard",
+                        "description": mapped.get("description") or "",
+                        "source": mapped.get("source") or "Import",
+                        "source_id": "",
+                        "taxonomy": mapped.get("taxonomy") or "Organizational",
+                        "priority": "M",
+                        "status": mapped.get("status") or "Open",
+                        "threat": mapped.get("threat"),
+                        "consequence": mapped.get("consequence"),
+                        "top_event": mapped.get("top_event"),
+                        "remarks": mapped.get("remarks"),
+                    })
+                elif dest == "flight_diversions":
+                    sector = mapped.get("flight_sector") or ""
+                    if "-" in str(sector):
+                        parts = [p.strip() for p in str(sector).split("-", 1)]
+                    else:
+                        parts = [str(sector).strip(), str(sector).strip()]
+                    pg.insert(FlightDiversion, {
+                        "tenant_id": tenant_uuid,
+                        "diversion_id": mapped.get("sequence_number") or f"IMP-{uuid.uuid4()}",
+                        "date": _parse_dt(mapped.get("occurrence_date") or mapped.get("reported_date")),
+                        "flight_number": mapped.get("flight_number") or "UNKNOWN",
+                        "aircraft_registration": mapped.get("aircraft_registration") or "UNKNOWN",
+                        "sector_from": parts[0] or "UNKNOWN",
+                        "sector_to": parts[1] if len(parts) > 1 else (parts[0] or "UNKNOWN"),
+                        "diverted_to": mapped.get("diverted_to") or "UNKNOWN",
+                        "reason": mapped.get("reason") or "Imported",
+                        "description": mapped.get("description") or "",
+                        "status": mapped.get("status") or "Open",
+                        "remarks": mapped.get("remarks"),
+                    })
+                elif dest == "safety_deficiencies":
+                    pg.insert(SafetyDeficiency, {
+                        "tenant_id": tenant_uuid,
+                        "source": mapped.get("source") or "Import",
+                        "description": mapped.get("description") or "",
+                        "status": mapped.get("status") or "Open",
+                    })
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Failed to insert into {dest} for row {row.get('row_number')}: {str(e)}")
         pg.update(
             MasterLogsheetStaging,
             "id",
