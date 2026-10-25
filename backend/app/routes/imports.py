@@ -92,7 +92,7 @@ async def promote_import(batch_id: str, user=Depends(get_safety_manager)):
         try:
             tenant_uuid = uuid.UUID(tenant_id_raw)
         except ValueError:
-            tenant_uuid = uuid.uuid5(uuid.NAMESPACE_DNS, tenant_id_raw)
+            tenant_uuid = uuid.UUID(uuid.uuid5(uuid.NAMESPACE_DNS, f"tenant:{tenant_id_raw}"))
     else:
         tenant_uuid = tenant_id_raw
     rows = pg.fetch_all(
@@ -114,7 +114,7 @@ async def promote_import(batch_id: str, user=Depends(get_safety_manager)):
             for dest in dests:
                 if dest == "occurrences":
                     pg.insert(Occurrence, {
-                        "tenant_id": tenant_id,
+                        "tenant_id": str(tenant_uuid),
                         "occurrence_id": mapped.get("sequence_number"),
                         "date": _parse_dt(mapped.get("occurrence_date") or mapped.get("reported_date")) or datetime.datetime.now(datetime.timezone.utc),
                         "source": mapped.get("source"),
