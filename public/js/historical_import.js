@@ -134,16 +134,19 @@ if (promoteBtn) promoteBtn.addEventListener('click', async () => {
         } catch (netErr) {
             throw new Error('Network error: ' + netErr.message);
         }
-        if (!res.ok) {
-            const contentType = res.headers.get('content-type') || '';
-            if (contentType.indexOf('application/json') !== -1) {
-                const data = await res.json();
-                throw new Error(data.detail || data.message || 'Request failed');
-            } else {
-                throw new Error(`Server error: ${res.status} ${res.statusText}`);
-            }
+
+        let data;
+        try {
+            data = await res.json();
+        } catch (e) {
+            const text = await res.text();
+            throw new Error(`Server returned: ${res.status} ${res.statusText}\n${text.substring(0, 100)}`);
         }
-        const data = await res.json();
+
+        if (!res.ok) {
+            throw new Error(data.detail || data.message || 'Promote failed');
+        }
+
         document.getElementById('successCount').textContent = data.promoted_rows;
         showStep(3);
     } catch (err) {
