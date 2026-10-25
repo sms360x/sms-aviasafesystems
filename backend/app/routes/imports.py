@@ -178,13 +178,11 @@ async def promote_import(batch_id: str, user=Depends(get_safety_manager)):
                         "status": mapped.get("status") or "Open",
                     })
                 if dest in ("hazards", "occurrences", "safety_deficiencies", "flight_diversions"):
-                    rpt_type = "VSR"
+                    rpt_type = "voluntary"
                     if dest == "occurrences":
-                        rpt_type = "MOR"
+                        rpt_type = "mandatory"
                     elif dest == "flight_diversions":
-                        rpt_type = "Diversion"
-                    elif dest == "safety_deficiencies":
-                        rpt_type = "Safety Deficiency"
+                        rpt_type = "mandatory"
                     pg.insert(Report, {
                         "tenant_id": tenant_uuid,
                         "report_type": rpt_type,
