@@ -52,8 +52,9 @@ async def import_master_logsheet(
         raise HTTPException(500, f"Parse failed: {e}")
 
     batch_id = str(uuid.uuid4())
+    staging_rows = []
     for row in staged:
-        pg.insert(MasterLogsheetStaging, {
+        staging_rows.append({
             "batch_id": batch_id,
             "tenant_id": tenant_id,
             "row_number": row["row_number"],
@@ -62,6 +63,8 @@ async def import_master_logsheet(
             "destination_tables": row["destination_tables"],
             "validation_status": "pending",
         })
+    if staging_rows:
+        pg.bulk_insert(MasterLogsheetStaging, staging_rows)
 
     return {
         "batch_id": batch_id,

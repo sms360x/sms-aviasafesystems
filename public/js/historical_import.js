@@ -132,17 +132,25 @@ if (promoteBtn) promoteBtn.addEventListener('click', async () => {
     if (!currentBatchId) return;
     promoteBtn.disabled = true;
     promoteBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Importing...';
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000);
     try {
         const headers = await getAuthHeaders();
         let res;
         try {
             res = await fetch(`${API_URL}/api/v1/imports/${currentBatchId}/promote`, {
                 method: 'POST',
-                headers: headers
+                headers: headers,
+                signal: controller.signal
             });
         } catch (netErr) {
+            clearTimeout(timeoutId);
+            if (netErr.name === 'AbortError') {
+                throw new Error('The server took too long to respond (30s). The import may still be processing in the background.');
+            }
             throw new Error('Network error: ' + netErr.message);
         }
+        clearTimeout(timeoutId);
 
         let data;
         try {
@@ -159,8 +167,10 @@ if (promoteBtn) promoteBtn.addEventListener('click', async () => {
         document.getElementById('successCount').textContent = data.promoted_rows;
         showStep(3);
     } catch (err) {
+        clearTimeout(timeoutId);
         showModal('Error', err.message, 'error');
     } finally {
+        clearTimeout(timeoutId);
         promoteBtn.disabled = false;
         promoteBtn.textContent = 'Confirm & Import';
     }

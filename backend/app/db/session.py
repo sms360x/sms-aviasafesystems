@@ -170,6 +170,7 @@ def get_engine() -> AsyncEngine:
                 "statement_cache_size": 0,
                 "prepared_statement_name_func": _unique_prepared_stmt_name,
                 "command_timeout": settings.DB_COMMAND_TIMEOUT,
+                "server_settings": {"statement_timeout": "15000"},
             },
         )
         # Phase 2C.3: set the app.current_* GUCs (and, when
