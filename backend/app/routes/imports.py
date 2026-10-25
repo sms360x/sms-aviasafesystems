@@ -92,7 +92,7 @@ async def promote_import(batch_id: str, user=Depends(get_safety_manager)):
         try:
             tenant_uuid = uuid.UUID(tenant_id_raw)
         except ValueError:
-            tenant_uuid = uuid.UUID(uuid.uuid5(uuid.NAMESPACE_DNS, f"tenant:{tenant_id_raw}"))
+            tenant_uuid = uuid.uuid5(uuid.NAMESPACE_DNS, f"tenant:{tenant_id_raw}")
     else:
         tenant_uuid = tenant_id_raw
     rows = pg.fetch_all(
