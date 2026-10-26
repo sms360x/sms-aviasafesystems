@@ -98,5 +98,6 @@ backups/
 _archive/
 storage/
 
-# SQL backups / dumps (tracked migrations in supabase/migrations/ are unaffected)
-*.sql
+# SQL backups / dumps
+backups/*.sql
+*.dump.sql
