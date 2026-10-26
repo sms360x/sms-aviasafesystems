@@ -1,43 +1,49 @@
-# Project Resume: AviaSAFE SMS (Phase 3D — Dashboard Data & Refinement)
+# Project Resume: AviaSAFE SMS (Phase 3D — CSV Import Complete)
 
-## 1. Project State & Context
-- **Repository:** `DHFactors/sms-aviasafesystems` (single `main` branch only)
-- **Deployments:**
-  - Frontend: Firebase Hosting (`aerosafety-sms-prod` site) — auto-deploys via GitHub Actions from `main`
-  - Backend: Render (`aviasafe-unified-platform`) — auto-deploys via GitHub from `main`
-- **Domains:**
-  - `sms360x.com` — SaaS landing page + login
-  - `sita.sms360x.com`, `tara.sms360x.com`, etc. — Tenant-scoped login
-  - `sms.aviasafesystems.com` — RETIRED (removed from Firebase and Cloudflare)
-- **Database:** Supabase (RLS + Phase 3A security verified)
-- **Marketing:** The old `sms360x-site` repo is retired. The Astro marketing page content is now baked into `aviasafesms/public/index.html`.
+**Session Date:** 2026-10-26  
+**Status:** CSV-only Master Logsheet import is VERIFIED WORKING end-to-end in production.  
+**Next Priority:** Build the ETL (Excel → CSV) and Export (DB → CSV) Mini-SaaS tools.
 
-## 2. What Was Just Accomplished (Phase 3C)
-- **Domain Migration:** Full cutover from `sms.aviasafesystems.com` to `sms360x.com` and `*.sms360x.com` subdomains.
-- **Login Page:** Split-screen layout with SMS360X branding. Custom circular logo. Helpful left panel. "Forgot Password" link. Mobile-responsive.
-- **Landing Page:** Replicated the Astro marketing design in plain HTML/Tailwind. "Who it is for" section now uses 4 icon cards (Airlines, ATO, MRO, State Regulators).
-- **Dashboard Header:** Custom `sms360x` logo, lowercase branding, nav wrapping fixed.
-- **Backend CORS:** Allowed `sms360x.com` and `*.sms360x.com` origins.
-- **Repo Cleanup:** Deleted all stale branches. Only `main` remains. All work consolidated. Dormant Astro/Tailwind/archive removed.
+## ✅ Master Logsheet Import (CSV) — VERIFIED WORKING
+The import engine is fully functional, bypassing the previous PgBouncer deadlock.
 
-## 3. Immediate Next Steps (Phase 3D)
-1. **Dashboard Data Refinement:**
-   - Populate KPIs and charts with realistic dummy data (currently showing "Loading..." or "0").
-   - Fix the per-page KPI grid responsiveness (tenant-dashboard.css, caan-oversight.css, aviasdcps.css).
-2. **Hazard Management Table:** Populate the hazard list with realistic sample entries.
-3. **Recent Activity Feed:** Populate with realistic activity.
-4. **Survey Module (Module A):** Verify the `/survey/?tenant=<slug>` flow end-to-end.
+- **Frontend:** `/dashboard/historical-import.html` (embedded in Safety Dashboard). Uses App Check + Auth.
+- **Backend:** `POST /api/v1/imports/master-logsheet` and `/promote`.
+- **Architecture:** Uses isolated SQLAlchemy transactions (`get_engine().begin()`) to bypass the shared bridge session.
+- **RLS:** Deterministic tenant UUID (`uuid5`) is used consistently for both `app.current_tenant` and staging inserts.
+- **Dashboard:** Dual-insert into `reports` ensures KPIs update immediately.
 
-## 4. How to Resume
-The SME will start the next session by pasting this prompt.
-The AI should:
-1. Acknowledge that Phase 3C is complete.
-2. Begin Phase 3D with a verification dispatch (read-only audit of the dashboard data rendering).
-3. Only after the audit, issue a fix dispatch based on real facts.
+### Smoke Test Results (2026-10-26)
+- Uploaded `test_import.csv` (3 rows).
+- Result: 200 OK, 3 rows staged, 3 rows promoted.
+- Dashboard KPIs updated (Total Reports: 27 → 30).
 
-## 5. Working Rules (Established This Session)
-- **Never edit code directly.** All code is written by OpenCode.
-- **Verify before fix.** Always issue a read-only audit first.
-- **Commit only after SME confirms.** Never push without explicit "push approved."
-- **Use Markdown code blocks for OpenCode dispatches.** No raw shell scripts in the SME's path.
-- **One commit = one logical change.**
+## 🚀 Next Phase: Complimentary Mini-SaaS Suite
+We are building two standalone tools to ship as a complimentary onboarding suite for prospective clients. This solves the "messy data" problem and provides a demo airline dataset.
+
+### Mini-SaaS 1: ETL Tool (Excel → CSV)
+**Purpose:** Allow airlines to upload their messy, multi-tab Excel logsheets, map columns, validate data, and download clean CSV files that the core SMS can ingest.
+
+**Tech Stack:** Python (FastAPI) + Pandas or React + SheetJS.
+
+**Key Features:**
+- Multi-tab Excel upload.
+- Column mapping UI (auto-detect headers, map to CAAN canonical headers).
+- Validation engine (dates, enums, required fields).
+- Output: ZIP containing `hazards.csv`, `occurrences.csv`, `flight_diversions.csv`, and `validation_report.csv`.
+
+### Mini-SaaS 2: Export Tool (DB → CSV)
+**Purpose:** Allow prospective clients to see the "Exit Strategy" — export any register (Hazard, Risk, Barrier, Occurrence) into a clean, CAAN-formatted CSV.
+
+**Tech Stack:** Same stack as core app.
+
+**Key Features:**
+- Select tenant and register type.
+- Apply date filters.
+- One-click download of CAAN-compliant CSV.
+
+### The Demo Airline Concept
+- **Scenario:** Prospective client logs into the app.
+- **Action:** They are given access to a "Demo Airline" tenant (e.g., "Sita Air Demo") pre-populated with realistic, CAAN-compliant data.
+- **Value:** They can explore the dashboard, run reports, and see the system populated before making a purchase decision.
+- **Onboarding:** When they sign, they use the **ETL Mini-SaaS** to convert their real Excel files, upload the CSVs, and clear the demo data.

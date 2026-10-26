@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Historical Import — AviaSAFE SMS</title>
+  <link rel="stylesheet" href="/css/variables.css" />
+  <link rel="stylesheet" href="/css/executive-ui.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <style>
+    .import-wrap { max-width: 1100px; margin: 24px auto; padding: 0 16px; }
+    .import-card { background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,.06); margin-bottom: 16px; }
+    .dropzone { border: 2px dashed #cbd5e1; border-radius: 12px; padding: 40px; text-align: center; cursor: pointer; transition: .2s; }
+    .dropzone:hover, .dropzone.drag { border-color: #2563eb; background: #eff6ff; }
+    .step { display: none; }
+    .step.active { display: block; }
+    .import-table { width: 100%; border-collapse: collapse; }
+    .import-table th, .import-table td { border: 1px solid #e2e8f0; padding: 8px; font-size: 13px; }
+    .import-table th { background: #f1f5f9; }
+    .unmapped { background: #fef3c7; border: 1px solid #f59e0b; padding: 12px; border-radius: 8px; margin-bottom: 12px; }
+    .btn { padding: 10px 16px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; }
+    .btn-primary { background: #2563eb; color: #fff; }
+    .btn-success { background: #16a34a; color: #fff; }
+    .success-box { background: #dcfce7; border: 1px solid #16a34a; padding: 20px; border-radius: 12px; text-align: center; }
+  </style>
+</head>
+<body>
+  <div id="execSidebar"></div>
+  <div id="execTopbar"></div>
+  <main class="import-wrap">
+    <h1>Master Logsheet Import</h1>
+
+    <section id="step1" class="step active">
+      <div class="import-card">
+        <div class="dropzone" id="dropzone">
+          <i class="fa-solid fa-cloud-arrow-up" style="font-size:32px;color:#2563eb;"></i>
+          <p>Drag & drop Excel/CSV here, or click to select</p>
+          <input type="file" id="fileInput" accept=".xlsx,.csv" />
+        </div>
+        <div style="margin-top:16px;">
+          <button id="uploadBtn" class="btn btn-primary">Upload &amp; Preview</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="step2" class="step">
+      <div class="import-card">
+        <div id="unmappedBox" class="unmapped" style="display:none;"></div>
+        <table class="import-table" id="previewTable">
+          <thead>
+            <tr><th>Row</th><th>Description</th><th>Destination Tables</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+        <div style="margin-top:16px;">
+          <button id="promoteBtn" class="btn btn-success">Confirm &amp; Import</button>
+          <button id="backBtn" class="btn" style="margin-left:8px;">Back</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="step3" class="step">
+      <div class="import-card">
+        <div class="success-box">
+          <h2>Import Complete</h2>
+          <p id="successMsg"></p>
+          <button id="resetBtn" class="btn btn-primary" style="margin-top:12px;">Upload Another File</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="/js/firebase.js"></script>
+  <script src="/js/executive-shell.js"></script>
+  <script>
+    const API_URL = 'https://aviasafe-unified-platform.onrender.com';
+    let currentBatchId = null;
+
+    async function getAuthHeaders() {
+      const user = firebase.auth().currentUser;
+      if (!user) throw new Error('Not authenticated');
+      const token = await user.getIdToken();
+      const appCheckToken = (typeof window.getAppCheckToken === 'function') ? await window.getAppCheckToken() : null;
+      const headers = { 'Authorization': `Bearer ${token}` };
+      if (appCheckToken) headers['X-Firebase-AppCheck'] = appCheckToken;
+      // tenant id from claims/session not available here; backend derives from user
+      return headers;
+    }
+
+    function showStep(n) {
+      document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+      document.getElementById('step' + n).classList.add('active');
+    }
+
+    document.getElementById('uploadBtn').addEventListener('click', async () => {
+      const fileInput = document.getElementById('fileInput');
+      if (!fileInput.files.length) return alert('Select a file first.');
+      const formData = new FormData();
+      formData.append('file', fileInput.files[0]);
+      try {
+        const headers = await getAuthHeaders();
+        const res = await fetch(`${API_URL}/api/v1/imports/master-logsheet`, {
+          method: 'POST',
+          headers: headers,
+          body: formData
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || data.message || 'Upload failed');
+        currentBatchId = data.batch_id;
+        renderPreview(data);
+        showStep(2);
+      } catch (err) {
+        alert('Error: ' + err.message);
+      }
+    });
+
+    function renderPreview(data) {
+      const tbody = document.querySelector('#previewTable tbody');
+      tbody.innerHTML = '';
+      (data.preview || []).forEach(row => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${row.row_number}</td><td>${row.mapped_data?.description || ''}</td><td>${(row.destination_tables || []).join(', ')}</td>`;
+        tbody.appendChild(tr);
+      });
+      const box = document.getElementById('unmappedBox');
+      if (data.unmapped_columns && data.unmapped_columns.length) {
+        box.style.display = 'block';
+        box.textContent = 'Unmapped columns: ' + data.unmapped_columns.join(', ');
+      } else {
+        box.style.display = 'none';
+      }
+    }
+
+    document.getElementById('promoteBtn').addEventListener('click', async () => {
+      if (!currentBatchId) return;
+      try {
+        const headers = await getAuthHeaders();
+        const res = await fetch(`${API_URL}/api/v1/imports/${currentBatchId}/promote`, {
+          method: 'POST',
+          headers: headers
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || data.message || 'Promote failed');
+        showSuccess(data.promoted_rows ?? 0);
+        showStep(3);
+      } catch (err) {
+        alert('Error: ' + err.message);
+      }
+    });
+
+    document.getElementById('backBtn').addEventListener('click', () => showStep(1));
+    document.getElementById('resetBtn').addEventListener('click', () => {
+      currentBatchId = null;
+      document.getElementById('fileInput').value = '';
+      document.querySelector('#previewTable tbody').innerHTML = '';
+      showStep(1);
+    });
+
+    function showSuccess(n) {
+      document.getElementById('successMsg').textContent = `${n} row(s) promoted successfully.`;
+    }
+
+    // init shell
+    if (typeof ExecutiveShell !== 'undefined') {
+      ExecutiveShell.init({ activePage: 'historical-import' });
+    }
+  </script>
+</body>
+</html>

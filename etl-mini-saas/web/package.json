@@ -1,0 +1,1 @@
+{"name":"logsheet-studio","version":"1.0.0","private":true,"type":"module","scripts":{"dev":"vite --host 127.0.0.1","build":"vite build"},"dependencies":{"react":"19.0.0","react-dom":"19.0.0","xlsx":"https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"},"devDependencies":{"vite":"6.4.1"}}
