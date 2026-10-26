@@ -107,4 +107,3 @@ window.ExecutiveShell = (function () {
 
     return { init: init, toggleSidebar: toggleSidebar };
 })();
-```<|end|><|start|>write to=assistant<|channel|>analysis<|message|>Created file successfully: public/js/executive-shell.js
