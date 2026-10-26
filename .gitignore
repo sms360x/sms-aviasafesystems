@@ -93,3 +93,10 @@ public/_hold/
 
 # DB backups
 backups/
+
+# ─── Stale / generated ─────────────────────────────────────────────────────
+_archive/
+storage/
+
+# SQL backups / dumps (tracked migrations in supabase/migrations/ are unaffected)
+*.sql
