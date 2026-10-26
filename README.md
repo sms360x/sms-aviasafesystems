@@ -3,9 +3,9 @@
 A multi-tenant aviation **Safety Management System (SMS) intelligence platform** for Nepal,
 aligned with **ICAO Annex 19**, **ICAO Doc 9859**, and **CAAN CAR-19**.
 
-> **Status:** Released as production **v1.0.0**. See
-> [docs/archive/PROJECT_STATUS_REPORT_05AUG2026.md](./docs/archive/PROJECT_STATUS_REPORT_05AUG2026.md) for the
-> release record and [docs/archive/PROJECT_CHARTER.md](./docs/archive/PROJECT_CHARTER.md) for the product charter.
+> **Status:** CSV-only Master Logsheet import is verified working end-to-end. See
+> [Project_Resume_Phase3D_Complete.md](./Project_Resume_Phase3D_Complete.md) for the current session handoff and
+> [ROADMAP.md](./ROADMAP.md) for the product roadmap.
 
 ---
 
@@ -109,7 +109,7 @@ Live endpoints:
 | Testing | [tests/README.md](./tests/README.md) |
 | Known limitations / tech debt | [docs/KNOWN_LIMITATIONS.md](./docs/KNOWN_LIMITATIONS.md) |
 | Product charter | [docs/archive/PROJECT_CHARTER.md](./docs/archive/PROJECT_CHARTER.md) |
-| Status & roadmap | [docs/archive/PROJECT_STATUS_REPORT_05AUG2026.md](./docs/archive/PROJECT_STATUS_REPORT_05AUG2026.md), [docs/PROJECT_STATUS_REPORT_2026-08-24.md](./docs/PROJECT_STATUS_REPORT_2026-08-24.md), [ROADMAP.md](./ROADMAP.md) |
+| Status & roadmap | [ROADMAP.md](./ROADMAP.md), [Project_Resume_Phase3D_Complete.md](./Project_Resume_Phase3D_Complete.md) |
 | Demo walkthrough | [docs/archive/DEMO_GUIDE.md](./docs/archive/DEMO_GUIDE.md) |
 | File structure & routing | [docs/FILE_STRUCTURE.md](./docs/FILE_STRUCTURE.md) |
 | Tenant onboarding | [public/docs/tenant-guide/](./public/docs/tenant-guide/) |
