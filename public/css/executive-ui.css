@@ -221,7 +221,6 @@ body.executive-layout {
     .exec-content { padding: 1rem; }
     .exec-topbar { padding: 0 1rem; }
 }
-```<|end|><|start|>write to<|channel|>assistant<|channel|>analysis<|message|>Created file successfully: public/css/executive-ui.css
 /* Historical import wizard */
 .dropzone { border: 2px dashed #cbd5e1; border-radius: 12px; padding: 40px; text-align: center; cursor: pointer; transition: .2s; }
 .dropzone:hover, .dropzone.drag { border-color: #2563eb; background: #eff6ff; }
