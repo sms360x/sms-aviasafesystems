@@ -43,16 +43,18 @@ async def import_master_logsheet(
     file: UploadFile = File(...),
     user=Depends(get_safety_manager),
 ):
-    tenant_id = user.get("tenant_id")
-    if not tenant_id:
+    tenant_id_raw = user.get("tenant_id")
+    if not tenant_id_raw:
         raise HTTPException(400, "No tenant context")
-    if isinstance(tenant_id, str):
+    # Generate the tenant UUID (same logic as promote)
+    if isinstance(tenant_id_raw, str):
         try:
-            tenant_uuid = uuid.UUID(tenant_id)
+            tenant_uuid = uuid.UUID(tenant_id_raw)
         except ValueError:
-            tenant_uuid = uuid.uuid5(uuid.NAMESPACE_DNS, f"tenant:{tenant_id}")
+            tenant_uuid = uuid.uuid5(uuid.NAMESPACE_DNS, f"tenant:{tenant_id_raw}")
     else:
-        tenant_uuid = tenant_id
+        tenant_uuid = tenant_id_raw
+
     try:
         mapping, unmapped, staged = parse_batch(file.file, file.filename or "")
     except ValueError as e:
@@ -64,8 +66,9 @@ async def import_master_logsheet(
     staging_rows = []
     for row in staged:
         staging_rows.append({
+            "id": str(uuid.uuid4()),
             "batch_id": batch_id,
-            "tenant_id": tenant_id,
+            "tenant_id": str(tenant_uuid),  # <-- USE THE UUID, NOT THE SLUG
             "row_number": row["row_number"],
             "raw_data": row["raw_data"],
             "mapped_data": row["mapped_data"],
@@ -77,12 +80,11 @@ async def import_master_logsheet(
         async with get_engine().begin() as conn:
             await conn.execute(
                 text("SELECT set_config('app.current_tenant', :t, true)"),
-                {"t": str(tenant_uuid)}
+                {"t": str(tenant_uuid)}  # UUID
             )
             if staging_rows:
                 import json
                 for row in staging_rows:
-                    row["id"] = str(uuid.uuid4())
                     row["raw_data"] = json.dumps(row["raw_data"])
                     row["mapped_data"] = json.dumps(row["mapped_data"])
                 await conn.execute(
@@ -133,8 +135,8 @@ def process_promote_batch(batch_id: str, tenant_id_raw: str, tenant_uuid):
             )
 
             result = await conn.execute(
-                text("SELECT * FROM master_logsheet_staging WHERE batch_id = :bid AND validation_status = 'pending'"),
-                {"bid": batch_id}
+                text("SELECT * FROM master_logsheet_staging WHERE batch_id = :bid AND tenant_id = :tid AND validation_status = 'pending'"),
+                {"bid": batch_id, "tid": str(tenant_uuid)}
             )
             rows = result.mappings().all()
             if not rows:
@@ -205,7 +207,7 @@ async def promote_import(
                     SELECT * FROM master_logsheet_staging 
                     WHERE batch_id = :bid AND tenant_id = :tid AND validation_status = 'pending'
                 """),
-                {"bid": batch_id, "tid": tenant_id}
+                {"bid": batch_id, "tid": str(tenant_uuid)}
             )
             rows = result.mappings().all()
     except Exception as e:
@@ -215,7 +217,7 @@ async def promote_import(
         raise HTTPException(404, "No pending rows found.")
 
     # 3. Queue background task
-    background_tasks.add_task(process_promote_batch, batch_id, tenant_id, tenant_uuid)
+    background_tasks.add_task(process_promote_batch, batch_id, str(tenant_uuid), tenant_uuid)
     return {
         "success": True,
         "batch_id": batch_id,
