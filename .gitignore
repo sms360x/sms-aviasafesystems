@@ -5,6 +5,7 @@
 # ─── Environment & Secrets ─────────────────────────────────────────────────
 .env
 .env.local
+backend/logs/
 *.env
 .env.demo
 backend/.env
