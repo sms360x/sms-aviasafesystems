@@ -308,29 +308,36 @@
             }
             tenant = (tr.claims && tr.claims.tenant_id) || '';
 
-            // Nav transform: flatten getVisibleNav() groups -> flat {id,label,icon,href,section}
-            var userObj = { email: user.email || '', role: role, department: '' };
-            var flatNav = [];
-            if (typeof window.getVisibleNav === 'function') {
-                window.getVisibleNav(userObj).forEach(function (g) {
-                    (g.items || []).forEach(function (item) {
-                        flatNav.push({
-                            id: item.id,
-                            label: item.label,
-                            href: item.href,
-                            icon: g.icon,
-                            section: g.group
-                        });
-                    });
-                });
-            }
+            // Hardcoded executive navigation (SME reference; replaces legacy
+            // nav-config.js role-based NAV_CONFIG).
+            var flatNav = [
+                // DASHBOARD
+                { id: 'dashboard', label: 'Dashboard', href: '/dashboard/safety-manager.html', icon: 'fa-table-columns', section: 'Dashboard' },
+                { id: 'reports', label: 'Reports', href: '#', icon: 'fa-file-lines' },
+
+                // SAFETY
+                { id: 'hazards', label: 'Hazards & Risks', href: '#', icon: 'fa-triangle-exclamation', section: 'Safety' },
+                { id: 'assurance', label: 'Safety Assurance', href: '#', icon: 'fa-shield-halved' },
+                { id: 'performance', label: 'Safety Performance', href: '#', icon: 'fa-chart-line' },
+                { id: 'actions', label: 'Actions', href: '#', icon: 'fa-clipboard-check' },
+
+                // REGULATORY
+                { id: 'compliance', label: 'Compliance', href: '#', icon: 'fa-scale-balanced', section: 'Regulatory' },
+                { id: 'articles', label: 'Articles & Advisories', href: '#', icon: 'fa-newspaper' },
+
+                // WORKSPACE
+                { id: 'surveys', label: 'Surveys', href: '#', icon: 'fa-square-poll-vertical', section: 'Workspace' },
+                { id: 'meetings', label: 'Meetings', href: '#', icon: 'fa-users' },
+                { id: 'documents', label: 'Documents', href: '#', icon: 'fa-folder-open' },
+                { id: 'admin', label: 'Administration', href: '#', icon: 'fa-gear' }
+            ];
 
             if (window.ExecutiveShell && typeof window.ExecutiveShell.init === 'function') {
                 window.ExecutiveShell.init({
                     brand: 'SMS360X',
                     role: roleLabel(role),
                     tenant: humanizeTenant(tenant),
-                    activeNav: 'safety-manager',
+                    activeNav: 'dashboard',
                     nav: flatNav
                 });
             }
