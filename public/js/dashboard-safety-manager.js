@@ -91,7 +91,8 @@
 
     // ─── Section renderers ─────────────────────────────────────────────────
 
-    function renderKpis(overview) {
+    function renderKpis(overview, smsHealth) {
+        renderSmsHealth(smsHealth);
         var s1 = document.getElementById('s1-body');
         if (!s1) return;
         if (!overview || !overview.ok || !overview.data) {
@@ -103,7 +104,6 @@
 
         var totalReports = kpis.total_reports;
         var highRisks = kpis.high_risk_reports;
-        var critical = kpis.critical_reports;
 
         var closed = org.corrective_actions_closed || 0;
         var open = org.corrective_actions_open || 0;
@@ -115,12 +115,32 @@
         setText('s1-safety-reports', totalReports == null ? '\u2014' : String(totalReports));
         setText('s1-high-risks', highRisks == null ? '\u2014' : String(highRisks));
         setText('s1-action-completion', completion);
-        setText('s1-significant-events', critical == null ? '\u2014' : String(critical));
 
         var trendEl = document.getElementById('s1-safety-reports-trend');
         if (trendEl) {
             if (trend == null) { trendEl.textContent = '\u2014'; trendEl.className = 'exec-kpi-trend flat'; }
             else { trendEl.textContent = String(trend); trendEl.className = 'exec-kpi-trend flat'; }
+        }
+    }
+
+    function renderSmsHealth(smsHealth) {
+        var val = document.getElementById('s1-sms-health');
+        var tier = document.getElementById('s1-sms-health-tier');
+        if (!val) return;
+        var data = (smsHealth && smsHealth.ok) ? smsHealth.data : null;
+        var score = data ? data.overall_score : null;
+        if (score == null) {
+            val.textContent = '\u2014';
+            if (tier) {
+                tier.textContent = smsHealth && !smsHealth.ok ? 'Unavailable' : 'No survey data';
+                tier.className = 'exec-kpi-trend flat';
+            }
+            return;
+        }
+        val.textContent = Math.round(Number(score)) + '%';
+        if (tier) {
+            tier.textContent = data.tier_label || data.tier || '\u2014';
+            tier.className = 'exec-kpi-trend flat';
         }
     }
 
@@ -167,20 +187,64 @@
         }
     }
 
-    function renderHazards(hazards) {
+    function renderRiskMatrix(riskMatrix) {
+        var el = document.getElementById('s2-matrix');
+        var caption = document.getElementById('s2-caption');
+        if (!el) return;
+        var data = (riskMatrix && riskMatrix.ok) ? riskMatrix.data : null;
+        if (!data || !data.severity_scale || !data.probability_scale) {
+            el.innerHTML = '<div class="exec-empty" style="grid-column:1 / -1;">' +
+                '<div class="exec-empty-title">Failed to load</div>' +
+                '<div class="exec-empty-note">' + esc(riskMatrix && riskMatrix.reason ? riskMatrix.reason : 'risk matrix unavailable') + '</div></div>';
+            if (caption) caption.textContent = '\u2014';
+            return;
+        }
+        var severities = data.severity_scale.slice().sort(function (a, b) { return a.value - b.value; });
+        var probabilities = data.probability_scale.slice().sort(function (a, b) { return b.value - a.value; });
+        var counts = {};
+        (data.cells || []).forEach(function (c) {
+            counts[c.probability + '|' + c.severity] = Number(c.count) || 0;
+        });
+
+        var html = '<div class="exec-risk-axis-label"></div>';
+        severities.forEach(function (s) {
+            html += '<div class="exec-risk-axis-label">' + esc(s.label) + '</div>';
+        });
+        probabilities.forEach(function (p) {
+            html += '<div class="exec-risk-axis-label">' + esc(p.label) + '</div>';
+            severities.forEach(function (s) {
+                var count = counts[p.value + '|' + s.value] || 0;
+                var cls = String(s.label || '').toLowerCase();
+                var title = p.label + ' \u00d7 ' + s.label + ': ' + count + ' hazard' + (count === 1 ? '' : 's');
+                html += '<div class="exec-risk-cell ' + esc(cls) + '" title="' + esc(title) + '">' + count + '</div>';
+            });
+        });
+        el.innerHTML = html;
+        if (caption) {
+            caption.textContent = (data.total == null ? 0 : data.total) + ' hazard' +
+                (data.total === 1 ? '' : 's') + ' plotted by severity and probability.';
+        }
+    }
+
+    function renderHazards(keyIssues) {
         var tbody = document.getElementById('s4-body');
         if (!tbody) return;
-        if (!hazards || !hazards.ok || !Array.isArray(hazards.data)) {
-            renderTableEmpty('s4-body', 'Failed to load \u2014 ' + (hazards && hazards.reason ? hazards.reason : 'hazards unavailable'));
+        var data = (keyIssues && keyIssues.ok) ? keyIssues.data : null;
+        if (!data) {
+            renderTableEmpty('s4-body', 'Failed to load \u2014 ' + (keyIssues && keyIssues.reason ? keyIssues.reason : 'key issues unavailable'));
             return;
         }
-        var top = hazards.data.slice(0, 5);
-        if (!top.length) {
-            renderTableEmpty('s4-body', 'No hazard data.');
+        var items = Array.isArray(data) ? data : (data.items || []);
+        if (!items.length) {
+            renderTableEmpty('s4-body', 'No hazard data in period.');
             return;
         }
-        tbody.innerHTML = top.map(function (h) {
-            return '<tr><td>' + esc(h.occurrence_type || '\u2014') + '</td><td>' + esc(h.count == null ? '\u2014' : String(h.count)) + '</td><td>' + esc(h.trend_direction || '\u2014') + '</td></tr>';
+        var trendLabel = { rising: '\u25b2 Rising', falling: '\u25bc Falling', flat: '\u25cf Flat' };
+        tbody.innerHTML = items.slice(0, 5).map(function (h) {
+            var label = h.occurrence_type || h.category || '\u2014';
+            var trend = h.trend_direction || h.trend;
+            return '<tr><td>' + esc(label) + '</td><td>' + esc(h.count == null ? '\u2014' : String(h.count)) +
+                '</td><td>' + esc(trendLabel[trend] || '\u2014') + '</td></tr>';
         }).join('');
     }
 
@@ -349,8 +413,10 @@
     async function loadAll(tenant) {
         var tasks = {
             overview: ApiClient.get('/api/v1/dashboard/overview'),
+            smsHealth: ApiClient.get('/api/v1/dashboard/sms-health?days=365'),
             trends: ApiClient.get('/api/v1/dashboard/trends?days=180'),
-            hazards: ApiClient.get('/api/v1/dashboard/hazards?days=90'),
+            riskMatrix: ApiClient.get('/api/v1/dashboard/risk-matrix'),
+            keyIssues: ApiClient.get('/api/v1/dashboard/key-issues?days=90&limit=5'),
             cans: ApiClient.get('/api/v1/cans/'),
             caps: ApiClient.get('/api/v1/cans/caps'),
             recent: ApiClient.get('/api/v1/dashboard/recent?days=90&page=1&page_size=10')
@@ -368,9 +434,10 @@
                 : { ok: false, reason: (r.reason && r.reason.message) || 'request failed' };
         });
 
-        renderKpis(results.overview);
+        renderKpis(results.overview, results.smsHealth);
         renderTrends(results.trends);
-        renderHazards(results.hazards);
+        renderRiskMatrix(results.riskMatrix);
+        renderHazards(results.keyIssues);
         renderDonut(results.cans, results.caps);
         renderRecent(results.recent);
         renderSpis(results.spi, tenant);

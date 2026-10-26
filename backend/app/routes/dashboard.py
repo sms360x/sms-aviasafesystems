@@ -184,6 +184,49 @@ async def get_hazard_frequency(
     return _envelope(data)
 
 
+@router.get("/risk-matrix")
+async def get_risk_matrix(
+    user: Dict[str, Any] = Depends(get_tenant_user),
+):
+    """5x5 severity x probability hazard heat-map for the Safety Manager."""
+    svc = DashboardService(user)
+    try:
+        data = svc.get_hazard_risk_matrix()
+    except Exception as e:
+        logger.error(f"Risk matrix failed for tenant {user.get('tenant_id')}: {e}")
+        data = {
+            "severity_scale": [],
+            "probability_scale": [],
+            "cells": [],
+            "total": 0,
+            "error": str(e),
+        }
+    return _envelope(data)
+
+
+@router.get("/key-issues")
+async def get_key_issues(
+    days: Optional[int] = Query(90, ge=0),
+    limit: int = Query(5, ge=1, le=20),
+    params: Dict[str, Any] = Depends(dashboard_params),
+    user: Dict[str, Any] = Depends(get_tenant_user),
+):
+    """Top key safety issues (existing hazard-frequency ranking)."""
+    period_days = _resolve_days(days, params, 90)
+    svc = DashboardService(user)
+    try:
+        data = svc.get_key_issues(days=period_days, limit=limit)
+    except Exception as e:
+        logger.error(f"Key issues failed for tenant {user.get('tenant_id')}: {e}")
+        data = {
+            "items": [],
+            "total": 0,
+            "period_days": period_days,
+            "error": str(e),
+        }
+    return _envelope(data)
+
+
 @router.get("/actions")
 async def get_actions_summary(
     days: Optional[int] = Query(90, ge=0),
@@ -396,6 +439,40 @@ async def get_airline_sms_maturity(
             "error": str(e),
         }
     return _envelope(data)
+
+
+@router.get("/sms-health")
+async def get_sms_health(
+    days: int = Query(365, ge=30, le=730),
+    user: Dict[str, Any] = Depends(get_tenant_user),
+):
+    """Overall SMS maturity score for the Safety Manager KPI.
+
+    Reuses the existing airline SMS maturity service (get_airline_sms_maturity)
+    and projects only the KPI fields. No new scoring math.
+    """
+    svc = DashboardService(user)
+    try:
+        data = svc.get_airline_sms_maturity(days=days)
+    except Exception as e:
+        logger.error(f"SMS health failed for tenant {user.get('tenant_id')}: {e}")
+        data = {
+            "overall_score": None,
+            "tier": None,
+            "tier_label": None,
+            "response_count": 0,
+            "latest_assessment_date": None,
+            "period_days": days,
+            "error": str(e),
+        }
+    return _envelope({
+        "overall_score": data.get("overall_score"),
+        "tier": data.get("tier"),
+        "tier_label": data.get("tier_label"),
+        "response_count": data.get("response_count"),
+        "latest_assessment_date": data.get("latest_assessment_date"),
+        "period_days": data.get("period_days", days),
+    })
 
 
 # ======================================================================

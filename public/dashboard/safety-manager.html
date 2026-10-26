@@ -47,45 +47,23 @@
                     </div>
                 </div>
                 <div class="exec-kpi">
-                    <div class="exec-kpi-icon red"><i class="fas fa-circle-exclamation"></i></div>
+                    <div class="exec-kpi-icon navy"><i class="fas fa-heart-pulse"></i></div>
                     <div class="exec-kpi-body">
-                        <div class="exec-kpi-label">Significant Events</div>
-                        <div class="exec-kpi-value" id="s1-significant-events">&mdash;</div>
+                        <div class="exec-kpi-label">SMS Health</div>
+                        <div class="exec-kpi-value" id="s1-sms-health">&mdash;</div>
+                        <div class="exec-kpi-trend flat" id="s1-sms-health-tier">&mdash;</div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- S2 — 5x5 Risk Matrix (STUB) -->
+        <!-- S2 — 5x5 Risk Matrix (live: /dashboard/risk-matrix) -->
         <div class="exec-bento-half exec-card" data-section="s2">
             <div class="exec-card-header">
                 <h2 class="exec-card-title">5&times;5 Risk Matrix</h2>
-                <span class="exec-stub-badge">Not yet wired</span>
             </div>
-            <div class="exec-risk-matrix">
-                <div class="exec-risk-axis-label"></div>
-                <div class="exec-risk-axis-label">Negligible</div>
-                <div class="exec-risk-axis-label">Minor</div>
-                <div class="exec-risk-axis-label">Major</div>
-                <div class="exec-risk-axis-label">Hazardous</div>
-                <div class="exec-risk-axis-label">Catastrophic</div>
-
-                <div class="exec-risk-axis-label">Almost Certain</div>
-                <div class="exec-risk-cell negligible"></div><div class="exec-risk-cell minor"></div><div class="exec-risk-cell major"></div><div class="exec-risk-cell hazardous"></div><div class="exec-risk-cell catastrophic"></div>
-
-                <div class="exec-risk-axis-label">Likely</div>
-                <div class="exec-risk-cell negligible"></div><div class="exec-risk-cell minor"></div><div class="exec-risk-cell major"></div><div class="exec-risk-cell hazardous"></div><div class="exec-risk-cell catastrophic"></div>
-
-                <div class="exec-risk-axis-label">Possible</div>
-                <div class="exec-risk-cell negligible"></div><div class="exec-risk-cell minor"></div><div class="exec-risk-cell major"></div><div class="exec-risk-cell hazardous"></div><div class="exec-risk-cell catastrophic"></div>
-
-                <div class="exec-risk-axis-label">Unlikely</div>
-                <div class="exec-risk-cell negligible"></div><div class="exec-risk-cell minor"></div><div class="exec-risk-cell major"></div><div class="exec-risk-cell hazardous"></div><div class="exec-risk-cell catastrophic"></div>
-
-                <div class="exec-risk-axis-label">Rare</div>
-                <div class="exec-risk-cell negligible"></div><div class="exec-risk-cell minor"></div><div class="exec-risk-cell major"></div><div class="exec-risk-cell hazardous"></div><div class="exec-risk-cell catastrophic"></div>
-            </div>
-            <div class="exec-chart-caption">Not yet wired &mdash; pending severity&times;probability endpoint.</div>
+            <div class="exec-risk-matrix" id="s2-matrix"></div>
+            <div class="exec-chart-caption" id="s2-caption">&mdash;</div>
         </div>
 
         <!-- S3 — Reports Trend (monthly; 12-week pending) -->
@@ -97,15 +75,14 @@
             <div class="exec-chart-wrap" id="s3-body"><canvas id="s3-reports-trend"></canvas></div>
         </div>
 
-        <!-- S4 — Top 5 Hazard Occurrence Types (partial stub) -->
+        <!-- S4 — Top 5 Key Safety Issues (live: /dashboard/key-issues) -->
         <div class="exec-bento-half exec-card" data-section="s4">
             <div class="exec-card-header">
-                <h2 class="exec-card-title">Top 5 Hazard Occurrence Types</h2>
-                <span class="exec-stub-badge">Key-issue ranking pending</span>
+                <h2 class="exec-card-title">Top 5 Key Safety Issues</h2>
             </div>
             <div class="exec-table-card">
                 <table class="exec-table">
-                    <thead><tr><th>Occurrence Type</th><th>Count</th><th>Trend</th></tr></thead>
+                    <thead><tr><th>Safety Issue</th><th>Count</th><th>Trend</th></tr></thead>
                     <tbody id="s4-body"></tbody>
                 </table>
             </div>

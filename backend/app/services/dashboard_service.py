@@ -28,7 +28,11 @@ from app.services.metrics_service import MetricsService
 from app.services import sms_maturity_service
 from app.services.gemini import sms_maturity_tier, SURVEY_PILLAR_NAMES
 from app.services.pg_cache import get_or_set, set as pg_cache_set
-from app.services.risk_matrix import normalize_tolerability
+from app.services.risk_matrix import (
+    PROBABILITY_LABELS_DEFAULT,
+    SEVERITY_LABELS_DEFAULT,
+    normalize_tolerability,
+)
 from seed.config import FLIGHT_OPERATOR_TYPES
 
 DIVERSION_COLLECTION = "flight_diversions"
@@ -411,6 +415,77 @@ class DashboardService:
         reports = self.repo.get_all_in_range(f)
         return MetricsService.calculate_hazard_frequency(reports)
 
+    def get_hazard_risk_matrix(self) -> Dict[str, Any]:
+        """5x5 severity x probability heat-map of the tenant's hazards.
+
+        Reuses ``_aggregate_hazard_matrix`` — the existing calculation shared
+        with the CAAN State dashboard (``get_caan_state``) — rather than
+        re-deriving the matrix here. Labels come from the shared risk-matrix
+        module so the dashboard matches the SRM vocabulary used everywhere else.
+        Closed hazards are included: the matrix is a full risk profile, not an
+        open-action queue.
+        """
+        severity_scale = [
+            {"value": s, "label": SEVERITY_LABELS_DEFAULT[str(s)]}
+            for s in range(1, 6)
+        ]
+        probability_scale = [
+            {"value": p, "label": PROBABILITY_LABELS_DEFAULT[str(p)]}
+            for p in range(1, 6)
+        ]
+        empty = {
+            "severity_scale": severity_scale,
+            "probability_scale": probability_scale,
+            "cells": [],
+            "total": 0,
+            "level2": 0,
+            "level3": 0,
+            "level4": 0,
+        }
+        if not self.tenant_id:
+            return empty
+
+        tid = register_tenant(self.tenant_id)
+        hazards = pg.fetch_all(
+            Hazard,
+            where=[Hazard.tenant_id == tid, Hazard.is_demo == demo_scope()],
+        )
+        matrix = self._aggregate_hazard_matrix(hazards)
+
+        cells = [
+            {
+                **cell,
+                "severity_label": SEVERITY_LABELS_DEFAULT[str(cell["severity"])],
+                "probability_label": PROBABILITY_LABELS_DEFAULT[str(cell["probability"])],
+            }
+            for cell in matrix["cells"]
+        ]
+        return {
+            "severity_scale": severity_scale,
+            "probability_scale": probability_scale,
+            "cells": cells,
+            "total": matrix["total"],
+            "level2": matrix["level2"],
+            "level3": matrix["level3"],
+            "level4": matrix["level4"],
+        }
+
+    def get_key_issues(self, days: int = 90, limit: int = 5) -> Dict[str, Any]:
+        """Top key safety issues, reusing the existing hazard-frequency math.
+
+        Delegates to ``get_hazard_frequency`` (MetricsService
+        ``calculate_hazard_frequency``) — the same ranking that already backs
+        ``GET /api/v1/dashboard/hazards``. The only added behaviour is the
+        top-N slice requested by the dashboard card.
+        """
+        capped = max(1, min(int(limit or 5), 20))
+        items = self.get_hazard_frequency(days=days)[:capped]
+        return {
+            "items": items,
+            "total": len(items),
+            "period_days": days,
+        }
+
     def get_ssp_risk_trends(self, **overrides) -> Dict[str, Any]:
         f = self._base_filter(**overrides)
         reports = self.repo.get_all_in_range(f)
@@ -533,6 +608,40 @@ class DashboardService:
         except Exception as e:
             logger.warning(f"CAAN latest assessment-date query failed: {e}")
             return {}
+
+    @staticmethod
+    def _aggregate_hazard_matrix(hazards: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """Existing 5x5 severity x probability hazard aggregation.
+
+        Single source of the heat-map math for both the CAAN State dashboard
+        (``get_caan_state``) and the tenant Safety Manager dashboard
+        (``get_hazard_risk_matrix``). Moves the pre-existing loop unchanged.
+        """
+        heat_map = [{"severity": s, "probability": p, "count": 0} for s in range(1, 6) for p in range(1, 6)]
+        level2 = level3 = level4 = 0
+        for h in hazards:
+            s = h.get("severity")
+            p = h.get("probability")
+            if isinstance(s, int) and isinstance(p, int) and 1 <= s <= 5 and 1 <= p <= 5:
+                cell = next((c for c in heat_map if c["severity"] == s and c["probability"] == p), None)
+                if cell:
+                    cell["count"] += 1
+            tier = normalize_tolerability(h.get("risk_level"))
+            if tier == "UNASSESSED":
+                continue
+            if tier == "LOW":
+                level2 += 1
+            elif tier == "HIGH":
+                level3 += 1
+            elif tier == "VERY HIGH":
+                level4 += 1
+        return {
+            "cells": heat_map,
+            "level2": level2,
+            "level3": level3,
+            "level4": level4,
+            "total": len(hazards),
+        }
 
     def get_caan_state(self, **overrides) -> Dict[str, Any]:
         """Full CAAN executive-summary payload, aggregated server-side.
@@ -690,24 +799,7 @@ class DashboardService:
         active_operators = sum(1 for t in tenant_map.values() if t["active"])
 
         # ---- Hazard matrix heatmap (severity x probability) ----
-        heat_map = [{"severity": s, "probability": p, "count": 0} for s in range(1, 6) for p in range(1, 6)]
-        level2 = level3 = level4 = 0
-        for h in hazards:
-            s = h.get("severity")
-            p = h.get("probability")
-            if isinstance(s, int) and isinstance(p, int) and 1 <= s <= 5 and 1 <= p <= 5:
-                cell = next((c for c in heat_map if c["severity"] == s and c["probability"] == p), None)
-                if cell:
-                    cell["count"] += 1
-            tier = normalize_tolerability(h.get("risk_level"))
-            if tier == "UNASSESSED":
-                continue
-            if tier == "LOW":
-                level2 += 1
-            elif tier == "HIGH":
-                level3 += 1
-            elif tier == "VERY HIGH":
-                level4 += 1
+        hazard_matrix = self._aggregate_hazard_matrix(hazards)
 
         # ---- Operator grid (merge tenant meta + per-tenant stats + maturity) ----
         maturity = self.get_caan_survey_maturity(days=days, regulator_id=regulator_id)
@@ -740,13 +832,7 @@ class DashboardService:
                 "responses": sum(v["responses"] for v in per_tenant.values()),
             },
             "operators": operators,
-            "hazard_matrix": {
-                "cells": heat_map,
-                "level2": level2,
-                "level3": level3,
-                "level4": level4,
-                "total": len(hazards),
-            },
+            "hazard_matrix": hazard_matrix,
             "spi_trend": trend,
             "sms_maturity": maturity,
         }
