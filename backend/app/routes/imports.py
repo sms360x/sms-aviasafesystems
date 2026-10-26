@@ -7,7 +7,7 @@ from app.middleware.auth import get_current_user, get_safety_manager
 from app.db import pg
 from app.db.db_models import MasterLogsheetStaging, Occurrence, Hazard, FlightDiversion, SafetyDeficiency, Report
 from app.db.rls import set_current_identity, identity_from_user, clear_current_identity
-from app.db.session import engine
+from app.db.session import get_engine
 from sqlalchemy import text
 import asyncio
 
@@ -96,7 +96,7 @@ def process_promote_batch(batch_id: str, tenant_id_raw: str, tenant_uuid):
     import datetime
 
     async def _run():
-        async with engine.begin() as conn:
+        async with get_engine().begin() as conn:
             # CRITICAL: Use the UUID for RLS context
             await conn.execute(
                 text("SELECT set_config('app.current_tenant', :t, true)"),
@@ -163,11 +163,10 @@ async def promote_import(
         tenant_uuid = tenant_id
 
     # 2. Fetch pending rows in an isolated transaction (bypassing the bridge session)
-    from app.db.session import engine
     from sqlalchemy import text
 
     try:
-        async with engine.begin() as conn:
+        async with get_engine().begin() as conn:
             await conn.execute(
                 text("SELECT set_config('app.current_tenant', :t, true)"),
                 {"t": str(tenant_uuid)}
