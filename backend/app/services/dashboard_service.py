@@ -9,7 +9,7 @@
 # CODE OWNER: AviaSafeSystems
 # ============================================================================
 
-from datetime import datetime, timezone, timedelta
+from datetime import date, datetime, timezone, timedelta
 from collections import defaultdict
 from typing import Dict, Any, List, Optional
 from loguru import logger
@@ -18,7 +18,7 @@ from sqlalchemy import func, select
 
 from app.core.config import settings
 from app.db import pg
-from app.db.db_models import FlightDiversion, Hazard, Report, StateRiskRegisterEntry, Survey, SurveyResponse, Tenant
+from app.db.db_models import Cap, FlightDiversion, Hazard, Report, StateRiskRegisterEntry, Survey, SurveyResponse, Tenant
 from app.db.ids import register_tenant, tenant_slug, tenant_uuid
 from app.db.isolation import demo_scope
 from app.db.runner import run
@@ -33,6 +33,11 @@ from app.services.risk_matrix import (
     SEVERITY_LABELS_DEFAULT,
     normalize_tolerability,
 )
+from app.services.risk_calculator import (
+    VALUE_TO_SEVERITY,
+    get_tolerability,
+    risk_index as icao_risk_index,
+)
 from seed.config import FLIGHT_OPERATOR_TYPES
 
 DIVERSION_COLLECTION = "flight_diversions"
@@ -46,6 +51,38 @@ TIER_LABELS = {
     "watch": "Watch",
     "action": "Action Needed",
     "critical": "Critical",
+}
+
+# CAP lifecycle states that are finished and must never be reported as overdue.
+# Mirrors escalation_service.CAP_TERMINAL_STATUSES (Module B §18.3) plus the
+# Rejected/Accepted outcomes used by the dashboard dispatch. "Overdue" is
+# deliberately absent: it is a resolving, non-terminal state.
+CAP_TERMINAL_STATUSES = {
+    "completed", "closed", "escalated", "cancelled", "canceled",
+    "rejected", "accepted",
+}
+# EIP (Escalated-In Progress, Module B §21) is still active but has no time
+# limit, so it must never be reported as overdue. It is surfaced as On Track
+# (the donut has no dedicated escalated segment).
+CAP_NO_TIME_LIMIT_STATUSES = {"eip"}
+# Human-in-the-loop states awaiting a reviewer decision.
+CAP_PENDING_REVIEW_STATUSES = {"under review", "returned", "revision required"}
+
+# ICAO Doc 9859 display vocabulary. Severity is stored numerically (1-5) and
+# rendered as a letter (A-E) at the presentation layer only.
+ICAO_SEVERITY_DESCRIPTORS = {
+    5: "Catastrophic",
+    4: "Hazardous",
+    3: "Major",
+    2: "Minor",
+    1: "Negligible",
+}
+ICAO_PROBABILITY_DESCRIPTORS = {
+    5: "Frequent",
+    4: "Occasional",
+    3: "Remote",
+    2: "Improbable",
+    1: "Extremely Improbable",
 }
 
 
@@ -114,10 +151,20 @@ class DashboardService:
         kpis = MetricsService.calculate_kpis(reports)
         ai_kpis = MetricsService.calculate_ai_kpis(reports)
         org_kpis = MetricsService.calculate_org_kpis(reports)
+        try:
+            action_completion = self.get_action_completion()
+        except Exception as e:
+            logger.warning(
+                f"CAP action-completion query failed for tenant {self.tenant_id}: {e}"
+            )
+            action_completion = self.empty_action_completion()
+        # Replace the legacy hardcoded zero with the date-derived CAP count.
+        org_kpis["safety_actions_overdue"] = action_completion["overdue"]
         return {
             "kpis": kpis,
             "ai_kpis": ai_kpis,
             "org_kpis": org_kpis,
+            "action_completion": action_completion,
         }
 
     def get_airline_sms_maturity(self, **overrides) -> Dict[str, Any]:
@@ -416,51 +463,68 @@ class DashboardService:
         return MetricsService.calculate_hazard_frequency(reports)
 
     def get_hazard_risk_matrix(self) -> Dict[str, Any]:
-        """5x5 severity x probability heat-map of the tenant's hazards.
+        """ICAO Doc 9859 5x5 heat-map of the tenant's hazards.
 
         Reuses ``_aggregate_hazard_matrix`` — the existing calculation shared
-        with the CAAN State dashboard (``get_caan_state``) — rather than
-        re-deriving the matrix here. Labels come from the shared risk-matrix
-        module so the dashboard matches the SRM vocabulary used everywhere else.
+        with the State dashboard aggregator — rather than re-deriving the
+        counts here. Each cell is then enriched with the ICAO display
+        vocabulary:
+
+          * severity 5-1 maps to letters A-E
+          * probability 5-1 maps to Frequent..Extremely Improbable
+          * ``risk_index`` is the alphanumeric grid reference, e.g. ``"4B"``
+          * ``tolerability`` is Intolerable / Tolerable / Acceptable
+
+        Legacy numeric fields (``severity``, ``probability``, ``count``,
+        ``severity_label``, ``probability_label``) are preserved so existing
+        consumers keep working.
         Closed hazards are included: the matrix is a full risk profile, not an
         open-action queue.
         """
         severity_scale = [
-            {"value": s, "label": SEVERITY_LABELS_DEFAULT[str(s)]}
+            {
+                "value": s,
+                "label": SEVERITY_LABELS_DEFAULT[str(s)],
+                "letter": VALUE_TO_SEVERITY[s],
+                "descriptor": ICAO_SEVERITY_DESCRIPTORS[s],
+            }
             for s in range(1, 6)
         ]
         probability_scale = [
-            {"value": p, "label": PROBABILITY_LABELS_DEFAULT[str(p)]}
+            {
+                "value": p,
+                "label": PROBABILITY_LABELS_DEFAULT[str(p)],
+                "descriptor": ICAO_PROBABILITY_DESCRIPTORS[p],
+            }
             for p in range(1, 6)
         ]
-        empty = {
-            "severity_scale": severity_scale,
-            "probability_scale": probability_scale,
-            "cells": [],
-            "total": 0,
-            "level2": 0,
-            "level3": 0,
-            "level4": 0,
-        }
+
         if not self.tenant_id:
-            return empty
+            matrix = self._aggregate_hazard_matrix([])
+        else:
+            tid = register_tenant(self.tenant_id)
+            hazards = pg.fetch_all(
+                Hazard,
+                where=[Hazard.tenant_id == tid, Hazard.is_demo == demo_scope()],
+            )
+            matrix = self._aggregate_hazard_matrix(hazards)
 
-        tid = register_tenant(self.tenant_id)
-        hazards = pg.fetch_all(
-            Hazard,
-            where=[Hazard.tenant_id == tid, Hazard.is_demo == demo_scope()],
-        )
-        matrix = self._aggregate_hazard_matrix(hazards)
-
-        cells = [
-            {
+        def _enrich(cell: Dict[str, Any]) -> Dict[str, Any]:
+            severity = cell["severity"]
+            probability = cell["probability"]
+            index = icao_risk_index(probability, severity)
+            return {
                 **cell,
-                "severity_label": SEVERITY_LABELS_DEFAULT[str(cell["severity"])],
-                "probability_label": PROBABILITY_LABELS_DEFAULT[str(cell["probability"])],
+                "risk_index": index,
+                "tolerability": get_tolerability(index),
+                "severity_label": SEVERITY_LABELS_DEFAULT[str(severity)],
+                "severity_letter": VALUE_TO_SEVERITY[severity],
+                "probability_label": PROBABILITY_LABELS_DEFAULT[str(probability)],
             }
-            for cell in matrix["cells"]
-        ]
+
+        cells = [_enrich(cell) for cell in matrix["cells"]]
         return {
+            "standard": "ICAO Doc 9859",
             "severity_scale": severity_scale,
             "probability_scale": probability_scale,
             "cells": cells,
@@ -495,6 +559,96 @@ class DashboardService:
         f = self._base_filter(**overrides)
         reports = self.repo.get_all_in_range(f)
         return MetricsService.calculate_org_kpis(reports)
+
+    @staticmethod
+    def empty_action_completion() -> Dict[str, Any]:
+        """Zeroed CAP state-machine payload for error/no-tenant paths."""
+        now = datetime.now(timezone.utc)
+        return {
+            "overdue": 0,
+            "due_within_30_days": 0,
+            "on_track": 0,
+            "pending_review": 0,
+            "closed": 0,
+            "no_due_date": 0,
+            "total": 0,
+            "as_of_date": now.date().isoformat(),
+            "generated_at": now.isoformat(),
+        }
+
+    @staticmethod
+    def _cap_target_date(value: Any) -> Optional[date]:
+        """Normalise a stored CAP target-completion value to a UTC date."""
+        if value is None:
+            return None
+        if isinstance(value, datetime):
+            dt = value
+        elif isinstance(value, date):
+            return value
+        elif isinstance(value, str):
+            try:
+                dt = datetime.fromisoformat(value.replace("Z", "+00:00"))
+            except ValueError:
+                return None
+        else:
+            return None
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        return dt.astimezone(timezone.utc).date()
+
+    def get_action_completion(self) -> Dict[str, Any]:
+        """Human-in-the-loop CAP state-machine counts for the donut.
+
+        Buckets are mutually exclusive (first match wins):
+
+          1. terminal status                -> ``closed``
+          2. EIP (no time limit)            -> ``on_track``
+          3. status "Overdue" or past date  -> ``overdue``
+          4. pending-review status          -> ``pending_review``
+          5. target date within 30 days     -> ``due_within_30_days``
+          6. target date further out        -> ``on_track``
+
+        Open CAPs with no target date are reported separately as
+        ``no_due_date`` and are not folded into ``on_track``. ``Overdue`` is
+        intentionally checked before ``Pending Review`` so a review item that
+        has blown its target date still surfaces as overdue.
+        """
+        now = datetime.now(timezone.utc)
+        result = self.empty_action_completion()
+        result["as_of_date"] = now.date().isoformat()
+        result["generated_at"] = now.isoformat()
+        if not self.tenant_id:
+            return result
+
+        tid = register_tenant(self.tenant_id)
+        caps = pg.fetch_all(
+            Cap,
+            where=[Cap.tenant_id == tid, Cap.is_demo == demo_scope()],
+        )
+        today = now.date()
+        horizon = today + timedelta(days=30)
+        for cap in caps:
+            result["total"] += 1
+            status = str(cap.get("status") or "").strip().lower()
+            if status in CAP_TERMINAL_STATUSES:
+                result["closed"] += 1
+                continue
+            if status in CAP_NO_TIME_LIMIT_STATUSES:
+                result["on_track"] += 1
+                continue
+
+            target = self._cap_target_date(cap.get("target_completion_date"))
+            if status == "overdue" or (target is not None and target < today):
+                result["overdue"] += 1
+            elif status in CAP_PENDING_REVIEW_STATUSES:
+                result["pending_review"] += 1
+            elif target is None:
+                result["no_due_date"] += 1
+            elif target <= horizon:
+                result["due_within_30_days"] += 1
+            else:
+                result["on_track"] += 1
+        return result
 
     # ------------------------------------------------------------------
     # Public: CAAN dashboard endpoints (cross-tenant, aggregated)

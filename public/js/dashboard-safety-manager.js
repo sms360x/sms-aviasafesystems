@@ -67,28 +67,6 @@
         return map[role] || role || 'User';
     }
 
-    // ─── Corrective-action donut bucketing ──────────────────────────────────
-    function isClosed(item) {
-        var s = String(item.status || '').toLowerCase();
-        return s === 'closed' || s === 'completed';
-    }
-
-    function bucketItem(item) {
-        if (isClosed(item)) return 'Closed';
-        var tcd = item.target_completion_date;
-        if (tcd) {
-            var d = new Date(tcd);
-            if (!isNaN(d.getTime())) {
-                var today = new Date();
-                today.setHours(0, 0, 0, 0);
-                var diffDays = (d.getTime() - today.getTime()) / 86400000;
-                if (diffDays < 0) return 'Overdue';
-                if (diffDays <= 30) return 'Due \u226430d';
-            }
-        }
-        return 'On Track';
-    }
-
     // ─── Section renderers ─────────────────────────────────────────────────
 
     function renderKpis(overview, smsHealth) {
@@ -199,30 +177,44 @@
             if (caption) caption.textContent = '\u2014';
             return;
         }
-        var severities = data.severity_scale.slice().sort(function (a, b) { return a.value - b.value; });
+        // ICAO Doc 9859 orientation: Y-axis severity Catastrophic (A) -> Negligible (E),
+        // X-axis probability Frequent (5) -> Extremely Improbable (1).
+        var severities = data.severity_scale.slice().sort(function (a, b) { return b.value - a.value; });
         var probabilities = data.probability_scale.slice().sort(function (a, b) { return b.value - a.value; });
-        var counts = {};
+        var cells = {};
         (data.cells || []).forEach(function (c) {
-            counts[c.probability + '|' + c.severity] = Number(c.count) || 0;
+            cells[c.probability + '|' + c.severity] = c;
         });
+        var letters = { 5: 'A', 4: 'B', 3: 'C', 2: 'D', 1: 'E' };
 
         var html = '<div class="exec-risk-axis-label"></div>';
-        severities.forEach(function (s) {
-            html += '<div class="exec-risk-axis-label">' + esc(s.label) + '</div>';
-        });
         probabilities.forEach(function (p) {
-            html += '<div class="exec-risk-axis-label">' + esc(p.label) + '</div>';
-            severities.forEach(function (s) {
-                var count = counts[p.value + '|' + s.value] || 0;
-                var cls = String(s.label || '').toLowerCase();
-                var title = p.label + ' \u00d7 ' + s.label + ': ' + count + ' hazard' + (count === 1 ? '' : 's');
-                html += '<div class="exec-risk-cell ' + esc(cls) + '" title="' + esc(title) + '">' + count + '</div>';
+            html += '<div class="exec-risk-axis-label exec-risk-axis-x">' +
+                esc(p.label) + ' (' + esc(p.value) + ')</div>';
+        });
+        severities.forEach(function (s) {
+            var letter = s.letter || letters[s.value] || '';
+            html += '<div class="exec-risk-axis-label exec-risk-axis-y">' +
+                esc(s.label) + ' (' + esc(letter) + ')</div>';
+            probabilities.forEach(function (p) {
+                var cell = cells[p.value + '|' + s.value] || {};
+                var count = Number(cell.count) || 0;
+                var index = cell.risk_index || (String(p.value) + letter);
+                var tolerability = cell.tolerability || 'Unclassified';
+                var cls = String(tolerability).toLowerCase();
+                var title = index + ' \u2014 ' + p.label + ' \u00d7 ' + s.label +
+                    ' (' + tolerability + '): ' + count + ' hazard' + (count === 1 ? '' : 's');
+                html += '<div class="exec-risk-cell ' + esc(cls) + (count === 0 ? ' is-empty' : '') +
+                    '" title="' + esc(title) + '">' +
+                    '<span class="exec-risk-index">' + esc(index) + '</span>' +
+                    '<span class="exec-risk-count">' + count + '</span></div>';
             });
         });
         el.innerHTML = html;
         if (caption) {
-            caption.textContent = (data.total == null ? 0 : data.total) + ' hazard' +
-                (data.total === 1 ? '' : 's') + ' plotted by severity and probability.';
+            var total = Number(data.total) || 0;
+            caption.textContent = total + ' hazard' + (total === 1 ? '' : 's') +
+                ' plotted on the ICAO Doc 9859 tolerability grid.';
         }
     }
 
@@ -248,21 +240,32 @@
         }).join('');
     }
 
-    function renderDonut(cansResult, capsResult) {
-        var cans = (cansResult && cansResult.ok) ? (cansResult.data || []) : null;
-        var caps = (capsResult && capsResult.ok) ? (capsResult.data || []) : null;
-        if (cans === null || caps === null) {
-            var reason = (cansResult && !cansResult.ok) ? cansResult.reason : ((capsResult && !capsResult.ok) ? capsResult.reason : 'request failed');
-            renderEmpty('s5-body', 'Failed to load', reason);
+    function renderDonut(actionCompletion) {
+        var data = (actionCompletion && actionCompletion.ok) ? actionCompletion.data : null;
+        if (!data) {
+            renderEmpty('s5-body', 'Failed to load',
+                actionCompletion && actionCompletion.reason ? actionCompletion.reason : 'action completion unavailable');
             return;
         }
-        var items = (cans || []).concat(caps || []);
-        var order = ['Overdue', 'Due \u226430d', 'On Track', 'Closed'];
-        var colors = { 'Overdue': '#dc2626', 'Due \u226430d': '#d97706', 'On Track': '#16a34a', 'Closed': '#475569' };
-        var counts = { 'Overdue': 0, 'Due \u226430d': 0, 'On Track': 0, 'Closed': 0 };
-        items.forEach(function (item) { counts[bucketItem(item)]++; });
+        // Server-side CAP state machine (human-in-the-loop): no date math here.
+        var order = ['Overdue', 'Due \u226430d', 'On Track', 'Pending Review', 'Closed'];
+        var colors = {
+            'Overdue': '#dc2626',
+            'Due \u226430d': '#d97706',
+            'On Track': '#16a34a',
+            'Pending Review': '#0284c7',
+            'Closed': '#475569'
+        };
+        var counts = {
+            'Overdue': Number(data.overdue) || 0,
+            'Due \u226430d': Number(data.due_within_30_days) || 0,
+            'On Track': Number(data.on_track) || 0,
+            'Pending Review': Number(data.pending_review) || 0,
+            'Closed': Number(data.closed) || 0
+        };
         var values = order.map(function (k) { return counts[k]; });
-        var total = values.reduce(function (a, b) { return a + b; }, 0);
+        var sum = values.reduce(function (a, b) { return a + b; }, 0);
+        var total = (data.total == null) ? sum : (Number(data.total) || 0);
 
         var center = document.getElementById('s5-donut-center');
         if (center) center.textContent = String(total);
@@ -417,8 +420,7 @@
             trends: ApiClient.get('/api/v1/dashboard/trends?days=180'),
             riskMatrix: ApiClient.get('/api/v1/dashboard/risk-matrix'),
             keyIssues: ApiClient.get('/api/v1/dashboard/key-issues?days=90&limit=5'),
-            cans: ApiClient.get('/api/v1/cans/'),
-            caps: ApiClient.get('/api/v1/cans/caps'),
+            actionCompletion: ApiClient.get('/api/v1/dashboard/action-completion'),
             recent: ApiClient.get('/api/v1/dashboard/recent?days=90&page=1&page_size=10')
         };
         if (tenant) {
@@ -438,7 +440,7 @@
         renderTrends(results.trends);
         renderRiskMatrix(results.riskMatrix);
         renderHazards(results.keyIssues);
-        renderDonut(results.cans, results.caps);
+        renderDonut(results.actionCompletion);
         renderRecent(results.recent);
         renderSpis(results.spi, tenant);
     }

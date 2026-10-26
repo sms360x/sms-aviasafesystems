@@ -191,21 +191,26 @@ body.executive-layout {
 .exec-table td { padding: 0.75rem 1rem; border-bottom: 1px solid #f1f5f9; font-size: 0.88rem; }
 .exec-table tbody tr:hover { background: #f8fafc; }
 
-.exec-risk-matrix { display: grid; grid-template-columns: 80px repeat(5, 1fr); gap: 2px; }
+.exec-risk-matrix { display: grid; grid-template-columns: 110px repeat(5, 1fr); gap: 2px; }
 .exec-risk-cell {
     aspect-ratio: 1.2; border-radius: 4px;
-    display: flex; align-items: center; justify-content: center;
-    font-weight: 700; font-size: 0.85rem;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 1px; line-height: 1.05; font-weight: 700;
+    border: 1px solid rgba(15, 23, 42, 0.06);
 }
-.exec-risk-cell.negligible { background: #dcfce7; color: #166534; }
-.exec-risk-cell.minor { background: #d1fae5; color: #065f46; }
-.exec-risk-cell.major { background: #fef3c7; color: #92400e; }
-.exec-risk-cell.hazardous { background: #fed7aa; color: #9a3412; }
-.exec-risk-cell.catastrophic { background: #fecaca; color: #991b1b; }
+.exec-risk-cell.intolerable { background: #fecaca; color: #991b1b; }
+.exec-risk-cell.tolerable { background: #fef3c7; color: #92400e; }
+.exec-risk-cell.acceptable { background: #dcfce7; color: #166534; }
+.exec-risk-cell.unclassified { background: #f1f5f9; color: #475569; }
+.exec-risk-cell.is-empty { opacity: 0.55; }
+.exec-risk-index { font-size: 0.85rem; font-weight: 800; letter-spacing: 0.2px; }
+.exec-risk-count { font-size: 0.72rem; font-weight: 600; opacity: 0.85; }
 .exec-risk-axis-label {
-    font-size: 0.72rem; font-weight: 600; color: var(--exec-text-muted);
-    text-transform: uppercase; letter-spacing: 0.3px; display: flex; align-items: center;
+    font-size: 0.7rem; font-weight: 600; color: var(--exec-text-muted);
+    letter-spacing: 0.2px; display: flex; align-items: center; line-height: 1.15;
 }
+.exec-risk-axis-y { padding-right: 0.35rem; }
+.exec-risk-axis-x { justify-content: center; text-align: center; }
 
 @media (max-width: 1024px) {
     .exec-bento-half { grid-column: span 12; }

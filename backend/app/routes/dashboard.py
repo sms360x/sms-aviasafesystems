@@ -97,6 +97,7 @@ async def get_dashboard_overview(
             "kpis": _empty_kpis(),
             "ai_kpis": _empty_ai_kpis(),
             "org_kpis": _empty_org_kpis(),
+            "action_completion": DashboardService.empty_action_completion(),
         })
 
 
@@ -201,6 +202,24 @@ async def get_risk_matrix(
             "total": 0,
             "error": str(e),
         }
+    return _envelope(data)
+
+
+@router.get("/action-completion")
+async def get_action_completion(
+    user: Dict[str, Any] = Depends(get_tenant_user),
+):
+    """Human-in-the-loop CAP state-machine counts (Corrective Actions donut).
+
+    Aggregated server-side so the browser never re-derives overdue / due-soon
+    logic. Terminal CAPs are reported as Closed; Overdue is date-derived.
+    """
+    svc = DashboardService(user)
+    try:
+        data = svc.get_action_completion()
+    except Exception as e:
+        logger.error(f"Action completion failed for tenant {user.get('tenant_id')}: {e}")
+        data = DashboardService.empty_action_completion()
     return _envelope(data)
 
 
