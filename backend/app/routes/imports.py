@@ -46,7 +46,13 @@ async def import_master_logsheet(
     tenant_id = user.get("tenant_id")
     if not tenant_id:
         raise HTTPException(400, "No tenant context")
-    set_current_identity(identity_from_user(user))
+    if isinstance(tenant_id, str):
+        try:
+            tenant_uuid = uuid.UUID(tenant_id)
+        except ValueError:
+            tenant_uuid = uuid.uuid5(uuid.NAMESPACE_DNS, f"tenant:{tenant_id}")
+    else:
+        tenant_uuid = tenant_id
     try:
         mapping, unmapped, staged = parse_batch(file.file, file.filename or "")
     except ValueError as e:
@@ -66,8 +72,31 @@ async def import_master_logsheet(
             "destination_tables": row["destination_tables"],
             "validation_status": "pending",
         })
-    if staging_rows:
-        pg.bulk_insert(MasterLogsheetStaging, staging_rows)
+
+    try:
+        async with get_engine().begin() as conn:
+            await conn.execute(
+                text("SELECT set_config('app.current_tenant', :t, true)"),
+                {"t": str(tenant_uuid)}
+            )
+            if staging_rows:
+                import json
+                for row in staging_rows:
+                    row["id"] = str(uuid.uuid4())
+                    row["raw_data"] = json.dumps(row["raw_data"])
+                    row["mapped_data"] = json.dumps(row["mapped_data"])
+                await conn.execute(
+                    text("""
+                        INSERT INTO master_logsheet_staging 
+                        (id, batch_id, tenant_id, row_number, raw_data, mapped_data, destination_tables, validation_status)
+                        VALUES (:id, :batch_id, :tenant_id, :row_number, :raw_data, :mapped_data, :destination_tables, :validation_status)
+                    """),
+                    staging_rows
+                )
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(500, f"Database staging failed: {str(e)}")
 
     return {
         "batch_id": batch_id,
