@@ -223,18 +223,39 @@ class MetricsService:
         }
 
     @staticmethod
-    def calculate_org_kpis(reports: List[dict]) -> Dict[str, Any]:
+    def calculate_org_kpis(reports: List[dict], dashboard_service=None) -> Dict[str, Any]:
         reporters = set(r.get("created_by") for r in reports if r.get("created_by"))
-        actions_open = sum(
-            1 for r in reports
-            for ca in (r.get("corrective_actions") or [])
-            if isinstance(ca, dict) and ca.get("status") == "OPEN"
-        )
-        actions_closed = sum(
-            1 for r in reports
-            for ca in (r.get("corrective_actions") or [])
-            if isinstance(ca, dict) and ca.get("status") == "CLOSED"
-        )
+        actions_open = 0
+        actions_closed = 0
+        if dashboard_service is not None:
+            try:
+                action_completion = dashboard_service.get_action_completion()
+                actions_open = (
+                    action_completion.get("overdue", 0)
+                    + action_completion.get("due_within_30_days", 0)
+                    + action_completion.get("on_track", 0)
+                    + action_completion.get("pending_review", 0)
+                )
+                actions_closed = action_completion.get("closed", 0)
+                # T4b: EIP exclusion pending; population refinement tracked separately.
+            except Exception:
+                actions_open = 0
+                actions_closed = 0
+        else:
+            # DEPRECATED fallback: reads r["corrective_actions"], a field that does NOT
+            # exist on the Report model or in the report dicts constructed from it.
+            # Preserved only for call sites that do not pass dashboard_service; always
+            # returns 0/0 in practice. Scheduled for removal in T4b. Do not extend.
+            actions_open = sum(
+                1 for r in reports
+                for ca in (r.get("corrective_actions") or [])
+                if isinstance(ca, dict) and ca.get("status") == "OPEN"
+            )
+            actions_closed = sum(
+                1 for r in reports
+                for ca in (r.get("corrective_actions") or [])
+                if isinstance(ca, dict) and ca.get("status") == "CLOSED"
+            )
         investigations = sum(
             1 for r in reports
             if r.get("investigation_status") in ("NOT_INVESTIGATED", "INVESTIGATING")

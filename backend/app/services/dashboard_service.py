@@ -150,7 +150,7 @@ class DashboardService:
         reports = self.repo.get_all_in_range(f)
         kpis = MetricsService.calculate_kpis(reports)
         ai_kpis = MetricsService.calculate_ai_kpis(reports)
-        org_kpis = MetricsService.calculate_org_kpis(reports)
+        org_kpis = MetricsService.calculate_org_kpis(reports, dashboard_service=self)
         try:
             action_completion = self.get_action_completion()
         except Exception as e:
@@ -558,7 +558,7 @@ class DashboardService:
     def get_actions_summary(self, **overrides) -> Dict[str, Any]:
         f = self._base_filter(**overrides)
         reports = self.repo.get_all_in_range(f)
-        return MetricsService.calculate_org_kpis(reports)
+        return MetricsService.calculate_org_kpis(reports, dashboard_service=self)
 
     @staticmethod
     def empty_action_completion() -> Dict[str, Any]:
