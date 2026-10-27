@@ -21,7 +21,7 @@
 
     <div class="exec-bento">
 
-        <!-- S1 — KPI row -->
+        <!-- S1 — KPI row (4 columns) -->
         <div class="exec-bento-full" data-section="s1">
             <div class="exec-kpi-row" id="s1-body">
                 <div class="exec-kpi">
@@ -57,28 +57,30 @@
             </div>
         </div>
 
-        <!-- S2 — 5x5 Risk Matrix (live: /dashboard/risk-matrix) -->
+        <!-- S2 — 5x5 Risk Matrix -->
         <div class="exec-bento-half exec-card" data-section="s2">
             <div class="exec-card-header">
                 <h2 class="exec-card-title">5&times;5 Risk Matrix</h2>
+                <a href="#" class="exec-card-link">View all</a>
             </div>
             <div class="exec-risk-matrix" id="s2-matrix"></div>
             <div class="exec-chart-caption" id="s2-caption">&mdash;</div>
         </div>
 
-        <!-- S3 — Reports Trend (monthly; 12-week pending) -->
+        <!-- S3 — Reports Trend -->
         <div class="exec-bento-half exec-card" data-section="s3">
             <div class="exec-card-header">
                 <h2 class="exec-card-title">Reports Trend</h2>
-                <span class="exec-stub-badge">Monthly &mdash; 12-week pending</span>
+                <a href="#" class="exec-card-link">View all</a>
             </div>
             <div class="exec-chart-wrap" id="s3-body"><canvas id="s3-reports-trend"></canvas></div>
         </div>
 
-        <!-- S4 — Top 5 Key Safety Issues (live: /dashboard/key-issues) -->
-        <div class="exec-bento-half exec-card" data-section="s4">
+        <!-- S4 — Top 5 Key Safety Issues -->
+        <div class="exec-bento-full exec-card" data-section="s4">
             <div class="exec-card-header">
                 <h2 class="exec-card-title">Top 5 Key Safety Issues</h2>
+                <a href="#" class="exec-card-link">View all</a>
             </div>
             <div class="exec-table-card">
                 <table class="exec-table">
@@ -88,10 +90,11 @@
             </div>
         </div>
 
-        <!-- S5 — Corrective Actions donut (computed) -->
-        <div class="exec-bento-half exec-card" data-section="s5">
+        <!-- S5 — Corrective Actions donut -->
+        <div class="exec-bento-third exec-card" data-section="s5">
             <div class="exec-card-header">
                 <h2 class="exec-card-title">Corrective Actions</h2>
+                <a href="#" class="exec-card-link">View all</a>
             </div>
             <div class="exec-donut-wrap" id="s5-body">
                 <div style="position: relative; width: 220px; height: 220px;">
@@ -102,10 +105,11 @@
             </div>
         </div>
 
-        <!-- S6 — Recent Safety Reports table -->
-        <div class="exec-bento-full exec-card" data-section="s6">
+        <!-- S6 — Recent Safety Reports -->
+        <div class="exec-bento-third exec-card" data-section="s6">
             <div class="exec-card-header">
                 <h2 class="exec-card-title">Recent Safety Reports</h2>
+                <a href="#" class="exec-card-link">View all</a>
             </div>
             <div class="exec-table-card">
                 <table class="exec-table exec-table-sticky">
@@ -115,10 +119,11 @@
             </div>
         </div>
 
-        <!-- S7 — My Tasks & Approvals (STUB) -->
-        <div class="exec-bento-half exec-card" data-section="s7">
+        <!-- S7 — My Tasks & Approvals -->
+        <div class="exec-bento-third exec-card" data-section="s7">
             <div class="exec-card-header">
                 <h2 class="exec-card-title">My Tasks &amp; Approvals</h2>
+                <a href="#" class="exec-card-link">View all</a>
             </div>
             <div class="exec-empty">
                 <div class="exec-empty-title">Not yet wired</div>
@@ -127,17 +132,19 @@
         </div>
 
         <!-- S8 — SPIs with 12-month trends -->
-        <div class="exec-bento-half exec-card" data-section="s8">
+        <div class="exec-bento-third exec-card" data-section="s8">
             <div class="exec-card-header">
                 <h2 class="exec-card-title">SPIs (12-month trends)</h2>
+                <a href="#" class="exec-card-link">View all</a>
             </div>
             <div class="exec-chart-wrap" id="s8-body"><canvas id="s8-spi-trend"></canvas></div>
         </div>
 
-        <!-- S9 — Compliance & Regulatory status (STUB) -->
-        <div class="exec-bento-half exec-card" data-section="s9">
+        <!-- S9 — Compliance & Regulatory -->
+        <div class="exec-bento-third exec-card" data-section="s9">
             <div class="exec-card-header">
                 <h2 class="exec-card-title">Compliance &amp; Regulatory</h2>
+                <a href="#" class="exec-card-link">View all</a>
             </div>
             <div class="exec-empty">
                 <div class="exec-empty-title">Not yet wired</div>
@@ -145,14 +152,51 @@
             </div>
         </div>
 
-        <!-- S10 — Latest Safety Intelligence (STUB) -->
-        <div class="exec-bento-half exec-card" data-section="s10">
+        <!-- S10 — Latest Safety Intelligence -->
+        <div class="exec-bento-third exec-card" data-section="s10">
             <div class="exec-card-header">
                 <h2 class="exec-card-title">Latest Safety Intelligence</h2>
+                <a href="#" class="exec-card-link">View all</a>
             </div>
             <div class="exec-empty">
                 <div class="exec-empty-title">Not yet wired</div>
                 <div class="exec-empty-note">External feed pending (ICAO, EASA, FAA, CAAN).</div>
+            </div>
+        </div>
+
+        <!-- S11 — Safety Performance Overview -->
+        <div class="exec-bento-third exec-card" data-section="s11">
+            <div class="exec-card-header">
+                <h2 class="exec-card-title">Safety Performance</h2>
+                <a href="#" class="exec-card-link">View all</a>
+            </div>
+            <div class="exec-empty">
+                <div class="exec-empty-title">Not yet wired</div>
+                <div class="exec-empty-note">SPI aggregate endpoint pending.</div>
+            </div>
+        </div>
+
+        <!-- S12 — Audit & Inspection Status -->
+        <div class="exec-bento-third exec-card" data-section="s12">
+            <div class="exec-card-header">
+                <h2 class="exec-card-title">Audit &amp; Inspection</h2>
+                <a href="#" class="exec-card-link">View all</a>
+            </div>
+            <div class="exec-empty">
+                <div class="exec-empty-title">Not yet wired</div>
+                <div class="exec-empty-note">PSOE integration pending.</div>
+            </div>
+        </div>
+
+        <!-- S13 — Hazard Register Summary -->
+        <div class="exec-bento-third exec-card" data-section="s13">
+            <div class="exec-card-header">
+                <h2 class="exec-card-title">Hazard Register</h2>
+                <a href="#" class="exec-card-link">View all</a>
+            </div>
+            <div class="exec-empty">
+                <div class="exec-empty-title">Not yet wired</div>
+                <div class="exec-empty-note">Risk register endpoint pending.</div>
             </div>
         </div>
 
