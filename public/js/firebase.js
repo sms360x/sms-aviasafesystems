@@ -675,7 +675,7 @@ function getRoleDestination(user) {
             try { resolveTenantContext({ email: tenantEmail }); } catch (e) { /* non-fatal */ }
             return '/dashboard/ae-dashboard.html';
         }
-        return '/safety.html';
+        return '/dashboard/safety-manager.html';
     }
 
     // 5. Department Manager — responsible-manager dashboard (avoids the
@@ -688,7 +688,7 @@ function getRoleDestination(user) {
     if (role === 'OFFICER' || role === 'SAFETY_OFFICER') {
         var officerEmail = ((user && user.email) || '').toLowerCase();
         var localPart = (officerEmail.split('@')[0] || '').toLowerCase();
-        if (localPart === 'safety') return '/safety.html';
+        if (localPart === 'safety') return '/dashboard/safety-manager.html';
         return '/dashboard/my-tasks.html';
     }
 
@@ -701,7 +701,7 @@ function getRoleDestination(user) {
     }
 
     // 8. Default
-    return '/safety.html';
+    return '/dashboard/safety-manager.html';
 }
 
 // ── Role-class toggle for element visibility ───────────────────────────────
