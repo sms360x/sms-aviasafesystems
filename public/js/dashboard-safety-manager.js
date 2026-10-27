@@ -248,20 +248,22 @@
             return;
         }
         // Server-side CAP state machine (human-in-the-loop): no date math here.
-        var order = ['Overdue', 'Due \u226430d', 'On Track', 'Pending Review', 'Closed'];
+        var order = ['Overdue', 'Due \u226430d', 'On Track', 'Pending Review', 'Closed', 'Missing due date'];
         var colors = {
             'Overdue': '#dc2626',
             'Due \u226430d': '#d97706',
             'On Track': '#16a34a',
             'Pending Review': '#0284c7',
-            'Closed': '#475569'
+            'Closed': '#475569',
+            'Missing due date': '#94a3b8'
         };
         var counts = {
             'Overdue': Number(data.overdue) || 0,
             'Due \u226430d': Number(data.due_within_30_days) || 0,
             'On Track': Number(data.on_track) || 0,
             'Pending Review': Number(data.pending_review) || 0,
-            'Closed': Number(data.closed) || 0
+            'Closed': Number(data.closed) || 0,
+            'Missing due date': Number(data.no_due_date) || 0
         };
         var values = order.map(function (k) { return counts[k]; });
         var sum = values.reduce(function (a, b) { return a + b; }, 0);
