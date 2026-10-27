@@ -169,5 +169,38 @@
 <script src="/js/nav-config.js"></script>
 <script src="/js/executive-shell.js"></script>
 <script src="/js/dashboard-safety-manager.js"></script>
+<script>
+// Add logout button at bottom of sidebar after ExecutiveShell renders
+document.addEventListener('DOMContentLoaded', function() {
+    function addLogoutButton() {
+        var nav = document.querySelector('#execSidebar .exec-sidebar-nav');
+        if (!nav) {
+            setTimeout(addLogoutButton, 50);
+            return;
+        }
+        if (document.getElementById('exec-logout')) return;
+        var logout = document.createElement('a');
+        logout.href = '#';
+        logout.id = 'exec-logout';
+        logout.className = 'exec-nav-item';
+        logout.innerHTML = '<i class="fas fa-sign-out-alt"></i><span>Logout</span>';
+        nav.appendChild(logout);
+        logout.addEventListener('click', function(e) {
+            e.preventDefault();
+            if (typeof firebase !== 'undefined' && firebase.auth) {
+                firebase.auth().signOut().then(function() {
+                    window.location.href = '/login.html';
+                }).catch(function(err) {
+                    console.error('Sign-out failed:', err);
+                    window.location.href = '/login.html';
+                });
+            } else {
+                window.location.href = '/login.html';
+            }
+        });
+    }
+    addLogoutButton();
+});
+</script>
 </body>
 </html>

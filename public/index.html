@@ -248,7 +248,7 @@
             const isBetaHost = /beta/.test(hostname);
             const user = localStorage.getItem('aviasafe:' + (isBetaHost ? 'beta' : 'prod') + ':user');
             if (user) {
-                window.location.href = '/safety.html';
+                window.location.href = '/dashboard/safety-manager.html';
             } else {
                 var redirectUrl = '/login.html?tenant=' + encodeURIComponent(tenantId);
                 if (window.location.search.includes('debug=true')) {
