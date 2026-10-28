@@ -382,23 +382,23 @@
             var flatNav = [
                 // DASHBOARD
                 { id: 'dashboard', label: 'Dashboard', href: '/dashboard/safety-manager.html', icon: 'fa-table-columns', section: 'Dashboard' },
-                { id: 'reports', label: 'Reports', href: '#', icon: 'fa-file-lines' },
+                { id: 'reports', label: 'Reports', href: '#reports', icon: 'fa-file-lines' },
 
                 // SAFETY
-                { id: 'hazards', label: 'Hazards & Risks', href: '#', icon: 'fa-triangle-exclamation', section: 'Safety' },
-                { id: 'assurance', label: 'Safety Assurance', href: '#', icon: 'fa-shield-halved' },
-                { id: 'performance', label: 'Safety Performance', href: '#', icon: 'fa-chart-line' },
-                { id: 'actions', label: 'Actions', href: '#', icon: 'fa-clipboard-check' },
+                { id: 'hazards', label: 'Hazards & Risks', href: '#hazards', icon: 'fa-triangle-exclamation', section: 'Safety' },
+                { id: 'assurance', label: 'Safety Assurance', href: '#assurance', icon: 'fa-shield-halved' },
+                { id: 'performance', label: 'Safety Performance', href: '#performance', icon: 'fa-chart-line' },
+                { id: 'actions', label: 'Actions', href: '#actions', icon: 'fa-clipboard-check' },
 
                 // REGULATORY
-                { id: 'compliance', label: 'Compliance', href: '#', icon: 'fa-scale-balanced', section: 'Regulatory' },
-                { id: 'articles', label: 'Articles & Advisories', href: '#', icon: 'fa-newspaper' },
+                { id: 'compliance', label: 'Compliance', href: '#compliance', icon: 'fa-scale-balanced', section: 'Regulatory' },
+                { id: 'articles', label: 'Articles & Advisories', href: '#articles', icon: 'fa-newspaper' },
 
                 // WORKSPACE
-                { id: 'surveys', label: 'Surveys', href: '#', icon: 'fa-square-poll-vertical', section: 'Workspace' },
-                { id: 'meetings', label: 'Meetings', href: '#', icon: 'fa-users' },
-                { id: 'documents', label: 'Documents', href: '#', icon: 'fa-folder-open' },
-                { id: 'admin', label: 'Administration', href: '#', icon: 'fa-gear' }
+                { id: 'surveys', label: 'Surveys', href: '#surveys', icon: 'fa-square-poll-vertical', section: 'Workspace' },
+                { id: 'meetings', label: 'Meetings', href: '#meetings', icon: 'fa-users' },
+                { id: 'documents', label: 'Documents', href: '#documents', icon: 'fa-folder-open' },
+                { id: 'admin', label: 'Administration', href: '#admin', icon: 'fa-gear' }
             ];
 
             if (window.ExecutiveShell && typeof window.ExecutiveShell.init === 'function') {
@@ -411,9 +411,60 @@
                 });
             }
 
-            loadAll(tenant);
+            applyRoute();
+
+            if (!window.__sms360x_loaded) {
+                window.__sms360x_loaded = true;
+                loadAll(tenant);
+            }
         });
     }
+
+    // ============================================================
+    // HASH ROUTER (dashboard / stub views)
+    // ============================================================
+    var ROUTE_MAP = {
+        'dashboard':   'pageContent',
+        'reports':     'reportsView',
+        'hazards':     'hazardsView',
+        'assurance':   'assuranceView',
+        'performance': 'performanceView',
+        'actions':     'actionsView',
+        'compliance':  'complianceView',
+        'articles':    'articlesView',
+        'surveys':     'surveysView',
+        'meetings':    'meetingsView',
+        'documents':   'documentsView',
+        'admin':       'adminView'
+    };
+
+    function applyRoute() {
+        var hash = (window.location.hash || '#dashboard').replace(/^#/, '');
+        var targetId = ROUTE_MAP[hash] || 'pageContent';
+        var stubViews = document.getElementById('stubViews');
+        var pageContent = document.getElementById('pageContent');
+
+        if (pageContent) pageContent.style.display = 'none';
+        if (stubViews) {
+            stubViews.style.display = 'none';
+            var stubs = stubViews.querySelectorAll('.route-stub');
+            for (var i = 0; i < stubs.length; i++) {
+                stubs[i].style.display = 'none';
+            }
+        }
+
+        var target = document.getElementById(targetId);
+        if (target) {
+            if (targetId === 'pageContent') {
+                target.style.display = '';
+            } else {
+                if (stubViews) stubViews.style.display = '';
+                target.style.display = 'block';
+            }
+        }
+    }
+
+    window.addEventListener('hashchange', applyRoute);
 
     async function loadAll(tenant) {
         var tasks = {
