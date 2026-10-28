@@ -76,6 +76,20 @@ body.executive-layout {
 
 .exec-main { margin-left: var(--exec-sidebar-width); min-height: 100vh; display: flex; flex-direction: column; }
 
+/* Sidebar collapse toggle */
+.sidebar-collapsed .exec-sidebar { width: 64px; overflow: hidden; }
+.sidebar-collapsed .exec-sidebar-brand span { display: none; }
+.sidebar-collapsed .exec-nav-item span { display: none; }
+.sidebar-collapsed .exec-nav-section { display: none; }
+.sidebar-collapsed .exec-sidebar-brand img { width: 32px; margin: 0 auto; }
+.sidebar-collapsed .exec-main { margin-left: 64px; }
+.exec-sidebar-toggle { background: none; border: none; color: inherit; cursor: pointer; margin-left: auto; }
+
+/* Router stub views */
+.route-stub { background: #fff; border-radius: 8px; padding: 32px 40px; min-height: calc(100vh - 120px); margin: 24px; }
+.route-stub h1 { font-size: 1.6rem; font-weight: 700; margin-bottom: 12px; }
+.route-stub p { color: #6b7280; }
+
 .exec-topbar {
     height: var(--exec-topbar-height);
     background: var(--exec-surface); border-bottom: 1px solid var(--exec-border);

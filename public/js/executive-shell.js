@@ -29,7 +29,9 @@ window.ExecutiveShell = (function () {
         var html = '<aside class="exec-sidebar" id="execSidebar">';
         html += '<div class="exec-sidebar-brand">';
         html += '<img src="/images/sms360x-logo.png" alt="SMS360X" onerror="this.style.display=\'none\'">';
-        html += '<span>' + esc(state.brand) + '</span></div>';
+        html += '<span>' + esc(state.brand) + '</span>';
+        html += '<button id="execSidebarToggle" class="exec-sidebar-toggle" aria-label="Toggle sidebar"><i class="fas fa-bars"></i></button>';
+        html += '</div>';
         html += '<nav class="exec-sidebar-nav">';
         var lastSection = null;
         state.nav.forEach(function (item) {
@@ -80,6 +82,13 @@ window.ExecutiveShell = (function () {
             toggle.style.display = window.innerWidth <= 768 ? 'block' : 'none';
             window.addEventListener('resize', function () {
                 toggle.style.display = window.innerWidth <= 768 ? 'block' : 'none';
+            });
+        }
+
+        var toggleBtn = document.getElementById('execSidebarToggle');
+        if (toggleBtn) {
+            toggleBtn.addEventListener('click', function() {
+                document.body.classList.toggle('sidebar-collapsed');
             });
         }
     }

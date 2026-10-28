@@ -439,34 +439,54 @@
 
     function applyRoute() {
         var hash = (window.location.hash || '#dashboard').replace(/^#/, '');
-        var stubViews = document.getElementById('stubViews');
         var execContent = document.getElementById('execContent');
+        if (!execContent) return; // Wait for ExecutiveShell to render
 
-        // Reset: hide stubs, show dashboard content
-        if (stubViews) {
-            stubViews.style.display = 'none';
-            var stubs = stubViews.querySelectorAll('.route-stub');
-            for (var i = 0; i < stubs.length; i++) {
-                stubs[i].style.display = 'none';
+        // 1. Ensure stub container exists inside execContent
+        var stubContainer = document.getElementById('stubViews');
+        if (!stubContainer) {
+            stubContainer = document.createElement('div');
+            stubContainer.id = 'stubViews';
+            stubContainer.style.display = 'none';
+            
+            // Create stubs dynamically
+            var routes = ['reports', 'hazards', 'assurance', 'performance', 'actions', 
+                          'compliance', 'articles', 'surveys', 'meetings', 'documents', 'admin'];
+            var titles = ['Reports', 'Hazards & Risks', 'Safety Assurance', 'Safety Performance', 
+                          'Actions', 'Compliance', 'Articles & Advisories', 'Surveys', 
+                          'Meetings', 'Documents', 'Administration'];
+            
+            for (var i = 0; i < routes.length; i++) {
+                var stub = document.createElement('div');
+                stub.id = routes[i] + 'View';
+                stub.className = 'route-stub';
+                stub.style.display = 'none';
+                stub.innerHTML = '<h1>' + titles[i] + '</h1><p>Coming Soon — under construction.</p>';
+                stubContainer.appendChild(stub);
+            }
+            execContent.appendChild(stubContainer);
+        }
+
+        // 2. Hide all views
+        execContent.style.display = 'none'; // Hide the dashboard content
+        stubContainer.style.display = 'none';
+        var stubs = stubContainer.querySelectorAll('.route-stub');
+        for (var j = 0; j < stubs.length; j++) {
+            stubs[j].style.display = 'none';
+        }
+
+        // 3. Show target
+        if (hash === 'dashboard' || !ROUTE_MAP[hash]) {
+            execContent.style.display = ''; // Show dashboard
+        } else {
+            var targetId = ROUTE_MAP[hash];
+            var target = document.getElementById(targetId);
+            if (target) {
+                stubContainer.style.display = '';
+                target.style.display = 'block';
             }
         }
 
-        if (hash === 'dashboard' || !ROUTE_MAP[hash]) {
-            // Show dashboard
-            if (execContent) execContent.style.display = '';
-            // Also mark active nav
-            setActiveNav(hash === 'dashboard' ? 'dashboard' : 'dashboard');
-            return;
-        }
-
-        // Non-dashboard route: hide execContent, show stub
-        if (execContent) execContent.style.display = 'none';
-        var targetId = ROUTE_MAP[hash];
-        var target = document.getElementById(targetId);
-        if (target) {
-            if (stubViews) stubViews.style.display = '';
-            target.style.display = 'block';
-        }
         setActiveNav(hash);
     }
 
