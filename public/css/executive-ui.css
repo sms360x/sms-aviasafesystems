@@ -390,3 +390,35 @@ body.executive-layout {
 }
 .exec-kpi-trend.trend-up   { color: #16a34a; font-weight: 600; }
 .exec-kpi-trend.trend-down { color: #dc2626; font-weight: 600; }
+
+/* ===== Date Range Filter ===== */
+.date-range-filter {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-size: 0.85rem;
+}
+.drf-label {
+    color: #6b7280;
+    font-weight: 500;
+    margin: 0;
+}
+.drf-select {
+    border: none;
+    background: transparent;
+    color: #111827;
+    font-weight: 600;
+    font-size: 0.85rem;
+    cursor: pointer;
+    outline: none;
+    padding: 2px 4px;
+}
+.drf-select:focus {
+    outline: 2px solid #2563eb;
+    outline-offset: 2px;
+    border-radius: 4px;
+}

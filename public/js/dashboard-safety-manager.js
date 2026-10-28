@@ -459,8 +459,14 @@
 
             if (!window.__sms360x_loaded) {
                 window.__sms360x_loaded = true;
-                loadAll(tenant);
             }
+
+            DateRangeFilter.mount('#dateFilterContainer', {
+                defaultDays: 90,
+                onChange: function (days) {
+                    loadAll(tenant, days);
+                }
+            });
         });
     }
 
@@ -553,9 +559,10 @@
 
     window.addEventListener('hashchange', applyRoute);
 
-    async function loadAll(tenant) {
+    async function loadAll(tenant, days) {
+        if (days === undefined) days = 90;
         var tasks = {
-            overview: ApiClient.get('/api/v1/dashboard/overview'),
+            overview: ApiClient.get('/api/v1/dashboard/overview?days=' + days),
             smsHealth: ApiClient.get('/api/v1/dashboard/sms-health?days=365'),
             trends: ApiClient.get('/api/v1/dashboard/trends?days=180'),
             riskMatrix: ApiClient.get('/api/v1/dashboard/risk-matrix'),
