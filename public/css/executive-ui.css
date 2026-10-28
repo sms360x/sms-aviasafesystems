@@ -85,19 +85,49 @@ body.executive-layout {
 .sidebar-collapsed .exec-sidebar-brand span { display: none; }
 .sidebar-collapsed .exec-nav-item span { display: none; }
 .sidebar-collapsed .exec-nav-section { display: none; }
-.sidebar-collapsed .exec-sidebar-brand img { 
-    width: calc(var(--exec-sidebar-collapsed-width, 64px) - 32px); 
-    margin: 0 auto; 
+/* Ensure brand container centers items when collapsed */
+.sidebar-collapsed .exec-sidebar-brand {
+    justify-content: center;
+    padding: 0.5rem 0;
+}
+/* Hide the logo when collapsed to make room for the toggle */
+.sidebar-collapsed .exec-sidebar-brand img {
+    display: none;
 }
 .sidebar-collapsed .exec-main { 
     margin-left: var(--exec-sidebar-collapsed-width, 64px); 
 }
-.exec-sidebar-toggle { 
-    background: none; 
-    border: none; 
-    color: inherit; 
-    cursor: pointer; 
-    margin-left: auto; 
+/* Make the toggle button prominent and centered */
+.sidebar-collapsed .exec-sidebar-toggle {
+    margin: 0 auto;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #e5e7eb; /* light grey background */
+    border-radius: 8px;
+    color: #111827;
+}
+.sidebar-collapsed .exec-sidebar-toggle:hover {
+    background: #d1d5db;
+}
+/* Ensure the toggle button is ALWAYS visible (even in expanded state) */
+.exec-sidebar-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    color: inherit;
+    border-radius: 6px;
+    transition: background 0.2s;
+}
+.exec-sidebar-toggle:hover {
+    background: rgba(0, 0, 0, 0.05);
 }
 
 /* Router stub views */
