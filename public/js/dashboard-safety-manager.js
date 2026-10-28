@@ -381,7 +381,7 @@
             // nav-config.js role-based NAV_CONFIG).
             var flatNav = [
                 // DASHBOARD
-                { id: 'dashboard', label: 'Dashboard', href: '/dashboard/safety-manager.html', icon: 'fa-table-columns', section: 'Dashboard' },
+                { id: 'dashboard', label: 'Dashboard', href: '#dashboard', icon: 'fa-table-columns', section: 'Dashboard' },
                 { id: 'reports', label: 'Reports', href: '#reports', icon: 'fa-file-lines' },
 
                 // SAFETY
@@ -440,11 +440,10 @@
 
     function applyRoute() {
         var hash = (window.location.hash || '#dashboard').replace(/^#/, '');
-        var targetId = ROUTE_MAP[hash] || 'pageContent';
         var stubViews = document.getElementById('stubViews');
-        var pageContent = document.getElementById('pageContent');
+        var execContent = document.getElementById('execContent');
 
-        if (pageContent) pageContent.style.display = 'none';
+        // Reset: hide stubs, show dashboard content
         if (stubViews) {
             stubViews.style.display = 'none';
             var stubs = stubViews.querySelectorAll('.route-stub');
@@ -453,13 +452,34 @@
             }
         }
 
+        if (hash === 'dashboard' || !ROUTE_MAP[hash]) {
+            // Show dashboard
+            if (execContent) execContent.style.display = '';
+            // Also mark active nav
+            setActiveNav(hash === 'dashboard' ? 'dashboard' : 'dashboard');
+            return;
+        }
+
+        // Non-dashboard route: hide execContent, show stub
+        if (execContent) execContent.style.display = 'none';
+        var targetId = ROUTE_MAP[hash];
         var target = document.getElementById(targetId);
         if (target) {
-            if (targetId === 'pageContent') {
-                target.style.display = '';
+            if (stubViews) stubViews.style.display = '';
+            target.style.display = 'block';
+        }
+        setActiveNav(hash);
+    }
+
+    function setActiveNav(activeId) {
+        var items = document.querySelectorAll('.exec-sidebar-nav a');
+        for (var i = 0; i < items.length; i++) {
+            var href = items[i].getAttribute('href') || '';
+            var itemId = href.replace(/^#/, '').replace(/^.*safety-manager\.html.*$/, 'dashboard');
+            if (itemId === activeId) {
+                items[i].classList.add('active');
             } else {
-                if (stubViews) stubViews.style.display = '';
-                target.style.display = 'block';
+                items[i].classList.remove('active');
             }
         }
     }
