@@ -440,7 +440,7 @@
     function applyRoute() {
         var hash = (window.location.hash || '#dashboard').replace(/^#/, '');
         var execContent = document.getElementById('execContent');
-        if (!execContent) return; // Wait for ExecutiveShell to render
+        if (!execContent) return;
 
         // 1. Ensure stub container exists inside execContent
         var stubContainer = document.getElementById('stubViews');
@@ -449,7 +449,6 @@
             stubContainer.id = 'stubViews';
             stubContainer.style.display = 'none';
             
-            // Create stubs dynamically
             var routes = ['reports', 'hazards', 'assurance', 'performance', 'actions', 
                           'compliance', 'articles', 'surveys', 'meetings', 'documents', 'admin'];
             var titles = ['Reports', 'Hazards & Risks', 'Safety Assurance', 'Safety Performance', 
@@ -467,8 +466,12 @@
             execContent.appendChild(stubContainer);
         }
 
-        // 2. Hide all views
-        execContent.style.display = 'none'; // Hide the dashboard content
+        // 2. Hide ALL views (dashboard children + stubs) — NOT execContent itself
+        var dashHeader = execContent.querySelector('.exec-page-header');
+        var dashBento = execContent.querySelector('.exec-bento');
+        if (dashHeader) dashHeader.style.display = 'none';
+        if (dashBento) dashBento.style.display = 'none';
+        
         stubContainer.style.display = 'none';
         var stubs = stubContainer.querySelectorAll('.route-stub');
         for (var j = 0; j < stubs.length; j++) {
@@ -477,7 +480,8 @@
 
         // 3. Show target
         if (hash === 'dashboard' || !ROUTE_MAP[hash]) {
-            execContent.style.display = ''; // Show dashboard
+            if (dashHeader) dashHeader.style.display = '';
+            if (dashBento) dashBento.style.display = '';
         } else {
             var targetId = ROUTE_MAP[hash];
             var target = document.getElementById(targetId);
