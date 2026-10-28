@@ -270,7 +270,7 @@ Clicking a matrix cell (for example, `4B`) should open a modal listing the speci
 | **TENANT_ADMIN (sita-air)** | `safety@sitaair.com.np` |
 | **SUPER_ADMIN** | `ezondiza.dhf@gmail.com` |
 | **Tenant UUID** | `2ec7c30d-bbdf-5ec1-b897-ea6a28f6c6fc` |
-| **Firebase App Check debug token** | `50ca9e6b-764f-49f2-9f72-a966d3c70aff` |
+| **Firebase App Check debug token** | `[REDACTED — rotated in Firebase Console on 2026-10-28]` |
 
 The App Check debug token must be registered in the Firebase Console for the test environment.
 

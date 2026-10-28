@@ -424,7 +424,6 @@
     // HASH ROUTER (dashboard / stub views)
     // ============================================================
     var ROUTE_MAP = {
-        'dashboard':   'pageContent',
         'reports':     'reportsView',
         'hazards':     'hazardsView',
         'assurance':   'assuranceView',
