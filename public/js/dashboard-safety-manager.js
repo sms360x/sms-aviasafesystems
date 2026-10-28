@@ -100,21 +100,23 @@
 
         var reportsEl = document.getElementById('s1-safety-reports');
         var reportsTrend = document.getElementById('s1-safety-reports-trend');
-        if (overviewRes && overviewRes.ok && overviewRes.data) {
-            var total = overviewRes.data.total_reports || 0;
-            var prev = overviewRes.data.previous_reports || 0;
+        if (overviewRes && overviewRes.ok && overviewRes.data && overviewRes.data.kpis) {
+            var total = overviewRes.data.kpis.total_reports || 0;
+            var prev = overviewRes.data.kpis.previous_period_total;
             reportsEl.textContent = total;
-            if (prev > 0) {
+            if (typeof prev === 'number' && prev > 0) {
                 var pct = Math.round(((total - prev) / prev) * 100);
                 var arrow = pct >= 0 ? '↑' : '↓';
-                reportsTrend.textContent = arrow + ' ' + Math.abs(pct) + '% vs previous 90 days';
+                reportsTrend.textContent = arrow + ' ' + Math.abs(pct) + '% vs previous period';
                 reportsTrend.className = 'exec-kpi-trend ' + (pct >= 0 ? 'trend-up' : 'trend-down');
             } else {
-                reportsTrend.textContent = 'vs previous 90 days';
+                reportsTrend.textContent = 'vs previous period';
+                reportsTrend.className = 'exec-kpi-trend';
             }
         } else {
             reportsEl.textContent = '0';
-            reportsTrend.textContent = 'vs previous 90 days';
+            reportsTrend.textContent = 'vs previous period';
+            reportsTrend.className = 'exec-kpi-trend';
         }
 
         var actionsEl = document.getElementById('s1-action-completion');
@@ -461,6 +463,13 @@
                 window.__sms360x_loaded = true;
             }
 
+            if (typeof window.DateRangeFilter === 'undefined') {
+                console.error('[Boot] DateRangeFilter component not loaded. ' +
+                    'Falling back to default 90-day load.');
+                loadAll(tenant, 90);
+                return;
+            }
+
             DateRangeFilter.mount('#dateFilterContainer', {
                 defaultDays: 90,
                 onChange: function (days) {
@@ -521,6 +530,8 @@
         var dashBento = execContent.querySelector('.exec-bento');
         if (dashHeader) dashHeader.style.display = 'none';
         if (dashBento) dashBento.style.display = 'none';
+        var dateFilter = document.getElementById('dateFilterContainer');
+        if (dateFilter) dateFilter.style.display = 'none';
         
         stubContainer.style.display = 'none';
         var stubs = stubContainer.querySelectorAll('.route-stub');
@@ -532,6 +543,7 @@
         if (hash === 'dashboard' || !ROUTE_MAP[hash]) {
             if (dashHeader) dashHeader.style.display = '';
             if (dashBento) dashBento.style.display = '';
+            if (dateFilter) dateFilter.style.display = 'flex';
         } else {
             var targetId = ROUTE_MAP[hash];
             var target = document.getElementById(targetId);
