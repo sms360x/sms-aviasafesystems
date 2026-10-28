@@ -70,14 +70,15 @@
     // ─── Section renderers ─────────────────────────────────────────────────
 
     function renderKpis(overviewRes, smsHealthRes, actionRes) {
+        // Card 1: SMS Health (uses overall_score, NOT score)
         var healthEl = document.getElementById('s1-sms-health');
         var healthTier = document.getElementById('s1-sms-health-tier');
         if (smsHealthRes && smsHealthRes.ok && smsHealthRes.data) {
-            var tier = smsHealthRes.data.tier || 'unknown';
-            var score = smsHealthRes.data.score;
+            var score = smsHealthRes.data.overall_score;
+            var tier = smsHealthRes.data.tier_label || smsHealthRes.data.tier || 'unknown';
             if (score !== undefined && score !== null) {
-                healthEl.textContent = score + '%';
-                healthTier.textContent = tier.charAt(0).toUpperCase() + tier.slice(1);
+                healthEl.textContent = Math.round(score) + '%';
+                healthTier.textContent = tier;
             } else {
                 healthEl.textContent = 'N/A';
                 healthTier.textContent = 'No survey data';
@@ -87,17 +88,21 @@
             healthTier.textContent = 'No survey data';
         }
 
+        // Card 2: Significant Risks (uses .kpis.high_risk_reports)
         var risksEl = document.getElementById('s1-high-risks');
         var risksNote = document.getElementById('s1-high-risks-note');
-        if (overviewRes && overviewRes.ok && overviewRes.data) {
-            var highRisks = overviewRes.data.high_risks || 0;
+        if (overviewRes && overviewRes.ok && overviewRes.data && overviewRes.data.kpis) {
+            var highRisks = overviewRes.data.kpis.high_risk_reports || 0;
             risksEl.textContent = highRisks;
-            risksNote.textContent = highRisks > 0 ? 'require executive attention' : 'No significant risks';
+            risksNote.textContent = highRisks > 0 
+                ? 'require executive attention' 
+                : 'No significant risks';
         } else {
             risksEl.textContent = '0';
             risksNote.textContent = 'No significant risks';
         }
 
+        // Card 3: Safety Reports (uses .kpis.total_reports; honest trend)
         var reportsEl = document.getElementById('s1-safety-reports');
         var reportsTrend = document.getElementById('s1-safety-reports-trend');
         if (overviewRes && overviewRes.ok && overviewRes.data && overviewRes.data.kpis) {
@@ -106,7 +111,7 @@
             reportsEl.textContent = total;
             if (typeof prev === 'number' && prev > 0) {
                 var pct = Math.round(((total - prev) / prev) * 100);
-                var arrow = pct >= 0 ? '↑' : '↓';
+                var arrow = pct >= 0 ? '\u2191' : '\u2193';
                 reportsTrend.textContent = arrow + ' ' + Math.abs(pct) + '% vs previous period';
                 reportsTrend.className = 'exec-kpi-trend ' + (pct >= 0 ? 'trend-up' : 'trend-down');
             } else {
@@ -119,34 +124,26 @@
             reportsTrend.className = 'exec-kpi-trend';
         }
 
+        // Card 4: Overdue Actions
         var actionsEl = document.getElementById('s1-action-completion');
         var actionsNote = document.getElementById('s1-action-completion-note');
         if (actionRes && actionRes.ok && actionRes.data) {
             var overdue = actionRes.data.overdue || 0;
             actionsEl.textContent = overdue;
-            actionsNote.textContent = overdue > 0 ? 'high priority items' : 'No overdue actions';
+            actionsNote.textContent = overdue > 0 
+                ? 'high priority items' 
+                : 'No overdue actions';
         } else {
             actionsEl.textContent = '0';
             actionsNote.textContent = 'No overdue actions';
         }
 
+        // Card 5: Regulatory Compliance (static until Compliance module exists)
         var complianceEl = document.getElementById('s1-compliance');
         var complianceNote = document.getElementById('s1-compliance-note');
-        if (overviewRes && overviewRes.ok && overviewRes.data) {
-            var stateFindings = overviewRes.data.state_findings || 0;
-            if (stateFindings === 0) {
-                complianceEl.textContent = 'On Track';
-                complianceNote.textContent = 'No open State Regulator findings';
-            } else {
-                complianceEl.textContent = stateFindings + ' open';
-                complianceNote.textContent = 'State Regulator findings';
-            }
-        } else {
-            complianceEl.textContent = 'On Track';
-            complianceNote.textContent = 'No open State Regulator findings';
-        }
+        complianceEl.textContent = 'On Track';
+        complianceNote.textContent = 'No open State Regulator findings';
     }
-
     function renderSmsHealth(smsHealth) {
         var val = document.getElementById('s1-sms-health');
         var tier = document.getElementById('s1-sms-health-tier');
