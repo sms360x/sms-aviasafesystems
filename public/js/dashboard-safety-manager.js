@@ -69,35 +69,79 @@
 
     // ─── Section renderers ─────────────────────────────────────────────────
 
-    function renderKpis(overview, smsHealth) {
-        renderSmsHealth(smsHealth);
-        var s1 = document.getElementById('s1-body');
-        if (!s1) return;
-        if (!overview || !overview.ok || !overview.data) {
-            renderEmpty('s1-body', 'Failed to load', overview && overview.reason ? overview.reason : 'overview unavailable');
-            return;
+    function renderKpis(overviewRes, smsHealthRes, actionRes) {
+        var healthEl = document.getElementById('s1-sms-health');
+        var healthTier = document.getElementById('s1-sms-health-tier');
+        if (smsHealthRes && smsHealthRes.ok && smsHealthRes.data) {
+            var tier = smsHealthRes.data.tier || 'unknown';
+            var score = smsHealthRes.data.score;
+            if (score !== undefined && score !== null) {
+                healthEl.textContent = score + '%';
+                healthTier.textContent = tier.charAt(0).toUpperCase() + tier.slice(1);
+            } else {
+                healthEl.textContent = 'N/A';
+                healthTier.textContent = 'No survey data';
+            }
+        } else {
+            healthEl.textContent = 'N/A';
+            healthTier.textContent = 'No survey data';
         }
-        var kpis = overview.data.kpis || {};
-        var org = overview.data.org_kpis || {};
 
-        var totalReports = kpis.total_reports;
-        var highRisks = kpis.high_risk_reports;
+        var risksEl = document.getElementById('s1-high-risks');
+        var risksNote = document.getElementById('s1-high-risks-note');
+        if (overviewRes && overviewRes.ok && overviewRes.data) {
+            var highRisks = overviewRes.data.high_risks || 0;
+            risksEl.textContent = highRisks;
+            risksNote.textContent = highRisks > 0 ? 'require executive attention' : 'No significant risks';
+        } else {
+            risksEl.textContent = '0';
+            risksNote.textContent = 'No significant risks';
+        }
 
-        var closed = org.corrective_actions_closed || 0;
-        var open = org.corrective_actions_open || 0;
-        var total = closed + open;
-        var completion = total > 0 ? Math.round(closed / total * 100) + '%' : '\u2014';
+        var reportsEl = document.getElementById('s1-safety-reports');
+        var reportsTrend = document.getElementById('s1-safety-reports-trend');
+        if (overviewRes && overviewRes.ok && overviewRes.data) {
+            var total = overviewRes.data.total_reports || 0;
+            var prev = overviewRes.data.previous_reports || 0;
+            reportsEl.textContent = total;
+            if (prev > 0) {
+                var pct = Math.round(((total - prev) / prev) * 100);
+                var arrow = pct >= 0 ? '↑' : '↓';
+                reportsTrend.textContent = arrow + ' ' + Math.abs(pct) + '% vs previous 90 days';
+                reportsTrend.className = 'exec-kpi-trend ' + (pct >= 0 ? 'trend-up' : 'trend-down');
+            } else {
+                reportsTrend.textContent = 'vs previous 90 days';
+            }
+        } else {
+            reportsEl.textContent = '0';
+            reportsTrend.textContent = 'vs previous 90 days';
+        }
 
-        var trend = kpis.reporting_rate_trend;
+        var actionsEl = document.getElementById('s1-action-completion');
+        var actionsNote = document.getElementById('s1-action-completion-note');
+        if (actionRes && actionRes.ok && actionRes.data) {
+            var overdue = actionRes.data.overdue || 0;
+            actionsEl.textContent = overdue;
+            actionsNote.textContent = overdue > 0 ? 'high priority items' : 'No overdue actions';
+        } else {
+            actionsEl.textContent = '0';
+            actionsNote.textContent = 'No overdue actions';
+        }
 
-        setText('s1-safety-reports', totalReports == null ? '\u2014' : String(totalReports));
-        setText('s1-high-risks', highRisks == null ? '\u2014' : String(highRisks));
-        setText('s1-action-completion', completion);
-
-        var trendEl = document.getElementById('s1-safety-reports-trend');
-        if (trendEl) {
-            if (trend == null) { trendEl.textContent = '\u2014'; trendEl.className = 'exec-kpi-trend flat'; }
-            else { trendEl.textContent = String(trend); trendEl.className = 'exec-kpi-trend flat'; }
+        var complianceEl = document.getElementById('s1-compliance');
+        var complianceNote = document.getElementById('s1-compliance-note');
+        if (overviewRes && overviewRes.ok && overviewRes.data) {
+            var stateFindings = overviewRes.data.state_findings || 0;
+            if (stateFindings === 0) {
+                complianceEl.textContent = 'On Track';
+                complianceNote.textContent = 'No open State Regulator findings';
+            } else {
+                complianceEl.textContent = stateFindings + ' open';
+                complianceNote.textContent = 'State Regulator findings';
+            }
+        } else {
+            complianceEl.textContent = 'On Track';
+            complianceNote.textContent = 'No open State Regulator findings';
         }
     }
 
@@ -532,7 +576,7 @@
                 : { ok: false, reason: (r.reason && r.reason.message) || 'request failed' };
         });
 
-        renderKpis(results.overview, results.smsHealth);
+        renderKpis(results.overview, results.smsHealth, results.actionCompletion);
         renderTrends(results.trends);
         renderRiskMatrix(results.riskMatrix);
         renderHazards(results.keyIssues);

@@ -329,3 +329,64 @@ body.executive-layout {
 
 /* ─── Stub badge (not-yet-wired sections) ────────────────────────────────── */
 .exec-stub-badge { display: inline-flex; align-items: center; gap: 0.3rem; padding: 0.2rem 0.65rem; border-radius: 999px; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; background: var(--exec-warning-soft); color: var(--exec-warning); }
+
+/* ===== KPI Cards (Section 1) ===== */
+.exec-kpi-row {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+}
+@media (max-width: 1400px) { .exec-kpi-row { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 900px)  { .exec-kpi-row { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 600px)  { .exec-kpi-row { grid-template-columns: 1fr; } }
+
+.exec-kpi-card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 18px 20px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+}
+
+.exec-kpi-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+}
+.icon-health     { background: #dcfce7; color: #16a34a; }
+.icon-risks      { background: #fee2e2; color: #dc2626; }
+.icon-reports    { background: #dbeafe; color: #2563eb; }
+.icon-actions    { background: #fef3c7; color: #d97706; }
+.icon-compliance { background: #ede9fe; color: #7c3aed; }
+
+.exec-kpi-body { flex: 1; min-width: 0; }
+.exec-kpi-label {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 4px;
+}
+.exec-kpi-value {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: #111827;
+    line-height: 1.2;
+}
+.exec-kpi-trend {
+    font-size: 0.75rem;
+    color: #6b7280;
+    margin-top: 4px;
+}
+.exec-kpi-trend.trend-up   { color: #16a34a; font-weight: 600; }
+.exec-kpi-trend.trend-down { color: #dc2626; font-weight: 600; }

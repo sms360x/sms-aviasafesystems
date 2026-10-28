@@ -26,37 +26,46 @@
 
     <div class="exec-bento">
 
-        <!-- S1 — KPI row (4 columns) -->
         <div class="exec-bento-full" data-section="s1">
             <div class="exec-kpi-row" id="s1-body">
-                <div class="exec-kpi">
-                    <div class="exec-kpi-icon blue"><i class="fas fa-file-lines"></i></div>
-                    <div class="exec-kpi-body">
-                        <div class="exec-kpi-label">Safety Reports</div>
-                        <div class="exec-kpi-value" id="s1-safety-reports">&mdash;</div>
-                        <div class="exec-kpi-trend flat" id="s1-safety-reports-trend">&mdash;</div>
-                    </div>
-                </div>
-                <div class="exec-kpi">
-                    <div class="exec-kpi-icon amber"><i class="fas fa-triangle-exclamation"></i></div>
-                    <div class="exec-kpi-body">
-                        <div class="exec-kpi-label">High Risks</div>
-                        <div class="exec-kpi-value" id="s1-high-risks">&mdash;</div>
-                    </div>
-                </div>
-                <div class="exec-kpi">
-                    <div class="exec-kpi-icon green"><i class="fas fa-clipboard-check"></i></div>
-                    <div class="exec-kpi-body">
-                        <div class="exec-kpi-label">Action Completion</div>
-                        <div class="exec-kpi-value" id="s1-action-completion">&mdash;</div>
-                    </div>
-                </div>
-                <div class="exec-kpi">
-                    <div class="exec-kpi-icon navy"><i class="fas fa-heart-pulse"></i></div>
+                <div class="exec-kpi exec-kpi-card" data-kpi="health">
+                    <div class="exec-kpi-icon icon-health"><i class="fas fa-shield-halved"></i></div>
                     <div class="exec-kpi-body">
                         <div class="exec-kpi-label">SMS Health</div>
-                        <div class="exec-kpi-value" id="s1-sms-health">&mdash;</div>
-                        <div class="exec-kpi-trend flat" id="s1-sms-health-tier">&mdash;</div>
+                        <div class="exec-kpi-value" id="s1-sms-health">—</div>
+                        <div class="exec-kpi-trend" id="s1-sms-health-tier">No survey data</div>
+                    </div>
+                </div>
+                <div class="exec-kpi exec-kpi-card" data-kpi="risks">
+                    <div class="exec-kpi-icon icon-risks"><i class="fas fa-triangle-exclamation"></i></div>
+                    <div class="exec-kpi-body">
+                        <div class="exec-kpi-label">Significant Risks</div>
+                        <div class="exec-kpi-value" id="s1-high-risks">—</div>
+                        <div class="exec-kpi-trend" id="s1-high-risks-note">require attention</div>
+                    </div>
+                </div>
+                <div class="exec-kpi exec-kpi-card" data-kpi="reports">
+                    <div class="exec-kpi-icon icon-reports"><i class="fas fa-file-lines"></i></div>
+                    <div class="exec-kpi-body">
+                        <div class="exec-kpi-label">Safety Reports</div>
+                        <div class="exec-kpi-value" id="s1-safety-reports">—</div>
+                        <div class="exec-kpi-trend" id="s1-safety-reports-trend">vs previous 90 days</div>
+                    </div>
+                </div>
+                <div class="exec-kpi exec-kpi-card" data-kpi="actions">
+                    <div class="exec-kpi-icon icon-actions"><i class="fas fa-clipboard-check"></i></div>
+                    <div class="exec-kpi-body">
+                        <div class="exec-kpi-label">Overdue Actions</div>
+                        <div class="exec-kpi-value" id="s1-action-completion">—</div>
+                        <div class="exec-kpi-trend" id="s1-action-completion-note">high priority items</div>
+                    </div>
+                </div>
+                <div class="exec-kpi exec-kpi-card" data-kpi="compliance">
+                    <div class="exec-kpi-icon icon-compliance"><i class="fas fa-scale-balanced"></i></div>
+                    <div class="exec-kpi-body">
+                        <div class="exec-kpi-label">Regulatory Compliance</div>
+                        <div class="exec-kpi-value" id="s1-compliance">—</div>
+                        <div class="exec-kpi-trend" id="s1-compliance-note">State Regulator findings</div>
                     </div>
                 </div>
             </div>
@@ -165,7 +174,7 @@
             </div>
             <div class="exec-empty">
                 <div class="exec-empty-title">Not yet wired</div>
-                <div class="exec-empty-note">External feed pending (ICAO, EASA, FAA, CAAN).</div>
+                <div class="exec-empty-note">External feed pending (ICAO, EASA, FAA, State Regulator).</div>
             </div>
         </div>
 
