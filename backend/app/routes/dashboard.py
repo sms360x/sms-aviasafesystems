@@ -468,11 +468,33 @@ async def get_sms_health(
     """Overall SMS maturity score for the Safety Manager KPI.
 
     Reuses the existing airline SMS maturity service (get_airline_sms_maturity)
-    and projects only the KPI fields. No new scoring math.
+    and projects the KPI fields plus per-pillar scores, bands, and labels
+    (80/60 thresholds). No new scoring math.
     """
     svc = DashboardService(user)
+    # Per-pillar projection defaults; stay defined even if the service raises.
+    pillars = {}
+    pillar_bands = {}
+    pillar_labels = {}
     try:
         data = svc.get_airline_sms_maturity(days=days)
+        pillars = data.get("pillars") or {}
+        pillar_bands = {}
+        pillar_labels = {}
+        for p in ["safety_policy", "safety_risk_management", "safety_assurance", "safety_promotion"]:
+            pct = pillars.get(p)
+            if pct is None:
+                pillar_bands[p] = "empty"
+                pillar_labels[p] = "No data"
+            elif pct >= 80:
+                pillar_bands[p] = "green"
+                pillar_labels[p] = "On track"
+            elif pct >= 60:
+                pillar_bands[p] = "yellow"
+                pillar_labels[p] = "Some gaps"
+            else:
+                pillar_bands[p] = "red"
+                pillar_labels[p] = "Action needed"
     except Exception as e:
         logger.error(f"SMS health failed for tenant {user.get('tenant_id')}: {e}")
         data = {
@@ -491,6 +513,9 @@ async def get_sms_health(
         "response_count": data.get("response_count"),
         "latest_assessment_date": data.get("latest_assessment_date"),
         "period_days": data.get("period_days", days),
+        "pillars": pillars,
+        "pillar_bands": pillar_bands,
+        "pillar_labels": pillar_labels,
     })
 
 
