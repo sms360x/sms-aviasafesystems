@@ -17,6 +17,11 @@
       ],
       "redirects": [
         {
+          "source": "/login",
+          "destination": "/login.html",
+          "type": 301
+        },
+        {
           "source": "/admin/dashboard.html",
           "destination": "/admin/production-setup.html",
           "type": 301

@@ -44,6 +44,8 @@ function asset(file) {
     }
 }
 assets.forEach(asset);
+assert((hosting.redirects || []).some(rule => rule.source === '/login' && rule.destination === '/login.html' && rule.type === 301),
+    '/login must redirect to the login page instead of the homepage fallback');
 const rewrites = hosting.rewrites || [];
 const apiIndex = rewrites.findIndex(rule => rule.source === '/etl/api/**');
 const etlIndex = rewrites.findIndex(rule => rule.source === '/etl/**');
