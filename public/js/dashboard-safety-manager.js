@@ -336,6 +336,71 @@
         }
     }
 
+    function renderSmsComponents(smsHealthResult) {
+        var data = (smsHealthResult && smsHealthResult.ok) ? smsHealthResult.data : null;
+        var statusEl = document.getElementById('s2b-survey-status');
+
+        var pillars = [
+            { key: 'safety_policy',           id: 'policy'    },
+            { key: 'safety_risk_management',  id: 'risk'      },
+            { key: 'safety_assurance',        id: 'assurance' },
+            { key: 'safety_promotion',        id: 'promotion' }
+        ];
+
+        var bandColors = {
+            green:  '#16a34a',
+            yellow: '#d97706',
+            red:    '#dc2626',
+            empty:  '#d1d5db'
+        };
+
+        var hasSurvey = !!(data && Number(data.response_count) > 0);
+
+        if (statusEl) {
+            statusEl.textContent = hasSurvey ? '' : 'Last Survey Date: No Survey Data';
+        }
+
+        pillars.forEach(function (p) {
+            var canvas  = document.getElementById('s2b-' + p.id + '-canvas');
+            var center  = document.getElementById('s2b-' + p.id + '-center');
+            var labelEl = document.getElementById('s2b-' + p.id + '-label');
+            if (!canvas || !center || !labelEl) return;
+
+            var pct  = hasSurvey && data.pillars ? data.pillars[p.key] : null;
+            var band = hasSurvey && data.pillar_bands ? data.pillar_bands[p.key] : 'empty';
+            var lbl  = hasSurvey && data.pillar_labels ? data.pillar_labels[p.key] : '—';
+
+            if (pct == null) {
+                center.textContent = '—';
+                labelEl.textContent = '—';
+                // Draw flat gray ring
+                if (window.Chart) {
+                    var existing = Chart.getChart(canvas);
+                    if (existing) existing.destroy();
+                    new Chart(canvas, {
+                        type: 'doughnut',
+                        data: { datasets: [{ data: [100], backgroundColor: [bandColors.empty], borderWidth: 0 }] },
+                        options: { responsive: true, maintainAspectRatio: false, cutout: '75%', plugins: { legend: { display: false }, tooltip: { enabled: false } } }
+                    });
+                }
+                return;
+            }
+
+            center.textContent = Math.round(Number(pct)) + '%';
+            labelEl.textContent = lbl;
+
+            if (window.Chart) {
+                var existing2 = Chart.getChart(canvas);
+                if (existing2) existing2.destroy();
+                new Chart(canvas, {
+                    type: 'doughnut',
+                    data: { datasets: [{ data: [Number(pct), 100 - Number(pct)], backgroundColor: [bandColors[band] || bandColors.empty, '#e5e7eb'], borderWidth: 0 }] },
+                    options: { responsive: true, maintainAspectRatio: false, cutout: '75%', plugins: { legend: { display: false }, tooltip: { enabled: false } } }
+                });
+            }
+        });
+    }
+
     function renderRecent(recent) {
         var tbody = document.getElementById('s6-body');
         if (!tbody) return;
@@ -572,7 +637,7 @@
         if (days === undefined) days = 90;
         var tasks = {
             overview: ApiClient.get('/api/v1/dashboard/overview?days=' + days),
-            smsHealth: ApiClient.get('/api/v1/dashboard/sms-health?days=365'),
+            smsHealth: ApiClient.get('/api/v1/dashboard/sms-health?days=' + days),
             trends: ApiClient.get('/api/v1/dashboard/trends?days=180'),
             riskMatrix: ApiClient.get('/api/v1/dashboard/risk-matrix'),
             keyIssues: ApiClient.get('/api/v1/dashboard/key-issues?days=90&limit=5'),
@@ -597,6 +662,7 @@
         renderRiskMatrix(results.riskMatrix);
         renderHazards(results.keyIssues);
         renderDonut(results.actionCompletion);
+        renderSmsComponents(results.smsHealth);
         renderRecent(results.recent);
         renderSpis(results.spi, tenant);
     }
