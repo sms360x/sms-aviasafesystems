@@ -13,13 +13,14 @@
 #              imports so tests can monkeypatch them on this module.
 # ==============================================================================
 
+import math
 import time
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional
 
 from loguru import logger
-from sqlalchemy import select
+from sqlalchemy import func, select
 
 from app.core.config import settings
 from app.core.metrics import record_ai_result
@@ -124,22 +125,49 @@ async def _create_report_async(self, values: dict) -> Report:
         return row
 
 
-async def _get_reports_async(self, cross_tenant: bool, tenant_uuid_value: uuid.UUID) -> list:
-    stmt = (
-        select(Report)
-        .where(Report.is_demo == demo_scope())
-        .order_by(Report.created_at.desc())
-    )
-    if cross_tenant:
+async def _get_reports_async(
+    self,
+    cross_tenant: bool,
+    tenant_uuid_value: uuid.UUID,
+    days: int = 90,
+    report_type: Optional[str] = None,
+    page: int = 1,
+    page_size: int = 20,
+) -> dict:
+    stmt = select(Report).where(Report.is_demo == demo_scope())
+    if not cross_tenant:
+        stmt = stmt.where(Report.tenant_id == tenant_uuid_value)
+    else:
         # VSR (voluntary) is never cross-tenant visible: a VSR is the source of
         # a hazard, and only the hazard is state-facing. MOR/other types remain
         # cross-tenant visible.
-        stmt = stmt.where(Report.report_type != "voluntary").limit(settings.REPO_QUERY_LIMIT)
-    else:
-        stmt = stmt.where(Report.tenant_id == tenant_uuid_value)
+        stmt = stmt.where(Report.report_type != "voluntary")
+    # Date window the caller can narrow (days param; formerly the unbounded list).
+    cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+    stmt = stmt.where(Report.created_at >= cutoff)
+    if report_type:
+        stmt = stmt.where(Report.report_type == report_type)
+    stmt = stmt.order_by(Report.created_at.desc())
+    # Single round trip: the window count covers the full filtered set
+    # (window functions evaluate before LIMIT/OFFSET). A separate count query
+    # would add a second prepared statement per request, which trips
+    # Supabase's transaction-mode pooler (asyncpg
+    # DuplicatePreparedStatementError — seen as nondeterministic CI flakes).
+    stmt = stmt.add_columns(func.count().over().label("total_count"))
+
     async with session_scope() as session:
-        rows = (await session.execute(stmt)).scalars().all()
-        return [_report_to_dict(r) for r in rows]
+        rows = (await session.execute(
+            stmt.limit(page_size).offset((page - 1) * page_size)
+        )).all()
+
+    total = rows[0][1] if rows else 0
+    return {
+        "items": [_report_to_dict(r[0]) for r in rows],
+        "total": total,
+        "page": page,
+        "page_size": page_size,
+        "pages": math.ceil(total / page_size) if total > 0 else 0,
+    }
 
 
 async def _get_report_async(self, tenant_uuid_value: Optional[uuid.UUID], report_uuid: uuid.UUID, cross_tenant: bool = False):
@@ -445,13 +473,23 @@ class ReportService:
         ReportRepository().invalidate_cache(prefix=f"{self.tenant_id}::")
         return data
 
-    def get_reports(self, user: dict) -> List[dict]:
+    def get_reports(
+        self, user: dict,
+        days: int = 90,
+        report_type: Optional[str] = None,
+        page: int = 1,
+        page_size: int = 20,
+    ) -> dict:
         try:
             cross_tenant = user.get("role") in settings.CROSS_TENANT_ROLES
             tid = None
             if not cross_tenant:
                 tid = register_tenant(self.tenant_id)
-            return run(_get_reports_async(self, cross_tenant, tid))
+            return run(_get_reports_async(
+                self, cross_tenant, tid,
+                days=days, report_type=report_type,
+                page=page, page_size=page_size,
+            ))
         except Exception as e:
             logger.error(f"Failed to retrieve reports: {e}")
             raise

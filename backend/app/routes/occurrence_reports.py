@@ -9,7 +9,7 @@
 # CODE OWNER: AviaSafeSystems
 # ============================================================================
 
-from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, status, Request
+from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, Query, status, Request
 from pydantic import BaseModel, Field
 from typing import List, Dict, Any, Optional
 from loguru import logger
@@ -291,11 +291,15 @@ async def submit_vsr(
     return _to_report_response(stored)
 
 
-@router.get("/", response_model=List[ReportListItem])
+@router.get("/", response_model=dict)
 async def get_reports(
+    days: int = Query(90, ge=1, le=365),
+    report_type: str = Query(None, description="Filter by 'voluntary' or 'mandatory'"),
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=100),
     user: Dict[str, Any] = Depends(get_current_user),
 ):
-    """Retrieve safety reports.
+    """Retrieve safety reports (paginated envelope).
 
     TENANT_ADMIN: reports scoped to their tenant.
     STATE_SMD / SUPER_ADMIN: cross-tenant view.
@@ -315,8 +319,21 @@ async def get_reports(
         raise HTTPException(status_code=403, detail="Safety Manager role required")
     service = ReportService(user.get("tenant_id", "default"))
 
-    docs = service.get_reports(user)
-    return [_to_list_item(d) for d in docs]
+    # ReportService.get_reports is the sync facade over the async engine
+    # (app.db.runner) — it returns the pagination dict directly.
+    result = service.get_reports(
+        user, days=days, report_type=report_type, page=page, page_size=page_size)
+
+    return {
+        "status": "success",
+        "data": [_to_list_item(d) for d in result["items"]],
+        "meta": {
+            "total": result["total"],
+            "page": result["page"],
+            "pages": result["pages"],
+            "page_size": result["page_size"],
+        },
+    }
 
 
 @router.get("/{report_id}", response_model=ReportResponse)
