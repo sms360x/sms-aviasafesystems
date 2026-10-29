@@ -134,9 +134,16 @@ def test_state_smd_denied_raw_report_list(client, monkeypatch):
 # code) reads the raw report list.
 def test_officer_can_read_report_list(client, monkeypatch):
     monkeypatch.setattr(occ_routes.ReportService, "get_reports",
-                        lambda self, user: [])
+                        lambda self, user, **kw: {
+                            "items": [], "total": 0, "page": 1,
+                            "page_size": 20, "pages": 0})
     _override("OFFICER", "t1", department="safety")
-    assert client.get("/api/v1/reports/").status_code == 200
+    r = client.get("/api/v1/reports/")
+    assert r.status_code == 200
+    body = r.json()
+    assert body["status"] == "success"
+    assert body["data"] == []
+    assert body["meta"]["total"] == 0
 
 
 # An OFFICER outside the Safety Department is denied the raw report list.
@@ -148,9 +155,16 @@ def test_officer_outside_safety_department_cannot_read_report_list(client):
 
 def test_legacy_safety_officer_still_admitted(client, monkeypatch):
     monkeypatch.setattr(occ_routes.ReportService, "get_reports",
-                        lambda self, user: [])
+                        lambda self, user, **kw: {
+                            "items": [], "total": 0, "page": 1,
+                            "page_size": 20, "pages": 0})
     _override("SAFETY_OFFICER", "t1")
-    assert client.get("/api/v1/reports/").status_code == 200
+    r = client.get("/api/v1/reports/")
+    assert r.status_code == 200
+    body = r.json()
+    assert body["status"] == "success"
+    assert body["data"] == []
+    assert body["meta"]["total"] == 0
 
 
 def test_officer_cannot_read_report_list(client):

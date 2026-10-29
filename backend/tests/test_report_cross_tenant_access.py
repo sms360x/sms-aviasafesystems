@@ -36,6 +36,10 @@ class _FakeResult:
     def first(self):
         return self._rows[0] if self._rows else None
 
+    def scalar_one(self):
+        # Used by the pagination count query added with the envelope shape.
+        return len(self._rows)
+
 
 class _FakeSession:
     def __init__(self, rows):
@@ -80,7 +84,11 @@ def _svc():
 # T1 — cross-tenant list excludes VSR (voluntary) rows.
 def test_cross_tenant_list_excludes_vsr(monkeypatch):
     sess = _install_fake_session(monkeypatch)
-    asyncio.run(rs._get_reports_async(_svc(), True, None))
+    out = asyncio.run(rs._get_reports_async(_svc(), True, None))
+    # Paginated envelope shape (route maps out["items"] -> response "data").
+    assert set(out.keys()) >= {"items", "total", "page", "page_size", "pages"}
+    assert out["items"] == []
+    assert out["total"] == 0
     sql = _sql(sess.statements[0])
     assert "report_type" in sql
     assert "voluntary" in sql
@@ -110,7 +118,9 @@ def test_cross_tenant_detail_mor_returns_report(monkeypatch):
 def test_same_tenant_list_keeps_vsr(monkeypatch):
     sess = _install_fake_session(monkeypatch)
     tid = uuid.uuid4()
-    asyncio.run(rs._get_reports_async(_svc(), False, tid))
+    out = asyncio.run(rs._get_reports_async(_svc(), False, tid))
+    # Paginated envelope shape — items present even when the page is empty.
+    assert "items" in out and "total" in out
     sql = _sql(sess.statements[0])
     assert "tenant_id" in sql
     assert "voluntary" not in sql

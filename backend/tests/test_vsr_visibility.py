@@ -92,7 +92,10 @@ def _patch_detail(monkeypatch, doc):
 
 def _patch_list(monkeypatch, rows):
     monkeypatch.setattr(ReportService, "get_reports",
-                        lambda self, user: rows)
+                        lambda self, user, **kw: {
+                            "items": rows, "total": len(rows),
+                            "page": 1, "page_size": 20,
+                            "pages": 1 if rows else 0})
 
 
 def _list_row():
@@ -228,11 +231,14 @@ def test_list_allowed_for_raw_vsr_roles(monkeypatch, role):
         r = client.get("/api/v1/reports/")
         assert r.status_code == 200, r.text
         body = r.json()
-        assert len(body) == 1
+        assert body["status"] == "success"
+        data = body["data"]
+        assert len(data) == 1
         # List projection carries no narrative or reporter metadata.
-        assert "narrative" not in body[0]
-        assert "reporter_name" not in body[0]
-        assert "reporter_email" not in body[0]
+        assert "narrative" not in data[0]
+        assert "reporter_name" not in data[0]
+        assert "reporter_email" not in data[0]
+        assert body["meta"]["total"] == 1
     finally:
         _clear()
 
