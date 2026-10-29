@@ -500,13 +500,11 @@
 
                 // REGULATORY
                 { id: 'compliance', label: 'Compliance', href: '#compliance', icon: 'fa-scale-balanced', section: 'Regulatory' },
-                { id: 'articles', label: 'Articles & Advisories', href: '#articles', icon: 'fa-newspaper' },
 
                 // WORKSPACE
                 { id: 'surveys', label: 'Surveys', href: '#surveys', icon: 'fa-square-poll-vertical', section: 'Workspace' },
                 { id: 'meetings', label: 'Meetings', href: '#meetings', icon: 'fa-users' },
-                { id: 'documents', label: 'Documents', href: '#documents', icon: 'fa-folder-open' },
-                { id: 'admin', label: 'Administration', href: '#admin', icon: 'fa-gear' }
+                { id: 'admin', label: 'Settings', href: '#admin', icon: 'fa-gear' }
             ];
 
             if (window.ExecutiveShell && typeof window.ExecutiveShell.init === 'function') {
@@ -551,10 +549,8 @@
         'performance': 'performanceView',
         'actions':     'actionsView',
         'compliance':  'complianceView',
-        'articles':    'articlesView',
         'surveys':     'surveysView',
         'meetings':    'meetingsView',
-        'documents':   'documentsView',
         'admin':       'adminView'
     };
 
@@ -570,11 +566,10 @@
             stubContainer.id = 'stubViews';
             stubContainer.style.display = 'none';
             
-            var routes = ['reports', 'hazards', 'assurance', 'performance', 'actions', 
-                          'compliance', 'articles', 'surveys', 'meetings', 'documents', 'admin'];
-            var titles = ['Reports', 'Hazards & Risks', 'Safety Assurance', 'Safety Performance', 
-                          'Actions', 'Compliance', 'Articles & Advisories', 'Surveys', 
-                          'Meetings', 'Documents', 'Administration'];
+            var routes = ['reports', 'hazards', 'assurance', 'performance', 'actions',
+                          'compliance', 'surveys', 'meetings', 'admin'];
+            var titles = ['Reports', 'Hazards & Risks', 'Safety Assurance', 'Safety Performance',
+                          'Actions', 'Compliance', 'Surveys', 'Meetings', 'Settings'];
             
             for (var i = 0; i < routes.length; i++) {
                 var stub = document.createElement('div');
