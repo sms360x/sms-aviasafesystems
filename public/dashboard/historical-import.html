@@ -4,25 +4,26 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Historical Import — AviaSAFE SMS</title>
-  <link rel="stylesheet" href="/css/variables.css" />
-  <link rel="stylesheet" href="/css/executive-ui.css" />
+  <link rel="stylesheet" href="/css/variables.css?brand=20261028" />
+  <link rel="stylesheet" href="/css/executive-ui.css?brand=20261028" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
   <style>
     .import-wrap { max-width: 1100px; margin: 24px auto; padding: 0 16px; }
     .import-card { background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,.06); margin-bottom: 16px; }
-    .dropzone { border: 2px dashed #cbd5e1; border-radius: 12px; padding: 40px; text-align: center; cursor: pointer; transition: .2s; }
-    .dropzone:hover, .dropzone.drag { border-color: #2563eb; background: #eff6ff; }
+    .dropzone { border: 2px dashed #bdccc4; border-radius: 12px; padding: 40px; text-align: center; cursor: pointer; transition: .2s; }
+    .dropzone:hover, .dropzone.drag { border-color: #235a4b; background: #f4f6f3; }
     .step { display: none; }
     .step.active { display: block; }
     .import-table { width: 100%; border-collapse: collapse; }
-    .import-table th, .import-table td { border: 1px solid #e2e8f0; padding: 8px; font-size: 13px; }
-    .import-table th { background: #f1f5f9; }
+    .import-table th, .import-table td { border: 1px solid #d7e4dc; padding: 8px; font-size: 13px; }
+    .import-table th { background: #edf2ed; }
     .unmapped { background: #fef3c7; border: 1px solid #f59e0b; padding: 12px; border-radius: 8px; margin-bottom: 12px; }
     .btn { padding: 10px 16px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; }
-    .btn-primary { background: #2563eb; color: #fff; }
+    .btn-primary { background: #235a4b; color: #fff; }
     .btn-success { background: #16a34a; color: #fff; }
     .success-box { background: #dcfce7; border: 1px solid #16a34a; padding: 20px; border-radius: 12px; text-align: center; }
   </style>
+    <link rel="stylesheet" href="/css/brand.css?v=20261028">
 </head>
 <body>
   <div id="execSidebar"></div>
@@ -33,7 +34,7 @@
     <section id="step1" class="step active">
       <div class="import-card">
         <div class="dropzone" id="dropzone">
-          <i class="fa-solid fa-cloud-arrow-up" style="font-size:32px;color:#2563eb;"></i>
+          <i class="fa-solid fa-cloud-arrow-up" style="font-size:32px;color:#235a4b;"></i>
           <p>Drag & drop Excel/CSV here, or click to select</p>
           <input type="file" id="fileInput" accept=".xlsx,.csv" />
         </div>
@@ -70,8 +71,8 @@
     </section>
   </main>
 
-  <script src="/js/firebase.js"></script>
-  <script src="/js/executive-shell.js"></script>
+  <script src="/js/firebase.js?brand=20261028"></script>
+  <script src="/js/executive-shell.js?brand=20261028"></script>
   <script>
     const API_URL = 'https://aviasafe-unified-platform.onrender.com';
     let currentBatchId = null;

@@ -11,9 +11,9 @@
 .aviasdcps-app {
     display: flex;
     min-height: 100vh;
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
-    color: #1e293b;
-    background: #f1f5f9;
+    font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
+    color: #192f35;
+    background: #edf2ed;
 }
 
 /* ========== SIDEBAR ========== */
@@ -119,7 +119,7 @@
 
 /* ========== HEADER ========== */
 .aviasdcps-header {
-    background: #0b2a42;
+    background: #192f35;
     color: #fff;
     display: flex;
     align-items: center;
@@ -186,7 +186,7 @@
 }
 
 .aviasdcps-period-filter select option {
-    background: #0b2a42;
+    background: #192f35;
     color: #fff;
 }
 
@@ -216,7 +216,7 @@
 .aviasdcps-section-title {
     font-size: 1rem;
     font-weight: 700;
-    color: #0b2a42;
+    color: #192f35;
     margin: 1.25rem 0 0.8rem;
     display: flex;
     align-items: center;
@@ -224,14 +224,14 @@
 }
 
 .aviasdcps-section-title:first-child { margin-top: 0; }
-.aviasdcps-section-title i { color: #1a6b8a; }
+.aviasdcps-section-title i { color: #1d5949; }
 
 /* ========== SUB-NAV TABS ========== */
 .aviasdcps-subnav {
     display: flex;
     gap: 0;
     margin-bottom: 1.25rem;
-    border-bottom: 2px solid #e2e8f0;
+    border-bottom: 2px solid #d7e4dc;
 }
 
 .aviasdcps-subnav-btn {
@@ -240,18 +240,18 @@
     padding: 0.55rem 1.1rem;
     font-size: 0.82rem;
     font-weight: 600;
-    color: #64748b;
+    color: #65766e;
     cursor: pointer;
     border-bottom: 2px solid transparent;
     margin-bottom: -2px;
     transition: color 0.12s, border-color 0.12s;
 }
 
-.aviasdcps-subnav-btn:hover { color: #0b2a42; }
+.aviasdcps-subnav-btn:hover { color: #192f35; }
 
 .aviasdcps-subnav-btn.active {
-    color: #1a6b8a;
-    border-bottom-color: #1a6b8a;
+    color: #1d5949;
+    border-bottom-color: #1d5949;
 }
 
 /* ========== KPI GRID ========== */
@@ -267,7 +267,7 @@
     padding: 1rem 1.1rem;
     border-radius: 8px;
     box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-    border-left: 4px solid #1a6b8a;
+    border-left: 4px solid #1d5949;
     transition: transform 0.12s;
 }
 
@@ -281,7 +281,7 @@
     font-size: 0.68rem;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    color: #64748b;
+    color: #65766e;
     margin: 0 0 0.3rem;
     font-weight: 600;
 }
@@ -289,7 +289,7 @@
 .aviasdcps-kpi-value {
     font-size: 1.65rem;
     font-weight: 800;
-    color: #0b2a42;
+    color: #192f35;
     line-height: 1.1;
 }
 
@@ -306,14 +306,14 @@
     padding: 0.85rem 1rem;
     border-radius: 8px;
     box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-    border-top: 3px solid #0ea5e9;
+    border-top: 3px solid #1d5949;
 }
 
 .aviasdcps-insight-chip h4 {
     font-size: 0.7rem;
     text-transform: uppercase;
     letter-spacing: 0.4px;
-    color: #64748b;
+    color: #65766e;
     margin: 0 0 0.3rem;
     font-weight: 600;
 }
@@ -321,7 +321,7 @@
 .aviasdcps-insight-value {
     font-size: 0.95rem;
     font-weight: 700;
-    color: #0b2a42;
+    color: #192f35;
 }
 
 /* ========== CHARTS ========== */
@@ -344,7 +344,7 @@
 .aviasdcps-chart-card h3 {
     font-size: 0.82rem;
     font-weight: 600;
-    color: #0b2a42;
+    color: #192f35;
     margin: 0 0 0.8rem;
 }
 
@@ -369,7 +369,7 @@
 .aviasdcps-filter-bar select,
 .aviasdcps-search-input {
     padding: 0.4rem 0.7rem;
-    border: 1px solid #e2e8f0;
+    border: 1px solid #d7e4dc;
     border-radius: 6px;
     font-size: 0.82rem;
     background: #fff;
@@ -392,12 +392,12 @@
 }
 
 .aviasdcps-btn-primary {
-    background: #1a6b8a;
+    background: #1d5949;
     color: #fff;
-    border-color: #1a6b8a;
+    border-color: #1d5949;
 }
 
-.aviasdcps-btn-primary:hover { background: #0b2a42; border-color: #0b2a42; }
+.aviasdcps-btn-primary:hover { background: #192f35; border-color: #192f35; }
 
 /* ========== TABLE ========== */
 .aviasdcps-table-wrap {
@@ -413,25 +413,25 @@
 }
 
 .aviasdcps-table th {
-    background: #f8fafc;
+    background: #f4f6f3;
     font-size: 0.7rem;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    color: #64748b;
+    color: #65766e;
     padding: 0.75rem 0.85rem;
     text-align: left;
-    border-bottom: 2px solid #e2e8f0;
+    border-bottom: 2px solid #d7e4dc;
     font-weight: 600;
     white-space: nowrap;
 }
 
 .aviasdcps-table td {
     padding: 0.65rem 0.85rem;
-    border-bottom: 1px solid #f1f5f9;
+    border-bottom: 1px solid #edf2ed;
     font-size: 0.82rem;
 }
 
-.aviasdcps-table tbody tr:hover { background: #f8fafc; cursor: pointer; }
+.aviasdcps-table tbody tr:hover { background: #f4f6f3; cursor: pointer; }
 
 /* ========== BADGES ========== */
 .aviasdcps-badge {
@@ -447,7 +447,7 @@
 .badge-high { background: #fff3e0; color: #e65100; }
 .badge-medium, .badge-warning { background: #fff8e1; color: #f9a825; }
 .badge-low { background: #e8f5e9; color: #2e7d32; }
-.badge-default { background: #f1f5f9; color: #64748b; }
+.badge-default { background: #edf2ed; color: #65766e; }
 .badge-new { background: #e3f2fd; color: #1565c0; }
 .badge-processing { background: #fff3e0; color: #e65100; }
 .badge-completed { background: #e8f5e9; color: #2e7d32; }
@@ -464,7 +464,7 @@
 
 .aviasdcps-page-btn {
     background: #fff;
-    border: 1px solid #e2e8f0;
+    border: 1px solid #d7e4dc;
     padding: 0.35rem 0.9rem;
     border-radius: 6px;
     cursor: pointer;
@@ -472,10 +472,10 @@
     transition: all 0.12s;
 }
 
-.aviasdcps-page-btn:hover:not(:disabled) { background: #f1f5f9; border-color: #1a6b8a; color: #1a6b8a; }
+.aviasdcps-page-btn:hover:not(:disabled) { background: #edf2ed; border-color: #1d5949; color: #1d5949; }
 .aviasdcps-page-btn:disabled { opacity: 0.4; cursor: default; }
 
-.aviasdcps-page-info { font-size: 0.82rem; color: #64748b; }
+.aviasdcps-page-info { font-size: 0.82rem; color: #65766e; }
 
 /* ========== TOOLS GRID ========== */
 .aviasdcps-tools-grid {
@@ -490,32 +490,32 @@
     box-shadow: 0 1px 3px rgba(0,0,0,0.06);
     padding: 1.5rem;
     text-align: center;
-    border: 1px solid #e2e8f0;
+    border: 1px solid #d7e4dc;
     transition: border-color 0.12s, box-shadow 0.12s;
     cursor: pointer;
 }
 
 .aviasdcps-tool-card:hover {
-    border-color: #1a6b8a;
+    border-color: #1d5949;
     box-shadow: 0 4px 12px rgba(26,107,138,0.12);
 }
 
 .aviasdcps-tool-card i {
     font-size: 2rem;
-    color: #1a6b8a;
+    color: #1d5949;
     margin-bottom: 0.8rem;
 }
 
 .aviasdcps-tool-card h3 {
     font-size: 0.95rem;
     font-weight: 700;
-    color: #0b2a42;
+    color: #192f35;
     margin: 0 0 0.4rem;
 }
 
 .aviasdcps-tool-card p {
     font-size: 0.82rem;
-    color: #64748b;
+    color: #65766e;
     margin: 0;
 }
 
@@ -538,12 +538,12 @@
 
 .aviasdcps-about-card h2 {
     font-size: 1.3rem;
-    color: #0b2a42;
+    color: #192f35;
     margin: 0 0 0.5rem;
 }
 
-.aviasdcps-about-card p { font-size: 0.9rem; color: #334155; margin: 0.4rem 0; }
-.aviasdcps-about-card hr { border: none; border-top: 1px solid #e2e8f0; margin: 1rem 0; }
+.aviasdcps-about-card p { font-size: 0.9rem; color: #244837; margin: 0.4rem 0; }
+.aviasdcps-about-card hr { border: none; border-top: 1px solid #d7e4dc; margin: 1rem 0; }
 
 /* ========== EMPTY STATE ========== */
 .aviasdcps-empty-state {
@@ -557,19 +557,19 @@
 
 .aviasdcps-empty-state i {
     font-size: 3rem;
-    color: #cbd5e1;
+    color: #bdccc4;
     margin-bottom: 1rem;
 }
 
 .aviasdcps-empty-state p {
     font-size: 0.95rem;
-    color: #475569;
+    color: #53685c;
     margin: 0.2rem 0;
 }
 
 .aviasdcps-empty-state .aviasdcps-muted {
     font-size: 0.82rem;
-    color: #94a3b8;
+    color: #83938a;
 }
 
 /* ========== DRAWER ========== */
@@ -607,13 +607,13 @@
     align-items: center;
     justify-content: space-between;
     padding: 1rem 1.25rem;
-    border-bottom: 1px solid #e2e8f0;
+    border-bottom: 1px solid #d7e4dc;
 }
 
 .aviasdcps-drawer-header h3 {
     font-size: 1rem;
     font-weight: 700;
-    color: #0b2a42;
+    color: #192f35;
     margin: 0;
 }
 
@@ -621,11 +621,11 @@
     background: transparent;
     border: none;
     font-size: 1.1rem;
-    color: #64748b;
+    color: #65766e;
     cursor: pointer;
 }
 
-.aviasdcps-drawer-close:hover { color: #0b2a42; }
+.aviasdcps-drawer-close:hover { color: #192f35; }
 
 .aviasdcps-drawer-body {
     flex: 1;
@@ -637,18 +637,18 @@
 .aviasdcps-footer {
     text-align: center;
     padding: 0.8rem 1rem;
-    border-top: 1px solid #e2e8f0;
+    border-top: 1px solid #d7e4dc;
     font-size: 0.78rem;
-    color: #94a3b8;
+    color: #83938a;
     margin-top: 1rem;
 }
 
 .aviasdcps-footer a {
-    color: #64748b;
+    color: #65766e;
     text-decoration: none;
 }
 
-.aviasdcps-footer a:hover { color: #1a6b8a; }
+.aviasdcps-footer a:hover { color: #1d5949; }
 
 .aviasdcps-footer span { margin: 0 0.3rem; }
 

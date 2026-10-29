@@ -13,21 +13,19 @@ AUTHOR: AviaSAFE Systems
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Step 3: Manage Regulators, Tenants &amp; Users — AviaSAFE Admin</title>
-    <link rel="stylesheet" href="/css/variables.css">
-    <link rel="stylesheet" href="/css/admin.css">
-    <link rel="stylesheet" href="/css/admin-setup.css">
+    <link rel="stylesheet" href="/css/variables.css?brand=20261028">
+    <link rel="stylesheet" href="/css/admin.css?brand=20261028">
+    <link rel="stylesheet" href="/css/admin-setup.css?brand=20261028">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-check-compat.js"></script>
-    <script src="/js/firebase.js?v=4.0.1"></script>
+    <script src="/js/firebase.js?v=4.0.1&brand=20261028"></script>
     <script src="/js/api/client.js"></script>
-    <script src="/js/admin.js"></script>
-    <script src="/js/admin-setup-core.js"></script>
+    <script src="/js/admin.js?brand=20261028"></script>
+    <script src="/js/admin-setup-core.js?brand=20261028"></script>
+    <link rel="stylesheet" href="/css/brand.css?v=20261028">
 </head>
 <body class="admin-body">
 
@@ -39,8 +37,8 @@ AUTHOR: AviaSAFE Systems
             <span class="page-title">Step 3 — Manage</span>
         </div>
         <div class="tb-actions" id="topNav">
-            <a href="/admin/production-setup.html" class="nav-link" style="color:#cbd5e1; text-decoration:none; font-size:.82rem; padding:6px 12px; border-radius:8px;"><i class="fas fa-cogs" style="color:#4fc3f7;"></i> Production Setup</a>
-            <a href="/admin/psoe-audit.html" class="nav-link" style="color:#cbd5e1; text-decoration:none; font-size:.82rem; padding:6px 12px; border-radius:8px;"><i class="fas fa-clipboard-check"></i> PSOE Audit</a>
+            <a href="/admin/production-setup.html" class="nav-link" style="color:#bdccc4; text-decoration:none; font-size:.82rem; padding:6px 12px; border-radius:8px;"><i class="fas fa-cogs" style="color:#4fc3f7;"></i> Production Setup</a>
+            <a href="/admin/psoe-audit.html" class="nav-link" style="color:#bdccc4; text-decoration:none; font-size:.82rem; padding:6px 12px; border-radius:8px;"><i class="fas fa-clipboard-check"></i> PSOE Audit</a>
             <span class="user-badge"><span class="role-chip">SUPER_ADMIN</span><span id="userDisplay">—</span></span>
             <button class="btn btn-danger btn-sm" onclick="logout()">Logout</button>
         </div>
@@ -82,11 +80,11 @@ AUTHOR: AviaSAFE Systems
             <div class="admin-card">
                 <p class="card-sub">Create tenant users or purge test accounts. Requires SUPER_ADMIN + setup key. New users receive a generated password (shown once) and a welcome email. Protected super-admin accounts cannot be deleted and self-deletion is blocked. Every create/delete is audit-logged.</p>
                 <div class="btn-row" style="margin-bottom:12px;">
-                    <select id="userTenantFilter" style="padding:6px 10px;border-radius:6px;border:1px solid #cbd5e1;min-width:160px;" onchange="renderUserTable()"><option value="">All tenants</option></select>
-                    <input type="search" id="userSearch" placeholder="Filter by email…" autocomplete="off" style="padding:6px 10px;border:1px solid #cbd5e1;border-radius:6px;font-size:.82rem;flex:1;min-width:180px;" oninput="filterUserTable(this.value)">
+                    <select id="userTenantFilter" style="padding:6px 10px;border-radius:6px;border:1px solid #bdccc4;min-width:160px;" onchange="renderUserTable()"><option value="">All tenants</option></select>
+                    <input type="search" id="userSearch" placeholder="Filter by email…" autocomplete="off" style="padding:6px 10px;border:1px solid #bdccc4;border-radius:6px;font-size:.82rem;flex:1;min-width:180px;" oninput="filterUserTable(this.value)">
                     <button class="btn btn-primary btn-sm" onclick="openCreateUserModal()"><i class="fas fa-user-plus"></i> Create User</button>
                     <button class="btn btn-outline btn-sm" onclick="loadUsers()"><i class="fas fa-rotate"></i> Refresh</button>
-                    <small style="margin-left:2px;color:#94a3b8;font-size:.72rem;">Generated password shown once.</small>
+                    <small style="margin-left:2px;color:#83938a;font-size:.72rem;">Generated password shown once.</small>
                 </div>
                 <div id="userList"><div class="empty-state">Not loaded. Click Refresh to load users.</div></div>
             </div>
@@ -100,12 +98,12 @@ AUTHOR: AviaSAFE Systems
 <div id="confirmModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:999;justify-content:center;align-items:center;">
     <div style="background:#fff;padding:26px;border-radius:10px;max-width:480px;width:90%;">
         <h3 style="margin:0 0 10px;color:#c5221f;"><i class="fas fa-triangle-exclamation"></i> <span id="confirmTitle">Confirm</span></h3>
-        <p id="confirmText" style="font-size:.9rem;color:#334155;line-height:1.5;"></p>
+        <p id="confirmText" style="font-size:.9rem;color:#244837;line-height:1.5;"></p>
         <div id="confirmSetupKeyWrap" style="display:none;margin-top:14px;">
-            <label for="confirmSetupKey" style="display:block;font-size:.78rem;font-weight:600;color:#475569;margin-bottom:4px;">Setup Key (SETUP_SECRET) *</label>
+            <label for="confirmSetupKey" style="display:block;font-size:.78rem;font-weight:600;color:#53685c;margin-bottom:4px;">Setup Key (SETUP_SECRET) *</label>
             <input type="password" id="confirmSetupKey" placeholder="Enter setup key to authorize this destructive action" autocomplete="off"
-                   style="width:100%;padding:9px 11px;border:1px solid #cbd5e1;border-radius:8px;font-size:.86rem;box-sizing:border-box;">
-            <small style="display:block;color:#94a3b8;font-size:.72rem;margin-top:4px;">Stored in this tab only (sessionStorage) — never sent except to verify this action.</small>
+                   style="width:100%;padding:9px 11px;border:1px solid #bdccc4;border-radius:8px;font-size:.86rem;box-sizing:border-box;">
+            <small style="display:block;color:#83938a;font-size:.72rem;margin-top:4px;">Stored in this tab only (sessionStorage) — never sent except to verify this action.</small>
             <div id="confirmSetupKeyError" style="display:none;margin-top:6px;color:#b91c1c;font-size:.78rem;"></div>
         </div>
         <div style="display:flex;gap:10px;margin-top:20px;justify-content:flex-end;">
@@ -118,11 +116,11 @@ AUTHOR: AviaSAFE Systems
 <!-- LIFECYCLE MANAGE MODAL — commercial status + date range for tenants/regulators -->
 <div id="lifecycleModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:1000;justify-content:center;align-items:center;">
     <div style="background:#fff;padding:24px;border-radius:12px;max-width:520px;width:92%;box-shadow:0 10px 30px rgba(0,0,0,.18);">
-        <h3 style="margin:0 0 4px;color:#0f172a;"><i class="fas fa-sliders" style="color:var(--color-brand-600);"></i> Manage <span id="lifecycleEntityType">Tenant</span></h3>
-        <p id="lifecycleEntityLabel" style="margin:0 0 14px;color:#64748b;font-size:.85rem;"></p>
+        <h3 style="margin:0 0 4px;color:#192f35;"><i class="fas fa-sliders" style="color:var(--color-brand-600);"></i> Manage <span id="lifecycleEntityType">Tenant</span></h3>
+        <p id="lifecycleEntityLabel" style="margin:0 0 14px;color:#65766e;font-size:.85rem;"></p>
         <div class="form-group">
             <label for="lifecycleStatus">Lifecycle Status *</label>
-            <select id="lifecycleStatus" style="width:100%;padding:9px 11px;border:1px solid #cbd5e1;border-radius:8px;font-size:.86rem;">
+            <select id="lifecycleStatus" style="width:100%;padding:9px 11px;border:1px solid #bdccc4;border-radius:8px;font-size:.86rem;">
                 <option value="demo">Demo</option>
                 <option value="trial">Trial</option>
                 <option value="active">Active</option>
@@ -130,16 +128,16 @@ AUTHOR: AviaSAFE Systems
                 <option value="retired">Retired</option>
                 <option value="cancelled">Cancelled</option>
             </select>
-            <small style="color:#94a3b8;">Demo/Trial are non-billable; Suspended blocks auth; Retired/Cancelled are terminal.</small>
+            <small style="color:#83938a;">Demo/Trial are non-billable; Suspended blocks auth; Retired/Cancelled are terminal.</small>
         </div>
         <div class="form-row">
-            <div class="form-group"><label for="lifecycleFrom">From Date</label><input type="date" id="lifecycleFrom" style="width:100%;padding:9px 11px;border:1px solid #cbd5e1;border-radius:8px;font-size:.86rem;"></div>
-            <div class="form-group"><label for="lifecycleTo">To Date</label><input type="date" id="lifecycleTo" style="width:100%;padding:9px 11px;border:1px solid #cbd5e1;border-radius:8px;font-size:.86rem;"></div>
+            <div class="form-group"><label for="lifecycleFrom">From Date</label><input type="date" id="lifecycleFrom" style="width:100%;padding:9px 11px;border:1px solid #bdccc4;border-radius:8px;font-size:.86rem;"></div>
+            <div class="form-group"><label for="lifecycleTo">To Date</label><input type="date" id="lifecycleTo" style="width:100%;padding:9px 11px;border:1px solid #bdccc4;border-radius:8px;font-size:.86rem;"></div>
         </div>
         <div style="margin-top:14px;">
-            <label for="lifecycleSetupKey" style="display:block;font-size:.78rem;font-weight:600;color:#475569;margin-bottom:4px;">Setup Key (SETUP_SECRET) *</label>
+            <label for="lifecycleSetupKey" style="display:block;font-size:.78rem;font-weight:600;color:#53685c;margin-bottom:4px;">Setup Key (SETUP_SECRET) *</label>
             <input type="password" id="lifecycleSetupKey" placeholder="Enter setup key to authorize this change" autocomplete="off"
-                   style="width:100%;padding:9px 11px;border:1px solid #cbd5e1;border-radius:8px;font-size:.86rem;box-sizing:border-box;">
+                   style="width:100%;padding:9px 11px;border:1px solid #bdccc4;border-radius:8px;font-size:.86rem;box-sizing:border-box;">
             <div id="lifecycleSetupKeyError" style="display:none;margin-top:6px;color:#b91c1c;font-size:.78rem;"></div>
         </div>
         <div style="display:flex;gap:10px;margin-top:18px;justify-content:flex-end;">
@@ -152,8 +150,8 @@ AUTHOR: AviaSAFE Systems
 <!-- CREATE / EDIT TENANT · REGULATOR MODAL — the central management hub -->
 <div id="entityModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:1000;justify-content:center;align-items:center;">
     <div style="background:#fff;padding:24px;border-radius:12px;max-width:560px;width:94%;box-shadow:0 10px 30px rgba(0,0,0,.18);max-height:92vh;overflow-y:auto;">
-        <h3 style="margin:0 0 4px;color:#0f172a;"><i class="fas fa-building" style="color:var(--color-brand-600);"></i> <span id="entityTitle">New Tenant</span></h3>
-        <p id="entitySubtitle" style="margin:0 0 14px;color:#64748b;font-size:.85rem;">Create a new operator tenant. A tenant that still exists in Postgres is updated instead of rejected.</p>
+        <h3 style="margin:0 0 4px;color:#192f35;"><i class="fas fa-building" style="color:var(--color-brand-600);"></i> <span id="entityTitle">New Tenant</span></h3>
+        <p id="entitySubtitle" style="margin:0 0 14px;color:#65766e;font-size:.85rem;">Create a new operator tenant. A tenant that still exists in Postgres is updated instead of rejected.</p>
 
         <div id="entityError" style="display:none;padding:10px 14px;background:#fef2f2;border:1px solid #fecaca;border-radius:6px;color:#b91c1c;font-size:.85rem;margin-bottom:12px;"></div>
 
@@ -161,55 +159,55 @@ AUTHOR: AviaSAFE Systems
             <div class="form-group" id="entityIdGroup">
                 <label for="entityId">Slug / ID *</label>
                 <input type="text" id="entityId"                        placeholder="e.g. operator-slug" autocomplete="off"
-                       style="width:100%;padding:9px 11px;border:1px solid #cbd5e1;border-radius:8px;font-size:.86rem;box-sizing:border-box;">
-                <small style="color:#94a3b8;">Lowercase letters, numbers and hyphens only.</small>
+                       style="width:100%;padding:9px 11px;border:1px solid #bdccc4;border-radius:8px;font-size:.86rem;box-sizing:border-box;">
+                <small style="color:#83938a;">Lowercase letters, numbers and hyphens only.</small>
             </div>
             <div class="form-group">
                 <label for="entityName">Name *</label>
                 <input type="text" id="entityName" placeholder="e.g. Operator Name" required autocomplete="off"
-                       style="width:100%;padding:9px 11px;border:1px solid #cbd5e1;border-radius:8px;font-size:.86rem;box-sizing:border-box;">
+                       style="width:100%;padding:9px 11px;border:1px solid #bdccc4;border-radius:8px;font-size:.86rem;box-sizing:border-box;">
             </div>
             <div class="form-group entityTenantOnly">
                 <label for="entityRegulator">Regulator</label>
-                <select id="entityRegulator" style="width:100%;padding:9px 11px;border:1px solid #cbd5e1;border-radius:8px;font-size:.86rem;">
+                <select id="entityRegulator" style="width:100%;padding:9px 11px;border:1px solid #bdccc4;border-radius:8px;font-size:.86rem;">
                     <option value="">— None —</option>
                 </select>
             </div>
             <div class="form-group entityTenantOnly">
                 <label for="entityKind">Service Provider Kind</label>
-                <select id="entityKind" style="width:100%;padding:9px 11px;border:1px solid #cbd5e1;border-radius:8px;font-size:.86rem;"></select>
+                <select id="entityKind" style="width:100%;padding:9px 11px;border:1px solid #bdccc4;border-radius:8px;font-size:.86rem;"></select>
             </div>
             <div class="form-group entityTenantOnly">
                 <label for="entitySafetyDept">Safety Department (code)</label>
-                <select id="entitySafetyDept" style="width:100%;padding:9px 11px;border:1px solid #cbd5e1;border-radius:8px;font-size:.86rem;">
+                <select id="entitySafetyDept" style="width:100%;padding:9px 11px;border:1px solid #bdccc4;border-radius:8px;font-size:.86rem;">
                     <option value="">— None —</option>
                 </select>
             </div>
             <div class="form-row">
                 <div class="form-group"><label for="entityCountry">Country</label>
                     <input type="text" id="entityCountry" placeholder="Country Name" autocomplete="off"
-                           style="width:100%;padding:9px 11px;border:1px solid #cbd5e1;border-radius:8px;font-size:.86rem;box-sizing:border-box;"></div>
+                           style="width:100%;padding:9px 11px;border:1px solid #bdccc4;border-radius:8px;font-size:.86rem;box-sizing:border-box;"></div>
                 <div class="form-group entityTenantOnly"><label for="entityIcao">ICAO</label>
                     <input type="text" id="entityIcao" placeholder="e.g. XXX" autocomplete="off"
-                           style="width:100%;padding:9px 11px;border:1px solid #cbd5e1;border-radius:8px;font-size:.86rem;box-sizing:border-box;"></div>
+                           style="width:100%;padding:9px 11px;border:1px solid #bdccc4;border-radius:8px;font-size:.86rem;box-sizing:border-box;"></div>
             </div>
             <div class="entityTenantOnly form-row">
                 <div class="form-group"><label for="entityContactName">Contact Person</label>
                     <input type="text" id="entityContactName" placeholder="Full name" autocomplete="off"
-                           style="width:100%;padding:9px 11px;border:1px solid #cbd5e1;border-radius:8px;font-size:.86rem;box-sizing:border-box;"></div>
+                           style="width:100%;padding:9px 11px;border:1px solid #bdccc4;border-radius:8px;font-size:.86rem;box-sizing:border-box;"></div>
                 <div class="form-group"><label for="entityContactEmail">Contact Email</label>
                     <input type="email" id="entityContactEmail" placeholder="user@tenant.com" autocomplete="off"
-                           style="width:100%;padding:9px 11px;border:1px solid #cbd5e1;border-radius:8px;font-size:.86rem;box-sizing:border-box;"></div>
+                           style="width:100%;padding:9px 11px;border:1px solid #bdccc4;border-radius:8px;font-size:.86rem;box-sizing:border-box;"></div>
             </div>
             <div class="form-group entityRegOnly">
                 <label for="entityDomain">Regulator Email Domain</label>
                 <input type="text" id="entityDomain" placeholder="e.g. authority.gov.xx" autocomplete="off"
-                       style="width:100%;padding:9px 11px;border:1px solid #cbd5e1;border-radius:8px;font-size:.86rem;box-sizing:border-box;">
+                       style="width:100%;padding:9px 11px;border:1px solid #bdccc4;border-radius:8px;font-size:.86rem;box-sizing:border-box;">
             </div>
             <div class="form-group">
-                <label for="entitySetupKey" style="display:block;font-size:.78rem;font-weight:600;color:#475569;margin-bottom:4px;">Setup Key (SETUP_SECRET) *</label>
+                <label for="entitySetupKey" style="display:block;font-size:.78rem;font-weight:600;color:#53685c;margin-bottom:4px;">Setup Key (SETUP_SECRET) *</label>
                 <input type="password" id="entitySetupKey" placeholder="Enter setup key" autocomplete="off"
-                       style="width:100%;padding:9px 11px;border:1px solid #cbd5e1;border-radius:8px;font-size:.86rem;box-sizing:border-box;">
+                       style="width:100%;padding:9px 11px;border:1px solid #bdccc4;border-radius:8px;font-size:.86rem;box-sizing:border-box;">
             </div>
             <div style="display:flex;gap:10px;margin-top:18px;justify-content:flex-end;">
                 <button type="button" class="btn" onclick="closeEntityModal()">Cancel</button>
@@ -229,15 +227,15 @@ AUTHOR: AviaSAFE Systems
 <!-- EDIT USER MODAL — change role/tenant/department/display name of an existing account -->
 <div id="editUserModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:1000;justify-content:center;align-items:center;">
     <div style="background:#fff;padding:24px;border-radius:12px;max-width:540px;width:92%;box-shadow:0 10px 30px rgba(0,0,0,.18);">
-        <h3 style="margin:0 0 4px;color:#0f172a;"><i class="fas fa-user-pen" style="color:#0ea5e9;"></i> Edit User</h3>
-        <p style="margin:0 0 14px;color:#64748b;font-size:.85rem;" id="editUserEmailLabel"></p>
+        <h3 style="margin:0 0 4px;color:#192f35;"><i class="fas fa-user-pen" style="color:#1d5949;"></i> Edit User</h3>
+        <p style="margin:0 0 14px;color:#65766e;font-size:.85rem;" id="editUserEmailLabel"></p>
 
         <div id="editUserError" style="display:none;padding:10px 14px;background:#fef2f2;border:1px solid #fecaca;border-radius:6px;color:#b91c1c;font-size:.85rem;margin-bottom:12px;"></div>
 
         <form id="editUserForm">
             <div class="form-group">
                 <label for="editUserRole">Role *</label>
-                <select id="editUserRole" style="width:100%;padding:9px 11px;border:1px solid #cbd5e1;border-radius:8px;font-size:.86rem;">
+                <select id="editUserRole" style="width:100%;padding:9px 11px;border:1px solid #bdccc4;border-radius:8px;font-size:.86rem;">
                     <option value="SUPER_ADMIN">Super Admin</option>
                     <option value="STATE_SMD">State SMD (Regulator)</option>
                     <option value="TENANT_ADMIN">Tenant Admin (Safety Manager)</option>
@@ -248,25 +246,25 @@ AUTHOR: AviaSAFE Systems
             </div>
             <div class="form-group">
                 <label for="editUserTenant">Tenant</label>
-                <select id="editUserTenant" style="width:100%;padding:9px 11px;border:1px solid #cbd5e1;border-radius:8px;font-size:.86rem;">
+                <select id="editUserTenant" style="width:100%;padding:9px 11px;border:1px solid #bdccc4;border-radius:8px;font-size:.86rem;">
                     <option value="">— No tenant / cross-tenant —</option>
                 </select>
             </div>
             <div class="form-group">
                 <label for="editUserDepartment">Department</label>
-                <select id="editUserDepartment" style="width:100%;padding:9px 11px;border:1px solid #cbd5e1;border-radius:8px;font-size:.86rem;">
+                <select id="editUserDepartment" style="width:100%;padding:9px 11px;border:1px solid #bdccc4;border-radius:8px;font-size:.86rem;">
                     <option value="">— None / not department-scoped —</option>
                 </select>
             </div>
             <div class="form-group">
                 <label for="editUserDisplayName">Display Name</label>
                 <input type="text" id="editUserDisplayName" placeholder="Full name" autocomplete="off"
-                       style="width:100%;padding:9px 11px;border:1px solid #cbd5e1;border-radius:8px;font-size:.86rem;box-sizing:border-box;">
+                       style="width:100%;padding:9px 11px;border:1px solid #bdccc4;border-radius:8px;font-size:.86rem;box-sizing:border-box;">
             </div>
             <div class="form-group">
-                <label for="editUserSetupKey" style="display:block;font-size:.78rem;font-weight:600;color:#475569;margin-bottom:4px;">Setup Key (SETUP_SECRET) *</label>
+                <label for="editUserSetupKey" style="display:block;font-size:.78rem;font-weight:600;color:#53685c;margin-bottom:4px;">Setup Key (SETUP_SECRET) *</label>
                 <input type="password" id="editUserSetupKey" placeholder="Enter setup key" autocomplete="off"
-                       style="width:100%;padding:9px 11px;border:1px solid #cbd5e1;border-radius:8px;font-size:.86rem;box-sizing:border-box;">
+                       style="width:100%;padding:9px 11px;border:1px solid #bdccc4;border-radius:8px;font-size:.86rem;box-sizing:border-box;">
             </div>
             <div style="display:flex;gap:10px;margin-top:18px;justify-content:flex-end;">
                 <button type="button" class="btn" onclick="closeEditUserModal()">Cancel</button>
@@ -279,8 +277,8 @@ AUTHOR: AviaSAFE Systems
 <!-- CREATE USER MODAL — add a tenant-scoped Firebase Auth user -->
 <div id="createUserModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:1000;justify-content:center;align-items:center;">
     <div style="background:#fff;padding:24px;border-radius:12px;max-width:540px;width:92%;box-shadow:0 10px 30px rgba(0,0,0,.18);">
-        <h3 style="margin:0 0 4px;color:#0f172a;"><i class="fas fa-user-plus" style="color:#0ea5e9;"></i> Create User</h3>
-        <p style="margin:0 0 14px;color:#64748b;font-size:.85rem;">Create a new user account for a tenant. A one-time password is generated and shown once.</p>
+        <h3 style="margin:0 0 4px;color:#192f35;"><i class="fas fa-user-plus" style="color:#1d5949;"></i> Create User</h3>
+        <p style="margin:0 0 14px;color:#65766e;font-size:.85rem;">Create a new user account for a tenant. A one-time password is generated and shown once.</p>
 
         <div id="createUserError" style="display:none;padding:10px 14px;background:#fef2f2;border:1px solid #fecaca;border-radius:6px;color:#b91c1c;font-size:.85rem;margin-bottom:12px;"></div>
 
@@ -288,12 +286,12 @@ AUTHOR: AviaSAFE Systems
             <div class="form-group">
                 <label for="newUserEmail">Email *</label>
                 <input type="email" id="newUserEmail" placeholder="user@tenant.com" required autocomplete="off"
-                       style="width:100%;padding:9px 11px;border:1px solid #cbd5e1;border-radius:8px;font-size:.86rem;box-sizing:border-box;">
+                       style="width:100%;padding:9px 11px;border:1px solid #bdccc4;border-radius:8px;font-size:.86rem;box-sizing:border-box;">
             </div>
             <div style="margin-top:12px;">
                 <div class="form-group">
                     <label for="newUserTenant">Tenant *</label>
-                    <select id="newUserTenant" required style="width:100%;padding:9px 11px;border:1px solid #cbd5e1;border-radius:8px;font-size:.86rem;">
+                    <select id="newUserTenant" required style="width:100%;padding:9px 11px;border:1px solid #bdccc4;border-radius:8px;font-size:.86rem;">
                         <option value="">— Select tenant —</option>
                     </select>
                 </div>
@@ -301,7 +299,7 @@ AUTHOR: AviaSAFE Systems
             <div style="margin-top:12px;">
                 <div class="form-group">
                     <label for="newUserRole">Role *</label>
-                    <select id="newUserRole" required style="width:100%;padding:9px 11px;border:1px solid #cbd5e1;border-radius:8px;font-size:.86rem;">
+                    <select id="newUserRole" required style="width:100%;padding:9px 11px;border:1px solid #bdccc4;border-radius:8px;font-size:.86rem;">
                         <option value="SUPER_ADMIN">Super Admin</option>
                         <option value="STATE_SMD">State SMD (Regulator)</option>
                         <option value="TENANT_ADMIN">Tenant Admin (Safety Manager)</option>
@@ -309,29 +307,29 @@ AUTHOR: AviaSAFE Systems
                         <option value="OFFICER">Officer</option>
                         <option value="ACCOUNTABLE_EXECUTIVE">Accountable Executive</option>
                     </select>
-                    <small style="color:#94a3b8;">Canonical roles (2B.4b).</small>
+                    <small style="color:#83938a;">Canonical roles (2B.4b).</small>
                 </div>
             </div>
             <div style="margin-top:12px;">
                 <div class="form-group">
                     <label for="newUserName">Display Name</label>
                     <input type="text" id="newUserName" placeholder="Full name" autocomplete="off"
-                           style="width:100%;padding:9px 11px;border:1px solid #cbd5e1;border-radius:8px;font-size:.86rem;box-sizing:border-box;">
+                           style="width:100%;padding:9px 11px;border:1px solid #bdccc4;border-radius:8px;font-size:.86rem;box-sizing:border-box;">
                 </div>
             </div>
             <div style="margin-top:12px;">
                 <div class="form-group">
                     <label for="newUserDepartment">Department</label>
-                    <select id="newUserDepartment" style="width:100%;padding:9px 11px;border:1px solid #cbd5e1;border-radius:8px;font-size:.86rem;">
+                    <select id="newUserDepartment" style="width:100%;padding:9px 11px;border:1px solid #bdccc4;border-radius:8px;font-size:.86rem;">
                         <option value="">— None / not department-scoped —</option>
                     </select>
-                    <small style="color:#94a3b8;">Leave empty for the Accountable Executive or SUPER_ADMIN.</small>
+                    <small style="color:#83938a;">Leave empty for the Accountable Executive or SUPER_ADMIN.</small>
                 </div>
             </div>
             <div style="margin-top:14px;">
-                <label for="createUserSetupKey" style="display:block;font-size:.78rem;font-weight:600;color:#475569;margin-bottom:4px;">Setup Key (SETUP_SECRET) *</label>
+                <label for="createUserSetupKey" style="display:block;font-size:.78rem;font-weight:600;color:#53685c;margin-bottom:4px;">Setup Key (SETUP_SECRET) *</label>
                 <input type="password" id="createUserSetupKey" placeholder="Enter setup key" required autocomplete="off"
-                       style="width:100%;padding:9px 11px;border:1px solid #cbd5e1;border-radius:8px;font-size:.86rem;box-sizing:border-box;">
+                       style="width:100%;padding:9px 11px;border:1px solid #bdccc4;border-radius:8px;font-size:.86rem;box-sizing:border-box;">
             </div>
             <div style="display:flex;gap:10px;margin-top:18px;justify-content:flex-end;">
                 <button type="button" class="btn" onclick="closeCreateUserModal()">Cancel</button>
@@ -343,9 +341,9 @@ AUTHOR: AviaSAFE Systems
             <i class="fas fa-check-circle" style="font-size:2.5rem;color:#166534;"></i>
             <h4 style="margin:8px 0 4px;color:#166534;">User Created Successfully!</h4>
             <p style="color:#065f46;font-size:.85rem;" id="newUserSuccessMessage"></p>
-            <div style="background:#f8fafc;padding:12px;border-radius:6px;margin:12px 0;border:1px solid #e2e8f0;">
+            <div style="background:#f4f6f3;padding:12px;border-radius:6px;margin:12px 0;border:1px solid #d7e4dc;">
                 <strong>One-Time Password:</strong>
-                <div id="newUserPassword" style="font-family:monospace;font-size:1.1rem;color:#0b2a42;user-select:all;"></div>
+                <div id="newUserPassword" style="font-family:monospace;font-size:1.1rem;color:#192f35;user-select:all;"></div>
             </div>
             <button class="btn btn-outline btn-sm" onclick="createUserDone()">
                 <i class="fas fa-check"></i> Done
@@ -468,7 +466,7 @@ function readModules(row) {
 function buildTenantRow(t) {
     var c = t.counts || {};
     var reg = t.regulator_name
-        ? esc(t.regulator_name) + (t.regulator_country ? ' <span style="color:#94a3b8;">(' + esc(t.regulator_country) + ')</span>' : '')
+        ? esc(t.regulator_name) + (t.regulator_country ? ' <span style="color:#83938a;">(' + esc(t.regulator_country) + ')</span>' : '')
         : esc(t.regulator_id || '—');
     var contract = (t.contract && (t.contract.start_date || t.contract.end_date))
         ? esc((t.contract.start_date || '?') + ' \u2192 ' + (t.contract.end_date || '?'))
@@ -508,7 +506,7 @@ function statusBadge(st) {
     if (st === 'ACTIVE') return '<span class="badge badge-active">ACTIVE</span>';
     if (st === 'SUSPENDED') return '<span class="badge badge-danger">SUSPENDED</span>';
     if (st === 'RETIRED') return '<span class="badge" style="background:#fee2e2;color:#7f1d1d;">RETIRED</span>';
-    if (st === 'CANCELLED' || st === 'CANCELED') return '<span class="badge" style="background:#f1f5f9;color:#475569;">CANCELLED</span>';
+    if (st === 'CANCELLED' || st === 'CANCELED') return '<span class="badge" style="background:#edf2ed;color:#53685c;">CANCELLED</span>';
     if (st === 'INACTIVE') return '<span class="badge badge-inactive">INACTIVE</span>';
     return '<span class="badge badge-info">' + esc(st || '—') + '</span>';
 }
@@ -528,7 +526,7 @@ function regulatorBadge(st) {
     if (st === 'active') return '<span class="badge badge-success">active</span>';
     if (st === 'suspended') return '<span class="badge badge-danger">suspended</span>';
     if (st === 'retired') return '<span class="badge" style="background:#fee2e2;color:#7f1d1d;">retired</span>';
-    if (st === 'cancelled' || st === 'canceled') return '<span class="badge" style="background:#f1f5f9;color:#475569;">cancelled</span>';
+    if (st === 'cancelled' || st === 'canceled') return '<span class="badge" style="background:#edf2ed;color:#53685c;">cancelled</span>';
     return '<span class="badge badge-info">' + esc(st || '—') + '</span>';
 }
 
@@ -656,10 +654,10 @@ function renderUserTable() {
             '<td><code>' + esc(u.role || '—') + '</code></td>' +
             '<td><code>' + esc(u.tenant_id || '—') + '</code></td>' +
             '<td>' + esc(u.department || '—') + '</td>' +
-            '<td style="font-size:.72rem;color:#64748b;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="' + uidEsc + '">' + uidEsc + '</td>' +
+            '<td style="font-size:.72rem;color:#65766e;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="' + uidEsc + '">' + uidEsc + '</td>' +
             '<td><div style="display:flex;gap:6px;flex-wrap:wrap;"><button class="btn btn-outline btn-sm" onclick="openEditUserModal(\'' + esc(u.uid).replace(/'/g, "\\'") + '\', \'' + emailEsc.replace(/'/g, "\\'") + '\', \'' + esc(u.role || '').replace(/'/g, "\\'") + '\', \'' + esc(u.tenant_id || '').replace(/'/g, "\\'") + '\', \'' + esc(u.department || '').replace(/'/g, "\\'") + '\', \'' + esc(u.display_name || '').replace(/'/g, "\\'") + '\')"><i class="fas fa-pen"></i> Edit</button><button class="btn btn-outline btn-sm" onclick="requestResetPassword(\'' + emailEsc.replace(/'/g, "\\'") + '\', \'' + uidEsc.replace(/'/g, "\\'") + '\')"><i class="fas fa-key"></i> Reset Password</button><button class="btn btn-danger btn-sm" onclick="requestDeleteUser(\'' + emailEsc.replace(/'/g, "\\'") + '\', \'' + uidEsc.replace(/'/g, "\\'") + '\')"><i class="fas fa-trash"></i> Delete</button></div></td></tr>';
     });
-    html += '</tbody></table></div><div style="margin-top:8px;color:#94a3b8;font-size:.75rem;">' + filtered.length + ' of ' + CACHED_USERS.length + ' users shown.</div>';
+    html += '</tbody></table></div><div style="margin-top:8px;color:#83938a;font-size:.75rem;">' + filtered.length + ' of ' + CACHED_USERS.length + ' users shown.</div>';
     el.innerHTML = html;
 }
 

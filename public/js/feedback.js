@@ -87,7 +87,7 @@ AUTHOR: AviaSAFE Systems
             padding: 0.65rem 1.1rem;\
             border: none;\
             border-radius: 999px;\
-            background: #1a6b8a;\
+            background: #1d5949;\
             color: #fff;\
             font-size: 0.85rem;\
             font-weight: 600;\
@@ -95,7 +95,7 @@ AUTHOR: AviaSAFE Systems
             box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);\
             transition: background 0.15s ease;\
         }\
-        #feedbackWidgetHost .feedback-fab:hover { background: #0b2a42; }\
+        #feedbackWidgetHost .feedback-fab:hover { background: #192f35; }\
         #feedbackWidgetHost .feedback-modal {\
             position: fixed;\
             inset: 0;\
@@ -134,23 +134,23 @@ AUTHOR: AviaSAFE Systems
         }\
         #feedbackWidgetHost .feedback-card-close:hover {\
             background: #f0f0f0;\
-            color: #1a6b8a;\
+            color: #1d5949;\
         }\
         #feedbackWidgetHost .feedback-card h3 {\
             margin: 0 0 0.25rem;\
             font-size: 1.1rem;\
-            color: #0f172a;\
+            color: #192f35;\
         }\
         #feedbackWidgetHost .feedback-card .feedback-sub {\
             margin: 0 0 1rem;\
             font-size: 0.8rem;\
-            color: #64748b;\
+            color: #65766e;\
         }\
         #feedbackWidgetHost .feedback-card label {\
             display: block;\
             font-size: 0.8rem;\
             font-weight: 600;\
-            color: #334155;\
+            color: #244837;\
             margin: 0.75rem 0 0.25rem;\
         }\
         #feedbackWidgetHost .feedback-card input,\
@@ -158,7 +158,7 @@ AUTHOR: AviaSAFE Systems
         #feedbackWidgetHost .feedback-card select {\
             width: 100%;\
             padding: 0.5rem 0.7rem;\
-            border: 1px solid #cbd5e1;\
+            border: 1px solid #bdccc4;\
             border-radius: 6px;\
             font-size: 0.9rem;\
             box-sizing: border-box;\
@@ -177,9 +177,9 @@ AUTHOR: AviaSAFE Systems
             font-weight: 600;\
             cursor: pointer;\
         }\
-        #feedbackWidgetHost .feedback-btn-primary { background: #1a6b8a; color: #fff; }\
-        #feedbackWidgetHost .feedback-btn-primary:hover { background: #0b2a42; }\
-        #feedbackWidgetHost .feedback-btn-cancel { background: #f1f5f9; color: #334155; }\
+        #feedbackWidgetHost .feedback-btn-primary { background: #1d5949; color: #fff; }\
+        #feedbackWidgetHost .feedback-btn-primary:hover { background: #192f35; }\
+        #feedbackWidgetHost .feedback-btn-cancel { background: #edf2ed; color: #244837; }\
         #feedbackWidgetHost .feedback-msg {\
             margin-top: 0.75rem;\
             font-size: 0.85rem;\
@@ -187,7 +187,7 @@ AUTHOR: AviaSAFE Systems
         }\
         #feedbackWidgetHost .feedback-msg.error { color: #b91c1c; }\
         #feedbackWidgetHost .feedback-stars { font-size: 1.4rem; cursor: pointer; }\
-        #feedbackWidgetHost .feedback-stars span { color: #cbd5e1; transition: color 0.1s; }\
+        #feedbackWidgetHost .feedback-stars span { color: #bdccc4; transition: color 0.1s; }\
         #feedbackWidgetHost .feedback-stars span.active { color: #f59e0b; }';
 
     function injectStyle() {

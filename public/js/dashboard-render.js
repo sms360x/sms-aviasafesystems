@@ -87,7 +87,7 @@
                 : '<span class="badge b-tolerable">No data</span>';
             return '<div class="stat-card"><div class="num">' + fmtPct(pct) + '</div><div class="lbl">' + meta.label + '</div>' +
                 '<div style="margin-top:0.5rem;">' + sub + '</div>' +
-                '<div style="color:#64748b;font-size:12px;margin-top:0.4rem;">' + meta.desc + '</div></div>';
+                '<div style="color:#65766e;font-size:12px;margin-top:0.4rem;">' + meta.desc + '</div></div>';
         }).join('');
     }
 
@@ -110,19 +110,19 @@
         if (strengths.length) {
             html += '<div style="margin-bottom:1rem;">' +
                 '<h4 style="color:#1e7e34;margin:0 0 8px;"><i class="fas fa-thumbs-up"></i> Strengths</h4>' +
-                '<ul style="margin:0;padding-left:18px;font-size:13px;color:#0b2a42;">' + strengths.map(function (s) { return '<li>' + s + '</li>'; }).join('') + '</ul></div>';
+                '<ul style="margin:0;padding-left:18px;font-size:13px;color:#192f35;">' + strengths.map(function (s) { return '<li>' + s + '</li>'; }).join('') + '</ul></div>';
         }
 
         if (opportunities.length) {
             html += '<div style="margin-bottom:1rem;">' +
                 '<h4 style="color:#c25400;margin:0 0 8px;"><i class="fas fa-bullseye"></i> Improvement Opportunities</h4>' +
-                '<ul style="margin:0;padding-left:18px;font-size:13px;color:#0b2a42;">' + opportunities.map(function (o) { return '<li>' + o + '</li>'; }).join('') + '</ul></div>';
+                '<ul style="margin:0;padding-left:18px;font-size:13px;color:#192f35;">' + opportunities.map(function (o) { return '<li>' + o + '</li>'; }).join('') + '</ul></div>';
         }
 
         if (!recs.length) {
             html += '<div class="success-banner" style="background:#e6f4ea;color:#1e7e34;padding:12px 16px;border-radius:8px;font-weight:600;">All pillars scored ≥70% in the selected period — no improvement actions required.</div>';
         } else {
-            html += '<h4 style="color:#0b2a42;margin:0 0 8px;"><i class="fas fa-wand-magic-sparkles"></i> Priority Improvement Actions</h4>';
+            html += '<h4 style="color:#192f35;margin:0 0 8px;"><i class="fas fa-wand-magic-sparkles"></i> Priority Improvement Actions</h4>';
             html += '<div class="section-sub" style="margin-bottom:12px;">ICAO-aligned actions targeting pillars scoring below 70%.</div>';
             html += recs.map(function (r) {
                 var tierBadgeHtml = r.tier === 'critical'
@@ -131,22 +131,22 @@
                 var actions = (r.actions || []).map(function (a) {
                     return '<li style="margin-bottom:8px;">' +
                         '<strong>' + a.action + '</strong>' +
-                        '<div style="color:#475569;font-size:12px;margin-top:2px;">' +
+                        '<div style="color:#53685c;font-size:12px;margin-top:2px;">' +
                         '<span class="badge ' + (a.priority === 'high' ? 'b-intolerable' : a.priority === 'medium' ? 'b-tolerable' : 'b-acceptable') + '" style="text-transform:uppercase;">' + (a.priority || '—') + '</span> ' +
                         (a.icao_reference || '') + ' · Owner: ' + (a.owner || '—') + ' · ' + (a.timeframe || '') +
                         '</div>' +
-                        '<div style="color:#64748b;font-size:12px;margin-top:2px;">Success metric: ' + (a.success_metric || '—') + '</div>' +
+                        '<div style="color:#65766e;font-size:12px;margin-top:2px;">Success metric: ' + (a.success_metric || '—') + '</div>' +
                         '</li>';
                 }).join('');
-                return '<div style="border:1px solid #e2e8f0;border-left:4px solid ' + (r.tier === 'critical' ? '#dc3545' : '#f57c00') + ';border-radius:8px;padding:14px 16px;margin-bottom:12px;background:#fff;">' +
+                return '<div style="border:1px solid #d7e4dc;border-left:4px solid ' + (r.tier === 'critical' ? '#dc3545' : '#f57c00') + ';border-radius:8px;padding:14px 16px;margin-bottom:12px;background:#fff;">' +
                     '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">' +
-                    '<strong style="font-size:15px;color:#0b2a42;">' + r.pillar_name + ' — ' + r.score_pct + '%</strong>' +
+                    '<strong style="font-size:15px;color:#192f35;">' + r.pillar_name + ' — ' + r.score_pct + '%</strong>' +
                     tierBadgeHtml +
                     '</div>' +
-                    '<p style="margin:8px 0;color:#475569;font-size:13px;">' + (r.summary || '') + '</p>' +
-                    (r.root_causes && r.root_causes.length ? '<div style="font-size:12px;color:#64748b;margin-bottom:8px;"><strong>Root causes:</strong> ' + r.root_causes.join('; ') + '</div>' : '') +
+                    '<p style="margin:8px 0;color:#53685c;font-size:13px;">' + (r.summary || '') + '</p>' +
+                    (r.root_causes && r.root_causes.length ? '<div style="font-size:12px;color:#65766e;margin-bottom:8px;"><strong>Root causes:</strong> ' + r.root_causes.join('; ') + '</div>' : '') +
                     '<ul style="margin:0;padding-left:18px;list-style:disc;font-size:13px;">' + actions + '</ul>' +
-                    (r.kpi_target ? '<div style="margin-top:8px;font-size:12px;color:#1a6b8a;"><strong>Target:</strong> raise to ≥' + r.kpi_target + '%</div>' : '') +
+                    (r.kpi_target ? '<div style="margin-top:8px;font-size:12px;color:#1d5949;"><strong>Target:</strong> raise to ≥' + r.kpi_target + '%</div>' : '') +
                     '</div>';
             }).join('');
         }

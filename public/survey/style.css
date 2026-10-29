@@ -9,16 +9,16 @@
 
 :root {
     /* ── ICAO OFFICIAL COLOR PALETTE ── */
-    --navy:    #002F6C;    /* Deep Corporate Blue */
-    --blue:    #0056B3;    /* Secondary Navigation Blue */
-    --sky:     #00A3E0;    /* Aviation Cyan / Focus Highlight */
+    --navy:    #174e48;    /* Deep Corporate Blue */
+    --blue:    #235a4b;    /* Secondary Navigation Blue */
+    --sky:     #329580;    /* Aviation Cyan / Focus Highlight */
     --accent:  #F0A500;    /* High-Visibility Warning Gold */
     
     /* ── SYSTEM MATRIX NEUTRALS ── */
-    --light:   #F8FAFC;    
-    --border:  #E2E8F0;    
-    --text:    #1E293B;    
-    --muted:   #64748B;    
+    --light:   #f4f6f3;
+    --border:  #d7e4dc;
+    --text:    #192f35;
+    --muted:   #65766e;
     --white:   #FFFFFF;    
     
     /* ── STRUCTURAL ASSIGNMENTS ── */
@@ -27,7 +27,7 @@
 
 /* ── BASE TYPOGRAPHY & RESET ── */
 body {
-    font-family: 'Open Sans', -apple-system, sans-serif;
+    font-family: 'DM Sans', -apple-system, sans-serif;
     background-color: var(--light);
     color: var(--text);
     line-height: 1.6;
@@ -36,7 +36,7 @@ body {
 }
 
 h1, h2, h3 {
-    font-family: 'Roboto', -apple-system, sans-serif;
+    font-family: 'DM Sans', -apple-system, sans-serif;
     font-weight: 600;
     color: var(--navy);
     letter-spacing: -0.02em;
@@ -86,7 +86,7 @@ h1, h2, h3 {
     font-size: 0.8rem;
     font-weight: 600;
     color: var(--muted);
-    background: #F1F5F9;
+    background: #edf2ed;
     padding: 0.3rem 0.8rem;
     border-radius: 20px;
 }
@@ -400,7 +400,7 @@ select:focus, textarea:focus {
 .status-alert-box-loading {
     margin-top: 1.5rem;
     padding: 1rem;
-    background: #E0F2FE;
+    background: #e9f0e9;
     color: var(--blue);
     font-weight: 600;
     border-radius: var(--radius);

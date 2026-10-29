@@ -38,7 +38,7 @@ body {
     margin-top: 0;
     padding: 20px 30px 20px;
     min-height: 100vh;
-    background: #f5f7fa;
+    background: #f4f6f3;
     flex: 1;
 }
 
@@ -51,7 +51,7 @@ body {
 .page-hero h1 {
     font-size: 22px;
     font-weight: 600;
-    color: #1a237e;
+    color: #174e48;
     margin: 0;
 }
 .page-hero .subtitle {
@@ -70,7 +70,7 @@ body {
     font-size: 20px;
     font-weight: 600;
     margin: 0;
-    color: #1a237e;
+    color: #174e48;
 }
 .page-header .subtitle {
     font-size: 13px;
@@ -80,12 +80,12 @@ body {
 
 /* ===== FOOTER ===== */
 .app-footer {
-    background: #e8f0fe;
+    background: #e9f0e9;
     border-top: 2px solid #ffd700;
     padding: 16px 20px;
     text-align: center;
     font-size: 14px;
-    color: #1a237e;
+    color: #174e48;
     min-height: 56px;
     display: flex;
     align-items: center;
@@ -132,7 +132,7 @@ body {
 
 .feedback-btn {
     background: linear-gradient(135deg, #ffd700 0%, #f7b500 100%);
-    color: #1a237e;
+    color: #174e48;
     border: none;
     padding: 8px 16px;
     border-radius: 6px;
@@ -214,14 +214,14 @@ body {
 }
 .feedback-close:hover {
     background: #f0f0f0;
-    color: #1a237e;
+    color: #174e48;
 }
 
 .feedback-modal-content h2 {
     margin: 0 0 20px;
     font-size: 20px;
     font-weight: 700;
-    color: #1a237e;
+    color: #174e48;
 }
 
 .feedback-rating {
@@ -279,14 +279,14 @@ body {
     border-radius: 6px;
     font-size: 14px;
     font-family: inherit;
-    color: #1a237e;
+    color: #174e48;
     background: #ffffff;
     transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 .feedback-field input:focus,
 .feedback-field textarea:focus {
     outline: none;
-    border-color: #1a237e;
+    border-color: #174e48;
     box-shadow: 0 0 0 3px rgba(26, 35, 126, 0.15);
 }
 .feedback-field textarea {
@@ -323,7 +323,7 @@ body {
     border-color: #bbb;
 }
 .feedback-btn-submit {
-    background: linear-gradient(135deg, #1a237e 0%, #0d1b5e 100%);
+    background: linear-gradient(135deg, #174e48 0%, #0d1b5e 100%);
     color: #ffffff;
     border: none;
     box-shadow: 0 2px 8px rgba(26, 35, 126, 0.3);

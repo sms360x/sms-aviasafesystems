@@ -1,0 +1,62 @@
+/* Shared ETL360X visual identity. Load after page styles.
+   Risk, warning, danger and success tokens deliberately retain their semantics. */
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;600;700;800&display=swap');
+:root, [data-tenant] {
+ --font-family: 'DM Sans', sans-serif;
+ --font-heading: 'Manrope', sans-serif;
+ --color-primary: #1d5949;
+ --color-primary-dark: #174e48;
+ --color-primary-light: #e9f0e9;
+ --color-accent: #1d5949;
+ --color-accent-light: #bdd5c9;
+ --color-focus: #235a4b;
+ --color-bg: #f4f6f3;
+ --color-surface: #fff;
+ --color-border: #d7e4dc;
+ --color-border-light: #edf2ed;
+ --color-text: #192f35;
+ --color-text-strong: #192f35;
+ --color-text-muted: #65766e;
+ --color-gray-50: #f4f6f3;
+ --color-gray-100: #edf2ed;
+ --color-gray-700: #65766e;
+ --color-gray-900: #192f35;
+ --exec-bg: #f4f6f3;
+ --exec-border: #d7e4dc;
+ --exec-accent: #1d5949;
+ --exec-accent-soft: #e9f0e9;
+ --exec-text-primary: #192f35;
+ --exec-text-secondary: #53685c;
+ --exec-text-muted: #65766e;
+ --shell-gold: #bdd5c9;
+ --hero-gradient: linear-gradient(135deg, #e9f0e9, #f4f6f3);
+}
+html, body, body.executive-layout, button, input, select, textarea,
+.font-sans, .exec-sidebar, .app-header, .app-footer {
+ font-family: 'DM Sans', sans-serif !important;
+}
+h1, h2, h3, h4, h5, h6, .exec-sidebar-brand, .header-brand {
+ font-family: 'Manrope', sans-serif !important;
+}
+/* Preserve icon fonts and monospace identifiers by avoiding universal font rules. */
+body { background-color: var(--color-bg); }
+::selection { background: #bdd5c9; color: #192f35; }
+:where(button, a, input, select, textarea):focus-visible { outline: 3px solid #8bbdb0; outline-offset: 3px; }
+.exec-nav-item.active { background: var(--exec-accent); color: #fff; }
+.exec-nav-item:hover:not(.active) { background: #edf2ed; }
+.exec-topbar, .exec-sidebar { background: #fbfcfa; }
+/* Legacy utilities used by page templates and generated dialogs. */
+.text-blue-500, .text-blue-600, .text-sky-500, .text-sky-600 { color: #235a4b !important; }
+.bg-blue-500, .bg-blue-600, .bg-sky-500, .bg-sky-600 { background-color: #1d5949 !important; }
+.bg-blue-50, .bg-blue-100, .bg-sky-50, .bg-sky-100 { background-color: #e9f0e9 !important; }
+.border-blue-500, .border-blue-600 { border-color: #235a4b !important; }
+
+/* Keep marketing copy legible against the forest-green login panel. */
+.login-brand-panel h2 { color: #fff; }
+/* Wider heading glyphs must not force dashboard cards beyond a phone viewport. */
+.exec-main, .exec-card, .exec-bento > *, .exec-topbar-search { min-width: 0; }
+@media (max-width: 600px) {
+ .exec-risk-matrix { grid-template-columns: 72px repeat(5, minmax(0, 1fr)); }
+ .exec-risk-axis-label { min-width: 0; overflow-wrap: anywhere; font-size: .58rem; }
+ .exec-topbar-search { display: none; }
+}

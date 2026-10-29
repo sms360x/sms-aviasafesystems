@@ -4,33 +4,33 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CAN Detail - AviaSAFE</title>
-<link rel="stylesheet" href="/css/variables.css">
+<link rel="stylesheet" href="/css/variables.css?brand=20261028">
 <link rel="stylesheet" href="/css/main.css">
-<link rel="stylesheet" href="/css/can-cap-print.css">
-<link rel="stylesheet" href="/css/srm.css">
-<link rel="stylesheet" href="/css/help-drawer.css">
+<link rel="stylesheet" href="/css/can-cap-print.css?brand=20261028">
+<link rel="stylesheet" href="/css/srm.css?brand=20261028">
+<link rel="stylesheet" href="/css/help-drawer.css?brand=20261028">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body { background: #f1f5f9; font-family: 'Inter', system-ui, -apple-system, sans-serif; color: #0b2a42; margin: 0; }
+        body { background: #edf2ed; font-family: 'DM Sans', system-ui, -apple-system, sans-serif; color: #192f35; margin: 0; }
         .page { max-width: 900px; margin: 0 auto; padding: 1.5rem; }
-        .back-link { display: inline-flex; align-items: center; gap: 0.5rem; color: #1a6b8a; font-size: 0.875rem; margin-bottom: 1rem; text-decoration: none; }
+        .back-link { display: inline-flex; align-items: center; gap: 0.5rem; color: #1d5949; font-size: 0.875rem; margin-bottom: 1rem; text-decoration: none; }
         .back-link:hover { text-decoration: underline; }
         .card { background: #fff; border-radius: 10px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); padding: 1.5rem; margin-bottom: 1.25rem; }
-        .card h2 { font-size: 1rem; color: #0b2a42; margin: 0 0 1rem; display: flex; align-items: center; gap: 0.5rem; }
+        .card h2 { font-size: 1rem; color: #192f35; margin: 0 0 1rem; display: flex; align-items: center; gap: 0.5rem; }
         .card h2 i { width: 1.25rem; text-align: center; }
-        .help-link { display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.72rem; font-weight: 600; color: #1a6b8a; cursor: pointer; border: 1px solid #cbd5e1; border-radius: 999px; padding: 0.15rem 0.6rem; background: #fff; }
-        .help-link:hover { background: #e8f0f8; border-color: #1a6b8a; }
+        .help-link { display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.72rem; font-weight: 600; color: #1d5949; cursor: pointer; border: 1px solid #bdccc4; border-radius: 999px; padding: 0.15rem 0.6rem; background: #fff; }
+        .help-link:hover { background: #e9f0e9; border-color: #1d5949; }
         .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
         .detail-field { margin-bottom: 0.5rem; }
-        .detail-field .label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; font-weight: 600; }
-        .detail-field .value { font-size: 0.95rem; color: #0b2a42; margin-top: 0.15rem; word-break: break-word; }
+        .detail-field .label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; color: #65766e; font-weight: 600; }
+        .detail-field .value { font-size: 0.95rem; color: #192f35; margin-top: 0.15rem; word-break: break-word; }
         .detail-field.full-width { grid-column: 1 / -1; }
         .badge { display: inline-block; padding: 0.2rem 0.6rem; border-radius: 999px; font-size: 0.75rem; font-weight: 600; }
         .badge-critical { background: #fde8e8; color: #dc3545; }
         .badge-high { background: #fff3e0; color: #e65100; }
         .badge-medium { background: #fff8e1; color: #f9a825; }
         .badge-low { background: #e8f5e9; color: #2e7d32; }
-        .badge-default { background: #f1f5f9; color: #64748b; }
+        .badge-default { background: #edf2ed; color: #65766e; }
         .badge-new { background: #e3f2fd; color: #1565c0; }
         .badge-processing { background: #fff3e0; color: #e65100; }
         .badge-warning { background: #fef3c7; color: #d97706; }
@@ -44,10 +44,10 @@
         .action-bar { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1.25rem; }
         .btn-pdf { display: inline-flex; align-items: center; gap: 0.5rem; background: #b91c1c; color: #fff; border: none; padding: 0.5rem 1rem; border-radius: 6px; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: opacity 0.15s; margin-left: auto; }
         .btn-pdf:hover { opacity: 0.85; }
-        .cap-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 1rem; margin-bottom: 0.75rem; }
+        .cap-card { background: #f4f6f3; border: 1px solid #d7e4dc; border-radius: 8px; padding: 1rem; margin-bottom: 0.75rem; }
         .cap-card .cap-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
         .cap-card .cap-header h4 { margin: 0; font-size: 0.9rem; }
-        .loading-state { display: flex; align-items: center; justify-content: center; padding: 4rem; color: #64748b; }
+        .loading-state { display: flex; align-items: center; justify-content: center; padding: 4rem; color: #65766e; }
         .loading-state i { font-size: 2rem; margin-right: 0.75rem; }
         .error-state { text-align: center; padding: 4rem; color: #dc3545; }
         #message { padding: 0.75rem 1rem; border-radius: 6px; margin-bottom: 1rem; display: none; font-size: 0.85rem; }
@@ -55,14 +55,12 @@
         #message.error { display: block; background: #fce8e6; color: #d33426; border-left: 4px solid #ea4335; }
         @media (max-width: 600px) { .detail-grid { grid-template-columns: 1fr; } }
     </style>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-
-    <link rel="stylesheet" href="../css/theme.css">
-    <link rel="stylesheet" href="/css/dashboard-responsive.css">
-    <link rel="stylesheet" href="/css/shell.css">
-    </head>
+    <link rel="stylesheet" href="../css/theme.css?brand=20261028">
+    <link rel="stylesheet" href="/css/dashboard-responsive.css?brand=20261028">
+    <link rel="stylesheet" href="/css/shell.css?brand=20261028">
+        <link rel="stylesheet" href="/css/brand.css?v=20261028">
+</head>
 <body>
 
 <div class="app-shell">
@@ -133,7 +131,7 @@
                 <button type="button" class="help-link" id="rcaGuideBtn" data-help-topic="sram_bowtie" title="Open RCA methodology guidance"><i class="fas fa-circle-question"></i> Guide</button>
             </div>
             <div id="rcaViewToggle" style="display:none;gap:0.5rem;align-items:center;margin-bottom:0.6rem;">
-                <span style="font-size:0.75rem;color:#64748b;font-weight:600;">View:</span>
+                <span style="font-size:0.75rem;color:#65766e;font-weight:600;">View:</span>
                 <button type="button" class="btn btn-outline btn-sm" id="rcaToggleBowtie" style="display:none;"><i class="fas fa-bow-arrow"></i> Bow-Tie</button>
                 <button type="button" class="btn btn-outline btn-sm" id="rcaToggleFishbone" style="display:none;"><i class="fas fa-diagnoses"></i> Fishbone</button>
             </div>
@@ -146,7 +144,7 @@
             <div class="card">
                 <h2><i class="fas fa-tasks"></i> Corrective Action Plans</h2>
                 <div id="capsList">
-                    <p style="color:#94a3b8;font-size:0.85rem;">No CAPs submitted yet.</p>
+                    <p style="color:#83938a;font-size:0.85rem;">No CAPs submitted yet.</p>
                 </div>
                 <div style="margin-top:1rem;text-align:right;">
                     <a id="submitCapBtn" href="#" class="btn btn-primary btn-sm"><i class="fas fa-plus"></i> Submit CAP</a>
@@ -162,7 +160,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-check-compat.js"></script>
-<script src="/js/firebase.js?v=4.0.1"></script>
+<script src="/js/firebase.js?v=4.0.1&brand=20261028"></script>
 <script src="/js/tenant_context.js"></script>
 <script src="/js/department_resolver.js"></script>
 <script src="/js/api/client.js"></script>
@@ -173,11 +171,11 @@ window.SHELL_CONFIG = {
 };
 </script>
 <script src="/js/nav-config.js"></script>
-<script src="/js/shell.js"></script>
-<script src="/js/risk_matrix.js"></script>
+<script src="/js/shell.js?brand=20261028"></script>
+<script src="/js/risk_matrix.js?brand=20261028"></script>
 <script src="/js/fishbone.js"></script>
-<script src="/js/srm.js"></script>
-<script src="/js/can_cap.js"></script>
+<script src="/js/srm.js?brand=20261028"></script>
+<script src="/js/can_cap.js?brand=20261028"></script>
 <script src="/js/help-drawer.js"></script>
 <script>
 let canData = null;
@@ -219,7 +217,7 @@ async function loadCaps(canId) {
         const caps = await CanCapAPI.listCaps(canId);
         const container = document.getElementById('capsList');
         if (!caps || caps.length === 0) {
-            container.innerHTML = '<p style="color:#94a3b8;font-size:0.85rem;">No CAPs submitted yet.</p>';
+            container.innerHTML = '<p style="color:#83938a;font-size:0.85rem;">No CAPs submitted yet.</p>';
             return;
         }
         container.innerHTML = caps.map(c => {
@@ -244,8 +242,8 @@ async function loadCaps(canId) {
                         <a href="/can_cap/cap_review.html?id=${c.id}" class="btn btn-outline btn-sm no-print" style="font-size:0.78rem;" onclick="event.stopPropagation();"><i class="fas fa-file-pdf"></i> Export PDF</a>
                     </span>
                 </div>
-                <p style="font-size:0.85rem;color:#475569;">Submitted by ${c.submitted_by || '-'} on ${formatCanDate(c.submitted_at)}</p>
-                <p style="font-size:0.85rem;color:#475569;">Target: ${formatCanDate(c.target_completion_date)}</p>
+                <p style="font-size:0.85rem;color:#53685c;">Submitted by ${c.submitted_by || '-'} on ${formatCanDate(c.submitted_at)}</p>
+                <p style="font-size:0.85rem;color:#53685c;">Target: ${formatCanDate(c.target_completion_date)}</p>
                 ${reviewActions}
             </div>
         `; }).join('');

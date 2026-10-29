@@ -17,7 +17,7 @@ const NHRC_META = {
     "MAC": { name: "Mid Air Collision", color: "#7c3aed" },
     "RE": { name: "Runway Excursion", color: "#f9a825" },
     "RI": { name: "Runway Incursion", color: "#d97706" },
-    "ARC": { name: "Abnormal Runway Contact", color: "#0284c7" },
+    "ARC": { name: "Abnormal Runway Contact", color: "#235a4b" },
     "WS": { name: "Wildlife Strike", color: "#34a853" },
 };
 
@@ -90,7 +90,7 @@ function renderNhrcCards() {
     }
 
     grid.innerHTML = nhrcData.map(k => {
-        const meta = NHRC_META[k.nhrc] || { name: k.nhrc, color: '#64748b' };
+        const meta = NHRC_META[k.nhrc] || { name: k.nhrc, color: '#65766e' };
         const statusClass = k.status === 'ok' ? 'status-ok' : k.status === 'watch' ? 'status-watch' : 'status-action';
         const statusLabel = k.status === 'ok' ? '✅ OK' : k.status === 'watch' ? '⚠️ Watch' : '🚨 Action';
 
@@ -151,7 +151,7 @@ function renderDistributionChart() {
 
     const labels = nhrcData.map(k => k.nhrc);
     const values = nhrcData.map(k => k.active_hazards);
-    const colors = nhrcData.map(k => NHRC_META[k.nhrc]?.color || '#64748b');
+    const colors = nhrcData.map(k => NHRC_META[k.nhrc]?.color || '#65766e');
 
     destroyChart('nhrcDistributionChart');
     chartInstances['nhrcDistributionChart'] = new Chart(ctx, {
@@ -186,7 +186,7 @@ function renderComparisonChart() {
         data: {
             labels,
             datasets: [
-                { label: `${currentTenant}`, data: tenantValues, backgroundColor: '#1a6b8a', borderRadius: 4 },
+                { label: `${currentTenant}`, data: tenantValues, backgroundColor: '#1d5949', borderRadius: 4 },
                 { label: 'State Average', data: stateValues, backgroundColor: '#d4af37', borderRadius: 4 },
             ],
         },

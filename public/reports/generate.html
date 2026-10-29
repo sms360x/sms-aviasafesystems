@@ -4,32 +4,32 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Generate Report - AviaSAFE</title>
-    <link rel="stylesheet" href="/css/variables.css">
+    <link rel="stylesheet" href="/css/variables.css?brand=20261028">
     <link rel="stylesheet" href="/css/main.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body { background: #f1f5f9; font-family: 'Inter', system-ui, -apple-system, sans-serif; color: #0b2a42; margin: 0; }
+        body { background: #edf2ed; font-family: 'DM Sans', system-ui, -apple-system, sans-serif; color: #192f35; margin: 0; }
         .page { max-width: 600px; margin: 0 auto; padding: 1.5rem; }
-        .back-link { display: inline-flex; align-items: center; gap: 0.5rem; color: #1a6b8a; font-size: 0.875rem; margin-bottom: 1rem; text-decoration: none; }
+        .back-link { display: inline-flex; align-items: center; gap: 0.5rem; color: #1d5949; font-size: 0.875rem; margin-bottom: 1rem; text-decoration: none; }
         .back-link:hover { text-decoration: underline; }
         .card { background: #fff; border-radius: 10px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); padding: 1.5rem; margin-bottom: 1.25rem; }
-        .card h2 { font-size: 1rem; color: #0b2a42; margin: 0 0 1rem; display: flex; align-items: center; gap: 0.5rem; }
+        .card h2 { font-size: 1rem; color: #192f35; margin: 0 0 1rem; display: flex; align-items: center; gap: 0.5rem; }
         .card h2 i { width: 1.25rem; text-align: center; }
         .form-group { margin-bottom: 1.25rem; }
-        .form-group label { display: block; font-size: 0.85rem; font-weight: 600; color: #475569; margin-bottom: 0.35rem; }
+        .form-group label { display: block; font-size: 0.85rem; font-weight: 600; color: #53685c; margin-bottom: 0.35rem; }
         .form-group select, .form-group input { width: 100%; padding: 0.5rem 0.75rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.9rem; background: #fff; }
-        .form-group select:focus, .form-group input:focus { outline: none; border-color: #1a6b8a; box-shadow: 0 0 0 2px rgba(26,107,138,0.15); }
+        .form-group select:focus, .form-group input:focus { outline: none; border-color: #1d5949; box-shadow: 0 0 0 2px rgba(26,107,138,0.15); }
         .type-selector { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 1.5rem; }
-        .type-option { padding: 1.25rem; border: 2px solid #e2e8f0; border-radius: 8px; cursor: pointer; text-align: center; transition: all 0.15s; }
-        .type-option:hover { border-color: #1a6b8a; background: #f0f6ff; }
-        .type-option.selected { border-color: #1a6b8a; background: #e8f0f8; }
+        .type-option { padding: 1.25rem; border: 2px solid #d7e4dc; border-radius: 8px; cursor: pointer; text-align: center; transition: all 0.15s; }
+        .type-option:hover { border-color: #1d5949; background: #f0f6ff; }
+        .type-option.selected { border-color: #1d5949; background: #e9f0e9; }
         .type-option .icon { font-size: 1.5rem; margin-bottom: 0.35rem; }
         .type-option .title { font-weight: 600; font-size: 0.9rem; }
-        .type-option .desc { font-size: 0.75rem; color: #64748b; margin-top: 0.2rem; }
-        .btn-primary { background: #1a6b8a; color: #fff; border: none; padding: 0.6rem 1.5rem; border-radius: 6px; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: all 0.15s; width: 100%; }
-        .btn-primary:hover { background: #0b2a42; }
+        .type-option .desc { font-size: 0.75rem; color: #65766e; margin-top: 0.2rem; }
+        .btn-primary { background: #1d5949; color: #fff; border: none; padding: 0.6rem 1.5rem; border-radius: 6px; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: all 0.15s; width: 100%; }
+        .btn-primary:hover { background: #192f35; }
         .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
-        .btn-secondary { background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; padding: 0.6rem 1.5rem; border-radius: 6px; font-size: 0.9rem; font-weight: 500; cursor: pointer; }
+        .btn-secondary { background: #edf2ed; color: #53685c; border: 1px solid #d7e4dc; padding: 0.6rem 1.5rem; border-radius: 6px; font-size: 0.9rem; font-weight: 500; cursor: pointer; }
         .result-card { display: none; background: #e8f5e9; padding: 1rem; border-radius: 8px; margin-top: 1rem; border-left: 4px solid #34a853; }
         .result-card .title { font-weight: 600; color: #2e7d32; }
         .result-card .links { margin-top: 0.75rem; display: flex; gap: 0.75rem; }
@@ -38,12 +38,10 @@
         #message.error { display: block; background: #fce8e6; color: #d33426; border-left: 4px solid #ea4335; }
         @media (max-width: 500px) { .type-selector { grid-template-columns: 1fr; } }
     </style>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-
-    <link rel="stylesheet" href="../css/theme.css">
-    </head>
+    <link rel="stylesheet" href="../css/theme.css?brand=20261028">
+        <link rel="stylesheet" href="/css/brand.css?v=20261028">
+</head>
 <body>
 
 <div class="page">
@@ -53,15 +51,15 @@
 
     <div class="card">
         <h2><i class="fas fa-plus-circle"></i> Generate Report</h2>
-        <p style="font-size:0.85rem;color:#64748b;margin-bottom:1.25rem;">
+        <p style="font-size:0.85rem;color:#65766e;margin-bottom:1.25rem;">
             Select a report type and period to generate a new safety performance report.
         </p>
 
         <form id="generateForm">
-            <label style="display:block;font-size:0.85rem;font-weight:600;color:#475569;margin-bottom:0.5rem;">Report Type</label>
+            <label style="display:block;font-size:0.85rem;font-weight:600;color:#53685c;margin-bottom:0.5rem;">Report Type</label>
             <div class="type-selector" id="typeSelector">
                 <div class="type-option selected" data-value="quarterly" onclick="selectType('quarterly')">
-                    <div class="icon"><i class="fas fa-calendar-alt" style="color:#1a6b8a;"></i></div>
+                    <div class="icon"><i class="fas fa-calendar-alt" style="color:#1d5949;"></i></div>
                     <div class="title">Quarterly Report</div>
                     <div class="desc">For Q1–Q4 periods with hazard trends, risk distribution, and CAN/CAP status.</div>
                 </div>
@@ -95,7 +93,7 @@
 
         <div class="result-card" id="resultCard">
             <div class="title"><i class="fas fa-check-circle"></i> Report Generated Successfully</div>
-            <p id="resultMessage" style="font-size:0.85rem;color:#475569;margin:0.5rem 0 0;"></p>
+            <p id="resultMessage" style="font-size:0.85rem;color:#53685c;margin:0.5rem 0 0;"></p>
             <div class="links">
                 <a href="" id="viewLink" class="btn btn-primary btn-sm"><i class="fas fa-eye"></i> View Report</a>
                 <a href="" id="downloadLink" class="btn btn-outline btn-sm" onclick="event.preventDefault();downloadResultPdf();"><i class="fas fa-download"></i> Download PDF</a>
@@ -107,7 +105,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-check-compat.js"></script>
-<script src="/js/firebase.js?v=4.0.1"></script>
+<script src="/js/firebase.js?v=4.0.1&brand=20261028"></script>
 <script src="/js/api/client.js"></script>
 <script src="/js/reports.js"></script>
 <script>

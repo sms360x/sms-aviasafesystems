@@ -23,8 +23,8 @@ const SPI_META = {
 const LOWER_IS_BETTER = new Set(["diversion_rate", "occurrence_rate"]);
 
 const SPI_PALETTE = [
-    "#1a6b8a", "#34a853", "#dc3545", "#f9a825",
-    "#7c3aed", "#0284c7", "#e65100", "#0b2a42",
+    "#1d5949", "#34a853", "#dc3545", "#f9a825",
+    "#7c3aed", "#235a4b", "#e65100", "#192f35",
 ];
 
 function escapeHtml(value) {
@@ -132,7 +132,7 @@ function renderSummary(values, statusMap) {
             <div class="num">${statusCounts.alert}</div>
             <div class="lbl">Alert</div>
         </div>
-        <div class="spi-summary-item" style="border-top-color:#1a6b8a;">
+        <div class="spi-summary-item" style="border-top-color:#1d5949;">
             <div class="num">${avgPerf.toFixed(1)}%</div>
             <div class="lbl">Avg vs Target</div>
         </div>
@@ -242,7 +242,7 @@ function renderComparisonChart(values, stateValues) {
         data: {
             labels,
             datasets: [
-                { label: currentTenant, data: keys.map(k => values[k]), backgroundColor: '#1a6b8a', borderRadius: 4 },
+                { label: currentTenant, data: keys.map(k => values[k]), backgroundColor: '#1d5949', borderRadius: 4 },
                 { label: 'State Average', data: keys.map(k => stateValues[k] != null ? stateValues[k] : 0), backgroundColor: '#d4af37', borderRadius: 4 },
             ],
         },

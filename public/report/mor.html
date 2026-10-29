@@ -4,9 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Submit MOR - AviaSAFE SSP</title>
-    <link rel="stylesheet" href="/css/variables.css">
+    <link rel="stylesheet" href="/css/variables.css?brand=20261028">
     <link rel="stylesheet" href="/css/main.css">
-    <link rel="stylesheet" href="/css/tenant-overrides.css">
+    <link rel="stylesheet" href="/css/tenant-overrides.css?brand=20261028">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * { box-sizing: border-box; }
@@ -14,7 +14,7 @@
         .mor-sidebar { width: 260px; flex-shrink: 0; background: var(--color-white); border-radius: var(--border-radius-lg); box-shadow: var(--shadow-lg); padding: var(--spacing-lg); position: sticky; top: var(--spacing-lg); align-self: flex-start; }
         .mor-sidebar h2 { font-size: var(--font-size-sm); color: var(--color-gray-500); text-transform: uppercase; letter-spacing: 1px; margin: 0 0 var(--spacing-md); }
         .progress-bar { height: 6px; background: var(--color-gray-200); border-radius: 3px; margin-bottom: var(--spacing-lg); overflow: hidden; }
-        .progress-fill { height: 100%; background: linear-gradient(90deg, var(--color-primary), #1a6b8a); border-radius: 3px; transition: width 0.4s ease; width: 0%; }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, var(--color-primary), #1d5949); border-radius: 3px; transition: width 0.4s ease; width: 0%; }
         .nav-sections { list-style: none; padding: 0; margin: 0; }
         .nav-section { display: flex; align-items: center; gap: var(--spacing-md); padding: var(--spacing-sm) var(--spacing-md); border-radius: var(--border-radius-md); cursor: pointer; transition: all 0.2s; margin-bottom: 2px; font-size: var(--font-size-sm); color: var(--color-gray-700); }
         .nav-section:hover { background: var(--color-gray-50); color: var(--color-gray-900); }
@@ -78,14 +78,12 @@
         .review-section .review-label { color: var(--color-gray-700); }
         .tenant-badge { display: inline-flex; align-items: center; gap: var(--spacing-sm); padding: var(--spacing-sm) var(--spacing-md); background: var(--color-info-bg); color: var(--color-primary); border-radius: var(--border-radius-full); font-weight: 500; font-size: var(--font-size-sm); margin-bottom: var(--spacing-lg); }
     </style>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-
-    <link rel="stylesheet" href="/css/theme.css">
-    <link rel="stylesheet" href="/css/dashboard-responsive.css">
-    <link rel="stylesheet" href="/css/shell.css">
-    </head>
+    <link rel="stylesheet" href="/css/theme.css?brand=20261028">
+    <link rel="stylesheet" href="/css/dashboard-responsive.css?brand=20261028">
+    <link rel="stylesheet" href="/css/shell.css?brand=20261028">
+        <link rel="stylesheet" href="/css/brand.css?v=20261028">
+</head>
 <body>
 
 <div class="app-shell" id="appShell">
@@ -568,8 +566,8 @@
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-check-compat.js"></script>
-<script src="/js/firebase.js?v=4.0.1"></script>
-<script src="/js/tenant.js"></script>
+<script src="/js/firebase.js?v=4.0.1&brand=20261028"></script>
+<script src="/js/tenant.js?brand=20261028"></script>
 <script src="/js/tenant_context.js"></script>
 <script src="/js/department_resolver.js"></script>
 <script src="/js/api/client.js"></script>
@@ -583,6 +581,6 @@ window.SHELL_CONFIG = {
 };
 </script>
 <script src="/js/nav-config.js"></script>
-<script src="/js/shell.js"></script>
+<script src="/js/shell.js?brand=20261028"></script>
 </body>
 </html>

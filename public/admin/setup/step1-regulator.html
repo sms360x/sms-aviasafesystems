@@ -14,21 +14,19 @@ AUTHOR: AviaSAFE Systems
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Step 1: Create State Regulator — AviaSAFE Admin</title>
-    <link rel="stylesheet" href="/css/variables.css">
-    <link rel="stylesheet" href="/css/admin.css">
-    <link rel="stylesheet" href="/css/admin-setup.css">
+    <link rel="stylesheet" href="/css/variables.css?brand=20261028">
+    <link rel="stylesheet" href="/css/admin.css?brand=20261028">
+    <link rel="stylesheet" href="/css/admin-setup.css?brand=20261028">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-check-compat.js"></script>
-    <script src="/js/firebase.js?v=4.0.1"></script>
+    <script src="/js/firebase.js?v=4.0.1&brand=20261028"></script>
     <script src="/js/api/client.js"></script>
-    <script src="/js/admin.js"></script>
-    <script src="/js/admin-setup-core.js"></script>
+    <script src="/js/admin.js?brand=20261028"></script>
+    <script src="/js/admin-setup-core.js?brand=20261028"></script>
+    <link rel="stylesheet" href="/css/brand.css?v=20261028">
 </head>
 <body class="admin-body">
 
@@ -40,8 +38,8 @@ AUTHOR: AviaSAFE Systems
             <span class="page-title">Step 1 — Create State Regulator</span>
         </div>
         <div class="tb-actions" id="topNav">
-            <a href="/admin/production-setup.html" class="nav-link" style="color:#cbd5e1; text-decoration:none; font-size:.82rem; padding:6px 12px; border-radius:8px;"><i class="fas fa-cogs" style="color:#4fc3f7;"></i> Production Setup</a>
-            <a href="/admin/psoe-audit.html" class="nav-link" style="color:#cbd5e1; text-decoration:none; font-size:.82rem; padding:6px 12px; border-radius:8px;"><i class="fas fa-clipboard-check"></i> PSOE Audit</a>
+            <a href="/admin/production-setup.html" class="nav-link" style="color:#bdccc4; text-decoration:none; font-size:.82rem; padding:6px 12px; border-radius:8px;"><i class="fas fa-cogs" style="color:#4fc3f7;"></i> Production Setup</a>
+            <a href="/admin/psoe-audit.html" class="nav-link" style="color:#bdccc4; text-decoration:none; font-size:.82rem; padding:6px 12px; border-radius:8px;"><i class="fas fa-clipboard-check"></i> PSOE Audit</a>
             <span class="user-badge"><span class="role-chip">SUPER_ADMIN</span><span id="userDisplay">—</span></span>
             <button class="btn btn-danger btn-sm" onclick="logout()">Logout</button>
         </div>
@@ -88,7 +86,7 @@ AUTHOR: AviaSAFE Systems
                                 <input type="checkbox" id="regIsDemo" checked>
                                 Demo Regulator
                             </label>
-                            <small style="color:#94a3b8;">Checked = demo (purgeable). Unchecked = real (protected).</small>
+                            <small style="color:#83938a;">Checked = demo (purgeable). Unchecked = real (protected).</small>
                         </div>
                     </div>
 
@@ -112,8 +110,8 @@ AUTHOR: AviaSAFE Systems
                 </form>
                 <div id="regAdminSuccess" style="display:none;margin-top:14px;padding:14px 16px;border-radius:8px;background:#f0fdf4;border:1px solid #bbf7d0;">
                     <div style="font-weight:700;color:#15803d;margin-bottom:6px;"><i class="fas fa-check-circle"></i> <span id="regAdminSuccessTitle">Regulator created.</span></div>
-                    <div style="font-size:.85rem;color:#334155;">Admin: <strong id="regAdminSuccessEmail"></strong></div>
-                    <div style="font-size:.85rem;color:#334155;">One-time password: <code id="regAdminSuccessPassword" style="user-select:all;"></code>
+                    <div style="font-size:.85rem;color:#244837;">Admin: <strong id="regAdminSuccessEmail"></strong></div>
+                    <div style="font-size:.85rem;color:#244837;">One-time password: <code id="regAdminSuccessPassword" style="user-select:all;"></code>
                         <button type="button" class="btn btn-outline btn-sm" onclick="copyRegAdminPassword()" style="margin-left:8px;">Copy</button></div>
                     <div style="font-size:.78rem;color:#b91c1c;margin-top:6px;">Shown once — copy now. It is never stored or shown again.</div>
                 </div>

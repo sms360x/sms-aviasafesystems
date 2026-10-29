@@ -4,45 +4,45 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Review CAP - AviaSAFE</title>
-<link rel="stylesheet" href="/css/variables.css">
+<link rel="stylesheet" href="/css/variables.css?brand=20261028">
 <link rel="stylesheet" href="/css/main.css">
-<link rel="stylesheet" href="/css/can-cap-print.css">
-<link rel="stylesheet" href="/css/srm.css">
-<link rel="stylesheet" href="/css/help-drawer.css">
+<link rel="stylesheet" href="/css/can-cap-print.css?brand=20261028">
+<link rel="stylesheet" href="/css/srm.css?brand=20261028">
+<link rel="stylesheet" href="/css/help-drawer.css?brand=20261028">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body { background: #f1f5f9; font-family: 'Inter', system-ui, -apple-system, sans-serif; color: #0b2a42; margin: 0; }
+        body { background: #edf2ed; font-family: 'DM Sans', system-ui, -apple-system, sans-serif; color: #192f35; margin: 0; }
         .page { max-width: 900px; margin: 0 auto; padding: 1.5rem; }
-        .cap-section { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px; color: #0b2a42; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.35rem; margin: 1.1rem 0 0.6rem; }
-.help-link { display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.72rem; font-weight: 600; color: #1a6b8a; cursor: pointer; border: 1px solid #cbd5e1; border-radius: 999px; padding: 0.15rem 0.6rem; background: #fff; }
-.help-link:hover { background: #e8f0f8; border-color: #1a6b8a; }
+        .cap-section { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px; color: #192f35; border-bottom: 1px solid #d7e4dc; padding-bottom: 0.35rem; margin: 1.1rem 0 0.6rem; }
+.help-link { display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.72rem; font-weight: 600; color: #1d5949; cursor: pointer; border: 1px solid #bdccc4; border-radius: 999px; padding: 0.15rem 0.6rem; background: #fff; }
+.help-link:hover { background: #e9f0e9; border-color: #1d5949; }
         .btn-pdf { display: inline-flex; align-items: center; gap: 0.5rem; background: #b91c1c; color: #fff; border: none; padding: 0.6rem 1.1rem; border-radius: 6px; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: opacity 0.15s; }
         .btn-pdf:hover { opacity: 0.85; }
         .cap-form td { white-space: pre-wrap; word-break: break-word; }
-        .back-link { display: inline-flex; align-items: center; gap: 0.5rem; color: #1a6b8a; font-size: 0.875rem; margin-bottom: 1rem; text-decoration: none; }
+        .back-link { display: inline-flex; align-items: center; gap: 0.5rem; color: #1d5949; font-size: 0.875rem; margin-bottom: 1rem; text-decoration: none; }
         .card { background: #fff; border-radius: 10px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); padding: 1.5rem; margin-bottom: 1.25rem; }
-        .card h2 { font-size: 1rem; color: #0b2a42; margin: 0 0 1rem; display: flex; align-items: center; gap: 0.5rem; }
+        .card h2 { font-size: 1rem; color: #192f35; margin: 0 0 1rem; display: flex; align-items: center; gap: 0.5rem; }
         .card h2 i { width: 1.25rem; text-align: center; }
         .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
         .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
         .detail-field { margin-bottom: 0.5rem; }
-        .detail-field .label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; font-weight: 600; }
-        .detail-field .value { font-size: 0.95rem; color: #0b2a42; margin-top: 0.15rem; word-break: break-word; white-space: pre-wrap; }
+        .detail-field .label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; color: #65766e; font-weight: 600; }
+        .detail-field .value { font-size: 0.95rem; color: #192f35; margin-top: 0.15rem; word-break: break-word; white-space: pre-wrap; }
         .detail-field.full-width { grid-column: 1 / -1; }
         .badge { display: inline-block; padding: 0.2rem 0.6rem; border-radius: 999px; font-size: 0.75rem; font-weight: 600; }
         .badge-critical { background: #fde8e8; color: #dc3545; }
         .badge-high { background: #fff3e0; color: #e65100; }
         .badge-medium { background: #fff8e1; color: #f9a825; }
         .badge-low { background: #e8f5e9; color: #2e7d32; }
-        .badge-default { background: #f1f5f9; color: #64748b; }
+        .badge-default { background: #edf2ed; color: #65766e; }
         .badge-processing { background: #fff3e0; color: #e65100; }
         .badge-warning { background: #fef3c7; color: #d97706; }
         .badge-completed { background: #e8f5e9; color: #2e7d32; }
         .badge-danger { background: #fde8e8; color: #b91c1c; }
         .form-group { margin-bottom: 1rem; }
-        .form-group label { display: block; font-size: 0.8rem; font-weight: 600; color: #475569; margin-bottom: 0.25rem; }
+        .form-group label { display: block; font-size: 0.8rem; font-weight: 600; color: #53685c; margin-bottom: 0.25rem; }
         .form-control { width: 100%; padding: 0.6rem 0.75rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.9rem; box-sizing: border-box; }
-        .form-control:focus { outline: none; border-color: #1a6b8a; box-shadow: 0 0 0 3px rgba(26,107,138,0.1); }
+        .form-control:focus { outline: none; border-color: #1d5949; box-shadow: 0 0 0 3px rgba(26,107,138,0.1); }
         textarea.form-control { min-height: 80px; resize: vertical; }
         select.form-control { appearance: auto; }
         .review-actions { display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 1.5rem; }
@@ -51,9 +51,9 @@
 .btn-accept { background: #2e7d32; color: #fff; }
 .btn-revision { background: #e65100; color: #fff; }
 .btn-overdue { background: #b91c1c; color: #fff; }
-.btn-escalate { background: #e8f0fe; color: #1a5fb4; border: 1px solid #aecbfa; }
+.btn-escalate { background: #e9f0e9; color: #1a5fb4; border: 1px solid #aecbfa; }
         .btn-review:disabled { opacity: 0.4; cursor: not-allowed; }
-        .loading-state { display: flex; align-items: center; justify-content: center; padding: 4rem; color: #64748b; }
+        .loading-state { display: flex; align-items: center; justify-content: center; padding: 4rem; color: #65766e; }
         .loading-state i { font-size: 2rem; margin-right: 0.75rem; }
         .error-state { text-align: center; padding: 4rem; color: #dc3545; }
         #message { padding: 0.75rem 1rem; border-radius: 6px; margin-bottom: 1rem; display: none; font-size: 0.85rem; }
@@ -61,12 +61,10 @@
         #message.error { display: block; background: #fce8e6; color: #d33426; border-left: 4px solid #ea4335; }
         @media (max-width: 600px) { .detail-grid, .form-row { grid-template-columns: 1fr; } }
     </style>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-
-    <link rel="stylesheet" href="../css/theme.css">
-    </head>
+    <link rel="stylesheet" href="../css/theme.css?brand=20261028">
+        <link rel="stylesheet" href="/css/brand.css?v=20261028">
+</head>
 <body>
 
 <div class="page">
@@ -193,7 +191,7 @@
                 <button type="button" class="help-link" id="rcaGuideBtn" data-help-topic="sram_bowtie" title="Open RCA methodology guidance"><i class="fas fa-circle-question"></i> Guide</button>
             </div>
             <div id="rcaViewToggle" style="display:none;gap:0.5rem;align-items:center;margin-bottom:0.6rem;">
-                <span style="font-size:0.75rem;color:#64748b;font-weight:600;">Reviewer view:</span>
+                <span style="font-size:0.75rem;color:#65766e;font-weight:600;">Reviewer view:</span>
                 <button type="button" class="btn btn-outline btn-sm" id="rcaToggleBowtie" style="display:none;"><i class="fas fa-bow-arrow"></i> Bow-Tie</button>
                 <button type="button" class="btn btn-outline btn-sm" id="rcaToggleFishbone" style="display:none;"><i class="fas fa-diagnoses"></i> Fishbone</button>
             </div>
@@ -205,25 +203,25 @@
         <div class="card" id="signaturesCard" style="display:none;">
             <h2><i class="fas fa-signature"></i> Signatures</h2>
             <div id="poSignatureDisplay" style="display:none; margin-bottom:1.25rem;">
-                <h4 style="font-size:0.9rem;color:#0b2a42;margin-bottom:0.5rem;">Process Owner</h4>
-                <div style="border:1px solid #e2e8f0; border-radius:6px; padding:8px; background:#fff; display:inline-block;">
+                <h4 style="font-size:0.9rem;color:#192f35;margin-bottom:0.5rem;">Process Owner</h4>
+                <div style="border:1px solid #d7e4dc; border-radius:6px; padding:8px; background:#fff; display:inline-block;">
                     <img id="poSignatureImage" src="" alt="Process Owner Signature" style="max-width:300px; max-height:80px; display:block;">
                 </div>
-                <div style="font-size:0.85rem;color:#475569;margin-top:0.5rem;">
+                <div style="font-size:0.85rem;color:#53685c;margin-top:0.5rem;">
                     <span><strong>Signed By:</strong> <span id="poSignatureName"></span></span> &nbsp;|&nbsp;
                     <span><strong>Date:</strong> <span id="poSignatureDate"></span></span>
-                    <span id="poVerifiedBadge" style="margin-left:0.5rem; display:none;"><i class="fas fa-check-circle" style="color:#2e7d32;"></i> Verified <small id="poSignatureHash" style="color:#94a3b8;"></small></span>
+                    <span id="poVerifiedBadge" style="margin-left:0.5rem; display:none;"><i class="fas fa-check-circle" style="color:#2e7d32;"></i> Verified <small id="poSignatureHash" style="color:#83938a;"></small></span>
                 </div>
             </div>
             <div id="maSignatureDisplay" style="display:none;">
-                <h4 style="font-size:0.9rem;color:#0b2a42;margin-bottom:0.5rem;">Managerial Approval</h4>
-                <div style="border:1px solid #e2e8f0; border-radius:6px; padding:8px; background:#fff; display:inline-block;">
+                <h4 style="font-size:0.9rem;color:#192f35;margin-bottom:0.5rem;">Managerial Approval</h4>
+                <div style="border:1px solid #d7e4dc; border-radius:6px; padding:8px; background:#fff; display:inline-block;">
                     <img id="maSignatureImage" src="" alt="Managerial Signature" style="max-width:300px; max-height:80px; display:block;">
                 </div>
-                <div style="font-size:0.85rem;color:#475569;margin-top:0.5rem;">
+                <div style="font-size:0.85rem;color:#53685c;margin-top:0.5rem;">
                     <span><strong>Signed By:</strong> <span id="maSignatureName"></span></span> &nbsp;|&nbsp;
                     <span><strong>Date:</strong> <span id="maSignatureDate"></span></span>
-                    <span id="maVerifiedBadge" style="margin-left:0.5rem; display:none;"><i class="fas fa-check-circle" style="color:#2e7d32;"></i> Verified <small id="maSignatureHash" style="color:#94a3b8;"></small></span>
+                    <span id="maVerifiedBadge" style="margin-left:0.5rem; display:none;"><i class="fas fa-check-circle" style="color:#2e7d32;"></i> Verified <small id="maSignatureHash" style="color:#83938a;"></small></span>
                 </div>
             </div>
         </div>
@@ -245,7 +243,7 @@
             </div>
 
             <div id="reviewForm" style="display:none;">
-                <p style="font-size:0.8rem;color:#64748b;margin:0 0 0.75rem;">
+                <p style="font-size:0.8rem;color:#65766e;margin:0 0 0.75rem;">
                     Safety assurance decision (ICAO Doc 9859 / CAR-19): accept the plan to start
                     implementation timeline tracking, return it to the postholder with mandatory
                     feedback, or escalate it to the Accountable Executive.
@@ -319,7 +317,7 @@
                     <textarea class="form-control" id="reviewClosingRemarks" placeholder="Final remarks on closure of the corrective action"></textarea>
                 </div>
                 <div class="form-group" id="revisionDeadlineGroup">
-                    <label>Revision Deadline <span style="font-weight:400;color:#94a3b8;">(used when returning the CAP)</span></label>
+                    <label>Revision Deadline <span style="font-weight:400;color:#83938a;">(used when returning the CAP)</span></label>
                     <input class="form-control" id="revisionDeadline" type="date">
                 </div>
                 <div class="review-actions" style="display:flex;gap:0.6rem;flex-wrap:wrap;">
@@ -327,7 +325,7 @@
                     <button class="btn-review btn-revision" onclick="submitGovernanceAction('return')"><i class="fas fa-undo"></i> Return with Feedback</button>
                     <button class="btn-review btn-escalate" onclick="submitGovernanceAction('escalate')"><i class="fas fa-user-shield"></i> Escalate to AE</button>
                 </div>
-                <p style="font-size:0.72rem;color:#64748b;margin-top:0.5rem;">
+                <p style="font-size:0.72rem;color:#65766e;margin-top:0.5rem;">
                     Accept &rarr; APPROVED / IN PROGRESS (timeline tracking starts) ·
                     Return &rarr; REVISION REQUIRED (feedback mandatory) ·
                     Escalate &rarr; flagged for Accountable Executive review.
@@ -345,12 +343,12 @@
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-check-compat.js"></script>
-<script src="/js/firebase.js?v=4.0.1"></script>
+<script src="/js/firebase.js?v=4.0.1&brand=20261028"></script>
 <script src="/js/api/client.js"></script>
-<script src="/js/risk_matrix.js"></script>
+<script src="/js/risk_matrix.js?brand=20261028"></script>
 <script src="/js/fishbone.js"></script>
-<script src="/js/srm.js"></script>
-<script src="/js/can_cap.js"></script>
+<script src="/js/srm.js?brand=20261028"></script>
+<script src="/js/can_cap.js?brand=20261028"></script>
 <script src="/js/help-drawer.js"></script>
 <script>
 let capData = null;
@@ -569,7 +567,7 @@ async function renderCapSraCell(containerEl, sra) {
     if (!containerEl) return;
     containerEl.innerHTML = '';
     if (!sra || (!sra.severity && !sra.risk_index)) {
-        containerEl.innerHTML = '<span style="color:#94a3b8;">Not assessed.</span>';
+        containerEl.innerHTML = '<span style="color:#83938a;">Not assessed.</span>';
         return;
     }
     const sev = sra.severity || Math.ceil((sra.risk_index || 1) / (sra.probability || 1));
@@ -583,7 +581,7 @@ async function renderCapSraCell(containerEl, sra) {
             showSummary: true,
         });
     } catch (err) {
-        containerEl.innerHTML = `<span style="color:#94a3b8;">${err.message}</span>`;
+        containerEl.innerHTML = `<span style="color:#83938a;">${err.message}</span>`;
     }
 }
 

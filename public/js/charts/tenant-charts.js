@@ -99,7 +99,7 @@ const TenantChartFactory = (function () {
               },
               font: { size: 9 },
             },
-            grid: { color: '#f1f5f9' },
+            grid: { color: '#edf2ed' },
           },
           y: {
             title: { display: true, text: 'Likelihood', font: { size: 11 } },
@@ -111,7 +111,7 @@ const TenantChartFactory = (function () {
               },
               font: { size: 9 },
             },
-            grid: { color: '#f1f5f9' },
+            grid: { color: '#edf2ed' },
           },
         },
       },
@@ -135,8 +135,8 @@ const TenantChartFactory = (function () {
       {
         label: spiData.name || 'SPI Value',
         data: values,
-        borderColor: '#002f6c',
-        backgroundColor: '#002f6c',
+        borderColor: '#174e48',
+        backgroundColor: '#174e48',
         pointRadius: 4,
         pointHoverRadius: 6,
         borderWidth: 2,
@@ -178,7 +178,7 @@ const TenantChartFactory = (function () {
         scales: {
           y: {
             beginAtZero: true,
-            grid: { color: '#f1f5f9' },
+            grid: { color: '#edf2ed' },
             ticks: { font: { size: 10 } },
           },
           x: {

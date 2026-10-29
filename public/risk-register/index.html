@@ -4,27 +4,26 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Risk Register - AviaSAFE</title>
-    <link rel="stylesheet" href="/css/variables.css">
+    <link rel="stylesheet" href="/css/variables.css?brand=20261028">
     <link rel="stylesheet" href="/css/main.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="/css/theme.css">
-    <link rel="stylesheet" href="/css/dashboard-responsive.css">
-<link rel="stylesheet" href="/css/shell.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/theme.css?brand=20261028">
+    <link rel="stylesheet" href="/css/dashboard-responsive.css?brand=20261028">
+<link rel="stylesheet" href="/css/shell.css?brand=20261028">
     <style>
-        body { background: #f5f7fa; font-family: 'Inter', system-ui, sans-serif; color: #0b2a42; margin: 0; }
+        body { background: #f4f6f3; font-family: 'DM Sans', system-ui, sans-serif; color: #192f35; margin: 0; }
         .page { max-width: 1300px; margin: 0 auto; padding: 1.5rem; }
         .header-bar { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.25rem; }
-        .header-bar h2 { margin: 0; color: #0b2a42; }
+        .header-bar h2 { margin: 0; color: #192f35; }
         .filter-bar { display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center; background: #fff; padding: 1rem 1.25rem; border-radius: 10px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); margin-bottom: 1.25rem; }
-        .filter-bar label { font-size: 0.8rem; font-weight: 600; color: #475569; }
-        select, input { padding: 0.4rem 0.75rem; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 0.85rem; background: #fff; font-family: inherit; color: #0b2a42; }
-        .btn { background: #1a6b8a; color: #fff; border: none; padding: 0.45rem 1rem; border-radius: 6px; cursor: pointer; font-size: 0.85rem; font-weight: 600; }
+        .filter-bar label { font-size: 0.8rem; font-weight: 600; color: #53685c; }
+        select, input { padding: 0.4rem 0.75rem; border: 1px solid #d7e4dc; border-radius: 6px; font-size: 0.85rem; background: #fff; font-family: inherit; color: #192f35; }
+        .btn { background: #1d5949; color: #fff; border: none; padding: 0.45rem 1rem; border-radius: 6px; cursor: pointer; font-size: 0.85rem; font-weight: 600; }
         .btn:hover { background: #0d5572; }
         .table-card { background: #fff; border-radius: 10px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); overflow: hidden; }
         .table-card table { width: 100%; border-collapse: collapse; }
-        .table-card th { background: #f8fafc; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; padding: 0.85rem 1rem; text-align: left; border-bottom: 2px solid #e2e8f0; white-space: nowrap; }
-        .table-card td { padding: 0.75rem 1rem; border-bottom: 1px solid #f1f5f9; font-size: 0.875rem; vertical-align: top; }
+        .table-card th { background: #f4f6f3; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; color: #65766e; padding: 0.85rem 1rem; text-align: left; border-bottom: 2px solid #d7e4dc; white-space: nowrap; }
+        .table-card td { padding: 0.75rem 1rem; border-bottom: 1px solid #edf2ed; font-size: 0.875rem; vertical-align: top; }
         .badge { display: inline-block; padding: 0.2rem 0.6rem; border-radius: 999px; font-size: 0.75rem; font-weight: 600; white-space: nowrap; }
         .badge-intolerable { background: #fde8e8; color: #b91c1c; }
         .badge-tolerable { background: #fef3c7; color: #b45309; }
@@ -32,14 +31,14 @@
         .badge-new { background: #e3f2fd; color: #1565c0; }
         .badge-completed { background: #e8f5e9; color: #2e7d32; }
         .badge-processing { background: #fff3e0; color: #e65100; }
-        .badge-default { background: #f1f5f9; color: #64748b; }
-        .loading-state { display: flex; align-items: center; justify-content: center; padding: 3rem; color: #64748b; }
-        .empty-state { text-align: center; padding: 3rem; color: #64748b; }
-        .justify { max-width: 420px; font-size: 0.82rem; color: #475569; }
+        .badge-default { background: #edf2ed; color: #65766e; }
+        .loading-state { display: flex; align-items: center; justify-content: center; padding: 3rem; color: #65766e; }
+        .empty-state { text-align: center; padding: 3rem; color: #65766e; }
+        .justify { max-width: 420px; font-size: 0.82rem; color: #53685c; }
         @media (max-width: 768px) { .filter-bar { flex-direction: column; align-items: stretch; } }
     </style>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="/css/brand.css?v=20261028">
 </head>
 <body>
 
@@ -62,7 +61,7 @@
         <label>Search:</label>
         <input type="text" id="filterSearch" placeholder="Hazard reference or title..." style="flex:1;min-width:160px;">
         <button class="btn" onclick="renderTable()"><i class="fas fa-search"></i> Filter</button>
-        <button class="btn" style="background:#64748b;" onclick="loadRegister()"><i class="fas fa-refresh"></i> Reload</button>
+        <button class="btn" style="background:#65766e;" onclick="loadRegister()"><i class="fas fa-refresh"></i> Reload</button>
     </div>
 
     <div class="table-card">
@@ -86,7 +85,7 @@
         <div id="emptyIndicator" class="empty-state" style="display:none;">
             <i class="fas fa-inbox" style="font-size:2rem;margin-bottom:0.5rem;"></i>
             <p>No assessed risks yet. Assess a hazard via the SRAM (Bow-Tie) module.</p>
-            <a href="/sram/index.html" style="color:#1a6b8a;font-weight:600;">Open SRAM</a>
+            <a href="/sram/index.html" style="color:#1d5949;font-weight:600;">Open SRAM</a>
         </div>
     </div>
 </div>
@@ -96,7 +95,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-check-compat.js"></script>
-<script src="/js/firebase.js?v=4.0.1"></script>
+<script src="/js/firebase.js?v=4.0.1&brand=20261028"></script>
 <script src="/js/tenant_context.js"></script>
 <script src="/js/department_resolver.js"></script>
 <script src="/js/api/client.js"></script>
@@ -109,7 +108,7 @@ window.SHELL_CONFIG = {
 };
 </script>
 <script src="/js/nav-config.js"></script>
-<script src="/js/shell.js"></script>
+<script src="/js/shell.js?brand=20261028"></script>
 <script src="/js/sram.js"></script>
 <script>
 var currentUser = null;
@@ -179,9 +178,9 @@ function renderTable() {
             : '-';
         var status = '<span class="badge ' + statusBadgeClass(r.status) + '">' + esc(SRAM.statusLabel(r.status)) + '</span>';
         var acceptance = r.accepted
-            ? '<span class="badge badge-completed"><i class="fas fa-check-circle"></i> Accepted</span><div class="muted" style="font-size:0.72rem;color:#64748b;margin-top:0.25rem;">by ' + esc(r.accepted_by || 'unknown') + '</div>'
+            ? '<span class="badge badge-completed"><i class="fas fa-check-circle"></i> Accepted</span><div class="muted" style="font-size:0.72rem;color:#65766e;margin-top:0.25rem;">by ' + esc(r.accepted_by || 'unknown') + '</div>'
             : '<span class="badge badge-processing">Not accepted</span>';
-        tr.innerHTML = '<td><strong>' + esc(hazardRef || '-') + '</strong>' + (title ? '<div style="font-size:0.8rem;color:#64748b;">' + esc(title) + '</div>' : '') + '</td>' +
+        tr.innerHTML = '<td><strong>' + esc(hazardRef || '-') + '</strong>' + (title ? '<div style="font-size:0.8rem;color:#65766e;">' + esc(title) + '</div>' : '') + '</td>' +
             '<td>' + current + '</td>' +
             '<td>' + residual + '</td>' +
             '<td>' + status + '</td>' +

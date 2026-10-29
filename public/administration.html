@@ -4,41 +4,39 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Administration — AviaSAFE</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz@14..32&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="/css/shell.css">
+    <link rel="stylesheet" href="/css/shell.css?brand=20261028">
     
-    <link rel="stylesheet" href="/css/variables.css">
-    <link rel="stylesheet" href="/styles/global.css">
+    <link rel="stylesheet" href="/css/variables.css?brand=20261028">
+    <link rel="stylesheet" href="/styles/global.css?brand=20261028">
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-check-compat.js"></script>
-    <script src="/js/firebase.js?v=4.0.1"></script>
+    <script src="/js/firebase.js?v=4.0.1&brand=20261028"></script>
     <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: 'Inter', system-ui, -apple-system, sans-serif; background: #f1f5f9; color: #0b2a42; min-height: 100vh; }
+        body { font-family: 'DM Sans', system-ui, -apple-system, sans-serif; background: #edf2ed; color: #192f35; min-height: 100vh; }
         #pageContent { display: none; }
         .page-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem; }
-        .page-header h2 { margin: 0; color: #0b2a42; }
-        .section-title { font-size: 1.25rem; font-weight: 600; color: #0b2a42; margin: 1.5rem 0 1rem; display: flex; align-items: center; gap: 0.5rem; }
+        .page-header h2 { margin: 0; color: #192f35; }
+        .section-title { font-size: 1.25rem; font-weight: 600; color: #192f35; margin: 1.5rem 0 1rem; display: flex; align-items: center; gap: 0.5rem; }
         .section-title:first-of-type { margin-top: 0; }
         .config-card { background: #fff; border-radius: 10px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); padding: 1.25rem; max-width: 900px; }
-        .config-card p.note { font-size: 0.85rem; color: #64748b; margin-bottom: 1rem; }
-        .btn-refresh { background: #1a6b8a; color: #fff; border: none; padding: 0.4rem 1rem; border-radius: 6px; cursor: pointer; font-size: 0.85rem; font-weight: 500; transition: background 0.15s; }
-        .btn-refresh:hover { background: #0b2a42; }
+        .config-card p.note { font-size: 0.85rem; color: #65766e; margin-bottom: 1rem; }
+        .btn-refresh { background: #1d5949; color: #fff; border: none; padding: 0.4rem 1rem; border-radius: 6px; cursor: pointer; font-size: 0.85rem; font-weight: 500; transition: background 0.15s; }
+        .btn-refresh:hover { background: #192f35; }
         .btn-refresh:disabled { opacity: 0.6; cursor: not-allowed; }
 
         /* Survey status toggle switch */
-        .survey-toggle-row { display: flex; align-items: center; gap: 1rem; padding: 0.9rem 0; border-bottom: 1px solid #e2e8f0; }
+        .survey-toggle-row { display: flex; align-items: center; gap: 1rem; padding: 0.9rem 0; border-bottom: 1px solid #d7e4dc; }
         .survey-toggle-row .toggle-copy { flex: 1; }
-        .survey-toggle-row .toggle-copy strong { font-size: 0.95rem; color: #0b2a42; }
-        .survey-toggle-row .toggle-copy small { display: block; font-size: 0.8rem; color: #64748b; margin-top: 0.15rem; }
+        .survey-toggle-row .toggle-copy strong { font-size: 0.95rem; color: #192f35; }
+        .survey-toggle-row .toggle-copy small { display: block; font-size: 0.8rem; color: #65766e; margin-top: 0.15rem; }
         .switch { position: relative; display: inline-block; width: 52px; height: 28px; flex: 0 0 auto; }
         .switch input { opacity: 0; width: 0; height: 0; }
-        .switch .slider { position: absolute; cursor: pointer; inset: 0; background: #cbd5e1; border-radius: 28px; transition: background 0.2s; }
+        .switch .slider { position: absolute; cursor: pointer; inset: 0; background: #bdccc4; border-radius: 28px; transition: background 0.2s; }
         .switch .slider::before { content: ''; position: absolute; height: 22px; width: 22px; left: 3px; top: 3px; background: #fff; border-radius: 50%; transition: transform 0.2s; }
         .switch input:checked + .slider { background: #34a853; }
         .switch input:checked + .slider::before { transform: translateX(24px); }
@@ -46,14 +44,15 @@
         #surveyFormRow { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem; }
         @media (max-width: 640px) { #surveyFormRow { grid-template-columns: 1fr; } }
         .distro-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; align-items: start; margin-top: 1rem; }
-        #surveyQrPreview { display: inline-block; padding: 0.6rem; border: 1px solid #e2e8f0; border-radius: 8px; background: #fff; }
+        #surveyQrPreview { display: inline-block; padding: 0.6rem; border: 1px solid #d7e4dc; border-radius: 8px; background: #fff; }
         #surveyQrPreview canvas { display: block; max-width: 100%; height: auto; }
         @media (max-width: 640px) { .distro-grid { grid-template-columns: 1fr; } }
     </style>
 
-    <link rel="stylesheet" href="css/theme.css">
-    <link rel="stylesheet" href="/css/dashboard-responsive.css">
-    </head>
+    <link rel="stylesheet" href="css/theme.css?brand=20261028">
+    <link rel="stylesheet" href="/css/dashboard-responsive.css?brand=20261028">
+        <link rel="stylesheet" href="/css/brand.css?v=20261028">
+</head>
 <body>
 
 <div class="app-shell">
@@ -73,15 +72,15 @@
             </p>
             <form id="riskMatrixForm" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;align-items:end;max-width:500px;">
                 <div class="form-group" style="margin-bottom:0;">
-                    <label style="display:block;font-size:0.8rem;font-weight:600;color:#475569;margin-bottom:0.25rem;">Low Max</label>
+                    <label style="display:block;font-size:0.8rem;font-weight:600;color:#53685c;margin-bottom:0.25rem;">Low Max</label>
                     <input type="number" id="rmLowMax" min="1" max="25" value="5" style="width:100%;padding:0.5rem;border:1px solid #d1d5db;border-radius:6px;font-size:0.9rem;">
                 </div>
                 <div class="form-group" style="margin-bottom:0;">
-                    <label style="display:block;font-size:0.8rem;font-weight:600;color:#475569;margin-bottom:0.25rem;">Medium Max</label>
+                    <label style="display:block;font-size:0.8rem;font-weight:600;color:#53685c;margin-bottom:0.25rem;">Medium Max</label>
                     <input type="number" id="rmMediumMax" min="1" max="25" value="9" style="width:100%;padding:0.5rem;border:1px solid #d1d5db;border-radius:6px;font-size:0.9rem;">
                 </div>
                 <div class="form-group" style="margin-bottom:0;">
-                    <label style="display:block;font-size:0.8rem;font-weight:600;color:#475569;margin-bottom:0.25rem;">High Max</label>
+                    <label style="display:block;font-size:0.8rem;font-weight:600;color:#53685c;margin-bottom:0.25rem;">High Max</label>
                     <input type="number" id="rmHighMax" min="1" max="25" value="15" style="width:100%;padding:0.5rem;border:1px solid #d1d5db;border-radius:6px;font-size:0.9rem;">
                 </div>
                 <div style="grid-column:1/-1;">
@@ -89,15 +88,15 @@
                     <span id="rmStatus" style="margin-left:0.75rem;font-size:0.85rem;display:none;"></span>
                 </div>
             </form>
-            <div style="margin-top:1.25rem;border-top:1px solid #e2e8f0;padding-top:1rem;">
-                <p style="font-size:0.8rem;color:#475569;font-weight:600;margin-bottom:0.5rem;">Preview — Severity × Probability (cell = risk index)</p>
+            <div style="margin-top:1.25rem;border-top:1px solid #d7e4dc;padding-top:1rem;">
+                <p style="font-size:0.8rem;color:#53685c;font-weight:600;margin-bottom:0.5rem;">Preview — Severity × Probability (cell = risk index)</p>
                 <div id="riskMatrixPreview" style="overflow-x:auto;"></div>
-                <div style="display:flex;gap:1rem;flex-wrap:wrap;justify-content:center;margin-top:0.75rem;font-size:0.72rem;color:#475569;">
+                <div style="display:flex;gap:1rem;flex-wrap:wrap;justify-content:center;margin-top:0.75rem;font-size:0.72rem;color:#53685c;">
                     <span style="display:inline-flex;align-items:center;gap:0.35rem;"><span style="width:14px;height:14px;background:#34a853;border-radius:3px;display:inline-block;"></span> Low (Level II)</span>
                     <span style="display:inline-flex;align-items:center;gap:0.35rem;"><span style="width:14px;height:14px;background:#f9ab00;border-radius:3px;display:inline-block;"></span> High (Level III)</span>
                     <span style="display:inline-flex;align-items:center;gap:0.35rem;"><span style="width:14px;height:14px;background:#ea4335;border-radius:3px;display:inline-block;"></span> Very High (Level IV)</span>
                 </div>
-                <p style="font-size:0.72rem;color:#94a3b8;margin-top:0.5rem;text-align:center;">
+                <p style="font-size:0.72rem;color:#83938a;margin-top:0.5rem;text-align:center;">
                     Thresholds are inclusive maximums (1–25). Risk index = Severity × Probability. Changes apply to your organization only.
                 </p>
             </div>
@@ -126,17 +125,17 @@
 
             <div id="surveyFormRow">
                 <div class="form-group" style="margin-bottom:0;">
-                    <label style="display:block;font-size:0.8rem;font-weight:600;color:#475569;margin-bottom:0.25rem;">Survey Start Date</label>
+                    <label style="display:block;font-size:0.8rem;font-weight:600;color:#53685c;margin-bottom:0.25rem;">Survey Start Date</label>
                     <input type="date" id="surveyOpenDate" style="width:100%;padding:0.5rem;border:1px solid #d1d5db;border-radius:6px;font-size:0.9rem;">
                 </div>
                 <div class="form-group" style="margin-bottom:0;">
-                    <label style="display:block;font-size:0.8rem;font-weight:600;color:#475569;margin-bottom:0.25rem;">Survey Expiry Date</label>
+                    <label style="display:block;font-size:0.8rem;font-weight:600;color:#53685c;margin-bottom:0.25rem;">Survey Expiry Date</label>
                     <input type="date" id="surveyCloseDate" style="width:100%;padding:0.5rem;border:1px solid #d1d5db;border-radius:6px;font-size:0.9rem;">
                 </div>
             </div>
 
             <div class="form-group" style="margin-top:1rem;max-width:280px;">
-                <label style="display:block;font-size:0.8rem;font-weight:600;color:#475569;margin-bottom:0.25rem;">Respondent Rate Limit / Cap (per day)</label>
+                <label style="display:block;font-size:0.8rem;font-weight:600;color:#53685c;margin-bottom:0.25rem;">Respondent Rate Limit / Cap (per day)</label>
                 <select id="surveyRateLimit" style="width:100%;padding:0.5rem;border:1px solid #d1d5db;border-radius:6px;font-size:0.9rem;background:#fff;">
                     <option value="5">5 responses / day</option>
                     <option value="10">10 responses / day</option>
@@ -147,7 +146,7 @@
             </div>
 
             <div class="form-group" style="margin-top:1rem;">
-                <label style="display:block;font-size:0.8rem;font-weight:600;color:#475569;margin-bottom:0.25rem;">Survey Instructions / Intro Message</label>
+                <label style="display:block;font-size:0.8rem;font-weight:600;color:#53685c;margin-bottom:0.25rem;">Survey Instructions / Intro Message</label>
                 <textarea id="surveyInstructions" rows="4" placeholder="e.g. Please answer each question honestly. Your responses support our Safety Management System." style="width:100%;padding:0.5rem;border:1px solid #d1d5db;border-radius:6px;font-size:0.9rem;resize:vertical;"></textarea>
             </div>
 
@@ -157,21 +156,21 @@
             </div>
 
             <!-- ============ SURVEY SHARE ============ -->
-            <div id="surveyShareSection" style="margin-top:24px; padding-top:20px; border-top:2px solid #e2e8f0;">
+            <div id="surveyShareSection" style="margin-top:24px; padding-top:20px; border-top:2px solid #d7e4dc;">
                 <!-- This div will be dynamically populated by JavaScript -->
                 <div id="surveyShareContent"></div>
             </div>
 
             <div id="surveyDistributionSection" style="display:none;margin-top:1.5rem;border-top:2px solid #34a853;padding-top:1.25rem;">
                 <div class="section-title" style="font-size:1.05rem;margin-top:0;"><i class="fas fa-bullhorn"></i> Survey Distribution &amp; Launch Controls</div>
-                <p style="font-size:0.85rem;color:#64748b;margin-bottom:1rem;">
+                <p style="font-size:0.85rem;color:#65766e;margin-bottom:1rem;">
                     Share the direct survey link with respondents, or download the QR code to print on company notice boards.
                 </p>
                 <div class="distro-grid">
                     <div>
-                        <label style="display:block;font-size:0.8rem;font-weight:600;color:#475569;margin-bottom:0.4rem;">Shortened Direct URL</label>
+                        <label style="display:block;font-size:0.8rem;font-weight:600;color:#53685c;margin-bottom:0.4rem;">Shortened Direct URL</label>
                         <div style="display:flex;gap:0.5rem;">
-                            <input type="text" id="surveyShortUrl" readonly style="flex:1;min-width:0;padding:0.5rem;border:1px solid #d1d5db;border-radius:6px;font-size:0.85rem;background:#f8fafc;color:#0b2a42;">
+                            <input type="text" id="surveyShortUrl" readonly style="flex:1;min-width:0;padding:0.5rem;border:1px solid #d1d5db;border-radius:6px;font-size:0.85rem;background:#f4f6f3;color:#192f35;">
                             <button type="button" class="btn-refresh" id="copySurveyLinkBtn"><i class="fas fa-copy"></i> Copy Link</button>
                         </div>
                         <div style="margin-top:0.6rem;">
@@ -179,7 +178,7 @@
                         </div>
                     </div>
                     <div style="text-align:center;">
-                        <label style="display:block;font-size:0.8rem;font-weight:600;color:#475569;margin-bottom:0.4rem;">QR Code — Notice Board Poster</label>
+                        <label style="display:block;font-size:0.8rem;font-weight:600;color:#53685c;margin-bottom:0.4rem;">QR Code — Notice Board Poster</label>
                         <div id="surveyQrPreview"></div>
                         <div style="margin-top:0.6rem;">
                             <button type="button" class="btn-refresh" id="downloadQrBtn"><i class="fas fa-download"></i> Download QR Code (PNG)</button>
@@ -202,7 +201,7 @@ window.SHELL_CONFIG = {
 };
 </script>
 <script src="/js/api/client.js"></script>
-<script src="/js/shell.js"></script>
+<script src="/js/shell.js?brand=20261028"></script>
 <script src="/js/dashboard-nav.js"></script>
 <script src="/js/dashboard-utils.js"></script>
 <script src="/js/report.js"></script>
@@ -226,7 +225,7 @@ function showAdministrationAccessDenied() {
         <div style="text-align:center;padding:3rem;">
             <i class="fas fa-lock" style="font-size:2.5rem;color:#dc3545;"></i>
             <h2 style="color:#dc3545;margin-top:1rem;">Access Denied</h2>
-            <p style="color:#64748b;">The Administration section is available to Safety Managers only.</p>
+            <p style="color:#65766e;">The Administration section is available to Safety Managers only.</p>
             <a href="/safety.html" class="btn btn-outline btn-sm" style="margin-top:1rem;"><i class="fas fa-arrow-left"></i> Back to Dashboard</a>
         </div>`;
     pageContent.style.display = 'block';
@@ -319,22 +318,22 @@ function renderRiskMatrixPreview() {
     };
 
     const colorFor = (index) => {
-        if (!valid) return '#e2e8f0';
-        return ICAO_COLORS[levelFor(index)] || '#e2e8f0';
+        if (!valid) return '#d7e4dc';
+        return ICAO_COLORS[levelFor(index)] || '#d7e4dc';
     };
 
     let html = '<table style="border-collapse:collapse;margin:0 auto;font-size:0.78rem;">';
-    html += '<tr><td style="padding:0.4rem;font-weight:700;color:#475569;text-align:right;">P\\S</td>';
+    html += '<tr><td style="padding:0.4rem;font-weight:700;color:#53685c;text-align:right;">P\\S</td>';
     for (let s = 1; s <= 5; s++) {
-        html += `<td style="padding:0.4rem 0.55rem;font-weight:700;color:#1a6b8a;text-align:center;">${s}</td>`;
+        html += `<td style="padding:0.4rem 0.55rem;font-weight:700;color:#1d5949;text-align:center;">${s}</td>`;
     }
     html += '</tr>';
     for (let p = 5; p >= 1; p--) {
-        html += `<tr><td style="padding:0.4rem;font-weight:700;color:#475569;text-align:right;">${p}</td>`;
+        html += `<tr><td style="padding:0.4rem;font-weight:700;color:#53685c;text-align:right;">${p}</td>`;
         for (let s = 1; s <= 5; s++) {
             const index = s * p;
             const color = colorFor(index);
-            const textColor = (index > 15 && valid) ? '#fff' : '#0b2a42';
+            const textColor = (index > 15 && valid) ? '#fff' : '#192f35';
             html += `<td style="padding:0.4rem;text-align:center;background:${color};border:1px solid #fff;border-radius:4px;min-width:42px;color:${textColor};font-weight:700;">${index}</td>`;
         }
         html += '</tr>';
@@ -345,7 +344,7 @@ function renderRiskMatrixPreview() {
     if (!valid) {
         note = '<p style="text-align:center;font-size:0.72rem;color:#d97706;margin-top:0.5rem;">Thresholds must be strictly increasing: 1 ≤ Low &lt; Medium &lt; High ≤ 25.</p>';
     } else {
-        note = `<p style="text-align:center;font-size:0.72rem;color:#94a3b8;margin-top:0.5rem;">Low ≤ ${t.lowMax} · High ≤ ${t.highMax} · Very High &gt; ${t.highMax}</p>`;
+        note = `<p style="text-align:center;font-size:0.72rem;color:#83938a;margin-top:0.5rem;">Low ≤ ${t.lowMax} · High ≤ ${t.highMax} · Very High &gt; ${t.highMax}</p>`;
     }
     container.innerHTML = html + note;
 }
@@ -558,30 +557,30 @@ async function loadSurveyShare(tenantId) {
     const surveyLink = `${window.location.origin}/survey/index.html?tenant=${tenantId}`;
     
     container.innerHTML = `
-        <h3><i class="fas fa-share-alt" style="color:#0ea5e9;"></i> Share Survey</h3>
-        <p style="color:#64748b; font-size:.85rem;">Copy the link below or scan the QR code to share the survey with employees.</p>
+        <h3><i class="fas fa-share-alt" style="color:#1d5949;"></i> Share Survey</h3>
+        <p style="color:#65766e; font-size:.85rem;">Copy the link below or scan the QR code to share the survey with employees.</p>
         
         <!-- Survey Link -->
         <div class="form-group" style="margin-top:12px;">
             <label style="font-weight:600; font-size:.85rem;">Survey Link</label>
             <div style="display:flex; gap:8px;">
                 <input type="text" id="surveyLink" readonly 
-                       style="flex:1; padding:10px 12px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; font-size:.85rem; cursor:pointer;" 
+                       style="flex:1; padding:10px 12px; background:#f4f6f3; border:1px solid #d7e4dc; border-radius:8px; font-size:.85rem; cursor:pointer;"
                        value="${surveyLink}" onclick="this.select();">
                 <button class="btn btn-primary btn-sm" onclick="copySurveyLink()" style="white-space:nowrap;">
                     <i class="fas fa-copy"></i> Copy
                 </button>
             </div>
-            <small style="color:#94a3b8; font-size:.75rem;">Click the link to select all, then copy.</small>
+            <small style="color:#83938a; font-size:.75rem;">Click the link to select all, then copy.</small>
         </div>
         
         <!-- QR Code -->
-        <div class="form-group" style="margin-top:16px; text-align:center; padding:20px; background:#f8fafc; border-radius:8px; border:1px solid #e2e8f0;">
+        <div class="form-group" style="margin-top:16px; text-align:center; padding:20px; background:#f4f6f3; border-radius:8px; border:1px solid #d7e4dc;">
             <label style="font-weight:600; font-size:.85rem; display:block; margin-bottom:12px;">QR Code</label>
             <div id="qrCodeContainer" style="display:flex; justify-content:center; padding:8px;">
                 <img id="qrCodeImage" src="" alt="QR Code" 
-                     style="max-width:200px; height:auto; border:1px solid #e2e8f0; border-radius:8px; padding:12px; background:#fff; display:none;">
-                <div id="qrCodeLoading" style="color:#94a3b8; font-size:.85rem; padding:20px;">
+                     style="max-width:200px; height:auto; border:1px solid #d7e4dc; border-radius:8px; padding:12px; background:#fff; display:none;">
+                <div id="qrCodeLoading" style="color:#83938a; font-size:.85rem; padding:20px;">
                     <i class="fas fa-spinner fa-spin"></i> Generating QR code...
                 </div>
             </div>
@@ -593,7 +592,7 @@ async function loadSurveyShare(tenantId) {
                     <i class="fas fa-download"></i> Download PNG
                 </button>
             </div>
-            <small style="color:#94a3b8; font-size:.75rem; display:block; margin-top:8px;">Scan the QR code with your phone camera to open the survey.</small>
+            <small style="color:#83938a; font-size:.75rem; display:block; margin-top:8px;">Scan the QR code with your phone camera to open the survey.</small>
         </div>
     `;
     
@@ -638,7 +637,7 @@ function generateQRCode(text) {
             text: text,
             width: 200,
             height: 200,
-            colorDark: "#1a237e",
+            colorDark: "#174e48",
             colorLight: "#ffffff",
             correctLevel: QRCode.CorrectLevel.H
         });
@@ -704,7 +703,7 @@ function printQRCode() {
     win.document.write(`
         <html><head><title>Survey QR Code</title>
         <style>body{display:flex;justify-content:center;align-items:center;height:100vh;margin:0;background:#fff;}
-        img{max-width:400px;border:1px solid #e2e8f0;border-radius:8px;padding:16px;}</style>
+        img{max-width:400px;border:1px solid #d7e4dc;border-radius:8px;padding:16px;}</style>
         </head><body>
         <img src="${src}" alt="Survey QR Code">
         <script>window.onload=function(){window.print();}<\/script>
@@ -773,7 +772,7 @@ function getTenantId() {
 function toast(message, type) {
     const toastDiv = document.getElementById('toastContainer') || createToastContainer();
     const el = document.createElement('div');
-    el.style.cssText = 'padding:10px 14px; border-radius:6px; font-size:0.85rem; color:#fff; background:' + (type === 'success' ? '#16a34a' : type === 'error' ? '#dc2626' : '#334155') + '; box-shadow:0 2px 8px rgba(0,0,0,0.15);';
+    el.style.cssText = 'padding:10px 14px; border-radius:6px; font-size:0.85rem; color:#fff; background:' + (type === 'success' ? '#16a34a' : type === 'error' ? '#dc2626' : '#244837') + '; box-shadow:0 2px 8px rgba(0,0,0,0.15);';
     el.textContent = message;
     toastDiv.appendChild(el);
     setTimeout(() => {

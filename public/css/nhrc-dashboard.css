@@ -12,7 +12,7 @@
     border-radius: 10px;
     box-shadow: 0 1px 4px rgba(0,0,0,0.06);
     padding: 1.25rem;
-    border-top: 4px solid #1a6b8a;
+    border-top: 4px solid #1d5949;
     cursor: pointer;
     transition: all 0.2s;
 }
@@ -32,12 +32,12 @@
 .nhrc-card .nhrc-code {
     font-size: 1.2rem;
     font-weight: 800;
-    color: #0b2a42;
+    color: #192f35;
 }
 
 .nhrc-card .nhrc-name {
     font-size: 0.85rem;
-    color: #64748b;
+    color: #65766e;
 }
 
 .nhrc-card .nhrc-stats {
@@ -50,26 +50,26 @@
 .nhrc-card .nhrc-stat {
     text-align: center;
     padding: 0.5rem;
-    background: #f8fafc;
+    background: #f4f6f3;
     border-radius: 6px;
 }
 
 .nhrc-card .nhrc-stat .num {
     font-size: 1.3rem;
     font-weight: 700;
-    color: #0b2a42;
+    color: #192f35;
 }
 
 .nhrc-card .nhrc-stat .lbl {
     font-size: 0.65rem;
-    color: #64748b;
+    color: #65766e;
     text-transform: uppercase;
     letter-spacing: 0.3px;
 }
 
 .nhrc-card .nhrc-trend {
     font-size: 0.8rem;
-    color: #475569;
+    color: #53685c;
     font-weight: 500;
     margin: 0.25rem 0 0.5rem;
 }
@@ -101,7 +101,7 @@
 
 .nhrc-card .nhrc-sei-link {
     font-size: 0.78rem;
-    color: #1a6b8a;
+    color: #1d5949;
     text-decoration: none;
     margin-top: 0.5rem;
     display: inline-block;
@@ -116,7 +116,7 @@
     grid-column: 1 / -1;
     text-align: center;
     padding: 2rem;
-    color: #64748b;
+    color: #65766e;
     font-size: 0.95rem;
 }
 
@@ -155,15 +155,15 @@
     right: 1.5rem;
     font-size: 1.5rem;
     cursor: pointer;
-    color: #64748b;
+    color: #65766e;
 }
 
 .modal-close:hover {
-    color: #0b2a42;
+    color: #192f35;
 }
 
 .modal-content h4 {
-    color: #0b2a42;
+    color: #192f35;
     margin: 1rem 0 0.5rem;
 }
 
@@ -171,7 +171,7 @@
     margin: 0 0 0.5rem;
     padding-left: 1.25rem;
     line-height: 1.6;
-    color: #334155;
+    color: #244837;
 }
 
 /* Chart wrap */

@@ -45,7 +45,7 @@
     // CAAN maturity stage badge mapping (Level 0-3).
     function maturityLevel(scorePct) {
         if (scorePct >= 90) return { level: 3, label: 'Effective', tag: 'Level 3 · Effective', color: '#1a7f37' };
-        if (scorePct >= 70) return { level: 2, label: 'Suitable / Operating', tag: 'Level 2 · Suitable / Operating', color: '#1a6b8a' };
+        if (scorePct >= 70) return { level: 2, label: 'Suitable / Operating', tag: 'Level 2 · Suitable / Operating', color: '#1d5949' };
         if (scorePct >= 40) return { level: 1, label: 'Present', tag: 'Level 1 · Present', color: '#d97706' };
         return { level: 0, label: 'Non-Compliant', tag: 'Level 0 · Non-Compliant', color: '#dc3545' };
     }
@@ -669,7 +669,7 @@
                     '<div style="text-align:center;padding:3rem;">' +
                     '  <i class="fas fa-lock" style="font-size:2.5rem;color:#dc3545;"></i>' +
                     '  <h2 style="color:#dc3545;margin-top:1rem;">Access Denied</h2>' +
-                    '  <p style="color:#64748b;">PSOE surveillance audits are available to Safety Managers and CAAN SMD only.</p>' +
+                    '  <p style="color:#65766e;">PSOE surveillance audits are available to Safety Managers and CAAN SMD only.</p>' +
                     '  <a href="/safety.html" class="btn btn-outline btn-sm" style="margin-top:1rem;"><i class="fas fa-arrow-left"></i> Back to Dashboard</a>' +
                     '</div>';
             }

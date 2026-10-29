@@ -45,7 +45,7 @@
 
 .kpi-metric-strip .kpi-card {
   background: #ffffff;
-  border: 1px solid #e2e8f0;
+  border: 1px solid #d7e4dc;
   border-radius: 8px;
   padding: 16px;
   display: flex;
@@ -63,7 +63,7 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.6px;
-  color: #64748b;
+  color: #65766e;
   overflow: hidden;
   text-overflow: ellipsis;
 }
@@ -81,7 +81,7 @@
 
 .kpi-metric-strip .kpi-card .kpi-trend.up { color: #dc2626; }
 .kpi-metric-strip .kpi-card .kpi-trend.down { color: #16a34a; }
-.kpi-metric-strip .kpi-card .kpi-trend.stable { color: #94a3b8; }
+.kpi-metric-strip .kpi-card .kpi-trend.stable { color: #83938a; }
 
 /* ========== OVERSIGHT GRID ========== */
 .oversight-grid {
@@ -99,7 +99,7 @@
 /* ========== CHART CARD ========== */
 .chart-card {
   background: #ffffff;
-  border: 1px solid #e2e8f0;
+  border: 1px solid #d7e4dc;
   border-radius: 8px;
   padding: 16px;
 }
@@ -114,7 +114,7 @@
 .chart-card .chart-card-header h3 {
   font-size: 0.85rem;
   font-weight: 600;
-  color: #334155;
+  color: #244837;
   margin: 0;
 }
 
@@ -122,8 +122,8 @@
   font-size: 0.65rem;
   padding: 2px 8px;
   border-radius: 10px;
-  background: #f1f5f9;
-  color: #64748b;
+  background: #edf2ed;
+  color: #65766e;
   font-weight: 500;
 }
 
@@ -150,13 +150,13 @@
 
 .audit-table tbody td {
   padding: 8px 12px;
-  border-bottom: 1px solid #e2e8f0;
-  color: #334155;
+  border-bottom: 1px solid #d7e4dc;
+  color: #244837;
   vertical-align: middle;
 }
 
 .audit-table tbody tr:hover {
-  background: #f8fafc;
+  background: #f4f6f3;
 }
 
 .audit-table .status-badge {
@@ -195,14 +195,14 @@
   align-items: center;
   justify-content: center;
   padding: 40px;
-  color: #94a3b8;
+  color: #83938a;
   font-size: 0.85rem;
 }
 
 .oversight-empty {
   text-align: center;
   padding: 40px;
-  color: #94a3b8;
+  color: #83938a;
 }
 
 .oversight-empty i {
@@ -240,7 +240,7 @@
 .dispatch-prompt-card input {
   width: 100%;
   padding: 8px 12px;
-  border: 1px solid #cbd5e1;
+  border: 1px solid #bdccc4;
   border-radius: 6px;
   font-size: 0.85rem;
   margin-bottom: 16px;

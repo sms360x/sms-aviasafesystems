@@ -165,7 +165,7 @@ const AviaSDCPSCaanOversight = (function () {
     overlay.innerHTML = `
       <div class="dispatch-prompt-card">
         <h3><i class="fa-solid fa-envelope"></i> Dispatch SSP Report</h3>
-        <p style="font-size:0.8rem;color:#64748b;margin:0 0 12px">
+        <p style="font-size:0.8rem;color:#65766e;margin:0 0 12px">
           Enter the recipient email for the ${currentReport.reporting_year} Q${currentReport.reporting_quarter || ''} report.
         </p>
         <input type="email" id="dispatchRecipientInput" placeholder="regulator@caanepal.gov.np" />

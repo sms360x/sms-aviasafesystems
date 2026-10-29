@@ -13,21 +13,19 @@ AUTHOR: AviaSAFE Systems
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Step 5: Dummy Data — AviaSAFE Admin</title>
-    <link rel="stylesheet" href="/css/variables.css">
-    <link rel="stylesheet" href="/css/admin.css">
-    <link rel="stylesheet" href="/css/admin-setup.css">
+    <link rel="stylesheet" href="/css/variables.css?brand=20261028">
+    <link rel="stylesheet" href="/css/admin.css?brand=20261028">
+    <link rel="stylesheet" href="/css/admin-setup.css?brand=20261028">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-check-compat.js"></script>
-    <script src="/js/firebase.js?v=4.0.1"></script>
+    <script src="/js/firebase.js?v=4.0.1&brand=20261028"></script>
     <script src="/js/api/client.js"></script>
-    <script src="/js/admin.js"></script>
-    <script src="/js/admin-setup-core.js"></script>
+    <script src="/js/admin.js?brand=20261028"></script>
+    <script src="/js/admin-setup-core.js?brand=20261028"></script>
+    <link rel="stylesheet" href="/css/brand.css?v=20261028">
 </head>
 <body class="admin-body">
 
@@ -39,8 +37,8 @@ AUTHOR: AviaSAFE Systems
             <span class="page-title">Step 5 — Dummy Data</span>
         </div>
         <div class="tb-actions" id="topNav">
-            <a href="/admin/production-setup.html" class="nav-link" style="color:#cbd5e1; text-decoration:none; font-size:.82rem; padding:6px 12px; border-radius:8px;"><i class="fas fa-cogs" style="color:#4fc3f7;"></i> Production Setup</a>
-            <a href="/admin/psoe-audit.html" class="nav-link" style="color:#cbd5e1; text-decoration:none; font-size:.82rem; padding:6px 12px; border-radius:8px;"><i class="fas fa-clipboard-check"></i> PSOE Audit</a>
+            <a href="/admin/production-setup.html" class="nav-link" style="color:#bdccc4; text-decoration:none; font-size:.82rem; padding:6px 12px; border-radius:8px;"><i class="fas fa-cogs" style="color:#4fc3f7;"></i> Production Setup</a>
+            <a href="/admin/psoe-audit.html" class="nav-link" style="color:#bdccc4; text-decoration:none; font-size:.82rem; padding:6px 12px; border-radius:8px;"><i class="fas fa-clipboard-check"></i> PSOE Audit</a>
             <span class="user-badge"><span class="role-chip">SUPER_ADMIN</span><span id="userDisplay">—</span></span>
             <button class="btn btn-danger btn-sm" onclick="logout()">Logout</button>
         </div>
@@ -59,17 +57,17 @@ AUTHOR: AviaSAFE Systems
                     <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap;">
                         <label style="font-size:.85rem;display:flex;align-items:center;gap:6px;"><input type="radio" name="demoScope" value="all" checked onchange="demoScopeChanged()"> All tenants</label>
                         <label style="font-size:.85rem;display:flex;align-items:center;gap:6px;"><input type="radio" name="demoScope" value="one" onchange="demoScopeChanged()"> Single tenant</label>
-                        <select id="demoTenantSelect" disabled style="padding:6px 10px;border-radius:6px;border:1px solid #cbd5e1;"><option value="">— select tenant —</option></select>
+                        <select id="demoTenantSelect" disabled style="padding:6px 10px;border-radius:6px;border:1px solid #bdccc4;"><option value="">— select tenant —</option></select>
                     </div>
                 </div>
                 <div class="form-group">
                     <label>Data types &amp; quantities</label>
                     <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap;">
-                        <label class="demo-kind-wrap" style="display:flex;align-items:center;gap:6px;font-size:.85rem;"><input type="checkbox" class="demo-kind" value="vsr" checked onchange="demoKindChanged()"> VSR <input type="number" class="demo-count" data-kind="vsr" value="5" min="1" max="500" style="width:64px;padding:4px 6px;border:1px solid #cbd5e1;border-radius:6px;"></label>
-                        <label class="demo-kind-wrap" style="display:flex;align-items:center;gap:6px;font-size:.85rem;"><input type="checkbox" class="demo-kind" value="mor" checked onchange="demoKindChanged()"> MOR <input type="number" class="demo-count" data-kind="mor" value="3" min="1" max="500" style="width:64px;padding:4px 6px;border:1px solid #cbd5e1;border-radius:6px;"></label>
-                        <label class="demo-kind-wrap" style="display:flex;align-items:center;gap:6px;font-size:.85rem;"><input type="checkbox" class="demo-kind" value="can" checked onchange="demoKindChanged()"> CAN <input type="number" class="demo-count" data-kind="can" value="3" min="1" max="500" style="width:64px;padding:4px 6px;border:1px solid #cbd5e1;border-radius:6px;"></label>
-                        <label class="demo-kind-wrap" style="display:flex;align-items:center;gap:6px;font-size:.85rem;"><input type="checkbox" class="demo-kind" value="cap" checked onchange="demoKindChanged()"> CAP <input type="number" class="demo-count" data-kind="cap" value="3" min="1" max="500" style="width:64px;padding:4px 6px;border:1px solid #cbd5e1;border-radius:6px;"></label>
-                        <label class="demo-kind-wrap" style="display:flex;align-items:center;gap:6px;font-size:.85rem;"><input type="checkbox" class="demo-kind" value="survey" checked onchange="demoKindChanged()"> Survey <input type="number" class="demo-count" data-kind="survey" value="12" min="1" max="500" style="width:64px;padding:4px 6px;border:1px solid #cbd5e1;border-radius:6px;"></label>
+                        <label class="demo-kind-wrap" style="display:flex;align-items:center;gap:6px;font-size:.85rem;"><input type="checkbox" class="demo-kind" value="vsr" checked onchange="demoKindChanged()"> VSR <input type="number" class="demo-count" data-kind="vsr" value="5" min="1" max="500" style="width:64px;padding:4px 6px;border:1px solid #bdccc4;border-radius:6px;"></label>
+                        <label class="demo-kind-wrap" style="display:flex;align-items:center;gap:6px;font-size:.85rem;"><input type="checkbox" class="demo-kind" value="mor" checked onchange="demoKindChanged()"> MOR <input type="number" class="demo-count" data-kind="mor" value="3" min="1" max="500" style="width:64px;padding:4px 6px;border:1px solid #bdccc4;border-radius:6px;"></label>
+                        <label class="demo-kind-wrap" style="display:flex;align-items:center;gap:6px;font-size:.85rem;"><input type="checkbox" class="demo-kind" value="can" checked onchange="demoKindChanged()"> CAN <input type="number" class="demo-count" data-kind="can" value="3" min="1" max="500" style="width:64px;padding:4px 6px;border:1px solid #bdccc4;border-radius:6px;"></label>
+                        <label class="demo-kind-wrap" style="display:flex;align-items:center;gap:6px;font-size:.85rem;"><input type="checkbox" class="demo-kind" value="cap" checked onchange="demoKindChanged()"> CAP <input type="number" class="demo-count" data-kind="cap" value="3" min="1" max="500" style="width:64px;padding:4px 6px;border:1px solid #bdccc4;border-radius:6px;"></label>
+                        <label class="demo-kind-wrap" style="display:flex;align-items:center;gap:6px;font-size:.85rem;"><input type="checkbox" class="demo-kind" value="survey" checked onchange="demoKindChanged()"> Survey <input type="number" class="demo-count" data-kind="survey" value="12" min="1" max="500" style="width:64px;padding:4px 6px;border:1px solid #bdccc4;border-radius:6px;"></label>
                     </div>
                     <small>Enter how many of each record to create per tenant. Disabled types are skipped.</small>
                 </div>
@@ -78,20 +76,20 @@ AUTHOR: AviaSAFE Systems
                 <button class="btn btn-success" onclick="demoData('seed')"><i class="fas fa-seedling"></i> Seed Dummy Data</button>
                 <button class="btn btn-danger" onclick="demoData('unseed')"><i class="fas fa-broom"></i> Unseed Dummy Data</button>
             </div>
-            <div style="border-top:1px dashed #e2e8f0;margin:16px 0 12px;padding-top:14px;">
-                <div style="font-size:.78rem;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:#94a3b8;margin-bottom:6px;"><i class="fas fa-calendar-alt"></i> 12-Month Demo Dataset</div>
+            <div style="border-top:1px dashed #d7e4dc;margin:16px 0 12px;padding-top:14px;">
+                <div style="font-size:.78rem;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:#83938a;margin-bottom:6px;"><i class="fas fa-calendar-alt"></i> 12-Month Demo Dataset</div>
                 <p class="card-sub" style="margin-bottom:10px;">Replaces the demo rows with a realistic 12-month set (~80 VSR / ~20 MOR / ~16 CAN / ~12 CAP / ~204 SMS-maturity surveys) across a random window in Jan 2026 – Sep 2027. Content is tenant-realistic: <strong>Sita Air</strong> gets fixed-wing only (DHC-6 / Do 228); <strong>Annapurna Helicopter</strong> gets helicopter-only (AS350 / H125 / Bell 407).</p>
                 <div class="btn-row">
                     <button class="btn btn-primary" onclick="demoData('seed12m')"><i class="fas fa-calendar-alt"></i> Seed 12-Month Demo Data</button>
                 </div>
             </div>
-            <div style="border-top:1px dashed #e2e8f0;margin:16px 0 12px;padding-top:14px;">
-                <div style="font-size:.78rem;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:#94a3b8;margin-bottom:8px;"><i class="fas fa-file-export"></i> Export Dummy Data</div>
+            <div style="border-top:1px dashed #d7e4dc;margin:16px 0 12px;padding-top:14px;">
+                <div style="font-size:.78rem;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:#83938a;margin-bottom:8px;"><i class="fas fa-file-export"></i> Export Dummy Data</div>
                 <p class="card-sub" style="margin-bottom:10px;">Download the seeded demo rows (<code>is_demo = true</code>) as CSV, scoped to all tenants or a single tenant.</p>
                 <div class="form-row" style="margin-bottom:10px;">
                     <div class="form-group">
                         <label>Tenant (slug or uuid) — optional</label>
-                        <input type="text" id="exportDummyTenant" placeholder="e.g. fixedwing — blank = all tenants" style="padding:8px 11px;border:1px solid #cbd5e1;border-radius:8px;font-size:.84rem;">
+                        <input type="text" id="exportDummyTenant" placeholder="e.g. fixedwing — blank = all tenants" style="padding:8px 11px;border:1px solid #bdccc4;border-radius:8px;font-size:.84rem;">
                     </div>
                 </div>
                 <div class="btn-row">
@@ -115,12 +113,12 @@ AUTHOR: AviaSAFE Systems
 <div id="confirmModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:999;justify-content:center;align-items:center;">
     <div style="background:#fff;padding:26px;border-radius:10px;max-width:480px;width:90%;">
         <h3 style="margin:0 0 10px;color:#c5221f;"><i class="fas fa-triangle-exclamation"></i> <span id="confirmTitle">Confirm</span></h3>
-        <p id="confirmText" style="font-size:.9rem;color:#334155;line-height:1.5;"></p>
+        <p id="confirmText" style="font-size:.9rem;color:#244837;line-height:1.5;"></p>
         <div id="confirmSetupKeyWrap" style="display:none;margin-top:14px;">
-            <label for="confirmSetupKey" style="display:block;font-size:.78rem;font-weight:600;color:#475569;margin-bottom:4px;">Setup Key (SETUP_SECRET) *</label>
+            <label for="confirmSetupKey" style="display:block;font-size:.78rem;font-weight:600;color:#53685c;margin-bottom:4px;">Setup Key (SETUP_SECRET) *</label>
             <input type="password" id="confirmSetupKey" placeholder="Enter setup key to authorize this destructive action" autocomplete="off"
-                   style="width:100%;padding:9px 11px;border:1px solid #cbd5e1;border-radius:8px;font-size:.86rem;box-sizing:border-box;">
-            <small style="display:block;color:#94a3b8;font-size:.72rem;margin-top:4px;">Stored in this tab only (sessionStorage) — never sent except to verify this action.</small>
+                   style="width:100%;padding:9px 11px;border:1px solid #bdccc4;border-radius:8px;font-size:.86rem;box-sizing:border-box;">
+            <small style="display:block;color:#83938a;font-size:.72rem;margin-top:4px;">Stored in this tab only (sessionStorage) — never sent except to verify this action.</small>
             <div id="confirmSetupKeyError" style="display:none;margin-top:6px;color:#b91c1c;font-size:.78rem;"></div>
         </div>
         <div style="display:flex;gap:10px;margin-top:20px;justify-content:flex-end;">

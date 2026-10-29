@@ -5,10 +5,10 @@
    PURPOSE: Shared visual language for the four role-scoped dashboards
             (DASHBOARD_CONTRACT.md §8 — visual design system).
    PALETTE (matches landing page public/index.html):
-     --dash-teal-900  #072535  deep teal hero (dark)
-     --dash-teal-800  #0A3A50  deep teal hero (light end of gradient)
-     --dash-brand-500 #0284C7  oceanic blue accent
-     --dash-slate-50  #F8FAFC  content background
+     --dash-teal-900  #143e35  deep teal hero (dark)
+     --dash-teal-800  #1d5949  deep teal hero (light end of gradient)
+     --dash-brand-500 #235a4b  oceanic blue accent
+     --dash-slate-50  #f4f6f3  content background
      --dash-gold      #D4AF37  executive accent (AE surfaces)
    MODULE ACCENTS (§8): Module A survey blue, Module B hazard/risk amber,
      Module C regulator slate/teal. Status colors red/yellow/green for KPI
@@ -20,28 +20,28 @@
    ============================================================================ */
 
 :root {
-  --dash-teal-900: #072535;
-  --dash-teal-800: #0a3a50;
-  --dash-teal-700: #0e4e6c;
-  --dash-brand-500: #0284c7;
-  --dash-brand-700: #0369a1;
-  --dash-slate-50: #f8fafc;
-  --dash-slate-100: #f1f5f9;
-  --dash-slate-200: #e2e8f0;
-  --dash-slate-400: #94a3b8;
-  --dash-slate-500: #64748b;
-  --dash-slate-800: #1e293b;
-  --dash-ink: #0f172a;
+  --dash-teal-900: #143e35;
+  --dash-teal-800: #1d5949;
+  --dash-teal-700: #174e48;
+  --dash-brand-500: #235a4b;
+  --dash-brand-700: #174e48;
+  --dash-slate-50: #f4f6f3;
+  --dash-slate-100: #edf2ed;
+  --dash-slate-200: #d7e4dc;
+  --dash-slate-400: #83938a;
+  --dash-slate-500: #65766e;
+  --dash-slate-800: #192f35;
+  --dash-ink: #192f35;
   --dash-gold: #d4af37;
   --dash-green: #1e7e34;
   --dash-amber: #b45309;
   --dash-red: #dc3545;
-  --dash-module-a: #0284c7;  /* Module A (survey) blue */
+  --dash-module-a: #235a4b;  /* Module A (survey) blue */
   --dash-module-b: #d97706;  /* Module B (hazard/risk) amber */
   --dash-module-c: #0f766e;  /* Module C (regulator) slate/teal */
   --dash-radius: 14px;
   --dash-space: 8px;
-  --dash-font: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --dash-font: 'DM Sans', system-ui, -apple-system, 'DM Sans', sans-serif;
 }
 
 /* ---- Shell frame -------------------------------------------------------- */
@@ -84,7 +84,7 @@
 
 .dash-logo { color: var(--dash-gold); font-size: 1.2rem; }
 
-.dash-brand-text em { font-style: normal; color: #7dd3fc; }
+.dash-brand-text em { font-style: normal; color: #bdd5c9; }
 
 .dash-brand-sms {
   font-size: 0.6rem;
@@ -94,7 +94,7 @@
   border-radius: 4px;
   background: rgba(125, 211, 252, 0.15);
   border: 1px solid rgba(125, 211, 252, 0.4);
-  color: #bae6fd;
+  color: #dce9dd;
   font-family: ui-monospace, monospace;
   vertical-align: middle;
 }
@@ -108,7 +108,7 @@
   border: 1px solid rgba(255, 255, 255, 0.25);
   border-radius: 999px;
   padding: 4px 10px;
-  color: #e2e8f0;
+  color: #d7e4dc;
   white-space: nowrap;
 }
 
@@ -202,7 +202,7 @@
 .dash-nav-link i { width: 16px; text-align: center; color: var(--dash-slate-400); }
 .dash-nav-link:hover { background: var(--dash-slate-100); }
 .dash-nav-link.active {
-  background: #f0f9ff;
+  background: #f4f6f3;
   color: var(--dash-brand-700);
   font-weight: 700;
 }
@@ -297,7 +297,7 @@
 .dash-kpi-strip.ae-neutral .dash-kpi { border-top-color: var(--dash-teal-800); }
 
 .dash-kpi.clickable { cursor: pointer; }
-.dash-kpi.clickable:hover { box-shadow: 0 4px 12px rgba(2, 132, 199, 0.12); }
+.dash-kpi.clickable:hover { box-shadow: 0 4px 12px rgba(35, 90, 75, 0.12); }
 
 .dash-kpi-value {
   font-size: 1.7rem;

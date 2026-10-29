@@ -870,7 +870,7 @@ function initDemoToolbar() {
         wrap.innerHTML = '<span style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.5px;color:#8fa8bd;">Demo</span>';
 
         var sel = document.createElement('select');
-        sel.style.cssText = 'background:#123a5c;color:#fff;border:1px solid rgba(255,255,255,0.3);' +
+        sel.style.cssText = 'background:#174e48;color:#fff;border:1px solid rgba(255,255,255,0.3);' +
             'border-radius:6px;padding:0.3rem 0.5rem;font-size:0.78rem;';
         options.forEach(function (o) {
             var opt = document.createElement('option');
@@ -925,15 +925,15 @@ function initDemoToolbar() {
             badge.className = 'badge badge-subtle-secondary';
             badge.id = 'demoModeIndicator';
             badge.title = 'Session expires ' + expiresLabel;
-            badge.style.cssText = 'font-size:0.75rem;opacity:0.85;background:#f1f5f9;color:#94a3b8;' +
-                'border:1px solid #e2e8f0;border-radius:999px;padding:0.25rem 0.7rem;';
+            badge.style.cssText = 'font-size:0.75rem;opacity:0.85;background:#edf2ed;color:#83938a;' +
+                'border:1px solid #d7e4dc;border-radius:999px;padding:0.25rem 0.7rem;';
             badge.textContent = indicatorText.replace(' \u00B7 expires ' + expiresLabel, '');
             host.insertBefore(badge, host.firstChild);
         } else {
             var chipEl = document.createElement('div');
             chipEl.id = 'demoModeIndicator';
-            chipEl.style.cssText = 'position:fixed;top:14px;right:14px;z-index:9998;background:#f1f5f9;' +
-                'color:#94a3b8;border:1px solid #e2e8f0;border-radius:999px;padding:0.25rem 0.7rem;' +
+            chipEl.style.cssText = 'position:fixed;top:14px;right:14px;z-index:9998;background:#edf2ed;' +
+                'color:#83938a;border:1px solid #d7e4dc;border-radius:999px;padding:0.25rem 0.7rem;' +
                 'font-size:0.66rem;font-family:Inter,Arial,sans-serif;';
             chipEl.textContent = indicatorText;
             document.body.appendChild(chipEl);

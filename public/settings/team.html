@@ -5,59 +5,58 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Team Management — AviaSAFE</title>
     <meta name="help-drawer-topic" content="team_admin">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz@14..32&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="/css/shell.css">
-    <link rel="stylesheet" href="/css/variables.css">
-    <link rel="stylesheet" href="/styles/global.css">
-    <link rel="stylesheet" href="/css/help-drawer.css">
+    <link rel="stylesheet" href="/css/shell.css?brand=20261028">
+    <link rel="stylesheet" href="/css/variables.css?brand=20261028">
+    <link rel="stylesheet" href="/styles/global.css?brand=20261028">
+    <link rel="stylesheet" href="/css/help-drawer.css?brand=20261028">
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: 'Inter', system-ui, -apple-system, sans-serif; background: #f1f5f9; color: #0b2a42; min-height: 100vh; }
+        body { font-family: 'DM Sans', system-ui, -apple-system, sans-serif; background: #edf2ed; color: #192f35; min-height: 100vh; }
         #pageContent { display: none; }
         .page-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem; }
-        .page-header h2 { margin: 0; color: #0b2a42; }
-        .page-header h2 .help-link { margin-left: 0.5rem; font-size: 0.72rem; font-weight: 600; color: #1a6b8a; cursor: pointer; border: 1px solid #cbd5e1; border-radius: 999px; padding: 0.15rem 0.6rem; background: #fff; }
-        .page-header h2 .help-link:hover { background: #e8f0f8; border-color: #1a6b8a; }
+        .page-header h2 { margin: 0; color: #192f35; }
+        .page-header h2 .help-link { margin-left: 0.5rem; font-size: 0.72rem; font-weight: 600; color: #1d5949; cursor: pointer; border: 1px solid #bdccc4; border-radius: 999px; padding: 0.15rem 0.6rem; background: #fff; }
+        .page-header h2 .help-link:hover { background: #e9f0e9; border-color: #1d5949; }
         .grid-2 { display: grid; grid-template-columns: 1.1fr 1fr; gap: 1.5rem; }
         @media (max-width: 960px) { .grid-2 { grid-template-columns: 1fr; } }
         .card { background: #fff; border-radius: 10px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); padding: 1.5rem; }
-        .card h3 { font-size: 1rem; font-weight: 600; color: #0b2a42; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; }
-        .card .hint { font-size: 0.8rem; color: #64748b; margin-top: 0.5rem; }
+        .card h3 { font-size: 1rem; font-weight: 600; color: #192f35; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; }
+        .card .hint { font-size: 0.8rem; color: #65766e; margin-top: 0.5rem; }
         .form-row { margin-bottom: 1rem; }
-        .form-row label { display: block; font-size: 0.85rem; font-weight: 500; color: #0b2a42; margin-bottom: 0.35rem; }
-        .form-row select, .form-row input { width: 100%; padding: 0.55rem 0.75rem; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 0.9rem; background: #fff; color: #0b2a42; }
-        .form-row select:disabled, .form-row input:disabled { background: #f1f5f9; color: #475569; cursor: not-allowed; }
-        .btn-primary { background: #1a6b8a; color: #fff; border: none; padding: 0.55rem 1.25rem; border-radius: 6px; cursor: pointer; font-size: 0.9rem; font-weight: 500; transition: background 0.15s; }
-        .btn-primary:hover { background: #0b2a42; }
-        .btn-outline { background: #fff; color: #1a6b8a; border: 1px solid #cbd5e1; padding: 0.4rem 0.9rem; border-radius: 6px; cursor: pointer; font-size: 0.8rem; font-weight: 500; }
-        .btn-outline:hover { border-color: #1a6b8a; }
+        .form-row label { display: block; font-size: 0.85rem; font-weight: 500; color: #192f35; margin-bottom: 0.35rem; }
+        .form-row select, .form-row input { width: 100%; padding: 0.55rem 0.75rem; border: 1px solid #d7e4dc; border-radius: 6px; font-size: 0.9rem; background: #fff; color: #192f35; }
+        .form-row select:disabled, .form-row input:disabled { background: #edf2ed; color: #53685c; cursor: not-allowed; }
+        .btn-primary { background: #1d5949; color: #fff; border: none; padding: 0.55rem 1.25rem; border-radius: 6px; cursor: pointer; font-size: 0.9rem; font-weight: 500; transition: background 0.15s; }
+        .btn-primary:hover { background: #192f35; }
+        .btn-outline { background: #fff; color: #1d5949; border: 1px solid #bdccc4; padding: 0.4rem 0.9rem; border-radius: 6px; cursor: pointer; font-size: 0.8rem; font-weight: 500; }
+        .btn-outline:hover { border-color: #1d5949; }
         .btn-copy { margin-left: 0.5rem; font-size: 0.75rem; padding: 0.25rem 0.6rem; }
         .role-badge { display: inline-block; padding: 0.2rem 0.6rem; border-radius: 999px; font-size: 0.72rem; font-weight: 600; }
         .role-admin { background: #dcfce7; color: #166534; }
-        .role-hod { background: #dbeafe; color: #1e40af; }
+        .role-hod { background: #e9f0e9; color: #174e48; }
         .role-officer { background: #fef9c3; color: #854d0e; }
-        .role-staff { background: #e2e8f0; color: #334155; }
-        .dept-tag { font-size: 0.75rem; color: #64748b; }
+        .role-staff { background: #d7e4dc; color: #244837; }
+        .dept-tag { font-size: 0.75rem; color: #65766e; }
         .table-wrap { overflow-x: auto; }
         table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
         th, td { text-align: left; padding: 0.6rem 0.75rem; border-bottom: 1px solid #eef2f7; vertical-align: middle; }
-        th { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.4px; color: #64748b; font-weight: 600; }
-        tr:hover td { background: #f8fafc; }
-        .invite-code { font-family: 'Consolas', 'Menlo', monospace; font-weight: 700; letter-spacing: 1px; color: #0b2a42; }
+        th { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.4px; color: #65766e; font-weight: 600; }
+        tr:hover td { background: #f4f6f3; }
+        .invite-code { font-family: 'Consolas', 'Menlo', monospace; font-weight: 700; letter-spacing: 1px; color: #192f35; }
         .invite-result { display: none; margin-top: 1rem; padding: 0.9rem 1rem; border: 1px solid #bbf7d0; background: #f0fdf4; border-radius: 8px; }
         .invite-result .code-big { font-size: 1.4rem; font-weight: 800; letter-spacing: 2px; color: #166534; font-family: 'Consolas', 'Menlo', monospace; }
-        .empty { text-align: center; padding: 2rem 1rem; color: #64748b; font-size: 0.85rem; }
+        .empty { text-align: center; padding: 2rem 1rem; color: #65766e; font-size: 0.85rem; }
         .error-box, .denied-box { display: none; text-align: center; padding: 3rem 1rem; }
         .error-box i, .denied-box i { font-size: 2.5rem; color: #dc3545; }
         .denied-box h2 { color: #dc3545; margin-top: 1rem; }
-        .denied-box p { color: #64748b; margin-top: 0.5rem; }
+        .denied-box p { color: #65766e; margin-top: 0.5rem; }
         .denied-box a { display: inline-block; margin-top: 1rem; }
-        .toast { position: fixed; bottom: 4.75rem; right: 1.5rem; background: #0b2a42; color: #fff; padding: 0.7rem 1.1rem; border-radius: 8px; font-size: 0.85rem; opacity: 0; transition: opacity 0.2s; pointer-events: none; z-index: 999; }
+        .toast { position: fixed; bottom: 4.75rem; right: 1.5rem; background: #192f35; color: #fff; padding: 0.7rem 1.1rem; border-radius: 8px; font-size: 0.85rem; opacity: 0; transition: opacity 0.2s; pointer-events: none; z-index: 999; }
         .toast.show { opacity: 1; }
     </style>
+    <link rel="stylesheet" href="/css/brand.css?v=20261028">
 </head>
 <body>
 
@@ -74,7 +73,7 @@
         <div id="errorBox" class="error-box">
             <i class="fas fa-exclamation-circle"></i>
             <h2 style="margin-top:1rem;color:#dc3545;">Failed to load Team Management</h2>
-            <p style="color:#64748b;margin-top:0.5rem;" id="errorMsg">Please reload the page.</p>
+            <p style="color:#65766e;margin-top:0.5rem;" id="errorMsg">Please reload the page.</p>
         </div>
 
         <div id="teamContent" style="display:none;">
@@ -146,7 +145,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-check-compat.js"></script>
-<script src="/js/firebase.js?v=4.0.1"></script>
+<script src="/js/firebase.js?v=4.0.1&brand=20261028"></script>
 <script>
 window.SHELL_CONFIG = {
     brand: 'AviaSAFE',
@@ -164,7 +163,7 @@ window.SHELL_CONFIG = {
 };
 </script>
 <script src="/js/api/client.js"></script>
-<script src="/js/shell.js"></script>
+<script src="/js/shell.js?brand=20261028"></script>
 <script src="/js/team.js"></script>
 <script src="/js/help-drawer.js"></script>
 

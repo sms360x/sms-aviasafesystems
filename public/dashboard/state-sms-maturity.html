@@ -17,30 +17,30 @@ AUTHOR: AviaSAFE Systems
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>State SMS Maturity Assessment — AviaSAFE SSP</title>
-    <link rel="stylesheet" href="/css/variables.css">
+    <link rel="stylesheet" href="/css/variables.css?brand=20261028">
     <link rel="stylesheet" href="/css/main.css">
-    <link rel="stylesheet" href="/css/shell.css">
+    <link rel="stylesheet" href="/css/shell.css?brand=20261028">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    <script src="../js/chart-theme.js"></script>
+    <script src="../js/chart-theme.js?brand=20261028"></script>
     <style>
         .section-head { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:0.75rem; margin-bottom:1.25rem; }
-        .section-head h2 { margin:0; color:var(--color-primary-dark, #0b2a42); }
-        .section-sub { color:#64748b; font-size:0.875rem; }
+        .section-head h2 { margin:0; color:var(--color-primary-dark, #192f35); }
+        .section-sub { color:#65766e; font-size:0.875rem; }
 
         .stat-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:1rem; margin-bottom:1.5rem; }
-        .stat-card { background:#fff; border-radius:10px; box-shadow:0 1px 4px rgba(0,0,0,0.06); padding:1.25rem; border-top:4px solid #1a6b8a; }
+        .stat-card { background:#fff; border-radius:10px; box-shadow:0 1px 4px rgba(0,0,0,0.06); padding:1.25rem; border-top:4px solid #1d5949; }
         .stat-card.gold { border-top-color:#d4af37; }
         .stat-card.green { border-top-color:#34a853; }
         .stat-card.red { border-top-color:#ea4335; }
-        .stat-card .num { font-size:1.9rem; font-weight:700; color:#0b2a42; }
-        .stat-card .lbl { font-size:0.75rem; text-transform:uppercase; letter-spacing:0.4px; color:#64748b; margin-top:0.25rem; }
-        .stat-card .tier { font-size:0.75rem; font-weight:600; color:#1a6b8a; margin-top:0.15rem; }
+        .stat-card .num { font-size:1.9rem; font-weight:700; color:#192f35; }
+        .stat-card .lbl { font-size:0.75rem; text-transform:uppercase; letter-spacing:0.4px; color:#65766e; margin-top:0.25rem; }
+        .stat-card .tier { font-size:0.75rem; font-weight:600; color:#1d5949; margin-top:0.15rem; }
 
         .card { background:#fff; border-radius:10px; box-shadow:0 1px 4px rgba(0,0,0,0.06); padding:1.25rem; margin-bottom:1.5rem; }
-        .card h3 { margin:0 0 1rem; font-size:1rem; color:#0b2a42; }
+        .card h3 { margin:0 0 1rem; font-size:1rem; color:#192f35; }
 
         .badge { display:inline-block; padding:0.2rem 0.6rem; border-radius:999px; font-size:0.72rem; font-weight:600; }
         .b-acceptable { background:#e6f4ea; color:#1e7e34; }
@@ -48,73 +48,71 @@ AUTHOR: AviaSAFE Systems
         .b-intolerable { background:#fce8e6; color:#c5221f; }
 
         .op-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:1rem; }
-        .op-card { background:#fff; border-radius:10px; box-shadow:0 1px 4px rgba(0,0,0,0.06); padding:1.15rem 1.25rem; border-top:3px solid #1a6b8a; display:flex; flex-direction:column; gap:0.6rem; }
+        .op-card { background:#fff; border-radius:10px; box-shadow:0 1px 4px rgba(0,0,0,0.06); padding:1.15rem 1.25rem; border-top:3px solid #1d5949; display:flex; flex-direction:column; gap:0.6rem; }
         .op-card-head { display:flex; align-items:flex-start; justify-content:space-between; gap:0.5rem; }
-        .op-card-head .op-name { font-weight:700; font-size:1rem; color:#0b2a42; }
-        .op-card-head .op-meta { font-size:0.72rem; color:#64748b; margin-top:0.15rem; }
+        .op-card-head .op-name { font-weight:700; font-size:1rem; color:#192f35; }
+        .op-card-head .op-meta { font-size:0.72rem; color:#65766e; margin-top:0.15rem; }
         .overall-line { display:flex; justify-content:space-between; align-items:center; font-size:0.85rem; padding-bottom:0.4rem; border-bottom:1px dashed #eef2f6; }
-        .overall-line span { color:#64748b; }
-        .overall-line strong { color:#0b2a42; }
+        .overall-line span { color:#65766e; }
+        .overall-line strong { color:#192f35; }
         .pillar-row { display:grid; grid-template-columns:1fr auto; grid-template-rows:auto auto; column-gap:0.75rem; align-items:center; font-size:0.78rem; }
-        .pillar-label { color:#475569; }
-        .pillar-val { color:#0b2a42; font-weight:700; justify-self:end; }
+        .pillar-label { color:#53685c; }
+        .pillar-val { color:#192f35; font-weight:700; justify-self:end; }
         .pillar-track { grid-column:1/-1; background:#eef2f6; border-radius:6px; height:8px; overflow:hidden; margin-top:0.15rem; }
         .pillar-fill { height:100%; border-radius:6px; }
-        .op-card .meta-line { font-size:0.72rem; color:#64748b; margin-top:auto; }
+        .op-card .meta-line { font-size:0.72rem; color:#65766e; margin-top:auto; }
         .op-card .meta-line i { margin-right:0.3rem; }
 
         .chart-wrap { position:relative; height:360px; }
         .chart-wrap.short { height:300px; }
 
         .btn { display:inline-flex; align-items:center; gap:0.4rem; padding:0.5rem 1rem; border:none; border-radius:6px; font-size:0.85rem; font-weight:600; cursor:pointer; transition:all 0.15s; text-decoration:none; }
-        .btn-primary { background:#1a6b8a; color:#fff; }
-        .btn-primary:hover { background:#0b2a42; }
-        .btn-outline { background:transparent; color:#1a6b8a; border:1px solid #1a6b8a; }
-        .btn-outline:hover { background:#e8f0f8; }
+        .btn-primary { background:#1d5949; color:#fff; }
+        .btn-primary:hover { background:#192f35; }
+        .btn-outline { background:transparent; color:#1d5949; border:1px solid #1d5949; }
+        .btn-outline:hover { background:#e9f0e9; }
         .btn-sm { padding:0.3rem 0.7rem; font-size:0.8rem; }
         .btn:disabled { opacity:0.5; cursor:not-allowed; }
 
         .form-control { padding:0.45rem 0.75rem; border:1px solid #d1d5db; border-radius:6px; font-size:0.875rem; background:#fff; }
 
-        .loading, .empty { text-align:center; padding:2.5rem; color:#64748b; }
+        .loading, .empty { text-align:center; padding:2.5rem; color:#65766e; }
         .error { text-align:center; padding:2rem; color:#c5221f; }
 
-        .meta-line { font-size:0.8rem; color:#64748b; margin-top:0.75rem; }
+        .meta-line { font-size:0.8rem; color:#65766e; margin-top:0.75rem; }
         .meta-line i { margin-right:0.3rem; }
 
         .ai-stat-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:1rem; margin-bottom:1.25rem; }
-        .ai-stat { background:#f8fafc; border-radius:8px; padding:0.9rem 1rem; text-align:center; border:1px solid #e2e8f0; }
-        .ai-stat .num { font-size:1.5rem; font-weight:700; color:#0b2a42; }
-        .ai-stat .lbl { font-size:0.7rem; text-transform:uppercase; letter-spacing:0.3px; color:#64748b; margin-top:0.15rem; }
+        .ai-stat { background:#f4f6f3; border-radius:8px; padding:0.9rem 1rem; text-align:center; border:1px solid #d7e4dc; }
+        .ai-stat .num { font-size:1.5rem; font-weight:700; color:#192f35; }
+        .ai-stat .lbl { font-size:0.7rem; text-transform:uppercase; letter-spacing:0.3px; color:#65766e; margin-top:0.15rem; }
 
-        .synthesis { background:linear-gradient(135deg,#eef6fb,#f6f9fc); border:1px solid #cfe3ee; border-radius:10px; padding:1.15rem 1.3rem; font-size:0.9rem; line-height:1.65; color:#0b2a42; margin-bottom:1.25rem; }
-        .synthesis i { color:#1a6b8a; margin-right:0.35rem; }
+        .synthesis { background:linear-gradient(135deg,#eef6fb,#f6f9fc); border:1px solid #cfe3ee; border-radius:10px; padding:1.15rem 1.3rem; font-size:0.9rem; line-height:1.65; color:#192f35; margin-bottom:1.25rem; }
+        .synthesis i { color:#1d5949; margin-right:0.35rem; }
 
-        .action-item { border:1px solid #e2e8f0; border-left:4px solid #f57c00; border-radius:8px; padding:0.8rem 1rem; margin-bottom:0.75rem; background:#fff; font-size:0.85rem; }
+        .action-item { border:1px solid #d7e4dc; border-left:4px solid #f57c00; border-radius:8px; padding:0.8rem 1rem; margin-bottom:0.75rem; background:#fff; font-size:0.85rem; }
         .action-item.critical { border-left-color:#dc3545; }
         .action-item .action-head { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem; }
-        .action-item .action-title { font-weight:600; color:#0b2a42; }
-        .action-item .action-meta { color:#64748b; font-size:0.78rem; margin-top:0.35rem; line-height:1.5; }
-        .action-item .action-meta strong { color:#475569; }
+        .action-item .action-title { font-weight:600; color:#192f35; }
+        .action-item .action-meta { color:#65766e; font-size:0.78rem; margin-top:0.35rem; line-height:1.5; }
+        .action-item .action-meta strong { color:#53685c; }
 
-        .pillar-chip { display:inline-block; background:#f1f5f9; border:1px solid #e2e8f0; border-radius:999px; padding:0.15rem 0.55rem; font-size:0.72rem; color:#475569; margin:0.15rem 0.2rem 0 0; }
+        .pillar-chip { display:inline-block; background:#edf2ed; border:1px solid #d7e4dc; border-radius:999px; padding:0.15rem 0.55rem; font-size:0.72rem; color:#53685c; margin:0.15rem 0.2rem 0 0; }
 
         @media (max-width: 640px) {
             .op-grid { grid-template-columns:1fr; }
         }
     </style>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-
-    <link rel="stylesheet" href="../css/theme.css">
-    <link rel="stylesheet" href="/css/dashboard-responsive.css">
+    <link rel="stylesheet" href="../css/theme.css?brand=20261028">
+    <link rel="stylesheet" href="/css/dashboard-responsive.css?brand=20261028">
     
-    </head>
+        <link rel="stylesheet" href="/css/brand.css?v=20261028">
+</head>
 <body>
 
 <div class="app-shell">
-    <div id="authGate" style="padding:3rem;text-align:center;color:#64748b;">
+    <div id="authGate" style="padding:3rem;text-align:center;color:#65766e;">
         <i class="fas fa-spinner fa-spin" style="font-size:2rem;"></i>
         <p>Checking State safety oversight access...</p>
     </div>
@@ -123,7 +121,7 @@ AUTHOR: AviaSAFE Systems
     <section id="sms-maturity" class="shell-scroll-spy" style="display:none;">
         <div class="section-head">
             <div>
-                <h2><i class="fas fa-heart-pulse" style="color:#1a6b8a;"></i> State-Wide SMS Maturity</h2>
+                <h2><i class="fas fa-heart-pulse" style="color:#1d5949;"></i> State-Wide SMS Maturity</h2>
                 <div class="section-sub">Aggregated 4-pillar / 12-element ICAO Annex 19 SMS evaluation — State scope</div>
             </div>
             <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
@@ -132,12 +130,12 @@ AUTHOR: AviaSAFE Systems
         </div>
         <div id="aggregateStats" class="stat-grid"></div>
         <div class="card">
-            <h3><i class="fas fa-radar" style="color:#1a6b8a;"></i> Pillar Radar — State Average vs 70% Target</h3>
+            <h3><i class="fas fa-radar" style="color:#1d5949;"></i> Pillar Radar — State Average vs 70% Target</h3>
             <div class="chart-wrap"><canvas id="pillarRadarChart"></canvas></div>
             <p class="meta-line"><i class="fas fa-shield-halved"></i> Each axis scores 1–5; the amber ring marks the 70% (≥3.8) maturity benchmark.</p>
         </div>
         <div class="card">
-            <h3><i class="fas fa-chart-bar" style="color:#1a6b8a;"></i> Overall Maturity by Operator vs State Average</h3>
+            <h3><i class="fas fa-chart-bar" style="color:#1d5949;"></i> Overall Maturity by Operator vs State Average</h3>
             <div class="chart-wrap short"><canvas id="operatorBarChart"></canvas></div>
         </div>
     </section>
@@ -146,7 +144,7 @@ AUTHOR: AviaSAFE Systems
     <section id="operators" class="shell-scroll-spy" style="display:none;">
         <div class="section-head">
             <div>
-                <h2><i class="fas fa-building" style="color:#1a6b8a;"></i> Operator Maturity Breakdown</h2>
+                <h2><i class="fas fa-building" style="color:#1d5949;"></i> Operator Maturity Breakdown</h2>
                 <div class="section-sub" id="operatorsSub">Per-operator overall maturity, pillar scores, response counts and latest assessment dates</div>
             </div>
         </div>
@@ -159,7 +157,7 @@ AUTHOR: AviaSAFE Systems
     <section id="assessment" class="shell-scroll-spy" style="display:none;">
         <div class="section-head">
             <div>
-                <h2><i class="fas fa-robot" style="color:#1a6b8a;"></i> State Safety Culture &amp; Maturity Assessment</h2>
+                <h2><i class="fas fa-robot" style="color:#1d5949;"></i> State Safety Culture &amp; Maturity Assessment</h2>
                 <div class="section-sub">Qualitative synthesis of State-level safety culture and maturity insights, derived from survey pillar scores below 70% (ICAO-aligned)</div>
             </div>
             <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
@@ -172,12 +170,12 @@ AUTHOR: AviaSAFE Systems
                 <button class="btn btn-outline btn-sm" onclick="loadAssessment(true)"><i class="fas fa-wand-magic-sparkles"></i> Regenerate</button>
             </div>
         </div>
-        <div id="assessmentContent"><p style="color:#64748b;"><i class="fas fa-spinner fa-spin"></i> Generating State safety culture assessment...</p></div>
+        <div id="assessmentContent"><p style="color:#65766e;"><i class="fas fa-spinner fa-spin"></i> Generating State safety culture assessment...</p></div>
     </section>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-check-compat.js"></script>
-<script src="/js/firebase.js?v=4.0.1"></script>
+<script src="/js/firebase.js?v=4.0.1&brand=20261028"></script>
 <script>
 // ============================================================================
 // CAAN SMD — STATE SMS MATURITY (STATE-SCOPED)
@@ -203,10 +201,10 @@ window.SHELL_CONFIG = {
 </script>
 <script src="/js/api/client.js"></script>
 <script src="/js/nav-config.js"></script>
-<script src="/js/shell.js"></script>
+<script src="/js/shell.js?brand=20261028"></script>
 <script>
 const PILLAR_META = [
-    { key: 'safety_policy', label: 'Safety Policy', color: '#1a6b8a' },
+    { key: 'safety_policy', label: 'Safety Policy', color: '#1d5949' },
     { key: 'safety_risk_management', label: 'Safety Risk Management', color: '#d97706' },
     { key: 'safety_assurance', label: 'Safety Assurance', color: '#34a853' },
     { key: 'safety_promotion', label: 'Safety Promotion', color: '#7c3aed' },
@@ -321,11 +319,11 @@ function renderPillarRadar(state) {
                 {
                     label: 'State Average',
                     data: PILLAR_META.map(p => (state.pillars && state.pillars[p.key]) || null),
-                    borderColor: '#1a6b8a',
+                    borderColor: '#1d5949',
                     backgroundColor: 'rgba(26,107,138,0.15)',
                     borderWidth: 2,
                     pointRadius: 4,
-                    pointBackgroundColor: '#1a6b8a',
+                    pointBackgroundColor: '#1d5949',
                 },
                 {
                     label: '70% Benchmark (≥3.8)',
@@ -372,7 +370,7 @@ function renderOperatorBars(state, operators) {
         data: {
             labels: sorted.map(o => o.display_name || o.tenant_id),
             datasets: [
-                { label: 'Overall SMS Maturity', data: sorted.map(o => o.overall_sms_maturity), backgroundColor: '#1a6b8a', borderRadius: 4 },
+                { label: 'Overall SMS Maturity', data: sorted.map(o => o.overall_sms_maturity), backgroundColor: '#1d5949', borderRadius: 4 },
                 { label: 'State Average', data: sorted.map(() => state.overall_sms_maturity ?? null), backgroundColor: '#d4af37', borderRadius: 4 },
             ],
         },
@@ -431,7 +429,7 @@ function renderOperatorCards(operators) {
 async function loadAssessment(refresh) {
     const el = document.getElementById('assessmentContent');
     const days = document.getElementById('aiDays').value;
-    el.innerHTML = '<p style="color:#64748b;"><i class="fas fa-spinner fa-spin"></i> Generating State safety culture assessment...</p>';
+    el.innerHTML = '<p style="color:#65766e;"><i class="fas fa-spinner fa-spin"></i> Generating State safety culture assessment...</p>';
     try {
         const data = await ApiClient.get(`/api/v1/dashboard/caan/sms-maturity-assessment?days=${days}&refresh=${refresh ? 'true' : 'false'}&${regQuery()}`);
         renderAssessment(data);
@@ -515,7 +513,7 @@ function renderAssessment(data) {
 
     const actionList = topActions.length
         ? `<div style="margin-top:0.5rem;">
-            <h4 style="margin:0 0 0.75rem;font-size:0.95rem;color:#0b2a42;"><i class="fas fa-list-check"></i> Top Recommended Improvement Actions (State-wide)</h4>
+            <h4 style="margin:0 0 0.75rem;font-size:0.95rem;color:#192f35;"><i class="fas fa-list-check"></i> Top Recommended Improvement Actions (State-wide)</h4>
             ${topActions.map(a => `
                 <div class="action-item ${a.tier === 'critical' ? 'critical' : ''}">
                     <div class="action-head">
@@ -532,7 +530,7 @@ function renderAssessment(data) {
 
     const lowChips = lowPillars.length
         ? `<div style="margin-bottom:1rem;">
-            <strong style="font-size:0.85rem;color:#0b2a42;">Pillars below 70% (operator-level):</strong>
+            <strong style="font-size:0.85rem;color:#192f35;">Pillars below 70% (operator-level):</strong>
             ${lowPillars.map(p => `<span class="pillar-chip">${p.pillar || p.pillar_name} — ${p.pct}% (${p.tier})</span>`).join('')}
         </div>`
         : '';

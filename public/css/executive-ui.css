@@ -6,23 +6,23 @@
    ============================================================================ */
 
 :root {
-    --exec-bg: #f8fafc;
+    --exec-bg: #f4f6f3;
     --exec-surface: #ffffff;
-    --exec-border: #e2e8f0;
-    --exec-navy-900: #0b2a42;
-    --exec-navy-800: #123a5c;
-    --exec-navy-700: #1a6b8a;
-    --exec-accent: #0ea5e9;
-    --exec-accent-soft: #e0f2fe;
+    --exec-border: #d7e4dc;
+    --exec-navy-900: #192f35;
+    --exec-navy-800: #174e48;
+    --exec-navy-700: #1d5949;
+    --exec-accent: #1d5949;
+    --exec-accent-soft: #e9f0e9;
     --exec-success: #16a34a;
     --exec-success-soft: #dcfce7;
     --exec-warning: #d97706;
     --exec-warning-soft: #fef3c7;
     --exec-danger: #dc2626;
     --exec-danger-soft: #fee2e2;
-    --exec-text-primary: #0f172a;
-    --exec-text-secondary: #475569;
-    --exec-text-muted: #64748b;
+    --exec-text-primary: #192f35;
+    --exec-text-secondary: #53685c;
+    --exec-text-muted: #65766e;
     --exec-radius-sm: 8px;
     --exec-radius-md: 12px;
     --exec-radius-lg: 16px;
@@ -36,7 +36,7 @@
 
 body.executive-layout {
     background: var(--exec-bg);
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
     color: var(--exec-text-primary);
     margin: 0;
     min-height: 100vh;
@@ -67,8 +67,8 @@ body.executive-layout {
     font-size: 0.9rem; font-weight: 500;
     transition: all 0.15s ease;
 }
-.exec-nav-item:hover { background: #f1f5f9; color: var(--exec-text-primary); }
-.exec-nav-item.active { background: #0ea5e9; color: #fff; font-weight: 600; }
+.exec-nav-item:hover { background: #edf2ed; color: var(--exec-text-primary); }
+.exec-nav-item.active { background: #1d5949; color: #fff; font-weight: 600; }
 .exec-nav-item i { width: 18px; text-align: center; opacity: 0.9; }
 .exec-nav-section {
     font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.6px;
@@ -146,7 +146,7 @@ body.executive-layout {
 .exec-topbar-search input {
     width: 100%; padding: 0.5rem 0.75rem 0.5rem 2.25rem;
     border: 1px solid var(--exec-border); border-radius: var(--exec-radius-sm);
-    font-size: 0.85rem; background: #f8fafc;
+    font-size: 0.85rem; background: #f4f6f3;
 }
 .exec-topbar-search i {
     position: absolute; left: 0.75rem; top: 50%; transform: translateY(-50%);
@@ -198,10 +198,10 @@ body.executive-layout {
 .exec-kpi-icon.green { background: var(--exec-success-soft); color: var(--exec-success); }
 .exec-kpi-icon.amber { background: var(--exec-warning-soft); color: var(--exec-warning); }
 .exec-kpi-icon.red { background: var(--exec-danger-soft); color: var(--exec-danger); }
-.exec-kpi-icon.navy { background: #e0e7ef; color: var(--exec-navy-900); }
+.exec-kpi-icon.navy { background: #e9f0e9; color: var(--exec-navy-900); }
 .exec-kpi-body { flex: 1; min-width: 0; }
 .exec-kpi-label {
-    font-size: 0.75rem; font-weight: 600; color: #64748b;
+    font-size: 0.75rem; font-weight: 600; color: #65766e;
     text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 0.25rem;
     white-space: normal;
 }
@@ -221,10 +221,10 @@ body.executive-layout {
     margin-bottom: 1rem; gap: 0.75rem;
 }
 .exec-card-title {
-    font-size: 1rem; font-weight: 600; color: #0f172a;
+    font-size: 1rem; font-weight: 600; color: #192f35;
     margin: 0; display: flex; align-items: center; gap: 0.5rem;
 }
-.exec-card-link { font-size: 0.8rem; color: #0ea5e9; text-decoration: none; font-weight: 600; }
+.exec-card-link { font-size: 0.8rem; color: #1d5949; text-decoration: none; font-weight: 600; }
 .exec-card-link:hover { text-decoration: underline; }
 
 .exec-chip {
@@ -236,7 +236,7 @@ body.executive-layout {
 .exec-chip.amber { background: var(--exec-warning-soft); color: var(--exec-warning); }
 .exec-chip.red { background: var(--exec-danger-soft); color: var(--exec-danger); }
 .exec-chip.blue { background: var(--exec-accent-soft); color: var(--exec-accent); }
-.exec-chip.gray { background: #e2e8f0; color: var(--exec-text-secondary); }
+.exec-chip.gray { background: #d7e4dc; color: var(--exec-text-secondary); }
 
 .exec-table-card {
     background: var(--exec-surface); border: 1px solid var(--exec-border);
@@ -244,13 +244,13 @@ body.executive-layout {
 }
 .exec-table { width: 100%; border-collapse: collapse; }
 .exec-table th {
-    background: #f8fafc; font-size: 0.72rem; text-transform: uppercase;
+    background: #f4f6f3; font-size: 0.72rem; text-transform: uppercase;
     letter-spacing: 0.4px; color: var(--exec-text-muted);
     padding: 0.75rem 1rem; text-align: left;
     border-bottom: 2px solid var(--exec-border); font-weight: 700;
 }
-.exec-table td { padding: 0.75rem 1rem; border-bottom: 1px solid #f1f5f9; font-size: 0.88rem; }
-.exec-table tbody tr:hover { background: #f8fafc; }
+.exec-table td { padding: 0.75rem 1rem; border-bottom: 1px solid #edf2ed; font-size: 0.88rem; }
+.exec-table tbody tr:hover { background: #f4f6f3; }
 
 .exec-risk-matrix { display: grid; grid-template-columns: 110px repeat(5, 1fr); gap: 2px; }
 .exec-risk-cell {
@@ -262,7 +262,7 @@ body.executive-layout {
 .exec-risk-cell.intolerable { background: #fca5a5; color: #ef4444; }
 .exec-risk-cell.tolerable { background: #fde047; color: #92400e; }
 .exec-risk-cell.acceptable { background: #86efac; color: #166534; }
-.exec-risk-cell.unclassified { background: #f1f5f9; color: #475569; }
+.exec-risk-cell.unclassified { background: #edf2ed; color: #53685c; }
 .exec-risk-cell.is-empty { opacity: 0.55; }
 .exec-risk-index { font-size: 0.85rem; font-weight: 800; letter-spacing: 0.2px; }
 .exec-risk-count { font-size: 0.72rem; font-weight: 600; opacity: 0.85; }
@@ -288,14 +288,14 @@ body.executive-layout {
     .exec-topbar { padding: 0 1rem; }
 }
 /* Historical import wizard */
-.dropzone { border: 2px dashed #cbd5e1; border-radius: 12px; padding: 40px; text-align: center; cursor: pointer; transition: .2s; }
-.dropzone:hover, .dropzone.drag { border-color: #2563eb; background: #eff6ff; }
+.dropzone { border: 2px dashed #bdccc4; border-radius: 12px; padding: 40px; text-align: center; cursor: pointer; transition: .2s; }
+.dropzone:hover, .dropzone.drag { border-color: #235a4b; background: #f4f6f3; }
 .wizard-step { display: none; }
 .wizard-step.active { display: block; }
 .data-table { width: 100%; border-collapse: collapse; }
-.data-table th, .data-table td { border: 1px solid #e2e8f0; padding: 8px; font-size: 13px; }
-.data-table th { background: #f1f5f9; }
-.data-table tbody tr:nth-child(even) { background: #f8fafc; }
+.data-table th, .data-table td { border: 1px solid #d7e4dc; padding: 8px; font-size: 13px; }
+.data-table th { background: #edf2ed; }
+.data-table tbody tr:nth-child(even) { background: #f4f6f3; }
 
 /* ============================================================================
    SMS360X Phase 2 — dashboard widget classes (appended; no existing rules

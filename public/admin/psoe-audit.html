@@ -16,26 +16,23 @@ AUTHOR:  AviaSAFE Systems
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PSOE Audit — AviaSAFE Admin</title>
-    <link rel="stylesheet" href="/css/variables.css">
-    <link rel="stylesheet" href="/css/admin.css">
+    <link rel="stylesheet" href="/css/variables.css?brand=20261028">
+    <link rel="stylesheet" href="/css/admin.css?brand=20261028">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-check-compat.js"></script>
-    <script src="/js/firebase.js?v=4.0.1"></script>
+    <script src="/js/firebase.js?v=4.0.1&brand=20261028"></script>
     <script src="/js/api/client.js"></script>
-    <script src="/js/admin.js"></script>
+    <script src="/js/admin.js?brand=20261028"></script>
 
     <style>
-        body { font-family: var(--font-family); background: var(--color-bg, #f1f5f9); color: var(--color-text, #1e293b); }
+        body { font-family: var(--font-family); background: var(--color-bg, #edf2ed); color: var(--color-text, #192f35); }
 
         .admin-shell { min-height: 100vh; display: flex; flex-direction: column; }
         .topbar {
-            background: linear-gradient(135deg, var(--color-deep-teal-950, #051a26), var(--color-deep-teal-900, #0b3a4d));
+            background: linear-gradient(135deg, var(--color-deep-teal-950, #102e29), var(--color-deep-teal-900, #0b3a4d));
             color: #fff; padding: 14px 26px; display: flex; align-items: center;
             justify-content: space-between; gap: 14px; flex-wrap: wrap;
             box-shadow: 0 2px 10px rgba(0,0,0,.18); position: sticky; top: 0; z-index: 20;
@@ -45,78 +42,79 @@ AUTHOR:  AviaSAFE Systems
         .tb-brand i { color: #4fc3f7; }
         .tb-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
         .tb-actions a.nav-link {
-            color: #cbd5e1; text-decoration: none; font-size: .82rem; padding: 6px 12px;
+            color: #bdccc4; text-decoration: none; font-size: .82rem; padding: 6px 12px;
             border-radius: 8px; transition: background .15s, color .15s;
         }
         .tb-actions a.nav-link:hover, .tb-actions a.nav-link.active { background: rgba(255,255,255,.12); color: #fff; }
         .user-badge { background: rgba(255,255,255,.14); color: #fff; padding: .3rem 1rem; border-radius: 999px; font-size: .82rem; }
-        .user-badge .role-chip { background: #4fc3f7; color: #072535; padding: .02rem .5rem; border-radius: 999px; margin-right: .4rem; font-weight: 700; }
+        .user-badge .role-chip { background: #4fc3f7; color: #143e35; padding: .02rem .5rem; border-radius: 999px; margin-right: .4rem; font-weight: 700; }
 
         .content-area { padding: 26px; flex: 1; max-width: 1100px; width: 100%; margin: 0 auto; box-sizing: border-box; }
-        .page-head h1 { margin: 0 0 4px; font-size: 1.5rem; color: var(--color-text-strong, #0f172a); }
-        .page-head .sub { color: var(--color-text-muted, #64748b); font-size: .9rem; }
+        .page-head h1 { margin: 0 0 4px; font-size: 1.5rem; color: var(--color-text-strong, #192f35); }
+        .page-head .sub { color: var(--color-text-muted, #65766e); font-size: .9rem; }
 
         .admin-card { background: #fff; border-radius: 14px; padding: 22px; box-shadow: 0 1px 4px rgba(15,23,42,.08); border: 1px solid #eef2f6; margin-bottom: 20px; }
-        .admin-card h2 { margin: 0 0 6px; font-size: 1.05rem; color: var(--color-text-strong, #0f172a); display: flex; align-items: center; gap: 10px; }
-        .admin-card .card-sub { color: var(--color-text-muted, #64748b); font-size: .84rem; margin: 0 0 14px; line-height: 1.5; }
+        .admin-card h2 { margin: 0 0 6px; font-size: 1.05rem; color: var(--color-text-strong, #192f35); display: flex; align-items: center; gap: 10px; }
+        .admin-card .card-sub { color: var(--color-text-muted, #65766e); font-size: .84rem; margin: 0 0 14px; line-height: 1.5; }
 
         .form-row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 10px; }
         .form-group { flex: 1; min-width: 150px; }
-        .form-group label { display: block; font-size: .78rem; font-weight: 600; color: #475569; margin-bottom: 4px; }
+        .form-group label { display: block; font-size: .78rem; font-weight: 600; color: #53685c; margin-bottom: 4px; }
         .form-group input, .form-group select, .form-group textarea {
-            width: 100%; padding: 9px 11px; border: 1px solid var(--color-border, #cbd5e1);
+            width: 100%; padding: 9px 11px; border: 1px solid var(--color-border, #bdccc4);
             border-radius: 8px; font-size: .86rem; box-sizing: border-box; background: #fff;
         }
-        .form-group small { display: block; color: #94a3b8; font-size: .72rem; margin-top: 3px; }
+        .form-group small { display: block; color: #83938a; font-size: .72rem; margin-top: 3px; }
 
         .btn-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
 
-        .empty-state { padding: 22px; text-align: center; color: #94a3b8; font-size: .85rem; background: #f8fafc; border-radius: 8px; }
-        .loading { padding: 18px; text-align: center; color: #64748b; font-size: .85rem; }
+        .empty-state { padding: 22px; text-align: center; color: #83938a; font-size: .85rem; background: #f4f6f3; border-radius: 8px; }
+        .loading { padding: 18px; text-align: center; color: #65766e; font-size: .85rem; }
         .status-box { padding: 12px 14px; border-radius: 8px; font-size: .85rem; margin-top: 12px; }
         .status-box.success { background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; }
         .status-box.error { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
         .status-box.warn { background: #fffbeb; color: #92400e; border: 1px solid #fde68a; }
 
-        .section-title { font-size: .78rem; font-weight: 800; text-transform: uppercase; letter-spacing: .5px; color: #94a3b8; margin: 26px 0 10px; }
+        .section-title { font-size: .78rem; font-weight: 800; text-transform: uppercase; letter-spacing: .5px; color: #83938a; margin: 26px 0 10px; }
 
         .admin-table { width: 100%; border-collapse: collapse; font-size: .82rem; }
-        .admin-table th { text-align: left; font-size: .72rem; text-transform: uppercase; letter-spacing: .4px; color: #94a3b8; padding: 8px 10px; border-bottom: 2px solid #e2e8f0; }
+        .admin-table th { text-align: left; font-size: .72rem; text-transform: uppercase; letter-spacing: .4px; color: #83938a; padding: 8px 10px; border-bottom: 2px solid #d7e4dc; }
         .admin-table td { padding: 9px 10px; border-bottom: 1px solid #eef2f6; vertical-align: middle; }
-        .admin-table tr:hover td { background: #f8fafc; }
+        .admin-table tr:hover td { background: #f4f6f3; }
 
         .badge { display: inline-block; padding: 3px 9px; border-radius: 999px; font-size: .72rem; font-weight: 600; }
         .badge-success { background: #dcfce7; color: #166534; }
         .badge-warn { background: #fff7ed; color: #c2410c; }
         .badge-danger { background: #fee2e2; color: #b91c1c; }
-        .badge-info { background: #e0f2fe; color: #075985; }
-        .badge-muted { background: #f1f5f9; color: #475569; }
+        .badge-info { background: #e9f0e9; color: #174e48; }
+        .badge-muted { background: #edf2ed; color: #53685c; }
 
         .score-strip { display: flex; gap: 12px; flex-wrap: wrap; margin: 4px 0 14px; }
-        .score-pill { flex: 1; min-width: 180px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px 14px; }
-        .score-pill .sp-label { font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .4px; color: #94a3b8; }
-        .score-pill .sp-val { font-size: 1.15rem; font-weight: 800; color: #0f172a; margin-top: 2px; }
-        .score-pill .sp-sub { font-size: .74rem; color: #64748b; }
+        .score-pill { flex: 1; min-width: 180px; background: #f4f6f3; border: 1px solid #d7e4dc; border-radius: 10px; padding: 12px 14px; }
+        .score-pill .sp-label { font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .4px; color: #83938a; }
+        .score-pill .sp-val { font-size: 1.15rem; font-weight: 800; color: #192f35; margin-top: 2px; }
+        .score-pill .sp-sub { font-size: .74rem; color: #65766e; }
 
-        .comp-block { border: 1px solid #e2e8f0; border-radius: 12px; margin-bottom: 16px; overflow: hidden; }
+        .comp-block { border: 1px solid #d7e4dc; border-radius: 12px; margin-bottom: 16px; overflow: hidden; }
         .comp-head { background: #eef3f9; padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
         .comp-head h3 { margin: 0; font-size: .92rem; color: #0f3d63; }
         .comp-head .comp-pct { font-size: .8rem; font-weight: 700; color: #0f3d63; }
         .q-row { border-top: 1px solid #eef2f6; padding: 12px 14px; }
         .q-row .q-head { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 8px; }
         .q-row .q-num { flex: 0 0 34px; font-weight: 800; font-size: .78rem; color: #0f3d63; background: #eef3f9; border-radius: 8px; text-align: center; padding: 6px 0; }
-        .q-row .q-text { font-size: .86rem; color: #1e293b; line-height: 1.45; }
+        .q-row .q-text { font-size: .86rem; color: #192f35; line-height: 1.45; }
         .q-row .q-controls { display: flex; gap: 10px; flex-wrap: wrap; margin-left: 44px; }
-        .q-row select { padding: 7px 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: .82rem; background: #fff; min-width: 190px; }
-        .q-row input, .q-row textarea { flex: 1; min-width: 200px; padding: 7px 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: .82rem; }
+        .q-row select { padding: 7px 10px; border: 1px solid #bdccc4; border-radius: 8px; font-size: .82rem; background: #fff; min-width: 190px; }
+        .q-row input, .q-row textarea { flex: 1; min-width: 200px; padding: 7px 10px; border: 1px solid #bdccc4; border-radius: 8px; font-size: .82rem; }
         .q-row textarea { min-height: 44px; resize: vertical; }
 
         .findings-table td.ft-actions { white-space: nowrap; }
-        .side-foot { text-align: center; color: #94a3b8; font-size: .8rem; padding: 20px 0 26px; }
+        .side-foot { text-align: center; color: #83938a; font-size: .8rem; padding: 20px 0 26px; }
         .side-foot i { color: #e2574c; }
 
         @media (max-width: 720px) { .content-area { padding: 16px; } }
     </style>
+    <link rel="stylesheet" href="/css/brand.css?v=20261028">
 </head>
 <body class="admin-body">
 
@@ -207,8 +205,8 @@ AUTHOR:  AviaSAFE Systems
 <!-- ===================== CREATE MODAL ===================== -->
 <div id="createModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:999;justify-content:center;align-items:center;">
     <div style="background:#fff;padding:26px;border-radius:12px;max-width:560px;width:92%;box-shadow:0 10px 30px rgba(0,0,0,.18);max-height:92vh;overflow:auto;">
-        <h3 style="margin:0 0 4px;color:#0f172a;"><i class="fas fa-clipboard-check" style="color:var(--color-brand-600);"></i> New PSOE Assessment</h3>
-        <p id="createTenantHint" style="margin:0 0 14px;color:#64748b;font-size:.85rem;"></p>
+        <h3 style="margin:0 0 4px;color:#192f35;"><i class="fas fa-clipboard-check" style="color:var(--color-brand-600);"></i> New PSOE Assessment</h3>
+        <p id="createTenantHint" style="margin:0 0 14px;color:#65766e;font-size:.85rem;"></p>
         <div class="form-group" style="margin-bottom:10px;"><label>Title *</label><input type="text" id="cTitle" placeholder="CAAN Appendix 10 Surveillance Audit — Operator (2026)"></div>
         <div class="form-row">
             <div class="form-group"><label>Department</label>
@@ -244,7 +242,7 @@ AUTHOR:  AviaSAFE Systems
 <!-- ===================== FINDING MODAL ===================== -->
 <div id="findingModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:998;justify-content:center;align-items:center;">
     <div style="background:#fff;padding:26px;border-radius:12px;max-width:540px;width:92%;box-shadow:0 10px 30px rgba(0,0,0,.18);">
-        <h3 style="margin:0 0 14px;color:#0f172a;"><i class="fas fa-folder-open" style="color:var(--color-brand-600);"></i> <span id="fModalTitle">Add Finding</span></h3>
+        <h3 style="margin:0 0 14px;color:#192f35;"><i class="fas fa-folder-open" style="color:var(--color-brand-600);"></i> <span id="fModalTitle">Add Finding</span></h3>
         <input type="hidden" id="fId">
         <div class="form-group" style="margin-bottom:10px;">
             <label>Finding type</label>
@@ -331,7 +329,7 @@ function adminAccessDenied(user) {
     gate.style.cssText = 'max-width:520px;margin:5rem auto;text-align:center;background:#fff;border-radius:12px;box-shadow:0 1px 6px rgba(0,0,0,.08);padding:3rem 2rem;';
     gate.innerHTML =
         '<i class="fas fa-lock" style="font-size:3rem;color:#dc3545;"></i>' +
-        '<h2 style="color:#0f172a;margin:1rem 0 .5rem;">Access Denied</h2>' +
+        '<h2 style="color:#192f35;margin:1rem 0 .5rem;">Access Denied</h2>' +
         '<p>Full PSOE access requires a regulator (CAAN), auditor or super-admin role. You are signed in as <strong>' + esc((user && user.email) || 'a user') + '</strong>.</p>' +
         '<button class="btn btn-primary" onclick="logout()">Sign out</button>';
     document.body.appendChild(gate);
@@ -434,12 +432,12 @@ async function loadAssessments() {
             '<th>Title</th><th>Status</th><th>Date</th><th>Auditor</th><th>Overall</th><th>Actions</th></tr></thead><tbody>' +
             rows.map(function (a) {
                 return '<tr><td><strong>' + esc(a.title || '—') + '</strong>' +
-                    (a.department ? '<br><span style="color:#94a3b8;font-size:.74rem;">' + esc(a.department) + '</span>' : '') + '</td>' +
+                    (a.department ? '<br><span style="color:#83938a;font-size:.74rem;">' + esc(a.department) + '</span>' : '') + '</td>' +
                     '<td>' + statusBadge(a.status) + '</td>' +
                     '<td style="white-space:nowrap;">' + (a.assessment_date ? AdminUI.fmtDate(a.assessment_date) : '—') + '</td>' +
                     '<td>' + esc(a.auditor_name || '—') + '</td>' +
                     '<td>' + (a.overall_score_pct != null
-                        ? '<strong>' + esc(a.overall_score_pct) + '%</strong><br><span style="font-size:.72rem;color:#64748b;">' + esc(a.overall_level || '') + '</span>'
+                        ? '<strong>' + esc(a.overall_score_pct) + '%</strong><br><span style="font-size:.72rem;color:#65766e;">' + esc(a.overall_level || '') + '</span>'
                         : '<span class="badge badge-muted">not scored</span>') + '</td>' +
                     '<td class="ft-actions"><button class="btn btn-outline btn-sm" onclick="openEditor(\'' + a.id + '\')"><i class="fas fa-edit"></i> Open</button>' +
                     '<button class="btn btn-outline btn-sm" onclick="openReportFor(\'' + a.id + '\')"><i class="fas fa-file-lines"></i> Report</button></td></tr>';

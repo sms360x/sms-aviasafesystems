@@ -272,7 +272,7 @@ const RiskMatrix = (() => {
                         &nbsp;·&nbsp; Severity: <strong>${r.severity_letter} (${r.severity})</strong>
                         &nbsp;·&nbsp; Probability: <strong>${r.probability}</strong>
                         &nbsp;·&nbsp; Level: <span class="${badge}">${r.level || '—'}</span>
-                        &nbsp;·&nbsp; Outcome: <strong style="color:${OUTCOME_COLORS[r.outcome] || '#334155'}">${r.outcome || '—'}</strong>
+                        &nbsp;·&nbsp; Outcome: <strong style="color:${OUTCOME_COLORS[r.outcome] || '#244837'}">${r.outcome || '—'}</strong>
                     `;
                 }
             }

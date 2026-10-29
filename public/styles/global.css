@@ -14,15 +14,15 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
 :root {
-    --font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    --font-family: 'DM Sans', 'DM Sans', Tahoma, Geneva, Verdana, sans-serif;
 
-    --color-bg: #f8fafc;
+    --color-bg: #f4f6f3;
     --color-surface: #ffffff;
-    --color-text: #0b2a42;
-    --color-text-muted: #5b6b7a;
-    --color-border: #dce6ee;
+    --color-text: #192f35;
+    --color-text-muted: #62736e;
+    --color-border: #d7e4dc;
 
-    --hero-gradient: linear-gradient(135deg, #e8f0f8 0%, #d4e2ef 100%);
+    --hero-gradient: linear-gradient(135deg, #e9f0e9 0%, #d4e2ef 100%);
     --shadow-card: 0 1px 3px rgba(11, 42, 66, 0.06), 0 6px 24px rgba(11, 42, 66, 0.07);
     --shadow-float: 0 8px 30px rgba(11, 42, 66, 0.14);
     --radius-lg: 14px;
@@ -88,7 +88,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* ========== HEADER ========== */
-/* NOTE: .app-header is now fully managed by dashboard-responsive.css (two-row dark #1a237e + yellow divider).
+/* NOTE: .app-header is now fully managed by dashboard-responsive.css (two-row dark #174e48 + yellow divider).
    Removed conflicting light-theme overrides that caused white-on-white text. See public/css/dashboard-responsive.css */
 
 /* ========== HERO ========== */

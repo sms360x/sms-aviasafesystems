@@ -2,7 +2,7 @@
    FILE: copilot-widget.css
    PATH: public/css/copilot-widget.css
    PURPOSE: Clean-light "Safety Copilot" chat widget (bottom-right), locked to
-            the ICAO light design system (white surface, slate text, #E2E8F0
+            the ICAO light design system (white surface, slate text, #d7e4dc
             borders).
    AUTHOR: AviaSAFE Systems
    =========================================================================== */
@@ -10,18 +10,18 @@
 .copilot-widget-root {
     --cpi-accent: #b45309;
     --cpi-bg: #ffffff;
-    --cpi-bg-2: #f1f5f9;
-    --cpi-bg-input: #f8fafc;
-    --cpi-text: #0f172a;
-    --cpi-muted: #64748b;
-    --cpi-border: #e2e8f0;
+    --cpi-bg-2: #edf2ed;
+    --cpi-bg-input: #f4f6f3;
+    --cpi-text: #192f35;
+    --cpi-muted: #65766e;
+    --cpi-border: #d7e4dc;
     --cpi-user-bubble: var(--color-brand-600);
-    --cpi-bot-bubble: #f8fafc;
+    --cpi-bot-bubble: #f4f6f3;
     position: fixed;
     right: 22px;
     bottom: 22px;
     z-index: 2147483000;
-    font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: 'DM Sans', 'DM Sans', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 /* ── Floating toggle button ── */

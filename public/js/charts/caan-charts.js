@@ -12,13 +12,13 @@ const CaanChartFactory = (function () {
   'use strict';
 
   const COLORS = {
-    primary: '#002f6c',
+    primary: '#174e48',
     accent: '#34a853',
     danger: '#dc2626',
     warning: '#f59e0b',
-    info: '#3b82f6',
-    muted: '#94a3b8',
-    bg: ['#002f6c', '#34a853', '#dc2626', '#f59e0b', '#8b5cf6', '#06b6d4', '#ec4899', '#64748b'],
+    info: '#477969',
+    muted: '#83938a',
+    bg: ['#174e48', '#34a853', '#dc2626', '#f59e0b', '#8b5cf6', '#329580', '#ec4899', '#65766e'],
   };
 
   function _destroyIfCanvas(canvasId) {
@@ -138,7 +138,7 @@ const CaanChartFactory = (function () {
         scales: {
           y: {
             beginAtZero: true,
-            grid: { color: '#f1f5f9' },
+            grid: { color: '#edf2ed' },
             ticks: { font: { size: 10 } },
           },
           x: {
@@ -199,11 +199,11 @@ const CaanChartFactory = (function () {
         scales: {
           x: {
             title: { display: true, text: 'Risk Index', font: { size: 11 } },
-            grid: { color: '#f1f5f9' },
+            grid: { color: '#edf2ed' },
           },
           y: {
             title: { display: true, text: 'Compliance Score %', font: { size: 11 } },
-            grid: { color: '#f1f5f9' },
+            grid: { color: '#edf2ed' },
             min: 0,
             max: 100,
           },
@@ -252,7 +252,7 @@ const CaanChartFactory = (function () {
         scales: {
           y: {
             beginAtZero: true,
-            grid: { color: '#f1f5f9' },
+            grid: { color: '#edf2ed' },
             ticks: { font: { size: 10 } },
           },
           x: {

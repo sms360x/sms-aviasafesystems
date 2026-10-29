@@ -13,20 +13,20 @@
     padding: 1rem;
     text-align: center;
     box-shadow: 0 1px 4px rgba(0,0,0,0.06);
-    border-top: 4px solid #1a6b8a;
+    border-top: 4px solid #1d5949;
 }
 
 .spi-summary-item .num {
     font-size: 1.8rem;
     font-weight: 700;
-    color: #0b2a42;
+    color: #192f35;
 }
 
 .spi-summary-item .lbl {
     font-size: 0.7rem;
     text-transform: uppercase;
     letter-spacing: 0.3px;
-    color: #64748b;
+    color: #65766e;
     margin-top: 0.25rem;
 }
 
@@ -37,10 +37,10 @@
 }
 
 .spi-card {
-    background: #f8fafc;
+    background: #f4f6f3;
     border-radius: 8px;
     padding: 1rem;
-    border-left: 4px solid #1a6b8a;
+    border-left: 4px solid #1d5949;
 }
 
 .spi-card .spi-header {
@@ -53,7 +53,7 @@
 .spi-card .spi-name {
     font-weight: 600;
     font-size: 0.9rem;
-    color: #0b2a42;
+    color: #192f35;
 }
 
 .spi-card .spi-status {
@@ -82,17 +82,17 @@
     display: flex;
     justify-content: space-between;
     font-size: 0.85rem;
-    color: #64748b;
+    color: #65766e;
 }
 
 .spi-card .spi-values .current {
     font-weight: 700;
-    color: #0b2a42;
+    color: #192f35;
 }
 
 .spi-card .spi-target {
     font-size: 0.72rem;
-    color: #64748b;
+    color: #65766e;
     margin-top: 0.25rem;
 }
 
@@ -110,7 +110,7 @@
     grid-column: 1 / -1;
     text-align: center;
     padding: 2rem;
-    color: #64748b;
+    color: #65766e;
     font-size: 0.95rem;
 }
 

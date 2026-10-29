@@ -5,32 +5,30 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PSOE Audit &amp; Surveillance — AviaSAFE</title>
     <meta name="help-drawer-topic" content="psoe_audit">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz@14..32&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="/css/variables.css">
-    <link rel="stylesheet" href="/css/shell.css">
-    <link rel="stylesheet" href="/styles/global.css">
-    <link rel="stylesheet" href="/css/help-drawer.css">
+    <link rel="stylesheet" href="/css/variables.css?brand=20261028">
+    <link rel="stylesheet" href="/css/shell.css?brand=20261028">
+    <link rel="stylesheet" href="/styles/global.css?brand=20261028">
+    <link rel="stylesheet" href="/css/help-drawer.css?brand=20261028">
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: 'Inter', system-ui, -apple-system, sans-serif; background: #f1f5f9; color: #0b2a42; min-height: 100vh; }
+        body { font-family: 'DM Sans', system-ui, -apple-system, sans-serif; background: #edf2ed; color: #192f35; min-height: 100vh; }
         #pageContent { display: none; }
 
         .page-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.25rem; }
-        .page-header h2 { margin: 0; color: #0b2a42; }
+        .page-header h2 { margin: 0; color: #192f35; }
         .page-header .header-actions { display: flex; align-items: center; gap: 0.75rem; }
 
         .card { background: #fff; border-radius: 10px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); padding: 1.25rem; margin-bottom: 1.25rem; }
-        .card-title { font-size: 0.95rem; font-weight: 700; color: #0b2a42; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; }
-        .card-title .help-link { margin-left: auto; font-size: 0.72rem; font-weight: 600; color: #1a6b8a; cursor: pointer; border: 1px solid #cbd5e1; border-radius: 999px; padding: 0.15rem 0.6rem; background: #fff; }
-        .card-title .help-link:hover { background: #e8f0f8; border-color: #1a6b8a; }
+        .card-title { font-size: 0.95rem; font-weight: 700; color: #192f35; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; }
+        .card-title .help-link { margin-left: auto; font-size: 0.72rem; font-weight: 600; color: #1d5949; cursor: pointer; border: 1px solid #bdccc4; border-radius: 999px; padding: 0.15rem 0.6rem; background: #fff; }
+        .card-title .help-link:hover { background: #e9f0e9; border-color: #1d5949; }
 
         /* ── Audit header card ── */
         .audit-header-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 1rem; }
-        .ah-field label { display: block; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; color: #64748b; margin-bottom: 0.25rem; }
-        .ah-field .ah-value { font-size: 0.95rem; font-weight: 600; color: #0b2a42; }
+        .ah-field label { display: block; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; color: #65766e; margin-bottom: 0.25rem; }
+        .ah-field .ah-value { font-size: 0.95rem; font-weight: 600; color: #192f35; }
         .ah-field input.form-control { width: 100%; padding: 0.5rem 0.65rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.9rem; }
         .status-badge { display: inline-block; padding: 0.3rem 0.8rem; border-radius: 999px; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.5px; }
         .badge-draft { background: #e3f2fd; color: #1565c0; }
@@ -39,78 +37,78 @@
         /* ── Maturity dashboard ── */
         .dash-grid { display: grid; grid-template-columns: 320px 1fr; gap: 1.25rem; align-items: stretch; }
         @media (max-width: 860px) { .dash-grid { grid-template-columns: 1fr; } }
-        .overall-panel { border-radius: 10px; background: #fff; border: 1px solid #e2e8f0; overflow: hidden; display: flex; flex-direction: column; }
-        #overallBand { height: 6px; background: #1a6b8a; }
+        .overall-panel { border-radius: 10px; background: #fff; border: 1px solid #d7e4dc; overflow: hidden; display: flex; flex-direction: column; }
+        #overallBand { height: 6px; background: #1d5949; }
         .overall-body { padding: 1.25rem; text-align: center; flex: 1; }
         .overall-score { font-size: 2.6rem; font-weight: 800; line-height: 1.1; }
-        .overall-label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; margin-top: 0.35rem; }
+        .overall-label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; color: #65766e; margin-top: 0.35rem; }
         .maturity-badge { display: inline-block; margin-top: 0.9rem; padding: 0.4rem 1rem; border-radius: 999px; color: #fff; font-size: 0.85rem; font-weight: 700; }
         .maturity-level-label { display: block; margin-top: 0.5rem; font-size: 0.8rem; font-weight: 600; }
-        .overall-detail { margin-top: 0.5rem; font-size: 0.72rem; color: #64748b; }
+        .overall-detail { margin-top: 0.5rem; font-size: 0.72rem; color: #65766e; }
 
         .comp-bars { display: flex; flex-direction: column; gap: 1rem; }
         .comp-bar { }
         .comp-bar-head { display: flex; align-items: center; gap: 0.6rem; font-size: 0.85rem; margin-bottom: 0.3rem; }
-        .comp-bar-name { font-weight: 600; color: #0b2a42; flex: 1; }
-        .comp-bar-weight { font-size: 0.72rem; color: #64748b; white-space: nowrap; }
+        .comp-bar-name { font-weight: 600; color: #192f35; flex: 1; }
+        .comp-bar-weight { font-size: 0.72rem; color: #65766e; white-space: nowrap; }
         .comp-bar-pct { font-weight: 700; min-width: 3.2rem; text-align: right; }
-        .comp-bar-track { height: 10px; background: #e2e8f0; border-radius: 999px; overflow: hidden; }
+        .comp-bar-track { height: 10px; background: #d7e4dc; border-radius: 999px; overflow: hidden; }
         .comp-bar-fill { height: 100%; border-radius: 999px; transition: width 0.25s ease; }
-        .comp-bar-sub { font-size: 0.72rem; color: #94a3b8; margin-top: 0.25rem; }
+        .comp-bar-sub { font-size: 0.72rem; color: #83938a; margin-top: 0.25rem; }
 
         /* ── Checklist toolbar + accordion ── */
         .checklist-toolbar { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem; flex-wrap: wrap; }
         .checklist-toolbar .tool-spacer { flex: 1; }
-        .btn-outline { background: transparent; color: #1a6b8a; border: 1px solid #1a6b8a; }
-        .btn-outline:hover { background: #e8f0f8; }
+        .btn-outline { background: transparent; color: #1d5949; border: 1px solid #1d5949; }
+        .btn-outline:hover { background: #e9f0e9; }
         .btn-sm { padding: 0.3rem 0.7rem; font-size: 0.8rem; }
         .btn { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.5rem 1rem; border: none; border-radius: 6px; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: all 0.15s; text-decoration: none; }
         .btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-        .comp-acc { border: 1px solid #e2e8f0; border-radius: 8px; margin-bottom: 0.75rem; background: #fff; }
+        .comp-acc { border: 1px solid #d7e4dc; border-radius: 8px; margin-bottom: 0.75rem; background: #fff; }
         .comp-acc summary { display: flex; align-items: center; gap: 0.75rem; padding: 0.85rem 1rem; cursor: pointer; list-style: none; }
         .comp-acc summary::-webkit-details-marker { display: none; }
-        .comp-acc summary::before { content: '\f078'; font-family: 'Font Awesome 6 Free'; font-weight: 900; font-size: 0.75rem; color: #64748b; transition: transform 0.15s; }
+        .comp-acc summary::before { content: '\f078'; font-family: 'Font Awesome 6 Free'; font-weight: 900; font-size: 0.75rem; color: #65766e; transition: transform 0.15s; }
         .comp-acc[open] summary::before { transform: rotate(180deg); }
-        .acc-title { font-weight: 700; color: #0b2a42; font-size: 0.95rem; }
-        .acc-meta { margin-left: auto; font-size: 0.75rem; color: #64748b; white-space: nowrap; }
+        .acc-title { font-weight: 700; color: #192f35; font-size: 0.95rem; }
+        .acc-meta { margin-left: auto; font-size: 0.75rem; color: #65766e; white-space: nowrap; }
         .acc-body { padding: 0.25rem 1rem 1rem; }
 
         /* ── Question cards ── */
-        .q-card { border: 1px solid #e2e8f0; border-left: 4px solid #1a6b8a; border-radius: 8px; padding: 0.9rem 1rem; margin-bottom: 0.75rem; background: #fbfdff; }
+        .q-card { border: 1px solid #d7e4dc; border-left: 4px solid #1d5949; border-radius: 8px; padding: 0.9rem 1rem; margin-bottom: 0.75rem; background: #fbfdff; }
         .q-card.q-card-gap { border-left-color: #dc3545; background: #fff7f7; }
         .q-head { display: flex; gap: 0.6rem; align-items: flex-start; }
-        .q-ref { flex: 0 0 auto; background: #1a6b8a; color: #fff; font-size: 0.68rem; font-weight: 700; border-radius: 5px; padding: 0.2rem 0.45rem; margin-top: 0.1rem; letter-spacing: 0.4px; }
+        .q-ref { flex: 0 0 auto; background: #1d5949; color: #fff; font-size: 0.68rem; font-weight: 700; border-radius: 5px; padding: 0.2rem 0.45rem; margin-top: 0.1rem; letter-spacing: 0.4px; }
         .q-card-gap .q-ref { background: #dc3545; }
-        .q-text { font-size: 0.9rem; font-weight: 600; color: #0b2a42; }
-        .q-guidance { font-size: 0.78rem; color: #64748b; margin: 0.5rem 0 0 1.4rem; }
-        .q-guidance i { color: #1a6b8a; margin-right: 0.3rem; }
+        .q-text { font-size: 0.9rem; font-weight: 600; color: #192f35; }
+        .q-guidance { font-size: 0.78rem; color: #65766e; margin: 0.5rem 0 0 1.4rem; }
+        .q-guidance i { color: #1d5949; margin-right: 0.3rem; }
         .q-score { display: flex; align-items: flex-start; gap: 0.6rem; margin-top: 0.7rem; }
-        .q-score-label { flex: 0 0 auto; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; color: #64748b; padding-top: 0.45rem; }
+        .q-score-label { flex: 0 0 auto; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; color: #65766e; padding-top: 0.45rem; }
         .score-pills { display: flex; flex-wrap: wrap; gap: 0.4rem; }
         .score-pill { position: relative; cursor: pointer; }
         .score-pill input { position: absolute; opacity: 0; pointer-events: none; }
-        .score-pill span { display: inline-flex; align-items: center; justify-content: center; min-width: 1.9rem; padding: 0.3rem 0.5rem; border: 1px solid #cbd5e1; border-radius: 999px; font-size: 0.78rem; font-weight: 700; color: #475569; background: #fff; }
+        .score-pill span { display: inline-flex; align-items: center; justify-content: center; min-width: 1.9rem; padding: 0.3rem 0.5rem; border: 1px solid #bdccc4; border-radius: 999px; font-size: 0.78rem; font-weight: 700; color: #53685c; background: #fff; }
         .score-pill em { display: none; }
-        .score-pill input:checked + span { background: #1a6b8a; border-color: #1a6b8a; color: #fff; }
-        .score-pill.pill-na input:checked + span { background: #64748b; border-color: #64748b; }
+        .score-pill input:checked + span { background: #1d5949; border-color: #1d5949; color: #fff; }
+        .score-pill.pill-na input:checked + span { background: #65766e; border-color: #65766e; }
         .q-notes { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-top: 0.75rem; }
         @media (max-width: 700px) { .q-notes { grid-template-columns: 1fr; } }
         .q-note { width: 100%; padding: 0.5rem 0.65rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.85rem; resize: vertical; font-family: inherit; }
-        .q-note:focus { outline: none; border-color: #1a6b8a; box-shadow: 0 0 0 3px rgba(26,107,138,0.1); }
+        .q-note:focus { outline: none; border-color: #1d5949; box-shadow: 0 0 0 3px rgba(26,107,138,0.1); }
         .q-gap-actions { display: flex; align-items: center; gap: 0.75rem; margin-top: 0.75rem; flex-wrap: wrap; }
         .gap-tag { font-size: 0.78rem; font-weight: 700; color: #dc3545; }
         .btn-promote { background: #dc3545; color: #fff; border: none; border-radius: 6px; padding: 0.35rem 0.8rem; font-size: 0.78rem; font-weight: 600; cursor: pointer; }
         .btn-promote:hover { background: #c0392b; }
 
         /* ── Action bar ── */
-        .action-bar { position: sticky; bottom: 0; z-index: 20; display: flex; align-items: center; gap: 0.6rem; background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 0.85rem 1.1rem; box-shadow: 0 -2px 10px rgba(0,0,0,0.06); flex-wrap: wrap; margin-top: 0.25rem; }
-        .btn-primary { background: #0b2a42; color: #fff; }
+        .action-bar { position: sticky; bottom: 0; z-index: 20; display: flex; align-items: center; gap: 0.6rem; background: #fff; border: 1px solid #d7e4dc; border-radius: 10px; padding: 0.85rem 1.1rem; box-shadow: 0 -2px 10px rgba(0,0,0,0.06); flex-wrap: wrap; margin-top: 0.25rem; }
+        .btn-primary { background: #192f35; color: #fff; }
         .btn-primary:hover { opacity: 0.9; }
         .btn-success { background: #1e7e34; color: #fff; }
         .btn-success:hover { background: #17612a; }
-        .btn-print { background: #fff; color: #0b2a42; border: 1px solid #cbd5e1; }
-        .btn-print:hover { background: #f1f5f9; }
+        .btn-print { background: #fff; color: #192f35; border: 1px solid #bdccc4; }
+        .btn-print:hover { background: #edf2ed; }
 
         .psoe-message { padding: 0.75rem 1rem; border-radius: 6px; margin-bottom: 1rem; display: none; font-size: 0.85rem; }
         .psoe-message.success { display: block; background: #e6f4ea; color: #1e7e34; border-left: 4px solid #34a853; }
@@ -122,7 +120,7 @@
             body { background: #fff; }
             .app-header, .page-hero, .app-footer, .dashboard-footer, .help-drawer-toggle, .action-bar, .page-header .header-actions, .help-link, .checklist-toolbar, .btn-promote { display: none !important; }
             .shell-content { padding: 0 !important; }
-            .card { box-shadow: none; border: 1px solid #e2e8f0; break-inside: avoid; }
+            .card { box-shadow: none; border: 1px solid #d7e4dc; break-inside: avoid; }
             .comp-acc { break-inside: avoid; }
             .comp-acc:not([open]) { display: block; }
             .comp-acc summary::before { content: none; }
@@ -130,8 +128,9 @@
             .q-card input, .q-card textarea { border: none; }
         }
     </style>
-    <link rel="stylesheet" href="css/theme.css">
-    <link rel="stylesheet" href="/css/dashboard-responsive.css">
+    <link rel="stylesheet" href="css/theme.css?brand=20261028">
+    <link rel="stylesheet" href="/css/dashboard-responsive.css?brand=20261028">
+    <link rel="stylesheet" href="/css/brand.css?v=20261028">
 </head>
 <body>
 
@@ -213,7 +212,7 @@
             <!-- Real-time maturity dashboard -->
             <div class="card">
                 <div class="card-title"><i class="fas fa-heart-pulse"></i> Real-Time Maturity Dashboard
-                    <span style="font-size:0.72rem;color:#64748b;font-weight:600;margin-left:0.5rem;">updates live as you score</span>
+                    <span style="font-size:0.72rem;color:#65766e;font-weight:600;margin-left:0.5rem;">updates live as you score</span>
                 </div>
                 <div class="dash-grid">
                     <div class="overall-panel">
@@ -236,7 +235,7 @@
                     <button type="button" class="help-link" data-help-topic="psoe_audit" title="Scoring scale and N/A handling"><i class="fas fa-circle-question"></i> How to score</button>
                 </div>
                 <div class="checklist-toolbar">
-                    <span style="font-size:0.8rem;color:#475569;"><i class="fas fa-circle-info"></i> Score each question 0–3 or mark N/A (excluded from the score). Questions scored 0 or 1 are flagged as gaps.</span>
+                    <span style="font-size:0.8rem;color:#53685c;"><i class="fas fa-circle-info"></i> Score each question 0–3 or mark N/A (excluded from the score). Questions scored 0 or 1 are flagged as gaps.</span>
                     <span class="tool-spacer"></span>
                     <button type="button" class="btn btn-outline btn-sm" id="collapseAllBtn"><i class="fas fa-compress"></i> Collapse All</button>
                     <button type="button" class="btn btn-outline btn-sm" id="expandAllBtn"><i class="fas fa-expand"></i> Expand All</button>
@@ -264,7 +263,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-check-compat.js"></script>
-<script src="/js/firebase.js?v=4.0.1"></script>
+<script src="/js/firebase.js?v=4.0.1&brand=20261028"></script>
 <script src="/js/tenant_context.js"></script>
 <script>
 window.SHELL_CONFIG = {
@@ -281,10 +280,10 @@ window.SHELL_CONFIG = {
 </script>
 <script src="/js/api/client.js"></script>
 <script src="/js/nav-config.js"></script>
-<script src="/js/shell.js"></script>
+<script src="/js/shell.js?brand=20261028"></script>
 <script src="/js/dashboard-nav.js"></script>
 <script src="/js/help-drawer.js"></script>
-<script src="/js/psoe.js"></script>
+<script src="/js/psoe.js?brand=20261028"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     var printHeader = document.getElementById('printHeader');

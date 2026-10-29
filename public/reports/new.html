@@ -4,38 +4,38 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>New Report — AviaSAFE</title>
-    <link rel="stylesheet" href="/css/variables.css">
+    <link rel="stylesheet" href="/css/variables.css?brand=20261028">
     <link rel="stylesheet" href="/css/main.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body { background: #f1f5f9; font-family: 'Inter', system-ui, -apple-system, sans-serif; color: #0b2a42; margin: 0; }
+        body { background: #edf2ed; font-family: 'DM Sans', system-ui, -apple-system, sans-serif; color: #192f35; margin: 0; }
         .page { max-width: 720px; margin: 0 auto; padding: 1.5rem; }
-        .back-link { display: inline-flex; align-items: center; gap: 0.5rem; color: #1a6b8a; font-size: 0.875rem; margin-bottom: 1rem; text-decoration: none; }
+        .back-link { display: inline-flex; align-items: center; gap: 0.5rem; color: #1d5949; font-size: 0.875rem; margin-bottom: 1rem; text-decoration: none; }
         .card { background: #fff; border-radius: 10px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); padding: 1.5rem; margin-bottom: 1.25rem; }
-        .card h2 { font-size: 1.05rem; color: #0b2a42; margin: 0 0 1rem; display: flex; align-items: center; gap: 0.5rem; }
+        .card h2 { font-size: 1.05rem; color: #192f35; margin: 0 0 1rem; display: flex; align-items: center; gap: 0.5rem; }
         .stepper { display: flex; gap: 0.5rem; margin-bottom: 1.25rem; flex-wrap: wrap; }
-        .step { flex: 1; min-width: 80px; text-align: center; padding: 0.6rem 0.5rem; border-radius: 8px; font-size: 0.8rem; font-weight: 600; background: #f1f5f9; color: #64748b; border: 1px solid #e2e8f0; cursor: pointer; }
-        .step.active { background: #1a6b8a; color: #fff; border-color: #1a6b8a; }
+        .step { flex: 1; min-width: 80px; text-align: center; padding: 0.6rem 0.5rem; border-radius: 8px; font-size: 0.8rem; font-weight: 600; background: #edf2ed; color: #65766e; border: 1px solid #d7e4dc; cursor: pointer; }
+        .step.active { background: #1d5949; color: #fff; border-color: #1d5949; }
         .step.done { background: #e8f5e9; color: #2e7d32; border-color: #a7f3d0; }
         .form-group { margin-bottom: 1rem; }
-        .form-group label { display: block; font-size: 0.85rem; font-weight: 600; color: #475569; margin-bottom: 0.35rem; }
+        .form-group label { display: block; font-size: 0.85rem; font-weight: 600; color: #53685c; margin-bottom: 0.35rem; }
         .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 0.5rem 0.75rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.9rem; background: #fff; }
         .form-group textarea { resize: vertical; min-height: 80px; }
         .radio-group { display: flex; gap: 1rem; flex-wrap: wrap; }
-        .radio-option { flex: 1; min-width: 140px; padding: 0.9rem; border: 2px solid #e2e8f0; border-radius: 8px; cursor: pointer; text-align: center; transition: all 0.15s; }
-        .radio-option.selected { border-color: #1a6b8a; background: #f0f6ff; }
+        .radio-option { flex: 1; min-width: 140px; padding: 0.9rem; border: 2px solid #d7e4dc; border-radius: 8px; cursor: pointer; text-align: center; transition: all 0.15s; }
+        .radio-option.selected { border-color: #1d5949; background: #f0f6ff; }
         .radio-option input { display: none; }
-        .just-culture { background: linear-gradient(135deg, #0b2a42, #1a6b8a); color: #fff; border-radius: 8px; padding: 1rem 1.25rem; display: flex; gap: 0.75rem; margin-bottom: 1.25rem; }
+        .just-culture { background: linear-gradient(135deg, #192f35, #1d5949); color: #fff; border-radius: 8px; padding: 1rem 1.25rem; display: flex; gap: 0.75rem; margin-bottom: 1.25rem; }
         .btn { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.6rem 1.25rem; border-radius: 6px; font-size: 0.9rem; font-weight: 600; cursor: pointer; border: none; }
-        .btn-primary { background: #1a6b8a; color: #fff; }
+        .btn-primary { background: #1d5949; color: #fff; }
         .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
-        .btn-outline { background: #fff; color: #475569; border: 1px solid #e2e8f0; }
+        .btn-outline { background: #fff; color: #53685c; border: 1px solid #d7e4dc; }
         .hidden { display: none; }
         #message { padding: 0.75rem 1rem; border-radius: 6px; margin-bottom: 1rem; display: none; font-size: 0.85rem; }
         #message.success { display: block; background: #e6f4ea; color: #1e7e34; border-left: 4px solid #34a853; }
         #message.error { display: block; background: #fce8e6; color: #d33426; border-left: 4px solid #ea4335; }
     </style>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+        <link rel="stylesheet" href="/css/brand.css?v=20261028">
 </head>
 <body>
 <div class="page">
@@ -71,8 +71,8 @@
         <div class="card hidden" data-step-panel="2">
             <h2><i class="fas fa-file-lines"></i> Step 2 — Report Type</h2>
             <div class="radio-group">
-                <label class="radio-option" data-type="mor"><input type="radio" name="reportType" value="mor"> MOR <small style="display:block;color:#991b1b;">CAMO/QA Department Admins only</small><small style="display:block;"><a href="/report/mor.html" onclick="event.stopPropagation()" style="font-size:0.75rem;color:#1a6b8a;">Open full MOR form →</a></small></label>
-                <label class="radio-option selected" data-type="vsr"><input type="radio" name="reportType" value="vsr" checked> VSR<small style="display:block;"><a href="/report/vsr.html" onclick="event.stopPropagation()" style="font-size:0.75rem;color:#1a6b8a;">Open full VSR form →</a></small></label>
+                <label class="radio-option" data-type="mor"><input type="radio" name="reportType" value="mor"> MOR <small style="display:block;color:#991b1b;">CAMO/QA Department Admins only</small><small style="display:block;"><a href="/report/mor.html" onclick="event.stopPropagation()" style="font-size:0.75rem;color:#1d5949;">Open full MOR form →</a></small></label>
+                <label class="radio-option selected" data-type="vsr"><input type="radio" name="reportType" value="vsr" checked> VSR<small style="display:block;"><a href="/report/vsr.html" onclick="event.stopPropagation()" style="font-size:0.75rem;color:#1d5949;">Open full VSR form →</a></small></label>
                 <label class="radio-option" data-type="confidential"><input type="radio" name="reportType" value="confidential"> Confidential</label>
             </div>
             <p id="morRestriction" style="display:none;font-size:0.8rem;color:#991b1b;background:#fef2f2;padding:0.5rem;border-radius:6px;margin-top:0.75rem;"><i class="fas fa-lock"></i> MOR restricted to CAMO/QA Department Admins. Your role and department will be checked.</p>
@@ -94,7 +94,7 @@
                 <div class="form-group" data-field="phone"><label>Phone</label><input type="tel" id="reporterPhone" placeholder="+977..."></div>
                 <div class="form-group"><label>Organization</label><input type="text" id="reporterOrg" placeholder="Airline / Dept"></div>
             </div>
-            <p style="font-size:0.75rem;color:#94a3b8;">Confidential: leave name/email/phone blank. VSR: name optional (leave blank to remain anonymous), email/phone optional. MOR: all required.</p>
+            <p style="font-size:0.75rem;color:#83938a;">Confidential: leave name/email/phone blank. VSR: name optional (leave blank to remain anonymous), email/phone optional. MOR: all required.</p>
         </div>
         <!-- Step 5 -->
         <div class="card hidden" data-step-panel="5">
@@ -124,7 +124,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-check-compat.js"></script>
-<script src="/js/firebase.js?v=4.0.1"></script>
+<script src="/js/firebase.js?v=4.0.1&brand=20261028"></script>
 <script src="/js/api/client.js"></script>
 <script src="/js/reports.client.js"></script>
 <script>

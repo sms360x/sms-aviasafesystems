@@ -22,7 +22,7 @@ function renderAccessDenied() {
     gate.style.cssText = 'max-width:520px;margin:5rem auto;text-align:center;background:#fff;border-radius:12px;box-shadow:0 1px 6px rgba(0,0,0,.08);padding:3rem 2rem;';
     gate.innerHTML =
         '<i class="fas fa-lock" style="font-size:3rem;color:#dc3545;"></i>' +
-        '<h2 style="color:#0f172a;margin:1rem 0 .5rem;">Access Denied</h2>' +
+        '<h2 style="color:#192f35;margin:1rem 0 .5rem;">Access Denied</h2>' +
         '<p>This page is restricted to SUPER_ADMIN users. You are signed in as <strong>' + esc((currentUser && currentUser.email) || 'a user') + '</strong>.</p>' +
         '<button class="btn btn-primary" onclick="logout()">Sign out</button>';
     document.body.appendChild(gate);
@@ -51,7 +51,7 @@ function openConfirm(title, html, action) {
     if (input) {
         // Prefill from sessionStorage if already entered this tab
         try { input.value = AdminUI.getSetupKey() || ''; } catch (e) { input.value = ''; }
-        input.style.borderColor = '#cbd5e1';
+        input.style.borderColor = '#bdccc4';
     }
     var modal = document.getElementById('confirmModal');
     if (modal) modal.style.display = 'flex';
@@ -136,7 +136,7 @@ function openLifecycleModal(type, id, status, fromDate, toDate) {
     if (errEl) { errEl.style.display = 'none'; errEl.textContent = ''; }
     if (keyInput) {
         try { keyInput.value = AdminUI.getSetupKey() || ''; } catch (e) { keyInput.value = ''; }
-        keyInput.style.borderColor = '#cbd5e1';
+        keyInput.style.borderColor = '#bdccc4';
     }
     var modal = document.getElementById('lifecycleModal');
     if (modal) modal.style.display = 'flex';
@@ -289,7 +289,7 @@ async function exportCsv(url, statusId, setupKey) {
         a.remove();
         setTimeout(function () { URL.revokeObjectURL(urlObj); }, 1000);
         exportStatus(statusId, 'Downloaded <strong>' + esc(filename) + '</strong>' +
-            (rowCount ? ' <span style="color:#475569;">(' + esc(rowCount) + ' row(s))</span>' : '') + '.', 'success');
+            (rowCount ? ' <span style="color:#53685c;">(' + esc(rowCount) + ' row(s))</span>' : '') + '.', 'success');
     } catch (err) {
         exportStatus(statusId, esc(err && err.message ? err.message : String(err)), 'error');
     }

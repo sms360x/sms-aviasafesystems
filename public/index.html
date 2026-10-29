@@ -25,16 +25,33 @@
     <meta name="description" content="SMS360X turns safety data into safety information, and safety information into safety intelligence — so operators, regulators, and states can make defensible decisions.">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
-        html { scroll-behavior: smooth; font-family: 'Inter', sans-serif; }
+        :root {
+            --home-background: #f4f6f3;
+            --home-text: #192f35;
+            --home-muted: #65766e;
+            --home-accent: #1d5949;
+            --home-border: #d7e4dc;
+        }
+        html { scroll-behavior: smooth; font-family: 'DM Sans', sans-serif; }
+        body.font-sans, button, input, textarea { font-family: 'DM Sans', sans-serif; }
+        body { background: var(--home-background); color: var(--home-text); }
+        h1, h2, h3 { font-family: 'Manrope', sans-serif; }
+        h1 { font-weight: 700; }
+        button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visible {
+            outline: 3px solid #8bbdb0;
+            outline-offset: 3px;
+        }
+        #demo-modal { background: #fff; color: var(--home-text); border: 1px solid var(--home-border); }
+        #demo-modal input, #demo-modal textarea { color: var(--home-text); background: #fff; }
         @keyframes spin { to { transform: rotate(360deg); } }
         .radar-sweep { animation: spin 8s linear infinite; }
         @media (prefers-reduced-motion: reduce) { .radar-sweep { animation: none; } }
         dialog::backdrop { background: rgba(0,0,0,0.5); }
     </style>
+    <link rel="stylesheet" href="/css/brand.css?v=20261028">
 </head>
-<body class="bg-[#F8FAFC] text-slate-800 font-sans antialiased min-h-screen flex flex-col">
+<body class="bg-[#f4f6f3] text-[#192f35] font-sans antialiased min-h-screen flex flex-col">
 <script>
 // Survey tenant entry: route a landing-page hit carrying a tenant query
 // parameter straight to the survey application. The marketing homepage is
@@ -54,29 +71,29 @@
 </script>
 
 <!-- Hero -->
-<section class="relative min-h-screen flex items-center overflow-hidden bg-gradient-to-b from-[#EAF2FB] to-[#F8FAFC]">
+<section class="relative min-h-screen flex items-center overflow-hidden bg-gradient-to-b from-[#e9f0e9] to-[#f4f6f3]">
     <!-- Radar background -->
     <div class="absolute inset-0 pointer-events-none opacity-50" aria-hidden="true">
         <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px]">
-            <div class="absolute inset-0 rounded-full border border-slate-300"></div>
-            <div class="absolute inset-[100px] rounded-full border border-slate-300"></div>
-            <div class="absolute inset-0 radar-sweep" style="background: conic-gradient(from 0deg, transparent 0deg, rgba(2,132,199,0.15) 60deg, transparent 120deg); border-radius: 50%;"></div>
-            <div class="absolute top-[20%] left-[30%] w-2 h-2 rounded-full bg-blue-400 opacity-50"></div>
-            <div class="absolute top-[40%] left-[70%] w-2 h-2 rounded-full bg-blue-400 opacity-40"></div>
-            <div class="absolute top-[60%] left-[25%] w-2 h-2 rounded-full bg-blue-400 opacity-60"></div>
-            <div class="absolute top-[75%] left-[60%] w-2 h-2 rounded-full bg-blue-400 opacity-30"></div>
-            <div class="absolute top-[30%] left-[50%] w-2 h-2 rounded-full bg-blue-400 opacity-45"></div>
-            <div class="absolute top-[55%] left-[45%] w-2 h-2 rounded-full bg-blue-400 opacity-55"></div>
-            <div class="absolute top-[15%] left-[60%] w-2 h-2 rounded-full bg-blue-400 opacity-35"></div>
-            <div class="absolute top-[80%] left-[35%] w-2 h-2 rounded-full bg-blue-400 opacity-50"></div>
+            <div class="absolute inset-0 rounded-full border border-[#bdccc4]"></div>
+            <div class="absolute inset-[100px] rounded-full border border-[#bdccc4]"></div>
+            <div class="absolute inset-0 radar-sweep" style="background: conic-gradient(from 0deg, transparent 0deg, rgba(50,149,128,0.15) 60deg, transparent 120deg); border-radius: 50%;"></div>
+            <div class="absolute top-[20%] left-[30%] w-2 h-2 rounded-full bg-[#329580] opacity-50"></div>
+            <div class="absolute top-[40%] left-[70%] w-2 h-2 rounded-full bg-[#329580] opacity-40"></div>
+            <div class="absolute top-[60%] left-[25%] w-2 h-2 rounded-full bg-[#329580] opacity-60"></div>
+            <div class="absolute top-[75%] left-[60%] w-2 h-2 rounded-full bg-[#329580] opacity-30"></div>
+            <div class="absolute top-[30%] left-[50%] w-2 h-2 rounded-full bg-[#329580] opacity-45"></div>
+            <div class="absolute top-[55%] left-[45%] w-2 h-2 rounded-full bg-[#329580] opacity-55"></div>
+            <div class="absolute top-[15%] left-[60%] w-2 h-2 rounded-full bg-[#329580] opacity-35"></div>
+            <div class="absolute top-[80%] left-[35%] w-2 h-2 rounded-full bg-[#329580] opacity-50"></div>
         </div>
     </div>
 
     <div class="max-w-7xl mx-auto px-6 w-full relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center py-20">
         <div>
-            <h1 class="text-4xl md:text-6xl font-extrabold tracking-tight text-slate-900 mb-6 leading-tight">Safety intelligence for modern aviation.</h1>
-            <p class="text-lg md:text-xl text-slate-600 max-w-xl mb-10 leading-relaxed">SMS360X turns safety data into safety information, and safety information into safety intelligence — so operators, regulators, and states can make defensible decisions.</p>
-            <div style="display:flex;justify-content:flex-end;"><button type="button" class="bg-[#0A3A50] hover:bg-[#0E4E6C] text-white font-semibold text-lg px-8 py-4 rounded-lg transition-all shadow-lg" onclick="document.getElementById('demo-modal').showModal()">Request an early demo</button></div>
+            <h1 class="text-4xl md:text-6xl font-bold tracking-tight text-[#192f35] mb-6 leading-tight">Safety intelligence <span class="text-[#477969]">for modern aviation.</span></h1>
+            <p class="text-lg md:text-xl text-[#65766e] max-w-xl mb-10 leading-relaxed">SMS360X turns safety data into safety information, and safety information into safety intelligence — so operators, regulators, and states can make defensible decisions.</p>
+            <div style="display:flex;justify-content:flex-end;"><button type="button" class="bg-[#1d5949] hover:bg-[#174e48] text-white font-semibold text-lg px-8 py-4 rounded-lg transition-all shadow-lg" onclick="document.getElementById('demo-modal').showModal()">Request an early demo</button></div>
         </div>
         <div class="relative w-full max-h-[480px] overflow-hidden rounded-2xl shadow-2xl">
             <img src="/Hero Image.png" alt="SMS360X safety intelligence card" class="w-full h-full object-cover">
@@ -86,36 +103,36 @@
 
 <!-- What SMS360X does -->
 <section class="py-20 max-w-7xl mx-auto px-6">
-    <h2 class="text-2xl md:text-4xl font-bold text-slate-900 mb-12 text-center">What SMS360X does</h2>
+    <h2 class="text-2xl md:text-4xl font-bold text-[#192f35] mb-12 text-center">What SMS360X does</h2>
     <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-        <div class="p-8 rounded-2xl border border-slate-200 bg-white shadow-sm">
-            <h3 class="text-xl font-bold text-slate-900 mb-3">Capture</h3>
-            <p class="text-slate-600 text-sm leading-relaxed">Occurrences, hazards, risks, and barriers in a single coherent model, aligned with ICAO Annex 19 and Doc 9859.</p>
+        <div class="p-8 rounded-2xl border border-[#d7e4dc] bg-white shadow-sm">
+            <h3 class="text-xl font-bold text-[#192f35] mb-3">Capture</h3>
+            <p class="text-[#65766e] text-sm leading-relaxed">Occurrences, hazards, risks, and barriers in a single coherent model, aligned with ICAO Annex 19 and Doc 9859.</p>
         </div>
-        <div class="p-8 rounded-2xl border border-slate-200 bg-white shadow-sm">
-            <h3 class="text-xl font-bold text-slate-900 mb-3">Connect</h3>
-            <p class="text-slate-600 text-sm leading-relaxed">Safety data linked across State, Regulator, Operator, and User, with tenant isolation by design.</p>
+        <div class="p-8 rounded-2xl border border-[#d7e4dc] bg-white shadow-sm">
+            <h3 class="text-xl font-bold text-[#192f35] mb-3">Connect</h3>
+            <p class="text-[#65766e] text-sm leading-relaxed">Safety data linked across State, Regulator, Operator, and User, with tenant isolation by design.</p>
         </div>
-        <div class="p-8 rounded-2xl border border-slate-200 bg-white shadow-sm">
-            <h3 class="text-xl font-bold text-slate-900 mb-3">Decide</h3>
-            <p class="text-slate-600 text-sm leading-relaxed">Dashboards and intelligence for safety managers, accountable executives, regulators, and state safety programmes.</p>
+        <div class="p-8 rounded-2xl border border-[#d7e4dc] bg-white shadow-sm">
+            <h3 class="text-xl font-bold text-[#192f35] mb-3">Decide</h3>
+            <p class="text-[#65766e] text-sm leading-relaxed">Dashboards and intelligence for safety managers, accountable executives, regulators, and state safety programmes.</p>
         </div>
     </div>
-    <p class="text-center text-slate-500 mt-10 text-sm">From frontline reporting to boardroom decisions, SMS360X provides a single source of truth.</p>
+    <p class="text-center text-[#62736e] mt-10 text-sm">From frontline reporting to boardroom decisions, SMS360X provides a single source of truth.</p>
 </section>
 
 <!-- Platform flow -->
-<section class="py-20 bg-slate-50">
+<section class="py-20 bg-[#edf2ed]">
     <div class="max-w-5xl mx-auto px-6">
-        <h2 class="text-2xl md:text-4xl font-bold text-slate-900 mb-12 text-center">Platform flow</h2>
+        <h2 class="text-2xl md:text-4xl font-bold text-[#192f35] mb-12 text-center">Platform flow</h2>
         <div class="flex flex-col md:flex-row items-center justify-center gap-4 text-center">
-            <div class="px-6 py-4 rounded-xl bg-white border border-slate-200 shadow-sm font-semibold text-slate-800">Safety Data</div>
-            <span class="text-slate-400">→</span>
-            <div class="px-6 py-4 rounded-xl bg-white border border-slate-200 shadow-sm font-semibold text-slate-800">Safety Information</div>
-            <span class="text-slate-400">→</span>
-            <div class="px-6 py-4 rounded-xl bg-white border border-slate-200 shadow-sm font-semibold text-slate-800">Safety Intelligence</div>
-            <span class="text-slate-400">→</span>
-            <div class="px-6 py-4 rounded-xl bg-white border border-slate-200 shadow-sm font-semibold text-slate-800">Decision Support</div>
+            <div class="px-6 py-4 rounded-xl bg-white border border-[#d7e4dc] shadow-sm font-semibold text-[#192f35]">Safety Data</div>
+            <span class="text-[#83938a]">→</span>
+            <div class="px-6 py-4 rounded-xl bg-white border border-[#d7e4dc] shadow-sm font-semibold text-[#192f35]">Safety Information</div>
+            <span class="text-[#83938a]">→</span>
+            <div class="px-6 py-4 rounded-xl bg-white border border-[#d7e4dc] shadow-sm font-semibold text-[#192f35]">Safety Intelligence</div>
+            <span class="text-[#83938a]">→</span>
+            <div class="px-6 py-4 rounded-xl bg-white border border-[#d7e4dc] shadow-sm font-semibold text-[#192f35]">Decision Support</div>
         </div>
     </div>
 </section>
@@ -124,62 +141,62 @@
 <section class="py-20 max-w-7xl mx-auto px-6">
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
         <div>
-            <h2 class="text-2xl md:text-4xl font-bold text-slate-900 mb-4">Built on international frameworks</h2>
-            <p class="text-slate-600 mb-3">SMS360X is grounded in the standards and guidance that already govern aviation safety management.</p>
-            <p class="text-slate-500 text-sm">Compliance isn't an afterthought — it's the foundation. Your data is structured to meet ICAO and state requirements out of the box.</p>
+            <h2 class="text-2xl md:text-4xl font-bold text-[#192f35] mb-4">Built on international frameworks</h2>
+            <p class="text-[#65766e] mb-3">SMS360X is grounded in the standards and guidance that already govern aviation safety management.</p>
+            <p class="text-[#62736e] text-sm">Compliance isn't an afterthought — it's the foundation. Your data is structured to meet ICAO and state requirements out of the box.</p>
         </div>
         <div class="flex flex-wrap gap-3">
-            <span class="px-4 py-2 rounded-full bg-white border border-slate-200 shadow-sm text-sm font-semibold text-slate-700">ICAO Annex 19</span>
-            <span class="px-4 py-2 rounded-full bg-white border border-slate-200 shadow-sm text-sm font-semibold text-slate-700">ICAO Doc 9859</span>
-            <span class="px-4 py-2 rounded-full bg-white border border-slate-200 shadow-sm text-sm font-semibold text-slate-700">ICAO Doc 10159</span>
-            <span class="px-4 py-2 rounded-full bg-white border border-slate-200 shadow-sm text-sm font-semibold text-slate-700">ADREP</span>
-            <span class="px-4 py-2 rounded-full bg-white border border-slate-200 shadow-sm text-sm font-semibold text-slate-700">HFACS</span>
-            <span class="px-4 py-2 rounded-full bg-white border border-slate-200 shadow-sm text-sm font-semibold text-slate-700">Nano-codes</span>
-            <span class="px-4 py-2 rounded-full bg-white border border-slate-200 shadow-sm text-sm font-semibold text-slate-700">Bow-Tie</span>
+            <span class="px-4 py-2 rounded-full bg-white border border-[#d7e4dc] shadow-sm text-sm font-semibold text-[#174e48]">ICAO Annex 19</span>
+            <span class="px-4 py-2 rounded-full bg-white border border-[#d7e4dc] shadow-sm text-sm font-semibold text-[#174e48]">ICAO Doc 9859</span>
+            <span class="px-4 py-2 rounded-full bg-white border border-[#d7e4dc] shadow-sm text-sm font-semibold text-[#174e48]">ICAO Doc 10159</span>
+            <span class="px-4 py-2 rounded-full bg-white border border-[#d7e4dc] shadow-sm text-sm font-semibold text-[#174e48]">ADREP</span>
+            <span class="px-4 py-2 rounded-full bg-white border border-[#d7e4dc] shadow-sm text-sm font-semibold text-[#174e48]">HFACS</span>
+            <span class="px-4 py-2 rounded-full bg-white border border-[#d7e4dc] shadow-sm text-sm font-semibold text-[#174e48]">Nano-codes</span>
+            <span class="px-4 py-2 rounded-full bg-white border border-[#d7e4dc] shadow-sm text-sm font-semibold text-[#174e48]">Bow-Tie</span>
         </div>
     </div>
 </section>
 
 <!-- Who it is for -->
-<section class="py-20 bg-slate-50">
+<section class="py-20 bg-[#edf2ed]">
     <div class="max-w-5xl mx-auto px-6">
-        <h2 class="text-2xl md:text-4xl font-bold text-slate-900 mb-12 text-center">Who it is for</h2>
+        <h2 class="text-2xl md:text-4xl font-bold text-[#192f35] mb-12 text-center">Who it is for</h2>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto mt-10">
 
             <!-- Airlines -->
-            <div class="bg-white p-8 rounded-2xl shadow-sm border border-slate-200 hover:shadow-lg transition-all duration-300 group">
-                <div class="w-12 h-12 rounded-full bg-sky-50 text-sky-600 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+            <div class="bg-white p-8 rounded-2xl shadow-sm border border-[#d7e4dc] hover:shadow-lg transition-all duration-300 group">
+                <div class="w-12 h-12 rounded-full bg-[#e9f0e9] text-[#235a4b] flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                     <i class="fa-solid fa-plane text-xl"></i>
                 </div>
-                <h3 class="text-xl font-bold text-slate-900 mb-3">Airlines</h3>
-                <p class="text-sm text-slate-600 leading-relaxed">Manage flight safety, cabin occurrences, and pilot reports (MOR/VSR) with real-time risk assessment and Just Culture protection.</p>
+                <h3 class="text-xl font-bold text-[#192f35] mb-3">Airlines</h3>
+                <p class="text-sm text-[#65766e] leading-relaxed">Manage flight safety, cabin occurrences, and pilot reports (MOR/VSR) with real-time risk assessment and Just Culture protection.</p>
             </div>
 
             <!-- ATO -->
-            <div class="bg-white p-8 rounded-2xl shadow-sm border border-slate-200 hover:shadow-lg transition-all duration-300 group">
-                <div class="w-12 h-12 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+            <div class="bg-white p-8 rounded-2xl shadow-sm border border-[#d7e4dc] hover:shadow-lg transition-all duration-300 group">
+                <div class="w-12 h-12 rounded-full bg-[#e9f0e9] text-[#235a4b] flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                     <i class="fa-solid fa-graduation-cap text-xl"></i>
                 </div>
-                <h3 class="text-xl font-bold text-slate-900 mb-3">ATO</h3>
-                <p class="text-sm text-slate-600 leading-relaxed">Monitor trainee safety culture, incident reports, and compliance with training regulations.</p>
+                <h3 class="text-xl font-bold text-[#192f35] mb-3">ATO</h3>
+                <p class="text-sm text-[#65766e] leading-relaxed">Monitor trainee safety culture, incident reports, and compliance with training regulations.</p>
             </div>
 
             <!-- MRO -->
-            <div class="bg-white p-8 rounded-2xl shadow-sm border border-slate-200 hover:shadow-lg transition-all duration-300 group">
-                <div class="w-12 h-12 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+            <div class="bg-white p-8 rounded-2xl shadow-sm border border-[#d7e4dc] hover:shadow-lg transition-all duration-300 group">
+                <div class="w-12 h-12 rounded-full bg-[#e9f0e9] text-[#235a4b] flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                     <i class="fa-solid fa-wrench text-xl"></i>
                 </div>
-                <h3 class="text-xl font-bold text-slate-900 mb-3">MRO</h3>
-                <p class="text-sm text-slate-600 leading-relaxed">Track maintenance errors, human factors, and safety assurance in the hangar or shop floor.</p>
+                <h3 class="text-xl font-bold text-[#192f35] mb-3">MRO</h3>
+                <p class="text-sm text-[#65766e] leading-relaxed">Track maintenance errors, human factors, and safety assurance in the hangar or shop floor.</p>
             </div>
 
             <!-- State Regulators -->
-            <div class="bg-white p-8 rounded-2xl shadow-sm border border-slate-200 hover:shadow-lg transition-all duration-300 group">
-                <div class="w-12 h-12 rounded-full bg-purple-50 text-purple-600 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+            <div class="bg-white p-8 rounded-2xl shadow-sm border border-[#d7e4dc] hover:shadow-lg transition-all duration-300 group">
+                <div class="w-12 h-12 rounded-full bg-[#e9f0e9] text-[#235a4b] flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                     <i class="fa-solid fa-landmark text-xl"></i>
                 </div>
-                <h3 class="text-xl font-bold text-slate-900 mb-3">State Regulators</h3>
-                <p class="text-sm text-slate-600 leading-relaxed">Enforce ICAO Annex 19 compliance, review operator SPIs, and oversee national safety programmes.</p>
+                <h3 class="text-xl font-bold text-[#192f35] mb-3">State Regulators</h3>
+                <p class="text-sm text-[#65766e] leading-relaxed">Enforce ICAO Annex 19 compliance, review operator SPIs, and oversee national safety programmes.</p>
             </div>
 
         </div>
@@ -188,33 +205,33 @@
 
 <!-- Early access -->
 <section class="py-20 max-w-5xl mx-auto px-6 text-center">
-    <h2 class="text-2xl md:text-4xl font-bold text-slate-900 mb-4">Early access</h2>
-    <p class="text-slate-600 mb-8">SMS360X is in active development. We are inviting a small number of operators and regulators to participate in an early demo.</p>
-    <button type="button" class="bg-[#0A3A50] hover:bg-[#0E4E6C] text-white font-semibold text-lg px-8 py-4 rounded-lg transition-all shadow-lg" onclick="document.getElementById('demo-modal').showModal()">Request an early demo</button>
+    <h2 class="text-2xl md:text-4xl font-bold text-[#192f35] mb-4">Early access</h2>
+    <p class="text-[#65766e] mb-8">SMS360X is in active development. We are inviting a small number of operators and regulators to participate in an early demo.</p>
+    <button type="button" class="bg-[#1d5949] hover:bg-[#174e48] text-white font-semibold text-lg px-8 py-4 rounded-lg transition-all shadow-lg" onclick="document.getElementById('demo-modal').showModal()">Request an early demo</button>
 </section>
 
 <!-- Footer -->
-<footer class="mt-auto w-full py-6 border-t border-slate-200 bg-white">
-    <div class="max-w-7xl mx-auto px-6 flex items-center justify-between text-sm text-slate-600">
-        <span class="font-bold text-slate-900">SMS360X</span>
-        <span>A <a href="https://gsacharya.com" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline">gsacharya.com</a> project</span>
+<footer class="mt-auto w-full py-6 border-t border-[#d7e4dc] bg-white">
+    <div class="max-w-7xl mx-auto px-6 flex items-center justify-between text-sm text-[#65766e]">
+        <span class="font-bold text-[#192f35]">SMS360X</span>
+        <span>A <a href="https://gsacharya.com" target="_blank" rel="noopener noreferrer" class="text-[#174e48] hover:underline">gsacharya.com</a> project</span>
     </div>
 </footer>
 
 <!-- Demo modal -->
 <dialog id="demo-modal" class="rounded-2xl shadow-2xl p-0 w-[95%] max-w-lg">
     <div class="p-6">
-        <button type="button" class="float-right text-slate-500 hover:text-slate-900 text-2xl leading-none" onclick="document.getElementById('demo-modal').close()">×</button>
-        <h2 class="text-xl font-bold text-slate-900 mb-4">Request an Early Demo</h2>
+        <button type="button" class="float-right text-[#62736e] hover:text-[#192f35] text-2xl leading-none" onclick="document.getElementById('demo-modal').close()">×</button>
+        <h2 class="text-xl font-bold text-[#192f35] mb-4">Request an Early Demo</h2>
         <form action="https://api.web3forms.com/submit" method="POST" novalidate class="space-y-4">
             <input type="hidden" name="access_key" value="5d866176-c3b5-4cae-bd56-31a3f7d4f331">
             <input type="hidden" name="subject" value="New Early Demo Request - SMS360X">
             <input type="hidden" name="to" value="sms360x@gmail.com">
-            <div><label for="modal-demo-name" class="block text-sm font-medium text-slate-700 mb-1">Name</label><input type="text" id="modal-demo-name" name="name" placeholder="Your name" required class="w-full border border-slate-300 rounded-lg px-3 py-2"></div>
-            <div><label for="modal-demo-email" class="block text-sm font-medium text-slate-700 mb-1">Email</label><input type="email" id="modal-demo-email" name="email" placeholder="you@company.com" required class="w-full border border-slate-300 rounded-lg px-3 py-2"></div>
-            <div><label for="modal-demo-company" class="block text-sm font-medium text-slate-700 mb-1">Company</label><input type="text" id="modal-demo-company" name="company" placeholder="Company / organisation" class="w-full border border-slate-300 rounded-lg px-3 py-2"></div>
-            <div><label for="modal-demo-message" class="block text-sm font-medium text-slate-700 mb-1">Message</label><textarea id="modal-demo-message" name="message" rows="4" placeholder="Anything you'd like us to know?" class="w-full border border-slate-300 rounded-lg px-3 py-2"></textarea></div>
-            <button type="submit" class="w-full py-3 px-8 text-base font-bold text-white bg-[#0A3A50] hover:bg-[#0E4E6C] rounded-lg shadow-md transition-all">Send Request</button>
+            <div><label for="modal-demo-name" class="block text-sm font-medium text-[#174e48] mb-1">Name</label><input type="text" id="modal-demo-name" name="name" placeholder="Your name" required class="w-full border border-[#bdccc4] rounded-lg px-3 py-2"></div>
+            <div><label for="modal-demo-email" class="block text-sm font-medium text-[#174e48] mb-1">Email</label><input type="email" id="modal-demo-email" name="email" placeholder="you@company.com" required class="w-full border border-[#bdccc4] rounded-lg px-3 py-2"></div>
+            <div><label for="modal-demo-company" class="block text-sm font-medium text-[#174e48] mb-1">Company</label><input type="text" id="modal-demo-company" name="company" placeholder="Company / organisation" class="w-full border border-[#bdccc4] rounded-lg px-3 py-2"></div>
+            <div><label for="modal-demo-message" class="block text-sm font-medium text-[#174e48] mb-1">Message</label><textarea id="modal-demo-message" name="message" rows="4" placeholder="Anything you'd like us to know?" class="w-full border border-[#bdccc4] rounded-lg px-3 py-2"></textarea></div>
+            <button type="submit" class="w-full py-3 px-8 text-base font-bold text-white bg-[#1d5949] hover:bg-[#174e48] rounded-lg shadow-md transition-all">Send Request</button>
         </form>
     </div>
 </dialog>

@@ -325,7 +325,7 @@ function renderReportTrendChart(data) {
         data: {
             labels: data.map(monthLabel),
             datasets: [
-                { label: 'VSR', data: data.map(d => d.voluntary ?? 0), borderColor: '#1a6b8a', fill: false, tension: 0.3 },
+                { label: 'VSR', data: data.map(d => d.voluntary ?? 0), borderColor: '#1d5949', fill: false, tension: 0.3 },
                 { label: 'MOR', data: data.map(d => d.mandatory ?? 0), borderColor: '#28a745', fill: false, tension: 0.3 },
                 { label: 'Diversion', data: data.map(d => d.diversions ?? 0), borderColor: '#dc3545', fill: false, tension: 0.3 },
             ],
@@ -581,7 +581,7 @@ function renderSSMRiskChart(data) {
         Human: '#9334e6',
         Environmental: '#c5221f',
         // Legacy aliases kept so already-stored series still colour correctly.
-        Operational: '#1a73e8',
+        Operational: '#1d5949',
         'Human Factors': '#9334e6',
         Wildlife: '#c5221f',
         External: '#c5221f',
@@ -649,7 +649,7 @@ function renderTrendChart(data) {
         data: {
             labels: data.map(d => `${d.month}/${d.year}`),
             datasets: [
-                { label: 'Total', data: data.map(d => d.total), borderColor: '#1a6b8a', fill: false, tension: 0.3 },
+                { label: 'Total', data: data.map(d => d.total), borderColor: '#1d5949', fill: false, tension: 0.3 },
                 { label: 'Voluntary', data: data.map(d => d.voluntary), borderColor: '#28a745', fill: false, tension: 0.3 },
                 { label: 'Mandatory', data: data.map(d => d.mandatory), borderColor: '#dc3545', fill: false, tension: 0.3 },
                 { label: 'High Risk', data: data.map(d => d.high_risk), borderColor: '#fd7e14', fill: false, tension: 0.3, borderDash: [5, 5] },
@@ -682,7 +682,7 @@ function renderHazardChart(data) {
             datasets: [{
                 label: 'Occurrences',
                 data: top.map(d => d.count),
-                backgroundColor: '#1a6b8a',
+                backgroundColor: '#1d5949',
                 borderRadius: 4,
             }],
         },
@@ -851,22 +851,22 @@ function renderRiskMatrixPreview() {
     };
 
     const colorFor = (index) => {
-        if (!valid) return '#e2e8f0';
-        return ICAO_COLORS[levelFor(index)] || '#e2e8f0';
+        if (!valid) return '#d7e4dc';
+        return ICAO_COLORS[levelFor(index)] || '#d7e4dc';
     };
 
     let html = '<table style="border-collapse:collapse;margin:0 auto;font-size:0.78rem;">';
-    html += '<tr><td style="padding:0.4rem;font-weight:700;color:#475569;text-align:right;">P\\S</td>';
+    html += '<tr><td style="padding:0.4rem;font-weight:700;color:#53685c;text-align:right;">P\\S</td>';
     for (let s = 1; s <= 5; s++) {
-        html += `<td style="padding:0.4rem 0.55rem;font-weight:700;color:#1a6b8a;text-align:center;">${s}</td>`;
+        html += `<td style="padding:0.4rem 0.55rem;font-weight:700;color:#1d5949;text-align:center;">${s}</td>`;
     }
     html += '</tr>';
     for (let p = 5; p >= 1; p--) {
-        html += `<tr><td style="padding:0.4rem;font-weight:700;color:#475569;text-align:right;">${p}</td>`;
+        html += `<tr><td style="padding:0.4rem;font-weight:700;color:#53685c;text-align:right;">${p}</td>`;
         for (let s = 1; s <= 5; s++) {
             const index = s * p;
             const color = colorFor(index);
-            const textColor = (index > 15 && valid) ? '#fff' : '#0b2a42';
+            const textColor = (index > 15 && valid) ? '#fff' : '#192f35';
             html += `<td style="padding:0.4rem;text-align:center;background:${color};border:1px solid #fff;border-radius:4px;min-width:42px;color:${textColor};font-weight:700;">${index}</td>`;
         }
         html += '</tr>';
@@ -877,7 +877,7 @@ function renderRiskMatrixPreview() {
     if (!valid) {
         note = '<p style="text-align:center;font-size:0.72rem;color:#d97706;margin-top:0.5rem;">Thresholds must be strictly increasing: 1 ≤ Low &lt; Medium &lt; High ≤ 25.</p>';
     } else {
-        note = `<p style="text-align:center;font-size:0.72rem;color:#94a3b8;margin-top:0.5rem;">Low ≤ ${t.lowMax} · High ≤ ${t.highMax} · Very High &gt; ${t.highMax}</p>`;
+        note = `<p style="text-align:center;font-size:0.72rem;color:#83938a;margin-top:0.5rem;">Low ≤ ${t.lowMax} · High ≤ ${t.highMax} · Very High &gt; ${t.highMax}</p>`;
     }
     container.innerHTML = html + note;
 }
@@ -974,7 +974,7 @@ function showError(msg) {
         <div style="display:flex;align-items:center;justify-content:center;height:100vh;flex-direction:column;font-family:sans-serif;">
             <h2 style="color:#dc3545;">Access Denied</h2>
             <p>${msg}</p>
-            <a href="/login.html" style="margin-top:1rem;color:#1a6b8a;">Return to Login</a>
+            <a href="/login.html" style="margin-top:1rem;color:#1d5949;">Return to Login</a>
         </div>
     `;
 }

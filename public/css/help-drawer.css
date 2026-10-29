@@ -16,9 +16,9 @@
     align-items: center;
     gap: 8px;
     padding: 10px 16px;
-    border: 1px solid var(--color-primary, #1a6b8a);
+    border: 1px solid var(--color-primary, #1d5949);
     border-radius: 999px;
-    background: var(--color-primary, #1a6b8a);
+    background: var(--color-primary, #1d5949);
     color: var(--color-white, #ffffff);
     font-size: 0.875rem;
     font-weight: 600;
@@ -28,7 +28,7 @@
     transition: background 0.18s ease, transform 0.18s ease;
 }
 .help-drawer-toggle:hover {
-    background: var(--color-primary-dark, #0b2a42);
+    background: var(--color-primary-dark, #192f35);
     transform: translateY(-1px);
 }
 .help-drawer-toggle-icon {
@@ -96,7 +96,7 @@
     justify-content: space-between;
     gap: 12px;
     padding: 18px 20px;
-    background: linear-gradient(135deg, var(--color-primary, #1a6b8a), var(--color-primary-dark, #0b2a42));
+    background: linear-gradient(135deg, var(--color-primary, #1d5949), var(--color-primary-dark, #192f35));
     color: var(--color-white, #ffffff);
 }
 .help-drawer-title {
@@ -148,7 +148,7 @@
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.04em;
-    color: var(--color-primary, #1a6b8a);
+    color: var(--color-primary, #1d5949);
 }
 .help-drawer-p {
     margin: 0 0 10px;
@@ -188,9 +188,9 @@
     text-align: left;
 }
 .help-drawer-table th {
-    background: var(--color-primary-light, #e8f0f8);
+    background: var(--color-primary-light, #e9f0e9);
     font-weight: 600;
-    color: var(--color-primary-dark, #0b2a42);
+    color: var(--color-primary-dark, #192f35);
 }
 .help-drawer-error {
     padding: 14px;

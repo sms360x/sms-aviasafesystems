@@ -195,8 +195,8 @@
                     datasets: [{
                         label: 'Reports',
                         data: values,
-                        borderColor: '#0284c7',
-                        backgroundColor: 'rgba(2,132,199,0.12)',
+                        borderColor: '#235a4b',
+                        backgroundColor: 'rgba(35, 90, 75,0.12)',
                         fill: true,
                         tension: 0.25,
                         pointRadius: 3,
@@ -296,9 +296,9 @@
             'Overdue': '#dc2626',
             'Due \u226430d': '#d97706',
             'On Track': '#16a34a',
-            'Pending Review': '#0284c7',
-            'Closed': '#475569',
-            'Missing due date': '#94a3b8'
+            'Pending Review': '#235a4b',
+            'Closed': '#53685c',
+            'Missing due date': '#83938a'
         };
         var counts = {
             'Overdue': Number(data.overdue) || 0,
@@ -374,7 +374,7 @@
             return;
         }
         var labels = rows[0].months || [];
-        var palette = ['#0284c7', '#16a34a', '#d97706', '#dc2626', '#7c3aed', '#0891b2', '#ca8a04', '#475569'];
+        var palette = ['#235a4b', '#16a34a', '#d97706', '#dc2626', '#7c3aed', '#477969', '#ca8a04', '#53685c'];
         var datasets = rows.map(function (row, i) {
             return {
                 label: row.name,

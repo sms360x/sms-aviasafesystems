@@ -4,16 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Accountable Executive — AviaSAFE</title>
-    <link rel="stylesheet" href="/css/variables.css">
+    <link rel="stylesheet" href="/css/variables.css?brand=20261028">
     <link rel="stylesheet" href="/css/main.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
-        body { background:#f8fafc; font-family:'Inter',system-ui,-apple-system,sans-serif; color:#0f172a; margin:0; }
-        .nav { background:#0b2a42; color:#fff; padding:0.9rem 1.5rem; display:flex; justify-content:space-between; align-items:center; position:sticky; top:0; z-index:100; }
+        body { background:#f4f6f3; font-family:'DM Sans',system-ui,-apple-system,sans-serif; color:#192f35; margin:0; }
+        .nav { background:#192f35; color:#fff; padding:0.9rem 1.5rem; display:flex; justify-content:space-between; align-items:center; position:sticky; top:0; z-index:100; }
         .nav h1 { font-size:1rem; font-weight:700; margin:0; letter-spacing:0.2px; }
         .nav h1 i { color:#d4af37; margin-right:0.5rem; }
-        .hero { background:linear-gradient(135deg,#0b2a42 0%,#123a5c 100%); color:#fff; padding:2rem; text-align:center; }
+        .hero { background:linear-gradient(135deg,#192f35 0%,#174e48 100%); color:#fff; padding:2rem; text-align:center; }
         .hero h1 { margin:0; font-size:1.6rem; font-weight:800; }
         .hero .sub { font-size:0.85rem; opacity:0.7; margin-top:0.4rem; }
         .hero .welcome { color:#d4af37; font-weight:600; margin-top:0.5rem; }
@@ -22,30 +22,31 @@
         .banner .label { font-size:0.65rem; text-transform:uppercase; letter-spacing:0.5px; color:#8fa8bd; font-weight:700; }
         .banner .value { font-size:0.95rem; font-weight:800; margin-top:0.3rem; }
         .chip { display:inline-block; padding:0.25rem 0.7rem; border-radius:999px; font-size:0.75rem; font-weight:700; }
-        .chip-blue { background:#172e52; color:#93c5fd; } .chip-green { background:#14532d; color:#4ade80; } .chip-amber { background:#78350f; color:#fbbf24; } .chip-red { background:#7f1d1d; color:#fca5a5; } .chip-grey { background:#475569; color:#e2e8f0; } /* 3C.1B: unknown/unavailable state */
+        .chip-blue { background:#172e52; color:#93c5fd; } .chip-green { background:#14532d; color:#4ade80; } .chip-amber { background:#78350f; color:#fbbf24; } .chip-red { background:#7f1d1d; color:#fca5a5; } .chip-grey { background:#53685c; color:#d7e4dc; } /* 3C.1B: unknown/unavailable state */
         .page { max-width:1100px; margin:0 auto; padding:1.5rem; }
         .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(320px,1fr)); gap:1.25rem; }
-        .card { background:#fff; border-radius:14px; padding:1.4rem; box-shadow:0 1px 6px rgba(0,0,0,0.06); border:1px solid #f1f5f9; }
-        .card h2 { font-size:0.95rem; margin:0 0 1rem; display:flex; align-items:center; gap:0.5rem; color:#0b2a42; }
-        .card h2 .tag { margin-left:auto; font-size:0.6rem; text-transform:uppercase; letter-spacing:0.4px; color:#64748b; background:#f8fafc; padding:0.2rem 0.5rem; border-radius:999px; }
+        .card { background:#fff; border-radius:14px; padding:1.4rem; box-shadow:0 1px 6px rgba(0,0,0,0.06); border:1px solid #edf2ed; }
+        .card h2 { font-size:0.95rem; margin:0 0 1rem; display:flex; align-items:center; gap:0.5rem; color:#192f35; }
+        .card h2 .tag { margin-left:auto; font-size:0.6rem; text-transform:uppercase; letter-spacing:0.4px; color:#65766e; background:#f4f6f3; padding:0.2rem 0.5rem; border-radius:999px; }
         .big-score { font-size:2.6rem; font-weight:800; line-height:1; }
         .kpi-strip { display:grid; grid-template-columns:repeat(4,1fr); gap:0.6rem; margin:1rem 0; }
-        .kpi { background:#f8fafc; border-radius:10px; padding:0.7rem; text-align:center; border:1px solid #eef2f7; }
+        .kpi { background:#f4f6f3; border-radius:10px; padding:0.7rem; text-align:center; border:1px solid #eef2f7; }
         .kpi .num { font-size:1.3rem; font-weight:800; }
-        .kpi .lbl { font-size:0.6rem; text-transform:uppercase; letter-spacing:0.3px; color:#64748b; }
+        .kpi .lbl { font-size:0.6rem; text-transform:uppercase; letter-spacing:0.3px; color:#65766e; }
         .heatmap { display:grid; grid-template-columns:repeat(6,1fr); gap:3px; font-size:0.6rem; }
-        .hm-cell { aspect-ratio:1.2; border-radius:4px; display:flex; align-items:center; justify-content:center; font-weight:700; background:#f1f5f9; color:#94a3b8; }
+        .hm-cell { aspect-ratio:1.2; border-radius:4px; display:flex; align-items:center; justify-content:center; font-weight:700; background:#edf2ed; color:#83938a; }
         .btn { display:inline-flex; align-items:center; gap:0.3rem; padding:0.45rem 0.9rem; border-radius:8px; font-size:0.78rem; font-weight:600; cursor:pointer; border:none; text-decoration:none; }
-        .btn-approve { background:#1e7e34; color:#fff; } .btn-risk { background:#b45309; color:#fff; } .btn-outline { background:#fff; border:1px solid #cbd5e1; color:#1a6b8a; }
-        .empty { color:#94a3b8; font-size:0.85rem; padding:1rem 0; text-align:center; }
-        .loading { display:flex; align-items:center; justify-content:center; padding:3rem; color:#64748b; }
-        .footer { text-align:center; padding:2rem 1rem; color:#94a3b8; font-size:0.75rem; }
+        .btn-approve { background:#1e7e34; color:#fff; } .btn-risk { background:#b45309; color:#fff; } .btn-outline { background:#fff; border:1px solid #bdccc4; color:#1d5949; }
+        .empty { color:#83938a; font-size:0.85rem; padding:1rem 0; text-align:center; }
+        .loading { display:flex; align-items:center; justify-content:center; padding:3rem; color:#65766e; }
+        .footer { text-align:center; padding:2rem 1rem; color:#83938a; font-size:0.75rem; }
         @media (max-width:700px) { .kpi-strip { grid-template-columns:repeat(2,1fr); } }
     </style>
-    <link rel="stylesheet" href="../css/theme.css">
-    <link rel="stylesheet" href="/css/dashboard-responsive.css">
-<link rel="stylesheet" href="/css/shell.css">
+    <link rel="stylesheet" href="../css/theme.css?brand=20261028">
+    <link rel="stylesheet" href="/css/dashboard-responsive.css?brand=20261028">
+<link rel="stylesheet" href="/css/shell.css?brand=20261028">
     
+    <link rel="stylesheet" href="/css/brand.css?v=20261028">
 </head>
 <body>
 
@@ -71,14 +72,14 @@
                     <div class="maturity-card" style="display:flex;flex-direction:column;gap:16px;">
                         <div class="maturity-top" style="display:flex;gap:16px;flex-wrap:wrap;align-items:start;">
                             <div class="maturity-filters" style="flex:1;min-width:220px;display:flex;flex-direction:column;gap:0.5rem;">
-                                <label style="font-size:0.7rem;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.3px;">Period</label>
-                                <select id="aeMaturityPeriod" onchange="loadAeMaturity()" style="padding:0.45rem 0.6rem;border:1px solid #e2e8f0;border-radius:8px;font-size:0.78rem;background:#fff;">
+                                <label style="font-size:0.7rem;font-weight:700;color:#65766e;text-transform:uppercase;letter-spacing:0.3px;">Period</label>
+                                <select id="aeMaturityPeriod" onchange="loadAeMaturity()" style="padding:0.45rem 0.6rem;border:1px solid #d7e4dc;border-radius:8px;font-size:0.78rem;background:#fff;">
                                     <option value="30">Last 30 days</option>
                                     <option value="90">Last 90 days</option>
                                     <option value="365" selected>Last 12 months</option>
                                 </select>
-                                <label style="font-size:0.7rem;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.3px;margin-top:0.25rem;">Component</label>
-                                <select id="aeMaturityComponent" onchange="renderAeMaturity()" style="padding:0.45rem 0.6rem;border:1px solid #e2e8f0;border-radius:8px;font-size:0.78rem;background:#fff;">
+                                <label style="font-size:0.7rem;font-weight:700;color:#65766e;text-transform:uppercase;letter-spacing:0.3px;margin-top:0.25rem;">Component</label>
+                                <select id="aeMaturityComponent" onchange="renderAeMaturity()" style="padding:0.45rem 0.6rem;border:1px solid #d7e4dc;border-radius:8px;font-size:0.78rem;background:#fff;">
                                     <option value="overall">All components</option>
                                     <option value="safety_policy">Safety Policy</option>
                                     <option value="safety_risk_management">Safety Risk Management</option>
@@ -90,19 +91,19 @@
                                 <div style="display:flex;gap:1.2rem;align-items:start;">
                                     <div>
                                         <div class="score-value big-score" id="aeMaturityScore">—</div>
-                                        <div class="score-label" style="font-size:0.7rem;color:#64748b;">Overall score</div>
+                                        <div class="score-label" style="font-size:0.7rem;color:#65766e;">Overall score</div>
                                         <div style="margin-top:0.4rem;"><span class="chip chip-blue" id="aeMaturityTier">—</span></div>
                                     </div>
                                     <div id="aeMaturityCompBlock" style="display:none;">
                                         <div class="score-value" id="aeMaturityCompScore" style="font-size:1.6rem;font-weight:800;line-height:1;">—</div>
-                                        <div class="score-label" id="aeMaturityCompLabel" style="font-size:0.7rem;color:#64748b;">(component)</div>
+                                        <div class="score-label" id="aeMaturityCompLabel" style="font-size:0.7rem;color:#65766e;">(component)</div>
                                     </div>
                                 </div>
-                                <p class="recommendation-text" id="aeMaturityReco" style="font-size:0.78rem;color:#475569;margin:0.5rem 0 0;"></p>
+                                <p class="recommendation-text" id="aeMaturityReco" style="font-size:0.78rem;color:#53685c;margin:0.5rem 0 0;"></p>
                             </div>
                         </div>
                         <div class="maturity-chart-block" style="position:relative;width:100%;">
-                            <button type="button" id="aeMaturityExpandBtn" onclick="openAeMaturityExpandModal()" title="Expand chart" style="position:absolute;top:8px;right:8px;z-index:2;background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:0.3rem 0.6rem;font-size:0.72rem;color:#1a6b8a;cursor:pointer;">⛶ Expand</button>
+                            <button type="button" id="aeMaturityExpandBtn" onclick="openAeMaturityExpandModal()" title="Expand chart" style="position:absolute;top:8px;right:8px;z-index:2;background:#fff;border:1px solid #d7e4dc;border-radius:8px;padding:0.3rem 0.6rem;font-size:0.72rem;color:#1d5949;cursor:pointer;">⛶ Expand</button>
                             <div style="position:relative;width:100%;height:220px;">
                                 <canvas id="aeMaturityChart"></canvas>
                             </div>
@@ -110,16 +111,16 @@
                     </div>
                     <div id="aeMatEmpty" class="empty" style="display:none;">No survey responses in period.</div>
                 </div>
-                <div class="card" style="border-top:4px solid #1a6b8a;">
+                <div class="card" style="border-top:4px solid #1d5949;">
                     <h2><i class="fas fa-gavel"></i> Executive Decisions <span class="tag">Approvals</span></h2>
                     <div id="escalationQueue"></div>
-                    <div style="margin-top:1rem;border-top:1px solid #f1f5f9;padding-top:1rem;">
-                        <div style="font-size:0.75rem;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.3px;">Recent Decisions</div>
+                    <div style="margin-top:1rem;border-top:1px solid #edf2ed;padding-top:1rem;">
+                        <div style="font-size:0.75rem;font-weight:700;color:#65766e;text-transform:uppercase;letter-spacing:0.3px;">Recent Decisions</div>
                         <div id="decisionLedger" style="margin-top:0.5rem;"></div>
                         <div style="display:flex;gap:0.5rem;margin-top:0.7rem;align-items:center;flex-wrap:wrap;">
                             <button id="aeExportCsvBtn" class="btn btn-outline" onclick="exportDecisionLog('csv')" style="font-size:0.7rem;" disabled title="Select at least one decision to export"><i class="fas fa-file-csv"></i> Export CSV</button>
                             <button id="aeExportPdfBtn" class="btn btn-outline" onclick="exportDecisionLog('pdf')" style="font-size:0.7rem;" disabled title="Select exactly one CAP to download its record"><i class="fas fa-file-pdf"></i> PDF</button>
-                            <span id="aeExportHint" style="font-size:0.72rem;color:#94a3b8;">Select at least one decision to export.</span>
+                            <span id="aeExportHint" style="font-size:0.72rem;color:#83938a;">Select at least one decision to export.</span>
                         </div>
                     </div>
                 </div>
@@ -130,25 +131,25 @@
 
 <div id="aeDecisionModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(11,42,66,0.55);z-index:1000;justify-content:center;align-items:center;">
     <div style="background:#fff;padding:1.5rem;border-radius:14px;max-width:480px;width:92%;box-shadow:0 10px 30px rgba(0,0,0,0.2);text-align:left;">
-        <h3 style="margin:0 0 0.5rem;color:#0b2a42;font-size:1rem;"><i class="fas fa-gavel" style="color:#d4af37;"></i> Executive Decision</h3>
-        <p id="aeDecisionContext" style="font-size:0.82rem;color:#64748b;margin:0 0 1rem;"></p>
+        <h3 style="margin:0 0 0.5rem;color:#192f35;font-size:1rem;"><i class="fas fa-gavel" style="color:#d4af37;"></i> Executive Decision</h3>
+        <p id="aeDecisionContext" style="font-size:0.82rem;color:#65766e;margin:0 0 1rem;"></p>
         <div style="margin-bottom:0.9rem;">
-            <label for="aeDecisionType" style="display:block;font-size:0.78rem;font-weight:700;color:#475569;margin-bottom:0.3rem;">Decision</label>
-            <select id="aeDecisionType" style="width:100%;padding:0.5rem 0.6rem;border:1px solid #cbd5e1;border-radius:8px;font-size:0.85rem;background:#fff;">
+            <label for="aeDecisionType" style="display:block;font-size:0.78rem;font-weight:700;color:#53685c;margin-bottom:0.3rem;">Decision</label>
+            <select id="aeDecisionType" style="width:100%;padding:0.5rem 0.6rem;border:1px solid #bdccc4;border-radius:8px;font-size:0.85rem;background:#fff;">
                 <option value="acknowledge" title="Accept the CAP as scoped and move it to EIP">Acknowledge</option>
                 <option value="direct" title="Direct further action — notes are required">Direct</option>
                 <option value="continue" title="Continue monitoring — notes are required">Continue</option>
             </select>
         </div>
         <div style="margin-bottom:0.9rem;">
-            <label for="aeDecisionNotes" style="display:block;font-size:0.78rem;font-weight:700;color:#475569;margin-bottom:0.3rem;">Notes</label>
-            <textarea id="aeDecisionNotes" rows="3" placeholder="Required for Direct and Continue (min 20 characters)" style="width:100%;padding:0.5rem 0.6rem;border:1px solid #cbd5e1;border-radius:8px;font-size:0.85rem;box-sizing:border-box;resize:vertical;"></textarea>
+            <label for="aeDecisionNotes" style="display:block;font-size:0.78rem;font-weight:700;color:#53685c;margin-bottom:0.3rem;">Notes</label>
+            <textarea id="aeDecisionNotes" rows="3" placeholder="Required for Direct and Continue (min 20 characters)" style="width:100%;padding:0.5rem 0.6rem;border:1px solid #bdccc4;border-radius:8px;font-size:0.85rem;box-sizing:border-box;resize:vertical;"></textarea>
         </div>
         <div style="margin-bottom:0.9rem;">
-            <label for="aeDecisionSignatureName" style="display:block;font-size:0.78rem;font-weight:700;color:#475569;margin-bottom:0.3rem;">Type your name</label>
-            <input id="aeDecisionSignatureName" type="text" placeholder="Full name" autocomplete="off" style="width:100%;padding:0.5rem 0.6rem;border:1px solid #cbd5e1;border-radius:8px;font-size:0.85rem;box-sizing:border-box;">
+            <label for="aeDecisionSignatureName" style="display:block;font-size:0.78rem;font-weight:700;color:#53685c;margin-bottom:0.3rem;">Type your name</label>
+            <input id="aeDecisionSignatureName" type="text" placeholder="Full name" autocomplete="off" style="width:100%;padding:0.5rem 0.6rem;border:1px solid #bdccc4;border-radius:8px;font-size:0.85rem;box-sizing:border-box;">
         </div>
-        <label style="display:flex;gap:0.5rem;align-items:flex-start;font-size:0.8rem;color:#475569;margin-bottom:0.9rem;cursor:pointer;">
+        <label style="display:flex;gap:0.5rem;align-items:flex-start;font-size:0.8rem;color:#53685c;margin-bottom:0.9rem;cursor:pointer;">
             <input type="checkbox" id="aeDecisionAttestation" style="margin-top:0.2rem;">
             <span>I confirm this is my terminal decision as Accountable Executive. I understand it is recorded immutably and attributed to my account.</span>
         </label>
@@ -164,13 +165,13 @@
     <div style="background:#fff;border-radius:14px;max-width:640px;width:92%;max-height:88vh;overflow-y:auto;padding:24px;box-shadow:0 10px 30px rgba(0,0,0,0.2);">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;">
             <div>
-                <h3 id="aeCapReviewTitle" style="margin:0;color:#0b2a42;">CAP — Executive Review</h3>
-                <p id="aeCapReviewSubtitle" style="margin:4px 0 0;font-size:0.85rem;color:#64748b;"></p>
+                <h3 id="aeCapReviewTitle" style="margin:0;color:#192f35;">CAP — Executive Review</h3>
+                <p id="aeCapReviewSubtitle" style="margin:4px 0 0;font-size:0.85rem;color:#65766e;"></p>
             </div>
-            <button type="button" onclick="closeAeCapReviewModal()" style="background:none;border:none;font-size:1.4rem;cursor:pointer;color:#64748b;">&times;</button>
+            <button type="button" onclick="closeAeCapReviewModal()" style="background:none;border:none;font-size:1.4rem;cursor:pointer;color:#65766e;">&times;</button>
         </div>
         <div id="aeCapReviewBody"></div>
-        <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px;padding-top:16px;border-top:1px solid #f1f5f9;">
+        <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px;padding-top:16px;border-top:1px solid #edf2ed;">
             <button type="button" onclick="closeAeCapReviewModal()" class="btn btn-outline">Close</button>
             <button type="button" onclick="closeAeCapReviewModal();openAeDecisionModal(currentDecisionCapId,'acknowledge')" class="btn btn-approve" style="background:#1e7e34;color:#fff;">Acknowledge</button>
             <button type="button" onclick="closeAeCapReviewModal();openAeDecisionModal(currentDecisionCapId,'direct')" class="btn btn-outline">Direct</button>
@@ -182,13 +183,13 @@
 <div id="aeMaturityExpandModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(11,42,66,0.55);z-index:1000;justify-content:center;align-items:center;">
     <div style="background:#fff;border-radius:14px;width:min(80vw,1000px);max-height:88vh;overflow-y:auto;padding:24px;box-shadow:0 10px 30px rgba(0,0,0,0.2);">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;">
-            <h3 id="aeMaturityExpandTitle" style="margin:0;color:#0b2a42;">SMS Maturity Trend</h3>
-            <button type="button" onclick="closeAeMaturityExpandModal()" style="background:none;border:none;font-size:1.4rem;cursor:pointer;color:#64748b;">&times;</button>
+            <h3 id="aeMaturityExpandTitle" style="margin:0;color:#192f35;">SMS Maturity Trend</h3>
+            <button type="button" onclick="closeAeMaturityExpandModal()" style="background:none;border:none;font-size:1.4rem;cursor:pointer;color:#65766e;">&times;</button>
         </div>
         <div style="position:relative;width:100%;height:min(60vh,500px);">
             <canvas id="aeMaturityChartFull"></canvas>
         </div>
-        <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px;padding-top:16px;border-top:1px solid #f1f5f9;">
+        <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px;padding-top:16px;border-top:1px solid #edf2ed;">
             <button type="button" onclick="closeAeMaturityExpandModal()" class="btn btn-outline">Close</button>
         </div>
     </div>
@@ -208,10 +209,10 @@ window.SHELL_CONFIG = {
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-check-compat.js"></script>
 <script src="/js/demo-prospects.js"></script>
 <script src="/js/demo-analytics.js"></script>
-<script src="/js/firebase.js?v=4.0.1"></script>
+<script src="/js/firebase.js?v=4.0.1&brand=20261028"></script>
 <script src="/js/api/client.js"></script>
-<script src="/js/chart-theme.js"></script>
-<script src="/js/shell.js"></script>
+<script src="/js/chart-theme.js?brand=20261028"></script>
+<script src="/js/shell.js?brand=20261028"></script>
 <script>
 // Minimalist AE — reuses ae-dashboard.html logic but hides non-executive panels
 let myEmail=null, myDomain=null, charts={}, gPsoeList=[], gCans=[], gCaps=[], gHazards=[], gReports=[], gAeKpis=null, gOverlays={}, currentDecisionCapId=null;
@@ -242,9 +243,9 @@ firebase.auth().onAuthStateChanged(async function(user){
 });
 function fmtDate(iso){ if(!iso) return '-'; try{ return new Date(iso).toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'});}catch(e){ return String(iso);} }
 function psoeStage(pct){
-    if(pct==null) return {label:'Not assessed', color:'#64748b'};
+    if(pct==null) return {label:'Not assessed', color:'#65766e'};
     if(pct>=90) return {label:'Level 3 — Effective', color:'#1a7f37'};
-    if(pct>=70) return {label:'Level 2 — Suitable & Operating', color:'#1a6b8a'};
+    if(pct>=70) return {label:'Level 2 — Suitable & Operating', color:'#1d5949'};
     if(pct>=40) return {label:'Level 1 — Present', color:'#d97706'};
     return {label:'Level 0 — Non-Compliant', color:'#dc3545'};
 }
@@ -310,7 +311,7 @@ function buildMaturityChartConfig(history, pillarKey, opts){
     };
     const label=pillarKey==='overall'?'Overall %':(AE_PILLARS.find(function(p){return p.key===pillarKey;})||{}).name+' %';
     return {type:'line',
-        data:{labels:history.map(function(h){return h.period||'';}),datasets:[{label:label,data:history.map(val),borderColor:'#1a6b8a',backgroundColor:'rgba(26,107,138,0.12)',fill:true,tension:0.25,spanGaps:true,pointRadius:3}]},
+        data:{labels:history.map(function(h){return h.period||'';}),datasets:[{label:label,data:history.map(val),borderColor:'#1d5949',backgroundColor:'rgba(26,107,138,0.12)',fill:true,tension:0.25,spanGaps:true,pointRadius:3}]},
         options:{responsive:opts.responsive!==false,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{min:0,max:100,ticks:{callback:function(v){return v+'%';}}},x:{ticks:{maxRotation:45}}}}};
 }
 function renderAeMaturity(){
@@ -376,7 +377,7 @@ function renderEscalations(caps){
     const el=document.getElementById('escalationQueue');
     if(gLoadErrors.indexOf('caps')!==-1){ el.innerHTML='<div class="empty" style="color:#b45309;">Data unavailable — could not load CAPs. Do not treat as all clear.</div>'; }
     else if(!queue.length){ el.innerHTML='<div class="empty">No escalated CAPs — all clear.</div>'; } else {
-        el.innerHTML=queue.map(c=>'<div style="border:1px solid #e2e8f0;border-radius:8px;padding:0.8rem;margin-bottom:0.6rem;"><div style="font-weight:700;font-size:0.85rem;"><span onclick="openAeCapReviewModal(\''+aeEsc(c.id)+'\')" style="color:#1a6b8a;text-decoration:underline;cursor:pointer;" role="button" tabindex="0">'+aeEsc(c.cap_reference||c.id)+'</span> <span style="color:#64748b;font-weight:400;">· '+ aeEsc(c.department||'—')+'</span></div><div style="font-size:0.78rem;color:#475569;margin:0.3rem 0;">'+aeEsc(c.escalation_reason||'—')+'</div><div style="display:flex;gap:0.4rem;"><button class="btn btn-approve" onclick="decideEscalation(\''+aeEsc(c.id)+'\',\'acknowledge\')">Acknowledge</button><button class="btn" style="background:#b45309;color:#fff;" onclick="decideEscalation(\''+aeEsc(c.id)+'\',\'continue\')">Continue</button></div></div>').join('');
+        el.innerHTML=queue.map(c=>'<div style="border:1px solid #d7e4dc;border-radius:8px;padding:0.8rem;margin-bottom:0.6rem;"><div style="font-weight:700;font-size:0.85rem;"><span onclick="openAeCapReviewModal(\''+aeEsc(c.id)+'\')" style="color:#1d5949;text-decoration:underline;cursor:pointer;" role="button" tabindex="0">'+aeEsc(c.cap_reference||c.id)+'</span> <span style="color:#65766e;font-weight:400;">· '+ aeEsc(c.department||'—')+'</span></div><div style="font-size:0.78rem;color:#53685c;margin:0.3rem 0;">'+aeEsc(c.escalation_reason||'—')+'</div><div style="display:flex;gap:0.4rem;"><button class="btn btn-approve" onclick="decideEscalation(\''+aeEsc(c.id)+'\',\'acknowledge\')">Acknowledge</button><button class="btn" style="background:#b45309;color:#fff;" onclick="decideEscalation(\''+aeEsc(c.id)+'\',\'continue\')">Continue</button></div></div>').join('');
     }
     // decision ledger (real decision records w/ multi-select + expand)
     aeLedgerSelected=new Set(); aeLedgerExpanded=false; aeLedgerDetails={};
@@ -407,11 +408,11 @@ async function renderAeLedger(caps){
             return {c:c,detail:null,sig:null};
         }
     }));
-    let html='<div style="display:flex;align-items:center;gap:0.5rem;padding:0.3rem 0;border-bottom:1px solid #f1f5f9;font-size:0.75rem;color:#64748b;"><input type="checkbox" id="aeLedgerSelectAll" onclick="aeLedgerToggleAll(this.checked)" aria-label="Select all"><span>Select all</span></div>';
+    let html='<div style="display:flex;align-items:center;gap:0.5rem;padding:0.3rem 0;border-bottom:1px solid #edf2ed;font-size:0.75rem;color:#65766e;"><input type="checkbox" id="aeLedgerSelectAll" onclick="aeLedgerToggleAll(this.checked)" aria-label="Select all"><span>Select all</span></div>';
     html+=settled.map(function(r){
         const c=r.c;
         if(!r.detail){
-            return '<div style="font-size:0.8rem;padding:0.4rem 0;border-bottom:1px dashed #eef2f7;color:#94a3b8;">'+aeEsc(c.cap_reference||c.id)+' — Decision record unavailable</div>';
+            return '<div style="font-size:0.8rem;padding:0.4rem 0;border-bottom:1px dashed #eef2f7;color:#83938a;">'+aeEsc(c.cap_reference||c.id)+' — Decision record unavailable</div>';
         }
         const d=r.detail, s=r.sig;
         const checked=aeLedgerSelected.has(c.id)?' checked':'';
@@ -654,14 +655,14 @@ function renderAeCapReviewBody(d,q){
     var tier=aeEsc(d.residual_tolerability_tier||'Not yet assessed');
     var html='';
     html+='<div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:1rem;"><span class="chip chip-blue">'+ref+'</span><span class="chip chip-blue">'+dept+'</span><span class="chip chip-amber">'+status+'</span></div>';
-    html+='<div style="margin-bottom:1rem;"><div style="font-size:0.72rem;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.3px;margin-bottom:0.3rem;">Why escalated</div><div style="font-size:0.85rem;color:#0f172a;">'+reason+'</div><div style="font-size:0.75rem;color:#64748b;margin-top:0.2rem;">Escalated '+aeEsc(escAt)+'</div></div>';
-    html+='<div style="margin-bottom:1rem;"><div style="font-size:0.72rem;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.3px;margin-bottom:0.3rem;">Residual risk</div><div style="font-size:0.85rem;color:#0f172a;">'+risk+'</div><div style="font-size:0.75rem;color:#64748b;margin-top:0.2rem;">Tolerability: '+tier+'</div></div>';
-    html+='<div style="margin-bottom:1rem;"><div style="font-size:0.72rem;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.3px;margin-bottom:0.3rem;">Proposed action</div><div style="font-size:0.85rem;color:#0f172a;white-space:pre-wrap;">'+aeEsc(d.action_plan||'—')+'</div>';
-    html+='<div style="font-size:0.78rem;color:#475569;margin-top:0.4rem;">Timeline: '+aeEsc(d.timeline||'—')+' · Target: '+(d.target_completion_date?fmtDate(d.target_completion_date):'—')+'</div>';
-    if(d.resources_required) html+='<div style="font-size:0.78rem;color:#475569;margin-top:0.2rem;">Resources: '+aeEsc(d.resources_required)+'</div>';
+    html+='<div style="margin-bottom:1rem;"><div style="font-size:0.72rem;font-weight:700;color:#65766e;text-transform:uppercase;letter-spacing:0.3px;margin-bottom:0.3rem;">Why escalated</div><div style="font-size:0.85rem;color:#192f35;">'+reason+'</div><div style="font-size:0.75rem;color:#65766e;margin-top:0.2rem;">Escalated '+aeEsc(escAt)+'</div></div>';
+    html+='<div style="margin-bottom:1rem;"><div style="font-size:0.72rem;font-weight:700;color:#65766e;text-transform:uppercase;letter-spacing:0.3px;margin-bottom:0.3rem;">Residual risk</div><div style="font-size:0.85rem;color:#192f35;">'+risk+'</div><div style="font-size:0.75rem;color:#65766e;margin-top:0.2rem;">Tolerability: '+tier+'</div></div>';
+    html+='<div style="margin-bottom:1rem;"><div style="font-size:0.72rem;font-weight:700;color:#65766e;text-transform:uppercase;letter-spacing:0.3px;margin-bottom:0.3rem;">Proposed action</div><div style="font-size:0.85rem;color:#192f35;white-space:pre-wrap;">'+aeEsc(d.action_plan||'—')+'</div>';
+    html+='<div style="font-size:0.78rem;color:#53685c;margin-top:0.4rem;">Timeline: '+aeEsc(d.timeline||'—')+' · Target: '+(d.target_completion_date?fmtDate(d.target_completion_date):'—')+'</div>';
+    if(d.resources_required) html+='<div style="font-size:0.78rem;color:#53685c;margin-top:0.2rem;">Resources: '+aeEsc(d.resources_required)+'</div>';
     html+='</div>';
     if(d.factual_review||d.rca){
-        html+='<details style="font-size:0.82rem;color:#475569;"><summary style="cursor:pointer;font-weight:700;color:#64748b;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.3px;">Root cause / Factual review</summary><div style="margin-top:0.4rem;white-space:pre-wrap;">'+aeEsc(d.factual_review||'')+(d.factual_review&&d.rca?'\n\n':'')+aeEsc(d.rca||'')+'</div></details>';
+        html+='<details style="font-size:0.82rem;color:#53685c;"><summary style="cursor:pointer;font-weight:700;color:#65766e;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.3px;">Root cause / Factual review</summary><div style="margin-top:0.4rem;white-space:pre-wrap;">'+aeEsc(d.factual_review||'')+(d.factual_review&&d.rca?'\n\n':'')+aeEsc(d.rca||'')+'</div></details>';
     }
     return html;
 }

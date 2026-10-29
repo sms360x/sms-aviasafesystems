@@ -1137,7 +1137,7 @@ const SRM = (() => {
                             <div class="srm-bsv-summary" data-srm-resultant-bsv></div>
                         </div>
                     </div>
-                    <div style="margin-top:0.6rem;font-size:0.75rem;color:#64748b;" data-cap-sev-letter>
+                    <div style="margin-top:0.6rem;font-size:0.75rem;color:#65766e;" data-cap-sev-letter>
                         Severity letter: <strong>${esc(state.severityLetter)}</strong>
                     </div>
                 </div>

@@ -21,39 +21,39 @@ AUTHOR: AviaSAFE Systems
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>State Risk Register — AviaSAFE SSP</title>
-    <link rel="stylesheet" href="/css/variables.css">
+    <link rel="stylesheet" href="/css/variables.css?brand=20261028">
     <link rel="stylesheet" href="/css/main.css">
-    <link rel="stylesheet" href="/css/shell.css">
+    <link rel="stylesheet" href="/css/shell.css?brand=20261028">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <style>
         .section-head { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:0.75rem; margin-bottom:1.25rem; }
-        .section-head h2 { margin:0; color:var(--color-primary-dark, #0b2a42); }
-        .section-sub { color:#64748b; font-size:0.875rem; }
+        .section-head h2 { margin:0; color:var(--color-primary-dark, #192f35); }
+        .section-sub { color:#65766e; font-size:0.875rem; }
 
         .stat-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:1rem; margin-bottom:1.5rem; }
-        .stat-card { background:#fff; border-radius:10px; box-shadow:0 1px 4px rgba(0,0,0,0.06); padding:1.25rem; border-top:4px solid #1a6b8a; }
+        .stat-card { background:#fff; border-radius:10px; box-shadow:0 1px 4px rgba(0,0,0,0.06); padding:1.25rem; border-top:4px solid #1d5949; }
         .stat-card.gold { border-top-color:#d4af37; }
         .stat-card.green { border-top-color:#34a853; }
         .stat-card.red { border-top-color:#ea4335; }
-        .stat-card .num { font-size:1.9rem; font-weight:700; color:#0b2a42; }
-        .stat-card .lbl { font-size:0.75rem; text-transform:uppercase; letter-spacing:0.4px; color:#64748b; margin-top:0.25rem; }
+        .stat-card .num { font-size:1.9rem; font-weight:700; color:#192f35; }
+        .stat-card .lbl { font-size:0.75rem; text-transform:uppercase; letter-spacing:0.4px; color:#65766e; margin-top:0.25rem; }
 
         .card { background:#fff; border-radius:10px; box-shadow:0 1px 4px rgba(0,0,0,0.06); padding:1.25rem; margin-bottom:1.5rem; }
-        .card h3 { margin:0 0 1rem; font-size:1rem; color:#0b2a42; }
+        .card h3 { margin:0 0 1rem; font-size:1rem; color:#192f35; }
 
         table { width:100%; border-collapse:collapse; }
-        th { background:#f8fafc; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.4px; color:#64748b; padding:0.7rem 0.8rem; text-align:left; border-bottom:2px solid #e2e8f0; }
-        td { padding:0.7rem 0.8rem; border-bottom:1px solid #f1f5f9; font-size:0.875rem; vertical-align:middle; }
-        tr:hover td { background:#f8fafc; }
+        th { background:#f4f6f3; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.4px; color:#65766e; padding:0.7rem 0.8rem; text-align:left; border-bottom:2px solid #d7e4dc; }
+        td { padding:0.7rem 0.8rem; border-bottom:1px solid #edf2ed; font-size:0.875rem; vertical-align:middle; }
+        tr:hover td { background:#f4f6f3; }
 
         .badge { display:inline-block; padding:0.2rem 0.6rem; border-radius:999px; font-size:0.72rem; font-weight:600; }
         .b-acceptable { background:#e6f4ea; color:#1e7e34; }
         .b-tolerable { background:#fff3cd; color:#9a6700; }
         .b-intolerable { background:#fce8e6; color:#c5221f; }
         .b-improving { background:#e6f4ea; color:#1e7e34; }
-        .b-stable { background:#e8f0f8; color:#1a6b8a; }
+        .b-stable { background:#e9f0e9; color:#1d5949; }
         .b-deteriorating { background:#fce8e6; color:#c5221f; }
 
         .tolerability-dot { display:inline-block; width:10px; height:10px; border-radius:50%; margin-right:0.35rem; }
@@ -64,44 +64,42 @@ AUTHOR: AviaSAFE Systems
         .staleness-banner { border-radius:8px; padding:0.75rem 1rem; font-size:0.85rem; margin-bottom:1.5rem; display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap; }
         .st-fresh { background:#e6f4ea; color:#1e7e34; border-left:4px solid #34a853; }
         .st-stale { background:#fff3cd; color:#9a6700; border-left:4px solid #f9ab00; }
-        .st-unknown { background:#e8f0f8; color:#1a6b8a; border-left:4px solid #1a6b8a; }
+        .st-unknown { background:#e9f0e9; color:#1d5949; border-left:4px solid #1d5949; }
 
         .btn { display:inline-flex; align-items:center; gap:0.4rem; padding:0.5rem 1rem; border:none; border-radius:6px; font-size:0.85rem; font-weight:600; cursor:pointer; transition:all 0.15s; text-decoration:none; }
-        .btn-primary { background:#1a6b8a; color:#fff; }
-        .btn-primary:hover { background:#0b2a42; }
-        .btn-outline { background:transparent; color:#1a6b8a; border:1px solid #1a6b8a; }
-        .btn-outline:hover { background:#e8f0f8; }
+        .btn-primary { background:#1d5949; color:#fff; }
+        .btn-primary:hover { background:#192f35; }
+        .btn-outline { background:transparent; color:#1d5949; border:1px solid #1d5949; }
+        .btn-outline:hover { background:#e9f0e9; }
         .btn-sm { padding:0.3rem 0.7rem; font-size:0.8rem; }
         .btn:disabled { opacity:0.5; cursor:not-allowed; }
 
         .input-group { display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap; }
         .input-sm { padding:0.35rem 0.6rem; border:1px solid #d1d5db; border-radius:6px; font-size:0.85rem; width:80px; }
 
-        .loading, .empty { text-align:center; padding:2.5rem; color:#64748b; }
+        .loading, .empty { text-align:center; padding:2.5rem; color:#65766e; }
         .error { text-align:center; padding:2rem; color:#c5221f; }
 
-        .meta-line { font-size:0.8rem; color:#64748b; margin-top:0.5rem; }
+        .meta-line { font-size:0.8rem; color:#65766e; margin-top:0.5rem; }
         .meta-line i { margin-right:0.3rem; }
         .tenant-tags { display:flex; flex-wrap:wrap; gap:0.35rem; }
-        .tenant-tag { background:#f1f5f9; border:1px solid #e2e8f0; border-radius:999px; padding:0.15rem 0.55rem; font-size:0.72rem; color:#475569; }
+        .tenant-tag { background:#edf2ed; border:1px solid #d7e4dc; border-radius:999px; padding:0.15rem 0.55rem; font-size:0.72rem; color:#53685c; }
 
         .period-select { display:flex; align-items:center; gap:0.5rem; margin-bottom:1.25rem; flex-wrap:wrap; }
         .period-select select { padding:0.45rem 0.75rem; border:1px solid #d1d5db; border-radius:6px; font-size:0.875rem; background:#fff; }
-        .period-select label { font-size:0.85rem; font-weight:600; color:#0b2a42; }
+        .period-select label { font-size:0.85rem; font-weight:600; color:#192f35; }
 
-        .ssp-progress { background:#e2e8f0; border-radius:6px; height:10px; width:100px; overflow:hidden; }
+        .ssp-progress { background:#d7e4dc; border-radius:6px; height:10px; width:100px; overflow:hidden; }
         .ssp-progress .fill { height:100%; border-radius:6px; }
     </style>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-
-    <link rel="stylesheet" href="css/theme.css">
-    </head>
+    <link rel="stylesheet" href="css/theme.css?brand=20261028">
+        <link rel="stylesheet" href="/css/brand.css?v=20261028">
+</head>
 <body>
 
 <div class="app-shell">
-    <div id="authGate" style="padding:3rem;text-align:center;color:#64748b;">
+    <div id="authGate" style="padding:3rem;text-align:center;color:#65766e;">
         <i class="fas fa-spinner fa-spin" style="font-size:2rem;"></i>
         <p>Checking state safety access...</p>
     </div>
@@ -110,7 +108,7 @@ AUTHOR: AviaSAFE Systems
     <section id="risk-register" class="shell-scroll-spy" style="display:none;">
         <div class="section-head">
             <div>
-                <h2><i class="fas fa-book" style="color:#1a6b8a;"></i> State Risk Register — Hazard Risk vs SSP Top Risk</h2>
+                <h2><i class="fas fa-book" style="color:#1d5949;"></i> State Risk Register — Hazard Risk vs SSP Top Risk</h2>
                 <div class="section-sub" id="registerSub">ICAO top-risk categories measured against state SSP targets</div>
             </div>
             <button class="btn btn-outline btn-sm" onclick="loadRegister()"><i class="fas fa-rotate"></i> Refresh</button>
@@ -162,7 +160,7 @@ AUTHOR: AviaSAFE Systems
     <section id="aggregation" class="shell-scroll-spy" style="display:none;">
         <div class="section-head">
             <div>
-                <h2><i class="fas fa-chart-bar" style="color:#1a6b8a;"></i> Cross-Tenant Aggregation (Live)</h2>
+                <h2><i class="fas fa-chart-bar" style="color:#1d5949;"></i> Cross-Tenant Aggregation (Live)</h2>
                 <div class="section-sub" id="aggregationSub">Live recomputation of state risk from tenant hazards and reports — not yet persisted</div>
             </div>
             <button class="btn btn-outline btn-sm" onclick="loadAggregation()"><i class="fas fa-rotate"></i> Recompute</button>
@@ -211,7 +209,7 @@ AUTHOR: AviaSAFE Systems
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-check-compat.js"></script>
-<script src="/js/firebase.js?v=4.0.1"></script>
+<script src="/js/firebase.js?v=4.0.1&brand=20261028"></script>
 <script>
 // ============================================================================
 // CAAN STATE RISK DASHBOARD
@@ -239,7 +237,7 @@ window.SHELL_CONFIG = {
 };
 </script>
 <script src="/js/api/client.js"></script>
-<script src="/js/shell.js"></script>
+<script src="/js/shell.js?brand=20261028"></script>
 
 <script>
 // ============================================================================
@@ -310,7 +308,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         console.error('State risk dashboard init failed:', err);
         const gate = document.getElementById('authGate');
         if (gate) {
-            gate.innerHTML = '<i class="fas fa-exclamation-circle" style="font-size:1.5rem;color:#c5221f;"></i><p style="color:#c5221f;">Failed to initialize the State dashboard. <a href="/login.html?tenant=caan" style="color:#1a6b8a;">Return to sign in</a></p>';
+            gate.innerHTML = '<i class="fas fa-exclamation-circle" style="font-size:1.5rem;color:#c5221f;"></i><p style="color:#c5221f;">Failed to initialize the State dashboard. <a href="/login.html?tenant=caan" style="color:#1d5949;">Return to sign in</a></p>';
         }
     }
 });
@@ -407,11 +405,11 @@ async function loadRegister() {
                      <input type="number" class="input-sm rate-input" min="0" max="100" step="0.1" value="${r.risk_reduction_rate ?? ''}" placeholder="red%">
                      <button class="btn btn-primary btn-sm" onclick="saveSspTarget('${r.id}')"><i class="fas fa-save"></i></button>
                    </div>`
-                : '<span style="color:#94a3b8;font-size:0.8rem;">Admin only</span>';
+                : '<span style="color:#83938a;font-size:0.8rem;">Admin only</span>';
             const tolClass = tolerabilityClass(r.tolerability);
             const dotClass = { Intolerable: 'tol-intolerable', Tolerable: 'tol-tolerable', Acceptable: 'tol-acceptable' }[r.tolerability] || 'tol-acceptable';
             return `<tr>
-                <td><strong>${r.icoc_category}</strong><br><span style="font-size:0.72rem;color:#64748b;">${r.name || ''}</span></td>
+                <td><strong>${r.icoc_category}</strong><br><span style="font-size:0.72rem;color:#65766e;">${r.name || ''}</span></td>
                 <td>${r.current_risk_index ?? '—'}</td>
                 <td>${r.ssp_target ?? '—'}</td>
                 <td>${r.actual_ssp_value ?? '—'}</td>
@@ -523,7 +521,7 @@ async function loadAggregation() {
         body.innerHTML = rows.map((r, i) => `
             <tr>
                 <td>${i + 1}</td>
-                <td><strong>${r.icoc_category}</strong><br><span style="font-size:0.72rem;color:#64748b;">${r.name || ''}</span></td>
+                <td><strong>${r.icoc_category}</strong><br><span style="font-size:0.72rem;color:#65766e;">${r.name || ''}</span></td>
                 <td>${r.current_risk_index ?? '—'}</td>
                 <td>${r.avg_severity ?? '—'}</td>
                 <td>${r.avg_probability ?? '—'}</td>

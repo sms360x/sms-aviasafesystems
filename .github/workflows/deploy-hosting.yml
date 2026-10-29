@@ -8,6 +8,7 @@ on:
       - 'public/**'
       - 'firebase.json'
       - '.firebaserc'
+      - 'scripts/verify-hosting.mjs'
       - '.github/workflows/deploy-hosting.yml'
   workflow_dispatch:  # manual trigger from the Actions tab
 
@@ -22,6 +23,9 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
+
+      - name: Verify theme and ETL release assets
+        run: node scripts/verify-hosting.mjs
 
       - name: Install Firebase CLI
         run: npm install -g firebase-tools

@@ -123,12 +123,12 @@ async function initializeTenant() {
         if (!validation.valid) {
             // Show error
             document.body.innerHTML = `
-                <div style="display: flex; justify-content: center; align-items: center; height: 100vh; font-family: sans-serif; background: #f8fafc; margin: 0;">
+                <div style="display: flex; justify-content: center; align-items: center; height: 100vh; font-family: sans-serif; background: #f4f6f3; margin: 0;">
                     <div style="text-align: center; padding: 40px; max-width: 500px; background: white; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
                         <i class="fas fa-building" style="font-size: 4rem; color: #ea4335; margin-bottom: 20px;"></i>
                         <h2 style="color: #ea4335;">Invalid Tenant</h2>
                         <p style="color: #5f6368;">${validation.error}</p>
-                        <button onclick="window.location.href='/'" style="background: #1a6b8a; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; margin-top: 15px;">
+                        <button onclick="window.location.href='/'" style="background: #1d5949; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; margin-top: 15px;">
                             Return to Home
                         </button>
                     </div>

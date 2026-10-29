@@ -232,7 +232,7 @@
         const el = document.createElement('div');
         el.style.cssText = 'padding:12px 20px;margin-bottom:10px;border-radius:6px;color:#fff;' +
             'box-shadow:0 2px 10px rgba(0,0,0,0.15);background:' +
-            (type === 'success' ? '#34a853' : type === 'error' ? '#ea4335' : '#1a6b8a') + ';';
+            (type === 'success' ? '#34a853' : type === 'error' ? '#ea4335' : '#1d5949') + ';';
         el.textContent = message;
         container.appendChild(el);
         setTimeout(function () { el.style.opacity = '0'; el.style.transition = 'opacity 0.4s'; setTimeout(function () { el.remove(); }, 400); }, 4000);

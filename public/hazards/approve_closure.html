@@ -4,45 +4,43 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Approve Closure - AviaSAFE</title>
-    <link rel="stylesheet" href="/css/variables.css">
+    <link rel="stylesheet" href="/css/variables.css?brand=20261028">
     <link rel="stylesheet" href="/css/main.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body { background: #f1f5f9; font-family: 'Inter', system-ui, -apple-system, sans-serif; color: #0b2a42; margin: 0; }
+        body { background: #edf2ed; font-family: 'DM Sans', system-ui, -apple-system, sans-serif; color: #192f35; margin: 0; }
         .page { max-width: 800px; margin: 0 auto; padding: 1.5rem; }
-        .back-link { display: inline-flex; align-items: center; gap: 0.5rem; color: #1a6b8a; font-size: 0.875rem; margin-bottom: 1rem; text-decoration: none; }
+        .back-link { display: inline-flex; align-items: center; gap: 0.5rem; color: #1d5949; font-size: 0.875rem; margin-bottom: 1rem; text-decoration: none; }
         .back-link:hover { text-decoration: underline; }
         .card { background: #fff; border-radius: 10px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); padding: 1.5rem; margin-bottom: 1.25rem; }
-        .card h2 { font-size: 1rem; color: #0b2a42; margin: 0 0 1rem; display: flex; align-items: center; gap: 0.5rem; }
+        .card h2 { font-size: 1rem; color: #192f35; margin: 0 0 1rem; display: flex; align-items: center; gap: 0.5rem; }
         .card h2 i { width: 1.25rem; text-align: center; }
         .badge { display: inline-block; padding: 0.2rem 0.6rem; border-radius: 999px; font-size: 0.75rem; font-weight: 600; }
         .badge-completed { background: #e8f5e9; color: #2e7d32; }
         .badge-warning { background: #fef3c7; color: #d97706; }
         .form-group { margin-bottom: 1rem; }
-        .form-group label { display: block; font-size: 0.85rem; font-weight: 600; color: #475569; margin-bottom: 0.35rem; }
+        .form-group label { display: block; font-size: 0.85rem; font-weight: 600; color: #53685c; margin-bottom: 0.35rem; }
         .form-group textarea { width: 100%; padding: 0.5rem 0.75rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.9rem; font-family: inherit; resize: vertical; min-height: 80px; }
-        .form-group textarea:focus { outline: none; border-color: #1a6b8a; box-shadow: 0 0 0 2px rgba(26,107,138,0.15); }
+        .form-group textarea:focus { outline: none; border-color: #1d5949; box-shadow: 0 0 0 2px rgba(26,107,138,0.15); }
         .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.25rem; }
-        .detail-field .label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; font-weight: 600; }
-        .detail-field .value { font-size: 0.95rem; color: #0b2a42; margin-top: 0.15rem; }
+        .detail-field .label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; color: #65766e; font-weight: 600; }
+        .detail-field .value { font-size: 0.95rem; color: #192f35; margin-top: 0.15rem; }
         .detail-field.full-width { grid-column: 1 / -1; }
         .btn-primary { background: #2e7d32; color: #fff; border: none; padding: 0.6rem 1.5rem; border-radius: 6px; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: background 0.15s; }
         .btn-primary:hover { background: #1b5e20; }
         .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
-        .btn-secondary { background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; padding: 0.6rem 1.5rem; border-radius: 6px; font-size: 0.9rem; font-weight: 500; cursor: pointer; transition: all 0.15s; }
-        .btn-secondary:hover { background: #e2e8f0; }
+        .btn-secondary { background: #edf2ed; color: #53685c; border: 1px solid #d7e4dc; padding: 0.6rem 1.5rem; border-radius: 6px; font-size: 0.9rem; font-weight: 500; cursor: pointer; transition: all 0.15s; }
+        .btn-secondary:hover { background: #d7e4dc; }
         #message { padding: 0.75rem 1rem; border-radius: 6px; margin-bottom: 1rem; display: none; font-size: 0.85rem; }
         #message.success { display: block; background: #e6f4ea; color: #1e7e34; border-left: 4px solid #34a853; }
         #message.error { display: block; background: #fce8e6; color: #d33426; border-left: 4px solid #ea4335; }
         @media (max-width: 600px) { .detail-grid { grid-template-columns: 1fr; } }
     </style>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-
-    <link rel="stylesheet" href="../css/theme.css">
-    <link rel="stylesheet" href="/css/dashboard-responsive.css">
-    </head>
+    <link rel="stylesheet" href="../css/theme.css?brand=20261028">
+    <link rel="stylesheet" href="/css/dashboard-responsive.css?brand=20261028">
+        <link rel="stylesheet" href="/css/brand.css?v=20261028">
+</head>
 <body>
 
 <div class="page">
@@ -52,13 +50,13 @@
 
     <div class="card">
         <h2><i class="fas fa-check-double"></i> Hazard Closure Approval</h2>
-        <p style="font-size:0.85rem;color:#64748b;margin-bottom:1.25rem;">
+        <p style="font-size:0.85rem;color:#65766e;margin-bottom:1.25rem;">
             As Accountable Executive, review the verification outcome and approve closure of this hazard.
             Once approved, the hazard will be closed and archived.
         </p>
 
         <div id="summarySection" style="display:none;">
-            <div class="card" style="background:#f8fafc;margin-bottom:1rem;">
+            <div class="card" style="background:#f4f6f3;margin-bottom:1rem;">
                 <h2><i class="fas fa-exclamation-triangle"></i> Hazard Summary</h2>
                 <div class="detail-grid">
                     <div class="detail-field full-width"><div class="label">Title</div><div class="value" id="hazardTitle"></div></div>
@@ -98,7 +96,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-check-compat.js"></script>
-<script src="/js/firebase.js?v=4.0.1"></script>
+<script src="/js/firebase.js?v=4.0.1&brand=20261028"></script>
 <script src="/js/api/client.js"></script>
 <script src="/js/hazards.js"></script>
 <script src="/js/verification.js"></script>

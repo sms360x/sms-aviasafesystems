@@ -31,12 +31,12 @@
     function setLoading(el) {
         if (!el) return;
         el.classList.add('sdps-loading');
-        el.innerHTML = '<div style="text-align:center;padding:2rem;color:#94a3b8;"><i class="fas fa-spinner fa-spin"></i> Loading...</div>';
+        el.innerHTML = '<div style="text-align:center;padding:2rem;color:#83938a;"><i class="fas fa-spinner fa-spin"></i> Loading...</div>';
     }
 
     function setEmpty(el, msg) {
         if (!el) return;
-        el.innerHTML = '<div style="text-align:center;padding:2rem;color:#94a3b8;">' + (msg || 'No data available') + '</div>';
+        el.innerHTML = '<div style="text-align:center;padding:2rem;color:#83938a;">' + (msg || 'No data available') + '</div>';
     }
 
     // ── Auth Gate ──
@@ -195,7 +195,7 @@
                 type: 'bar',
                 data: {
                     labels: labels,
-                    datasets: [{ label: 'Hazards', data: labels.map(function (l) { return counts[l] || 0; }), backgroundColor: labels.map(function (l) { return colors[l] || '#94a3b8'; }), borderRadius: 4 }],
+                    datasets: [{ label: 'Hazards', data: labels.map(function (l) { return counts[l] || 0; }), backgroundColor: labels.map(function (l) { return colors[l] || '#83938a'; }), borderRadius: 4 }],
                 },
                 options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } },
             });
@@ -214,7 +214,7 @@
                 data: {
                     labels: trends.map(function (d) { return d.month + '/' + d.year; }),
                     datasets: [
-                        { label: 'Total', data: trends.map(function (d) { return d.total; }), borderColor: '#1a6b8a', fill: false, tension: 0.3 },
+                        { label: 'Total', data: trends.map(function (d) { return d.total; }), borderColor: '#1d5949', fill: false, tension: 0.3 },
                         { label: 'High Risk', data: trends.map(function (d) { return d.high_risk; }), borderColor: '#dc3545', fill: false, tension: 0.3, borderDash: [5, 5] },
                     ],
                 },
@@ -243,7 +243,7 @@
             var items = Array.isArray(data) ? data : (data.items || []);
             tbody.innerHTML = '';
             if (items.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:2rem;color:#94a3b8;">No hazards found</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:2rem;color:#83938a;">No hazards found</td></tr>';
                 return;
             }
             items.slice(0, PAGE_SIZE).forEach(function (h) {
@@ -275,7 +275,7 @@
             '<p><strong>Risk Index:</strong> ' + (h.risk_index ?? '—') + ' (' + riskLevel + ')</p>' +
             '<p><strong>Status:</strong> <span class="sdps-badge ' + hazardStatusBadgeClass(h.status) + '">' + (h.status || '—') + '</span></p>' +
             '<p><strong>Source:</strong> ' + (h.source || '—') + '</p>' +
-            '<p><strong>Description:</strong></p><p style="color:#475569;">' + (h.description || 'No description.') + '</p>' +
+            '<p><strong>Description:</strong></p><p style="color:#53685c;">' + (h.description || 'No description.') + '</p>' +
             '</div>';
         openDrawer('Hazard Detail', html);
     }
@@ -300,7 +300,7 @@
                 data: {
                     labels: trends.map(function (d) { return d.month + '/' + d.year; }),
                     datasets: [
-                        { label: 'Total', data: trends.map(function (d) { return d.total; }), backgroundColor: '#1a6b8a', borderRadius: 3 },
+                        { label: 'Total', data: trends.map(function (d) { return d.total; }), backgroundColor: '#1d5949', borderRadius: 3 },
                         { label: 'High Risk', data: trends.map(function (d) { return d.high_risk; }), backgroundColor: '#dc3545', borderRadius: 3 },
                     ],
                 },
@@ -321,7 +321,7 @@
                 type: 'doughnut',
                 data: {
                     labels: sources.map(function (s) { return s.source || s; }),
-                    datasets: [{ data: sources.map(function (s) { return s.count || 1; }), backgroundColor: ['#1a6b8a', '#34a853', '#f9ab00', '#ea4335', '#9334e6', '#188038'] }],
+                    datasets: [{ data: sources.map(function (s) { return s.count || 1; }), backgroundColor: ['#1d5949', '#34a853', '#f9ab00', '#ea4335', '#9334e6', '#188038'] }],
                 },
                 options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } },
             });
@@ -340,7 +340,7 @@
                 type: 'bar',
                 data: {
                     labels: taxonomies.map(function (t) { return t.taxonomy || t; }),
-                    datasets: [{ label: 'Count', data: taxonomies.map(function (t) { return t.count || 1; }), backgroundColor: '#0ea5e9', borderRadius: 3 }],
+                    datasets: [{ label: 'Count', data: taxonomies.map(function (t) { return t.count || 1; }), backgroundColor: '#1d5949', borderRadius: 3 }],
                 },
                 options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true, ticks: { precision: 0 } } } },
             });
@@ -359,7 +359,7 @@
             var data = await DashboardAPI.getRecentReports(_currentDays, _occurrencePage, PAGE_SIZE);
             tbody.innerHTML = '';
             if (!data || !data.items || data.items.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:2rem;color:#94a3b8;">No occurrences found</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:2rem;color:#83938a;">No occurrences found</td></tr>';
                 return;
             }
             data.items.forEach(function (r) {
@@ -423,7 +423,7 @@
                 data: {
                     labels: trends.map(function (d) { return d.month + '/' + d.year; }),
                     datasets: [
-                        { label: 'Total', data: trends.map(function (d) { return d.total; }), borderColor: '#1a6b8a', fill: false, tension: 0.3 },
+                        { label: 'Total', data: trends.map(function (d) { return d.total; }), borderColor: '#1d5949', fill: false, tension: 0.3 },
                         { label: 'Voluntary', data: trends.map(function (d) { return d.voluntary; }), borderColor: '#28a745', fill: false, tension: 0.3 },
                         { label: 'Mandatory', data: trends.map(function (d) { return d.mandatory; }), borderColor: '#dc3545', fill: false, tension: 0.3 },
                     ],
@@ -451,7 +451,7 @@
                 type: 'pie',
                 data: {
                     labels: labels,
-                    datasets: [{ data: labels.map(function (l) { return counts[l] || 0; }), backgroundColor: labels.map(function (l) { return colors[l] || '#94a3b8'; }) }],
+                    datasets: [{ data: labels.map(function (l) { return counts[l] || 0; }), backgroundColor: labels.map(function (l) { return colors[l] || '#83938a'; }) }],
                 },
                 options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } },
             });
@@ -500,7 +500,7 @@
             var riskData = safeArray(await DashboardAPI.getRiskDistribution(_currentDays));
             tbody.innerHTML = '';
             if (riskData.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:2rem;color:#94a3b8;">No risk data available</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:2rem;color:#83938a;">No risk data available</td></tr>';
                 return;
             }
             riskData.forEach(function (d) {
@@ -551,7 +551,7 @@
                 data: {
                     labels: trends.map(function (d) { return d.month + '/' + d.year; }),
                     datasets: [
-                        { label: 'Total Reports', data: trends.map(function (d) { return d.total; }), borderColor: '#1a6b8a', fill: false, tension: 0.3 },
+                        { label: 'Total Reports', data: trends.map(function (d) { return d.total; }), borderColor: '#1d5949', fill: false, tension: 0.3 },
                     ],
                 },
                 options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } },

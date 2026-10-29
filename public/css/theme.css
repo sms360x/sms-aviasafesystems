@@ -14,13 +14,13 @@
 
 /* ========== BASE / PAGE CANVAS ========== */
 :root {
-    --color-bg: #f8fafc;
-    --color-text: #334155;
-    --color-text-muted: #64748b;
-    --color-text-strong: #0f172a;
+    --color-bg: #f4f6f3;
+    --color-text: #244837;
+    --color-text-muted: #65766e;
+    --color-text-strong: #192f35;
     --color-surface: #ffffff;
-    --color-border: #e2e8f0;
-    --color-focus: #0284c7;
+    --color-border: #d7e4dc;
+    --color-focus: #235a4b;
 }
 
 body {
@@ -33,8 +33,8 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 ::selection {
-    background: rgba(2, 132, 199, 0.18);
-    color: #0f172a;
+    background: rgba(35, 90, 75, 0.18);
+    color: #192f35;
 }
 
 /* ========== NAVIGATION / HEADER ========== */
@@ -42,7 +42,7 @@ h1, h2, h3, h4, h5, h6 {
     color: var(--color-text-strong);
 }
 .app-header nav a {
-    color: #334155;
+    color: #244837;
 }
 .app-header nav a:hover,
 .app-header nav a.active {
@@ -111,8 +111,8 @@ h1, h2, h3, h4, h5, h6 {
     color: #c2410c;
 }
 .badge-default {
-    background: #f1f5f9;
-    color: #475569;
+    background: #edf2ed;
+    color: #53685c;
 }
 .status-badge.status-active {
     background: #dcfce7;
@@ -132,7 +132,7 @@ h1, h2, h3, h4, h5, h6 {
 .filter-bar select,
 .filter-bar textarea {
     background: #ffffff;
-    border: 1px solid #cbd5e1;
+    border: 1px solid #bdccc4;
     color: var(--color-text);
 }
 .form-control::placeholder,
@@ -148,10 +148,10 @@ h1, h2, h3, h4, h5, h6 {
 .filter-bar textarea:focus {
     outline: none;
     border-color: var(--color-focus);
-    box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.18);
+    box-shadow: 0 0 0 3px rgba(35, 90, 75, 0.18);
 }
 .form-group label {
-    color: #1e293b;
+    color: #192f35;
 }
 .form-hint {
     color: var(--color-text-muted);
@@ -160,8 +160,8 @@ h1, h2, h3, h4, h5, h6 {
 /* ========== TABLES ========== */
 .table th,
 .table-card th {
-    background: #f8fafc;
-    color: #475569;
+    background: #f4f6f3;
+    color: #53685c;
 }
 .table td,
 .table-card td,
@@ -171,7 +171,7 @@ h1, h2, h3, h4, h5, h6 {
 .table tr:hover td,
 .table-card tr:hover td,
 .detail-grid tr:hover td {
-    background: #f8fafc;
+    background: #f4f6f3;
 }
 
 /* ========== MODALS ========== */
@@ -199,7 +199,7 @@ h1, h2, h3, h4, h5, h6 {
 
 /* ========== FOOTER ========== */
 /* Compact light footer. Total height ~64-80px, balancing the ~64px header.
-   Subtly differentiated from the page canvas (--color-bg #f8fafc) with a
+   Subtly differentiated from the page canvas (--color-bg #f4f6f3) with a
    slightly deeper slate tint and a hairline top border. Loaded last so it
    wins over main.css / shell.css / global.css on every page. */
 .app-footer,
@@ -273,11 +273,11 @@ footer,
 /* ========== SCROLLBARS ========== */
 body,
 .shell-content {
-    scrollbar-color: #cbd5e1 var(--color-bg);
+    scrollbar-color: #bdccc4 var(--color-bg);
 }
 ::-webkit-scrollbar-track {
     background: var(--color-bg);
 }
 ::-webkit-scrollbar-thumb {
-    background: #cbd5e1;
+    background: #bdccc4;
 }

@@ -125,7 +125,7 @@ async function fetchCans(days) {
 
         tbody.innerHTML = '';
         if (!cans || cans.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#94a3b8;padding:2rem;"><i class="fas fa-inbox"></i> No CANs found for the selected period.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#83938a;padding:2rem;"><i class="fas fa-inbox"></i> No CANs found for the selected period.</td></tr>';
             return [];
         }
 

@@ -17,37 +17,35 @@ AUTHOR: AviaSAFE Systems
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Audit Chain Viewer — AviaSAFE Admin</title>
-    <link rel="stylesheet" href="/css/variables.css">
-    <link rel="stylesheet" href="/css/admin.css">
-    <link rel="stylesheet" href="/css/admin-setup.css">
+    <link rel="stylesheet" href="/css/variables.css?brand=20261028">
+    <link rel="stylesheet" href="/css/admin.css?brand=20261028">
+    <link rel="stylesheet" href="/css/admin-setup.css?brand=20261028">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-check-compat.js"></script>
-    <script src="/js/firebase.js?v=4.0.1"></script>
+    <script src="/js/firebase.js?v=4.0.1&brand=20261028"></script>
     <script src="/js/api/client.js"></script>
-    <script src="/js/admin.js"></script>
-    <script src="/js/admin-setup-core.js"></script>
+    <script src="/js/admin.js?brand=20261028"></script>
+    <script src="/js/admin-setup-core.js?brand=20261028"></script>
     <style>
         .chain-grid { display: grid; grid-template-columns: 1fr; gap: 16px; }
-        .hash-cell { font-family: 'Consolas', monospace; font-size: .72rem; color: #64748b; white-space: nowrap; }
+        .hash-cell { font-family: 'Consolas', monospace; font-size: .72rem; color: #65766e; white-space: nowrap; }
         .verdict-valid { background: #e6f4ea; color: #1e7e34; }
         .verdict-broken { background: #fce8e6; color: #c5221f; }
         .verdict-unlinked { background: #fef3c7; color: #b45309; }
         .verdict { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: .72rem; font-weight: 600; }
         .mono { font-family: 'Consolas', monospace; font-size: .78rem; }
-        .muted { color: #64748b; font-size: .78rem; }
+        .muted { color: #65766e; font-size: .78rem; }
         .row-click { cursor: pointer; }
-        .detail-pre { background: #0f172a; color: #e2e8f0; padding: 12px; border-radius: 8px; overflow: auto; max-height: 320px; font-size: .76rem; }
+        .detail-pre { background: #192f35; color: #d7e4dc; padding: 12px; border-radius: 8px; overflow: auto; max-height: 320px; font-size: .76rem; }
         .kv { display: grid; grid-template-columns: 160px 1fr; gap: 4px 10px; font-size: .82rem; }
-        .kv div:nth-child(odd) { color: #64748b; }
+        .kv div:nth-child(odd) { color: #65766e; }
         .filter-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
         .pill { display: inline-block; padding: 2px 8px; border-radius: 999px; background: var(--color-gray-50); border: 1px solid var(--color-border); font-size: .72rem; margin: 2px 4px 2px 0; }
     </style>
+    <link rel="stylesheet" href="/css/brand.css?v=20261028">
 </head>
 <body class="admin-body">
 
@@ -59,8 +57,8 @@ AUTHOR: AviaSAFE Systems
             <span class="page-title">Audit Chain Viewer</span>
         </div>
         <div class="tb-actions" id="topNav">
-            <a href="/admin/production-setup.html" class="nav-link" style="color:#cbd5e1; text-decoration:none; font-size:.82rem; padding:6px 12px; border-radius:8px;"><i class="fas fa-cogs" style="color:#4fc3f7;"></i> Production Setup</a>
-            <a href="/admin/system-config.html" class="nav-link" style="color:#cbd5e1; text-decoration:none; font-size:.82rem; padding:6px 12px; border-radius:8px;"><i class="fas fa-sliders" style="color:#4fc3f7;"></i> System Configs</a>
+            <a href="/admin/production-setup.html" class="nav-link" style="color:#bdccc4; text-decoration:none; font-size:.82rem; padding:6px 12px; border-radius:8px;"><i class="fas fa-cogs" style="color:#4fc3f7;"></i> Production Setup</a>
+            <a href="/admin/system-config.html" class="nav-link" style="color:#bdccc4; text-decoration:none; font-size:.82rem; padding:6px 12px; border-radius:8px;"><i class="fas fa-sliders" style="color:#4fc3f7;"></i> System Configs</a>
             <span class="user-badge"><span class="role-chip">SUPER_ADMIN</span><span id="userDisplay">—</span></span>
             <button class="btn btn-danger btn-sm" onclick="logout()">Logout</button>
         </div>
@@ -94,7 +92,7 @@ AUTHOR: AviaSAFE Systems
                 <div class="card-head">
                     <span class="step-badge">Events</span>
                     <h2 style="margin:0 14px 0 12px;"><i class="fas fa-list-check"></i> Audit events</h2>
-                    <span style="margin-left:auto;font-size:.78rem;color:#94a3b8;" id="eventCount">—</span>
+                    <span style="margin-left:auto;font-size:.78rem;color:#83938a;" id="eventCount">—</span>
                 </div>
 
                 <div class="filter-grid" style="margin-bottom:14px;">

@@ -4,21 +4,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Diversion Detail - AviaSAFE</title>
-    <link rel="stylesheet" href="/css/variables.css">
+    <link rel="stylesheet" href="/css/variables.css?brand=20261028">
     <link rel="stylesheet" href="/css/main.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body { background: #f1f5f9; font-family: 'Inter', system-ui, -apple-system, sans-serif; color: #0b2a42; margin: 0; }
+        body { background: #edf2ed; font-family: 'DM Sans', system-ui, -apple-system, sans-serif; color: #192f35; margin: 0; }
         .page { max-width: 900px; margin: 0 auto; padding: 1.5rem; }
-        .back-link { display: inline-flex; align-items: center; gap: 0.5rem; color: #1a6b8a; font-size: 0.875rem; margin-bottom: 1rem; text-decoration: none; }
+        .back-link { display: inline-flex; align-items: center; gap: 0.5rem; color: #1d5949; font-size: 0.875rem; margin-bottom: 1rem; text-decoration: none; }
         .back-link:hover { text-decoration: underline; }
         .card { background: #fff; border-radius: 10px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); padding: 1.5rem; margin-bottom: 1.25rem; }
-        .card h2 { font-size: 1rem; color: #0b2a42; margin: 0 0 1rem; display: flex; align-items: center; gap: 0.5rem; }
+        .card h2 { font-size: 1rem; color: #192f35; margin: 0 0 1rem; display: flex; align-items: center; gap: 0.5rem; }
         .card h2 i { width: 1.25rem; text-align: center; }
         .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
         .detail-field { margin-bottom: 0.35rem; }
-        .detail-field .label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; font-weight: 600; }
-        .detail-field .value { font-size: 0.95rem; color: #0b2a42; margin-top: 0.15rem; word-break: break-word; }
+        .detail-field .label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; color: #65766e; font-weight: 600; }
+        .detail-field .value { font-size: 0.95rem; color: #192f35; margin-top: 0.15rem; word-break: break-word; }
         .detail-field.full-width { grid-column: 1 / -1; }
         .badge { display: inline-block; padding: 0.2rem 0.6rem; border-radius: 999px; font-size: 0.75rem; font-weight: 600; }
         .badge-new { background: #e3f2fd; color: #1565c0; }
@@ -26,34 +26,32 @@
         .badge-warning { background: #fef3c7; color: #d97706; }
         .badge-completed { background: #e8f5e9; color: #2e7d32; }
         .badge-critical { background: #fde8e8; color: #dc3545; }
-        .badge-default { background: #f1f5f9; color: #64748b; }
+        .badge-default { background: #edf2ed; color: #65766e; }
         .badge-info { background: #e3f2fd; color: #1565c0; }
         .badge-high { background: #fff3e0; color: #e65100; }
         .badge-medium { background: #fff8e1; color: #f9a825; }
         .action-bar { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1rem; }
         .action-btn { padding: 0.5rem 1rem; border: none; border-radius: 6px; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: all 0.15s; }
         .action-btn:hover { opacity: 0.85; }
-        .action-btn-primary { background: #1a6b8a; color: #fff; }
+        .action-btn-primary { background: #1d5949; color: #fff; }
         .action-btn-danger { background: #fde8e8; color: #dc3545; }
         .action-btn-success { background: #e8f5e9; color: #2e7d32; }
         .action-btn-warning { background: #fef3c7; color: #d97706; }
         #message { padding: 0.75rem 1rem; border-radius: 6px; margin-bottom: 1rem; display: none; font-size: 0.85rem; }
         #message.success { display: block; background: #e6f4ea; color: #1e7e34; border-left: 4px solid #34a853; }
         #message.error { display: block; background: #fce8e6; color: #d33426; border-left: 4px solid #ea4335; }
-        .loading-state { display: flex; align-items: center; justify-content: center; padding: 4rem; color: #64748b; }
+        .loading-state { display: flex; align-items: center; justify-content: center; padding: 4rem; color: #65766e; }
         .loading-state i { font-size: 2rem; margin-right: 0.75rem; }
         .error-state { text-align: center; padding: 4rem; color: #dc3545; }
         .edit-field { width: 100%; padding: 0.4rem 0.5rem; border: 1px solid #d1d5db; border-radius: 4px; font-size: 0.9rem; }
-        .edit-field:focus { outline: none; border-color: #1a6b8a; }
-        .btn-save-edit { background: #1a6b8a; color: #fff; border: none; padding: 0.3rem 0.75rem; border-radius: 4px; cursor: pointer; font-size: 0.8rem; margin-top: 0.25rem; }
+        .edit-field:focus { outline: none; border-color: #1d5949; }
+        .btn-save-edit { background: #1d5949; color: #fff; border: none; padding: 0.3rem 0.75rem; border-radius: 4px; cursor: pointer; font-size: 0.8rem; margin-top: 0.25rem; }
         @media (max-width: 600px) { .detail-grid { grid-template-columns: 1fr; } }
     </style>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-
-    <link rel="stylesheet" href="../css/theme.css">
-    </head>
+    <link rel="stylesheet" href="../css/theme.css?brand=20261028">
+        <link rel="stylesheet" href="/css/brand.css?v=20261028">
+</head>
 <body>
 
 <div class="page">
@@ -125,7 +123,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-check-compat.js"></script>
-<script src="/js/firebase.js?v=4.0.1"></script>
+<script src="/js/firebase.js?v=4.0.1&brand=20261028"></script>
 <script src="/js/api/client.js"></script>
 <script src="/js/hazards.js"></script>
 <script src="/js/flight_diversions.js"></script>
@@ -228,7 +226,7 @@ function renderActionButtons(d) {
         html += `<button class="action-btn action-btn-danger" onclick="deleteDiversion()"><i class="fas fa-trash"></i> Delete</button>`;
     }
 
-    container.innerHTML = html || '<p style="font-size:0.85rem;color:#94a3b8;">No actions available.</p>';
+    container.innerHTML = html || '<p style="font-size:0.85rem;color:#83938a;">No actions available.</p>';
 }
 
 function populateEditForm(d) {

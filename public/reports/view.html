@@ -4,57 +4,55 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Report View - AviaSAFE</title>
-    <link rel="stylesheet" href="/css/variables.css">
+    <link rel="stylesheet" href="/css/variables.css?brand=20261028">
     <link rel="stylesheet" href="/css/main.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    <script src="../js/chart-theme.js"></script>
+    <script src="../js/chart-theme.js?brand=20261028"></script>
     <style>
-        body { background: #f1f5f9; font-family: 'Inter', system-ui, -apple-system, sans-serif; color: #0b2a42; margin: 0; }
+        body { background: #edf2ed; font-family: 'DM Sans', system-ui, -apple-system, sans-serif; color: #192f35; margin: 0; }
         .page { max-width: 1000px; margin: 0 auto; padding: 1.5rem; }
-        .back-link { display: inline-flex; align-items: center; gap: 0.5rem; color: #1a6b8a; font-size: 0.875rem; margin-bottom: 1rem; text-decoration: none; }
+        .back-link { display: inline-flex; align-items: center; gap: 0.5rem; color: #1d5949; font-size: 0.875rem; margin-bottom: 1rem; text-decoration: none; }
         .back-link:hover { text-decoration: underline; }
         .page-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.25rem; }
-        .page-header h1 { font-size: 1.25rem; color: #0b2a42; margin: 0; }
+        .page-header h1 { font-size: 1.25rem; color: #192f35; margin: 0; }
         .card { background: #fff; border-radius: 10px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); padding: 1.5rem; margin-bottom: 1.25rem; }
-        .card h2 { font-size: 1rem; color: #0b2a42; margin: 0 0 1rem; display: flex; align-items: center; gap: 0.5rem; }
+        .card h2 { font-size: 1rem; color: #192f35; margin: 0 0 1rem; display: flex; align-items: center; gap: 0.5rem; }
         .card h2 i { width: 1.25rem; text-align: center; }
         .kpi-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 0.75rem; margin-bottom: 1.25rem; }
-        .kpi-item { background: #f8fafc; padding: 1rem; border-radius: 8px; text-align: center; border-left: 4px solid #1a6b8a; }
-        .kpi-item .value { font-size: 1.6rem; font-weight: 700; color: #0b2a42; }
-        .kpi-item .label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.3px; color: #64748b; margin-top: 0.2rem; }
+        .kpi-item { background: #f4f6f3; padding: 1rem; border-radius: 8px; text-align: center; border-left: 4px solid #1d5949; }
+        .kpi-item .value { font-size: 1.6rem; font-weight: 700; color: #192f35; }
+        .kpi-item .label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.3px; color: #65766e; margin-top: 0.2rem; }
         .chart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.25rem; }
         .chart-card { background: #fff; border-radius: 8px; padding: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
-        .chart-card h3 { font-size: 0.85rem; color: #475569; margin: 0 0 0.75rem; }
+        .chart-card h3 { font-size: 0.85rem; color: #53685c; margin: 0 0 0.75rem; }
         .chart-wrapper { position: relative; height: 220px; }
         .chart-full { grid-column: 1 / -1; }
         .badge { display: inline-block; padding: 0.2rem 0.6rem; border-radius: 999px; font-size: 0.75rem; font-weight: 600; }
         .badge-completed { background: #e8f5e9; color: #2e7d32; }
         .btn { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.5rem 1rem; border-radius: 6px; font-size: 0.85rem; font-weight: 600; cursor: pointer; text-decoration: none; border: none; }
-        .btn-primary { background: #1a6b8a; color: #fff; }
-        .btn-primary:hover { background: #0b2a42; }
+        .btn-primary { background: #1d5949; color: #fff; }
+        .btn-primary:hover { background: #192f35; }
         .btn-success { background: #2e7d32; color: #fff; }
         .btn-success:hover { background: #1b5e20; }
-        .btn-outline { background: transparent; color: #475569; border: 1px solid #e2e8f0; }
-        .btn-outline:hover { background: #f1f5f9; }
-        .insight-item { padding: 0.5rem 0.75rem; background: #f0f6ff; border-radius: 6px; margin-bottom: 0.5rem; font-size: 0.85rem; border-left: 3px solid #1a6b8a; }
+        .btn-outline { background: transparent; color: #53685c; border: 1px solid #d7e4dc; }
+        .btn-outline:hover { background: #edf2ed; }
+        .insight-item { padding: 0.5rem 0.75rem; background: #f0f6ff; border-radius: 6px; margin-bottom: 0.5rem; font-size: 0.85rem; border-left: 3px solid #1d5949; }
         table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
-        th { background: #f8fafc; padding: 0.6rem 0.75rem; text-align: left; font-weight: 600; color: #64748b; border-bottom: 2px solid #e2e8f0; font-size: 0.75rem; text-transform: uppercase; }
-        td { padding: 0.5rem 0.75rem; border-bottom: 1px solid #f1f5f9; }
+        th { background: #f4f6f3; padding: 0.6rem 0.75rem; text-align: left; font-weight: 600; color: #65766e; border-bottom: 2px solid #d7e4dc; font-size: 0.75rem; text-transform: uppercase; }
+        td { padding: 0.5rem 0.75rem; border-bottom: 1px solid #edf2ed; }
         @media (max-width: 700px) { .chart-grid { grid-template-columns: 1fr; } }
     </style>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-
-    <link rel="stylesheet" href="../css/theme.css">
-    </head>
+    <link rel="stylesheet" href="../css/theme.css?brand=20261028">
+        <link rel="stylesheet" href="/css/brand.css?v=20261028">
+</head>
 <body>
 
 <div class="page">
     <a href="/reports/index.html" class="back-link"><i class="fas fa-arrow-left"></i> Back to Reports</a>
 
-    <div id="loadingIndicator" style="text-align:center;padding:3rem;color:#94a3b8;">
+    <div id="loadingIndicator" style="text-align:center;padding:3rem;color:#83938a;">
         <i class="fas fa-spinner fa-spin" style="font-size:2rem;"></i>
         <p style="margin-top:0.5rem;">Loading report...</p>
     </div>
@@ -63,7 +61,7 @@
         <div class="page-header">
             <div>
                 <h1 id="reportTitle"></h1>
-                <p style="font-size:0.85rem;color:#64748b;margin:0.25rem 0 0;" id="reportMeta"></p>
+                <p style="font-size:0.85rem;color:#65766e;margin:0.25rem 0 0;" id="reportMeta"></p>
             </div>
             <button class="btn btn-success" id="exportBtn"><i class="fas fa-download"></i> Download PDF</button>
         </div>
@@ -111,7 +109,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-check-compat.js"></script>
-<script src="/js/firebase.js?v=4.0.1"></script>
+<script src="/js/firebase.js?v=4.0.1&brand=20261028"></script>
 <script src="/js/api/client.js"></script>
 <script src="/js/reports.js"></script>
 <script>
@@ -162,7 +160,7 @@ function renderReport(data, type) {
     // KPIs
     const kpiContainer = document.getElementById('kpiSection');
     const kpiItems = [
-        { label: 'Total Hazards', value: s.total_hazards || 0, color: '#1a6b8a' },
+        { label: 'Total Hazards', value: s.total_hazards || 0, color: '#1d5949' },
         { label: type === 'quarterly' ? 'New (Period)' : 'Opened (Year)', value: s.new_hazards || s.hazards_opened || 0, color: '#d97706' },
         { label: 'Closed', value: s.closed_hazards || s.hazards_closed || 0, color: '#2e7d32' },
         { label: 'Closure Rate', value: `${s.closure_rate || 0}%`, color: '#7c3aed' },
@@ -225,7 +223,7 @@ function renderReport(data, type) {
     const insights = d.insights || [];
     if (insights.length > 0) {
         document.getElementById('insightsSection').style.display = 'block';
-        document.getElementById('insightsContent').innerHTML = insights.map(i => `<div class="insight-item"><i class="fas fa-circle-info" style="color:#1a6b8a;margin-right:0.35rem;"></i>${i}</div>`).join('');
+        document.getElementById('insightsContent').innerHTML = insights.map(i => `<div class="insight-item"><i class="fas fa-circle-info" style="color:#1d5949;margin-right:0.35rem;"></i>${i}</div>`).join('');
     } else {
         document.getElementById('insightsSection').style.display = 'none';
     }
@@ -283,7 +281,7 @@ function renderTrendChart(trends) {
             datasets: [{
                 label: 'Hazards',
                 data: trends.map(t => t.count || 0),
-                backgroundColor: '#1a6b8a',
+                backgroundColor: '#1d5949',
                 borderRadius: 4,
             }],
         },

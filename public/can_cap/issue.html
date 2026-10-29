@@ -4,48 +4,46 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Issue CAN - AviaSAFE</title>
-    <link rel="stylesheet" href="/css/variables.css">
+    <link rel="stylesheet" href="/css/variables.css?brand=20261028">
     <link rel="stylesheet" href="/css/main.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body { background: #f1f5f9; font-family: 'Inter', system-ui, -apple-system, sans-serif; color: #0b2a42; margin: 0; }
+        body { background: #edf2ed; font-family: 'DM Sans', system-ui, -apple-system, sans-serif; color: #192f35; margin: 0; }
         .page { max-width: 760px; margin: 0 auto; padding: 1.5rem; }
-        .back-link { display: inline-flex; align-items: center; gap: 0.5rem; color: #1a6b8a; font-size: 0.875rem; margin-bottom: 1rem; text-decoration: none; }
+        .back-link { display: inline-flex; align-items: center; gap: 0.5rem; color: #1d5949; font-size: 0.875rem; margin-bottom: 1rem; text-decoration: none; }
         .card { background: #fff; border-radius: 10px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); padding: 1.5rem; margin-bottom: 1.25rem; }
-        .card h2 { font-size: 1rem; color: #0b2a42; margin: 0 0 1rem; display: flex; align-items: center; gap: 0.5rem; }
+        .card h2 { font-size: 1rem; color: #192f35; margin: 0 0 1rem; display: flex; align-items: center; gap: 0.5rem; }
         .card h2 i { width: 1.25rem; text-align: center; }
         .form-group { margin-bottom: 1rem; }
-        .form-group label { display: block; font-size: 0.8rem; font-weight: 600; color: #475569; margin-bottom: 0.25rem; }
+        .form-group label { display: block; font-size: 0.8rem; font-weight: 600; color: #53685c; margin-bottom: 0.25rem; }
         .form-group label .required { color: #dc3545; margin-left: 2px; }
         .form-control { width: 100%; padding: 0.6rem 0.75rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.9rem; box-sizing: border-box; }
-        .form-control:focus { outline: none; border-color: #1a6b8a; box-shadow: 0 0 0 3px rgba(26,107,138,0.1); }
+        .form-control:focus { outline: none; border-color: #1d5949; box-shadow: 0 0 0 3px rgba(26,107,138,0.1); }
         textarea.form-control { min-height: 80px; resize: vertical; }
         select.form-control { appearance: auto; }
         .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
         .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; }
-        .btn-submit { background: #0b2a42; color: #fff; border: none; padding: 0.75rem 2rem; border-radius: 6px; font-size: 1rem; font-weight: 600; cursor: pointer; }
+        .btn-submit { background: #192f35; color: #fff; border: none; padding: 0.75rem 2rem; border-radius: 6px; font-size: 1rem; font-weight: 600; cursor: pointer; }
         .btn-submit:hover { opacity: 0.9; }
         .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; }
         #message { padding: 0.75rem 1rem; border-radius: 6px; margin-bottom: 1rem; display: none; font-size: 0.85rem; }
         #message.success { display: block; background: #e6f4ea; color: #1e7e34; border-left: 4px solid #34a853; }
         #message.error { display: block; background: #fce8e6; color: #d33426; border-left: 4px solid #ea4335; }
-        .risk-preview { background: #f0f4ff; border: 1px solid #dbe7f5; border-radius: 6px; padding: 0.6rem 0.9rem; font-size: 0.85rem; color: #475569; margin-top: 0.4rem; }
-        .risk-preview strong { color: #0b2a42; }
-        .hint { font-size: 0.72rem; color: #94a3b8; margin-top: 0.25rem; }
+        .risk-preview { background: #f0f4ff; border: 1px solid #dbe7f5; border-radius: 6px; padding: 0.6rem 0.9rem; font-size: 0.85rem; color: #53685c; margin-top: 0.4rem; }
+        .risk-preview strong { color: #192f35; }
+        .hint { font-size: 0.72rem; color: #83938a; margin-top: 0.25rem; }
         .badge { display: inline-block; padding: 0.2rem 0.6rem; border-radius: 999px; font-size: 0.75rem; font-weight: 600; }
         .badge-low { background: #e8f5e9; color: #2e7d32; }
         .badge-medium { background: #fff8e1; color: #f9a825; }
         .badge-high { background: #fff3e0; color: #e65100; }
         .badge-critical { background: #fde8e8; color: #dc3545; }
-        .badge-default { background: #f1f5f9; color: #64748b; }
+        .badge-default { background: #edf2ed; color: #65766e; }
         @media (max-width: 600px) { .form-row, .form-row-3 { grid-template-columns: 1fr; } }
     </style>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-
-    <link rel="stylesheet" href="../css/theme.css">
-    </head>
+    <link rel="stylesheet" href="../css/theme.css?brand=20261028">
+        <link rel="stylesheet" href="/css/brand.css?v=20261028">
+</head>
 <body>
 
 <div class="page">
@@ -134,7 +132,7 @@
                 <input class="form-control" id="fieldCopiesTo" placeholder="Comma-separated recipients (email or role)">
             </div>
 
-            <div class="section-title" style="font-size:0.95rem;font-weight:600;color:#0b2a42;margin:0.5rem 0 1rem;display:flex;align-items:center;gap:0.5rem;">
+            <div class="section-title" style="font-size:0.95rem;font-weight:600;color:#192f35;margin:0.5rem 0 1rem;display:flex;align-items:center;gap:0.5rem;">
                 <i class="fas fa-th"></i> Initial Safety Risk Assessment (Severity A–E × Probability 1–5)
             </div>
 
@@ -175,10 +173,10 @@
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-check-compat.js"></script>
-<script src="/js/firebase.js?v=4.0.1"></script>
+<script src="/js/firebase.js?v=4.0.1&brand=20261028"></script>
 <script src="/js/api/client.js"></script>
-<script src="/js/risk_matrix.js"></script>
-<script src="/js/can_cap.js"></script>
+<script src="/js/risk_matrix.js?brand=20261028"></script>
+<script src="/js/can_cap.js?brand=20261028"></script>
 <script src="/js/hazards.js"></script>
 <script>
 let hazards = [];

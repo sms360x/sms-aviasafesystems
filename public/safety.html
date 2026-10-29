@@ -5,28 +5,26 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Safety Dashboard — AviaSAFE SSP</title>
 
-    <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz@14..32&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="/css/shell.css">
+    <link rel="stylesheet" href="/css/shell.css?brand=20261028">
     
-    <link rel="stylesheet" href="/css/variables.css">
-    <link rel="stylesheet" href="/styles/global.css">
+    <link rel="stylesheet" href="/css/variables.css?brand=20261028">
+    <link rel="stylesheet" href="/styles/global.css?brand=20261028">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    <script src="js/chart-theme.js"></script>
+    <script src="js/chart-theme.js?brand=20261028"></script>
 
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         body {
-            font-family: 'Inter', system-ui, -apple-system, sans-serif;
-            background: #f1f5f9;
-            color: #0b2a42;
+            font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
+            background: #edf2ed;
+            color: #192f35;
             min-height: 100vh;
         }
 
         .nav {
-            background: #0b2a42;
+            background: #192f35;
             color: #fff;
             padding: 0.75rem 1.5rem;
             display: flex;
@@ -61,7 +59,7 @@
         .section-title {
             font-size: 1.25rem;
             font-weight: 600;
-            color: #0b2a42;
+            color: #192f35;
             margin: 1.5rem 0 1rem;
             display: flex;
             align-items: center;
@@ -80,7 +78,7 @@
             padding: 1.25rem;
             border-radius: 10px;
             box-shadow: 0 1px 4px rgba(0,0,0,0.06);
-            border-left: 4px solid #1a6b8a;
+            border-left: 4px solid #1d5949;
             transition: transform 0.15s;
         }
         .kpi-card:hover { transform: translateY(-2px); }
@@ -89,13 +87,13 @@
             font-size: 0.75rem;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            color: #64748b;
+            color: #65766e;
             margin-bottom: 0.4rem;
         }
         .kpi-value {
             font-size: 1.8rem;
             font-weight: 700;
-            color: #0b2a42;
+            color: #192f35;
         }
 
         /* ── Chart Grid ── */
@@ -116,7 +114,7 @@
         .chart-card h3 {
             font-size: 0.85rem;
             font-weight: 600;
-            color: #0b2a42;
+            color: #192f35;
             margin-bottom: 1rem;
         }
         .chart-wrapper { position: relative; height: 260px; }
@@ -137,21 +135,21 @@
             border-collapse: collapse;
         }
         .table-card th {
-            background: #f8fafc;
+            background: #f4f6f3;
             font-size: 0.75rem;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            color: #64748b;
+            color: #65766e;
             padding: 0.85rem 1rem;
             text-align: left;
-            border-bottom: 2px solid #e2e8f0;
+            border-bottom: 2px solid #d7e4dc;
         }
         .table-card td {
             padding: 0.75rem 1rem;
-            border-bottom: 1px solid #f1f5f9;
+            border-bottom: 1px solid #edf2ed;
             font-size: 0.875rem;
         }
-        .table-card tbody tr:hover { background: #f8fafc; }
+        .table-card tbody tr:hover { background: #f4f6f3; }
 
         /* ── Badges ── */
         .badge {
@@ -165,12 +163,12 @@
         .badge-high { background: #fff3e0; color: #e65100; }
         .badge-medium { background: #fff8e1; color: #f9a825; }
         .badge-low { background: #e8f5e9; color: #2e7d32; }
-        .badge-default { background: #f1f5f9; color: #64748b; }
+        .badge-default { background: #edf2ed; color: #65766e; }
         .badge-new { background: #e3f2fd; color: #1565c0; }
         .badge-processing { background: #fff3e0; color: #e65100; }
         .badge-completed { background: #e8f5e9; color: #2e7d32; }
         .badge-failed { background: #fde8e8; color: #dc3545; }
-        .badge-archived { background: #f1f5f9; color: #64748b; }
+        .badge-archived { background: #edf2ed; color: #65766e; }
 
         /* ── Recent-activity cards ── */
         .activity-list {
@@ -190,12 +188,12 @@
             color: inherit;
             background: #fff;
         }
-        .activity-list li a:hover { border-color: #1a6b8a; }
+        .activity-list li a:hover { border-color: #1d5949; }
         .activity-list .act-title {
             display: block;
             font-size: 0.82rem;
             font-weight: 600;
-            color: #0b2a42;
+            color: #192f35;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -206,7 +204,7 @@
             gap: 0.4rem;
             margin-top: 0.25rem;
             font-size: 0.72rem;
-            color: #64748b;
+            color: #65766e;
         }
 
         /* ── Pagination ── */
@@ -219,16 +217,16 @@
         }
         .page-btn {
             background: #fff;
-            border: 1px solid #e2e8f0;
+            border: 1px solid #d7e4dc;
             padding: 0.4rem 1rem;
             border-radius: 6px;
             cursor: pointer;
             font-size: 0.85rem;
             transition: all 0.15s;
         }
-        .page-btn:hover:not(:disabled) { background: #f1f5f9; border-color: #1a6b8a; color: #1a6b8a; }
+        .page-btn:hover:not(:disabled) { background: #edf2ed; border-color: #1d5949; color: #1d5949; }
         .page-btn:disabled { opacity: 0.4; cursor: default; }
-        .page-info { font-size: 0.85rem; color: #64748b; }
+        .page-info { font-size: 0.85rem; color: #65766e; }
 
         /* ── States ── */
         .state-container { position: relative; min-height: 100px; }
@@ -249,7 +247,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            color: #64748b;
+            color: #65766e;
             font-size: 0.9rem;
             z-index: 2;
         }
@@ -261,7 +259,7 @@
         }
         .state-empty .empty-msg, .state-error .error-msg {
             font-size: 0.9rem;
-            color: #64748b;
+            color: #65766e;
         }
         .state-error .error-msg { color: #dc3545; }
 
@@ -276,10 +274,10 @@
             border-radius: 10px;
             box-shadow: 0 1px 4px rgba(0,0,0,0.06);
         }
-        .filter-bar label { font-size: 0.85rem; font-weight: 500; color: #0b2a42; }
+        .filter-bar label { font-size: 0.85rem; font-weight: 500; color: #192f35; }
         .filter-bar select {
             padding: 0.4rem 0.75rem;
-            border: 1px solid #e2e8f0;
+            border: 1px solid #d7e4dc;
             border-radius: 6px;
             font-size: 0.85rem;
             background: #fff;
@@ -287,7 +285,7 @@
         }
         .btn-refresh {
             margin-left: auto;
-            background: #1a6b8a;
+            background: #1d5949;
             color: #fff;
             border: none;
             padding: 0.4rem 1rem;
@@ -297,7 +295,7 @@
             font-weight: 500;
             transition: background 0.15s;
         }
-        .btn-refresh:hover { background: #0b2a42; }
+        .btn-refresh:hover { background: #192f35; }
 
         .kpi-grid.state-loading,
         .chart-card .state-loading,
@@ -307,9 +305,10 @@
 
     </style>
 
-    <link rel="stylesheet" href="css/theme.css">
-    <link rel="stylesheet" href="/css/dashboard-responsive.css">
-    </head>
+    <link rel="stylesheet" href="css/theme.css?brand=20261028">
+    <link rel="stylesheet" href="/css/dashboard-responsive.css?brand=20261028">
+        <link rel="stylesheet" href="/css/brand.css?v=20261028">
+</head>
 <body>
 
 <div class="app-shell">
@@ -436,11 +435,11 @@
             <!-- Section 4: Corrective Action (CAN/CAP) Register -->
             <div class="section-title shell-scroll-spy" id="corrective-actions"><i class="fas fa-clipboard-check"></i> Corrective Action Notices</div>
         <div id="canCapTable" class="table-card state-container">
-            <div class="filter-bar" style="border-radius:0;box-shadow:none;border-bottom:1px solid #e2e8f0;margin-bottom:0;">
-                <span style="font-size:0.85rem;color:#475569;"><i class="fas fa-clipboard-check"></i> CAN Register — <strong id="canCapCount">0</strong> notices</span>
-                <a href="/can_cap/issue.html" style="margin-left:auto;font-size:0.8rem;color:#1a6b8a;"><i class="fas fa-plus"></i> Issue CAN</a>
-                <a href="/can_cap/cans.html" style="margin-left:1rem;font-size:0.8rem;color:#1a6b8a;"><i class="fas fa-external-link-alt"></i> All CANs</a>
-                <a href="/can_cap/caps.html" style="margin-left:1rem;font-size:0.8rem;color:#1a6b8a;"><i class="fas fa-external-link-alt"></i> CAP Register</a>
+            <div class="filter-bar" style="border-radius:0;box-shadow:none;border-bottom:1px solid #d7e4dc;margin-bottom:0;">
+                <span style="font-size:0.85rem;color:#53685c;"><i class="fas fa-clipboard-check"></i> CAN Register — <strong id="canCapCount">0</strong> notices</span>
+                <a href="/can_cap/issue.html" style="margin-left:auto;font-size:0.8rem;color:#1d5949;"><i class="fas fa-plus"></i> Issue CAN</a>
+                <a href="/can_cap/cans.html" style="margin-left:1rem;font-size:0.8rem;color:#1d5949;"><i class="fas fa-external-link-alt"></i> All CANs</a>
+                <a href="/can_cap/caps.html" style="margin-left:1rem;font-size:0.8rem;color:#1d5949;"><i class="fas fa-external-link-alt"></i> CAP Register</a>
             </div>
             <table>
                 <thead>
@@ -472,7 +471,7 @@
             <!-- Section 5: Latest Reports -->
             <div class="section-title shell-scroll-spy" id="reports"><i class="fas fa-chart-bar"></i> Latest Reports</div>
         <div id="reportsTable" class="table-card state-container">
-            <div class="filter-bar" style="border-radius:0;box-shadow:none;border-bottom:1px solid #e2e8f0;margin-bottom:0;">
+            <div class="filter-bar" style="border-radius:0;box-shadow:none;border-bottom:1px solid #d7e4dc;margin-bottom:0;">
                 <label for="recentRange"><i class="fas fa-calendar-alt"></i> Timeline:</label>
                 <select id="recentRange">
                     <option value="7">This Week</option>
@@ -480,7 +479,7 @@
                     <option value="90">This Quarter</option>
                     <option value="365">This Year</option>
                 </select>
-                <a href="/reports/index.html" style="margin-left:auto;font-size:0.8rem;color:#1a6b8a;"><i class="fas fa-external-link-alt"></i> View All Reports</a>
+                <a href="/reports/index.html" style="margin-left:auto;font-size:0.8rem;color:#1d5949;"><i class="fas fa-external-link-alt"></i> View All Reports</a>
             </div>
             <table>
                 <thead>
@@ -507,7 +506,7 @@
                 <h2 style="font-size:1.25rem;"><i class="fas fa-file-import"></i> Historical Data Import</h2>
             </div>
             <div class="dropzone" id="dropzone">
-                <i class="fas fa-cloud-upload-alt" style="font-size: 3rem; color: #1a6b8a; margin-bottom: 1rem;"></i>
+                <i class="fas fa-cloud-upload-alt" style="font-size: 3rem; color: #1d5949; margin-bottom: 1rem;"></i>
                 <h3>Upload Master Logsheet</h3>
                 <p>Drag and drop your Excel (.xlsx) or CSV file here, or click to browse.</p>
                 <input type="file" id="fileInput" accept=".xlsx,.csv" style="display: none;">
@@ -519,8 +518,8 @@
             </div>
             <div id="import-step-2" class="wizard-step" style="display:none; margin-top:1rem;">
                 <div class="table-card">
-                    <div class="filter-bar" style="border-radius:0;box-shadow:none;border-bottom:1px solid #e2e8f0;margin-bottom:0;">
-                        <span style="font-size:0.85rem;color:#475569;"><i class="fas fa-list"></i> Previewing <strong id="previewCount">0</strong> rows</span>
+                    <div class="filter-bar" style="border-radius:0;box-shadow:none;border-bottom:1px solid #d7e4dc;margin-bottom:0;">
+                        <span style="font-size:0.85rem;color:#53685c;"><i class="fas fa-list"></i> Previewing <strong id="previewCount">0</strong> rows</span>
                         <button class="btn btn-outline" id="cancelUploadBtn" style="margin-left:auto;">Cancel</button>
                         <button class="btn btn-primary" id="promoteBtn" style="margin-left:1rem;">Confirm & Import</button>
                     </div>
@@ -536,7 +535,7 @@
             <div id="import-step-3" class="wizard-step" style="display:none; text-align: center; padding: 3rem;">
                 <i class="fas fa-check-circle" style="font-size: 4rem; color: #2e7d32; margin-bottom: 1rem;"></i>
                 <h2>Import Successful</h2>
-                <p style="color: #64748b; margin-bottom: 1.5rem;"><strong id="successCount">0</strong> records have been successfully promoted to the database.</p>
+                <p style="color: #65766e; margin-bottom: 1.5rem;"><strong id="successCount">0</strong> records have been successfully promoted to the database.</p>
                 <button class="btn btn-primary" id="resetImportBtn">Import Another File</button>
             </div>
         </div>
@@ -547,7 +546,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-check-compat.js"></script>
-    <script src="/js/firebase.js?v=4.0.1"></script>
+    <script src="/js/firebase.js?v=4.0.1&brand=20261028"></script>
     <script src="/js/tenant_context.js"></script>
     <script src="/js/department_resolver.js"></script>
 <script>
@@ -560,24 +559,24 @@ window.SHELL_CONFIG = {
 </script>
 <script src="/js/nav-config.js"></script>
 <script src="/js/api/client.js"></script>
-<script src="/js/shell.js?v=4"></script>
+<script src="/js/shell.js?v=4&brand=20261028"></script>
 <script src="/js/dashboard-nav.js"></script>
 <script src="/js/api/dashboard.js"></script>
 <script src="/js/dashboard-utils.js"></script>
 <script src="/js/report.js"></script>
 <script src="/js/hazards.js"></script>
-<script src="/js/can_cap.js"></script>
+<script src="/js/can_cap.js?brand=20261028"></script>
 <script src="/js/verification.js"></script>
 <script src="/js/reports.js"></script>
 <script src="/js/flight_diversions.js"></script>
-<script src="/js/dashboard.js"></script>
+<script src="/js/dashboard.js?brand=20261028"></script>
 <!-- Custom Alert Modal -->
 <div id="customAlertModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
     <div style="background: #fff; padding: 2rem; border-radius: 12px; max-width: 400px; width: 90%; box-shadow: 0 4px 12px rgba(0,0,0,0.15); text-align: center;">
         <div id="modalIcon" style="font-size: 2.5rem; margin-bottom: 1rem;"></div>
-        <h3 id="modalTitle" style="margin-bottom: 0.5rem; color: #0b2a42;">Alert</h3>
-        <p id="modalMessage" style="color: #64748b; margin-bottom: 1.5rem;"></p>
-        <button onclick="document.getElementById('customAlertModal').style.display='none'" style="background: #1a6b8a; color: #fff; border: none; padding: 0.5rem 1.5rem; border-radius: 6px; cursor: pointer; font-weight: 600;">OK</button>
+        <h3 id="modalTitle" style="margin-bottom: 0.5rem; color: #192f35;">Alert</h3>
+        <p id="modalMessage" style="color: #65766e; margin-bottom: 1.5rem;"></p>
+        <button onclick="document.getElementById('customAlertModal').style.display='none'" style="background: #1d5949; color: #fff; border: none; padding: 0.5rem 1.5rem; border-radius: 6px; cursor: pointer; font-weight: 600;">OK</button>
     </div>
 </div>
 <script src="/js/historical_import.js"></script>

@@ -13,21 +13,19 @@ AUTHOR: AviaSAFE Systems
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Step 4: Audit Log — AviaSAFE Admin</title>
-    <link rel="stylesheet" href="/css/variables.css">
-    <link rel="stylesheet" href="/css/admin.css">
-    <link rel="stylesheet" href="/css/admin-setup.css">
+    <link rel="stylesheet" href="/css/variables.css?brand=20261028">
+    <link rel="stylesheet" href="/css/admin.css?brand=20261028">
+    <link rel="stylesheet" href="/css/admin-setup.css?brand=20261028">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-check-compat.js"></script>
-    <script src="/js/firebase.js?v=4.0.1"></script>
+    <script src="/js/firebase.js?v=4.0.1&brand=20261028"></script>
     <script src="/js/api/client.js"></script>
-    <script src="/js/admin.js"></script>
-    <script src="/js/admin-setup-core.js"></script>
+    <script src="/js/admin.js?brand=20261028"></script>
+    <script src="/js/admin-setup-core.js?brand=20261028"></script>
+    <link rel="stylesheet" href="/css/brand.css?v=20261028">
 </head>
 <body class="admin-body">
 
@@ -39,8 +37,8 @@ AUTHOR: AviaSAFE Systems
             <span class="page-title">Step 4 — Audit Log</span>
         </div>
         <div class="tb-actions" id="topNav">
-            <a href="/admin/production-setup.html" class="nav-link" style="color:#cbd5e1; text-decoration:none; font-size:.82rem; padding:6px 12px; border-radius:8px;"><i class="fas fa-cogs" style="color:#4fc3f7;"></i> Production Setup</a>
-            <a href="/admin/psoe-audit.html" class="nav-link" style="color:#cbd5e1; text-decoration:none; font-size:.82rem; padding:6px 12px; border-radius:8px;"><i class="fas fa-clipboard-check"></i> PSOE Audit</a>
+            <a href="/admin/production-setup.html" class="nav-link" style="color:#bdccc4; text-decoration:none; font-size:.82rem; padding:6px 12px; border-radius:8px;"><i class="fas fa-cogs" style="color:#4fc3f7;"></i> Production Setup</a>
+            <a href="/admin/psoe-audit.html" class="nav-link" style="color:#bdccc4; text-decoration:none; font-size:.82rem; padding:6px 12px; border-radius:8px;"><i class="fas fa-clipboard-check"></i> PSOE Audit</a>
             <span class="user-badge"><span class="role-chip">SUPER_ADMIN</span><span id="userDisplay">—</span></span>
             <button class="btn btn-danger btn-sm" onclick="logout()">Logout</button>
         </div>
@@ -56,7 +54,7 @@ AUTHOR: AviaSAFE Systems
             <div class="card-head" style="cursor:pointer;" onclick="toggleAuditLog()">
                 <span class="step-badge">Step 4</span>
                 <h2 style="margin:0 14px 0 12px;"><i class="fas fa-clipboard-list"></i> Audit Log</h2>
-                <span style="margin-left:auto;font-size:.8rem;color:#64748b;">
+                <span style="margin-left:auto;font-size:.8rem;color:#65766e;">
                     <i class="fas fa-chevron-down" id="auditLogIcon"></i>
                 </span>
             </div>
@@ -64,7 +62,7 @@ AUTHOR: AviaSAFE Systems
                 <p class="card-sub">Last 5 audit log entries. Click to expand/collapse.</p>
                 <div class="btn-row" style="margin-bottom:12px;">
                     <button class="btn btn-primary btn-sm" onclick="loadAuditLog()"><i class="fas fa-rotate"></i> Refresh</button>
-                    <span style="margin-left:auto;font-size:.78rem;color:#94a3b8;">Showing last 5 entries</span>
+                    <span style="margin-left:auto;font-size:.78rem;color:#83938a;">Showing last 5 entries</span>
                 </div>
                 <div id="auditArea" style="overflow-x:auto;"><div class="loading"><i class="fas fa-spinner fa-spin"></i> Loading audit log...</div></div>
             </div>

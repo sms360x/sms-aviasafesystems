@@ -44,6 +44,21 @@
       ],
       "rewrites": [
         {
+          "source": "/etl/api/**",
+          "run": {
+            "serviceId": "etl360x",
+            "region": "asia-south1"
+          }
+        },
+        {
+          "source": "/etl",
+          "destination": "/etl/index.html"
+        },
+        {
+          "source": "/etl/**",
+          "destination": "/etl/index.html"
+        },
+        {
           "source": "/register.html",
           "destination": "/register.html"
         },
@@ -126,6 +141,4 @@
       ]
     }
   ]
-
 }
-

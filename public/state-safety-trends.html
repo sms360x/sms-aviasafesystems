@@ -18,41 +18,42 @@ AUTHOR: AviaSAFE Systems
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Safety Trends — State Oversight | AviaSAFE SSP</title>
-    <link rel="stylesheet" href="/css/variables.css">
+    <link rel="stylesheet" href="/css/variables.css?brand=20261028">
     <link rel="stylesheet" href="/css/main.css">
-    <link rel="stylesheet" href="/css/shell.css">
-    <link rel="stylesheet" href="/css/tenant-overrides.css">
+    <link rel="stylesheet" href="/css/shell.css?brand=20261028">
+    <link rel="stylesheet" href="/css/tenant-overrides.css?brand=20261028">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    <script src="js/chart-theme.js"></script>
+    <script src="js/chart-theme.js?brand=20261028"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-check-compat.js"></script>
     <style>
         .hub-head { margin-bottom: 1.5rem; }
-        .hub-head h1 { margin: 0; color: var(--color-primary-dark, #0b2a42); display: flex; align-items: center; gap: 0.5rem; }
-        .hub-sub { color: #64748b; font-size: 0.9rem; margin-top: 0.35rem; }
+        .hub-head h1 { margin: 0; color: var(--color-primary-dark, #192f35); display: flex; align-items: center; gap: 0.5rem; }
+        .hub-sub { color: #65766e; font-size: 0.9rem; margin-top: 0.35rem; }
 
         .hub-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; }
-        .hub-card { display: block; background: #fff; border-radius: 10px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); padding: 1.4rem 1.5rem; border-top: 3px solid #1a6b8a; text-decoration: none; color: inherit; transition: box-shadow 0.15s, transform 0.15s; }
+        .hub-card { display: block; background: #fff; border-radius: 10px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); padding: 1.4rem 1.5rem; border-top: 3px solid #1d5949; text-decoration: none; color: inherit; transition: box-shadow 0.15s, transform 0.15s; }
         .hub-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.12); transform: translateY(-2px); }
-        .hub-card .hub-icon { font-size: 1.6rem; color: #1a6b8a; margin-bottom: 0.6rem; }
-        .hub-card .hub-title { font-weight: 700; font-size: 1.05rem; color: #0b2a42; }
-        .hub-card .hub-desc { font-size: 0.85rem; color: #64748b; margin-top: 0.4rem; line-height: 1.5; }
+        .hub-card .hub-icon { font-size: 1.6rem; color: #1d5949; margin-bottom: 0.6rem; }
+        .hub-card .hub-title { font-weight: 700; font-size: 1.05rem; color: #192f35; }
+        .hub-card .hub-desc { font-size: 0.85rem; color: #65766e; margin-top: 0.4rem; line-height: 1.5; }
     </style>
-    <link rel="stylesheet" href="css/theme.css">
+    <link rel="stylesheet" href="css/theme.css?brand=20261028">
+    <link rel="stylesheet" href="/css/brand.css?v=20261028">
 </head>
 <body>
 
 <div class="app-shell">
-    <div id="authGate" style="padding:3rem;text-align:center;color:#64748b;">
+    <div id="authGate" style="padding:3rem;text-align:center;color:#65766e;">
         <i class="fas fa-spinner fa-spin" style="font-size:2rem;"></i>
         <p>Checking State safety oversight access...</p>
     </div>
 
     <div id="mainContent" style="display:none;">
         <div class="hub-head">
-            <h1><i class="fas fa-chart-line" style="color:#1a6b8a;"></i> Safety Trends</h1>
+            <h1><i class="fas fa-chart-line" style="color:#1d5949;"></i> Safety Trends</h1>
             <div class="hub-sub">State Safety Performance Indicators, National High-Risk Categories, and the State Risk Register — aggregated at State scope</div>
         </div>
 
@@ -78,7 +79,7 @@ AUTHOR: AviaSAFE Systems
     </div>
 </div>
 
-<script src="/js/firebase.js?v=4.0.1"></script>
+<script src="/js/firebase.js?v=4.0.1&brand=20261028"></script>
 <script>
 window.SHELL_CONFIG = {
     brand: 'AviaSAFE',
@@ -96,7 +97,7 @@ window.SHELL_CONFIG = {
 </script>
 <script src="/js/api/client.js"></script>
 <script src="/js/nav-config.js"></script>
-<script src="/js/shell.js"></script>
+<script src="/js/shell.js?brand=20261028"></script>
 
 <script>
 document.addEventListener('DOMContentLoaded', async () => {

@@ -15,21 +15,19 @@ AUTHOR: AviaSAFE Systems
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Step 2: Add Service Provider Tenants — AviaSAFE Admin</title>
-    <link rel="stylesheet" href="/css/variables.css">
-    <link rel="stylesheet" href="/css/admin.css">
-    <link rel="stylesheet" href="/css/admin-setup.css">
+    <link rel="stylesheet" href="/css/variables.css?brand=20261028">
+    <link rel="stylesheet" href="/css/admin.css?brand=20261028">
+    <link rel="stylesheet" href="/css/admin-setup.css?brand=20261028">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-check-compat.js"></script>
-    <script src="/js/firebase.js?v=4.0.1"></script>
+    <script src="/js/firebase.js?v=4.0.1&brand=20261028"></script>
     <script src="/js/api/client.js"></script>
-    <script src="/js/admin.js"></script>
-    <script src="/js/admin-setup-core.js"></script>
+    <script src="/js/admin.js?brand=20261028"></script>
+    <script src="/js/admin-setup-core.js?brand=20261028"></script>
+    <link rel="stylesheet" href="/css/brand.css?v=20261028">
 </head>
 <body class="admin-body">
 
@@ -41,8 +39,8 @@ AUTHOR: AviaSAFE Systems
             <span class="page-title">Step 2 — Add Service Provider Tenants</span>
         </div>
         <div class="tb-actions" id="topNav">
-            <a href="/admin/production-setup.html" class="nav-link" style="color:#cbd5e1; text-decoration:none; font-size:.82rem; padding:6px 12px; border-radius:8px;"><i class="fas fa-cogs" style="color:#4fc3f7;"></i> Production Setup</a>
-            <a href="/admin/psoe-audit.html" class="nav-link" style="color:#cbd5e1; text-decoration:none; font-size:.82rem; padding:6px 12px; border-radius:8px;"><i class="fas fa-clipboard-check"></i> PSOE Audit</a>
+            <a href="/admin/production-setup.html" class="nav-link" style="color:#bdccc4; text-decoration:none; font-size:.82rem; padding:6px 12px; border-radius:8px;"><i class="fas fa-cogs" style="color:#4fc3f7;"></i> Production Setup</a>
+            <a href="/admin/psoe-audit.html" class="nav-link" style="color:#bdccc4; text-decoration:none; font-size:.82rem; padding:6px 12px; border-radius:8px;"><i class="fas fa-clipboard-check"></i> PSOE Audit</a>
             <span class="user-badge"><span class="role-chip">SUPER_ADMIN</span><span id="userDisplay">—</span></span>
             <button class="btn btn-danger btn-sm" onclick="logout()">Logout</button>
         </div>
@@ -72,7 +70,7 @@ AUTHOR: AviaSAFE Systems
                         <div class="form-group">
                             <label>Service Provider Kind *</label>
                             <select id="tenantKind" required><option value="operator" selected>operator</option></select>
-                            <small style="color:#94a3b8;font-size:.72rem;">Reserved kinds (regulator, platform) are not offered here.</small>
+                            <small style="color:#83938a;font-size:.72rem;">Reserved kinds (regulator, platform) are not offered here.</small>
                         </div>
                     </div>
                     <div class="form-row">
@@ -92,7 +90,7 @@ AUTHOR: AviaSAFE Systems
                                 <option value="fssd">Flight Safety Standards Division</option>
                                 <option value="assd">Aerodrome Safety Standards Division</option>
                             </select>
-                            <small style="color:#94a3b8;font-size:.72rem;">Canonical department code (2B.4a). Leave None if unset.</small>
+                            <small style="color:#83938a;font-size:.72rem;">Canonical department code (2B.4a). Leave None if unset.</small>
                         </div>
                         <div class="form-group"><label>Regulator (State Regulator from Step 1) *</label><select id="tenantRegulator" required><option value="">— select regulator —</option></select></div>
                     </div>
@@ -116,7 +114,7 @@ AUTHOR: AviaSAFE Systems
                                 <input type="checkbox" id="tenantIsDemo" checked>
                                 Demo Tenant
                             </label>
-                            <small style="color:#94a3b8;">Checked = demo (purgeable). Unchecked = real (protected).</small>
+                            <small style="color:#83938a;">Checked = demo (purgeable). Unchecked = real (protected).</small>
                         </div>
                     </div>
                     <!-- Contact Person Section -->
@@ -124,24 +122,24 @@ AUTHOR: AviaSAFE Systems
                         <div class="form-group">
                             <label>Contact Person Name</label>
                             <input type="text" id="tenantContactName" placeholder="e.g., Rajesh Thapa">
-                            <small style="color:#94a3b8;font-size:.72rem;">Safety Manager / Accountable Manager</small>
+                            <small style="color:#83938a;font-size:.72rem;">Safety Manager / Accountable Manager</small>
                         </div>
                         <div class="form-group">
                             <label>Contact Email</label>
                             <input type="email" id="tenantContactEmail" placeholder="e.g., safety@airline.com">
-                            <small style="color:#94a3b8;font-size:.72rem;">Primary safety contact email</small>
+                            <small style="color:#83938a;font-size:.72rem;">Primary safety contact email</small>
                         </div>
                         <div class="form-group">
                             <label>Contact Phone</label>
                             <input type="tel" id="tenantContactPhone" placeholder="e.g., +977 9841 234567">
-                            <small style="color:#94a3b8;font-size:.72rem;">Primary safety contact phone</small>
+                            <small style="color:#83938a;font-size:.72rem;">Primary safety contact phone</small>
                         </div>
                     </div>
                     <div class="form-row">
                         <div class="form-group">
                             <label>Contact Title</label>
                             <input type="text" id="tenantContactTitle" placeholder="e.g., Safety Manager">
-                            <small style="color:#94a3b8;font-size:.72rem;">Job title of the contact person</small>
+                            <small style="color:#83938a;font-size:.72rem;">Job title of the contact person</small>
                         </div>
                     </div>
                     <div class="btn-row" style="margin-top:12px;">
@@ -152,7 +150,7 @@ AUTHOR: AviaSAFE Systems
                 <textarea id="bulkTextarea" placeholder="CSV (paste below), e.g.:
 tenant_id,name,icao,country,regulator_id
 operator-slug,Operator Name,XXX,Country Name,regulator-slug
-operator-slug-2,Operator Name Two,XXX,Country Name,regulator-slug" style="display:none;margin-top:14px;width:100%;min-height:110px;padding:10px;border:1px solid #cbd5e1;border-radius:8px;font-size:.82rem;box-sizing:border-box;"></textarea>
+operator-slug-2,Operator Name Two,XXX,Country Name,regulator-slug" style="display:none;margin-top:14px;width:100%;min-height:110px;padding:10px;border:1px solid #bdccc4;border-radius:8px;font-size:.82rem;box-sizing:border-box;"></textarea>
             </div>
         </div>
 

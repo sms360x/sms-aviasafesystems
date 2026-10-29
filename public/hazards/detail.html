@@ -5,30 +5,30 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hazard Detail - AviaSAFE</title>
     <meta name="help-drawer-topic" content="sram_bowtie">
-    <link rel="stylesheet" href="/css/variables.css">
+    <link rel="stylesheet" href="/css/variables.css?brand=20261028">
     <link rel="stylesheet" href="/css/main.css">
-    <link rel="stylesheet" href="/css/srm.css">
-    <link rel="stylesheet" href="/css/help-drawer.css">
+    <link rel="stylesheet" href="/css/srm.css?brand=20261028">
+    <link rel="stylesheet" href="/css/help-drawer.css?brand=20261028">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body { background: #f1f5f9; font-family: 'Inter', system-ui, -apple-system, sans-serif; color: #0b2a42; margin: 0; }
+        body { background: #edf2ed; font-family: 'DM Sans', system-ui, -apple-system, sans-serif; color: #192f35; margin: 0; }
         .page { max-width: 900px; margin: 0 auto; padding: 1.5rem; }
-        .back-link { display: inline-flex; align-items: center; gap: 0.5rem; color: #1a6b8a; font-size: 0.875rem; margin-bottom: 1rem; text-decoration: none; }
+        .back-link { display: inline-flex; align-items: center; gap: 0.5rem; color: #1d5949; font-size: 0.875rem; margin-bottom: 1rem; text-decoration: none; }
         .back-link:hover { text-decoration: underline; }
         .card { background: #fff; border-radius: 10px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); padding: 1.5rem; margin-bottom: 1.25rem; }
-        .card h2 { font-size: 1rem; color: #0b2a42; margin: 0 0 1rem; display: flex; align-items: center; gap: 0.5rem; }
+        .card h2 { font-size: 1rem; color: #192f35; margin: 0 0 1rem; display: flex; align-items: center; gap: 0.5rem; }
         .card h2 i { width: 1.25rem; text-align: center; }
         .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
         .detail-field { margin-bottom: 0.5rem; }
-        .detail-field .label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; font-weight: 600; }
-        .detail-field .value { font-size: 0.95rem; color: #0b2a42; margin-top: 0.15rem; word-break: break-word; }
+        .detail-field .label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; color: #65766e; font-weight: 600; }
+        .detail-field .value { font-size: 0.95rem; color: #192f35; margin-top: 0.15rem; word-break: break-word; }
         .detail-field.full-width { grid-column: 1 / -1; }
         .badge { display: inline-block; padding: 0.2rem 0.6rem; border-radius: 999px; font-size: 0.75rem; font-weight: 600; }
         .badge-critical { background: #fde8e8; color: #dc3545; }
         .badge-high { background: #fff3e0; color: #e65100; }
         .badge-medium { background: #fff8e1; color: #f9a825; }
         .badge-low { background: #e8f5e9; color: #2e7d32; }
-        .badge-default { background: #f1f5f9; color: #64748b; }
+        .badge-default { background: #edf2ed; color: #65766e; }
         .badge-new { background: #e3f2fd; color: #1565c0; }
         .badge-processing { background: #fff3e0; color: #e65100; }
         .badge-warning { background: #fef3c7; color: #d97706; }
@@ -38,9 +38,9 @@
         .risk-index-display .label { font-size: 0.85rem; font-weight: 600; margin-top: 0.25rem; }
         .bg-very-high { background: #7f1d1d; color: #fff; }
         .bg-high { background: #dc3545; color: #fff; }
-        .bg-medium { background: #f9a825; color: #0b2a42; }
+        .bg-medium { background: #f9a825; color: #192f35; }
         .bg-low { background: #2e7d32; color: #fff; }
-        .bg-na { background: #f1f5f9; color: #64748b; }
+        .bg-na { background: #edf2ed; color: #65766e; }
         .action-bar { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1.25rem; }
         .action-btn { padding: 0.5rem 1rem; border: none; border-radius: 6px; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: all 0.15s; }
         .action-btn:hover { opacity: 0.85; }
@@ -51,30 +51,28 @@
         .action-btn-close { background: #e8f5e9; color: #2e7d32; }
         .action-btn-reopen { background: #fde8e8; color: #dc3545; }
         .action-btn-warning { background: #fef3c7; color: #d97706; }
-        .status-transition { background: #f8fafc; padding: 1rem; border-radius: 8px; margin-bottom: 1rem; }
-        .status-transition h4 { font-size: 0.85rem; color: #475569; margin: 0 0 0.75rem; }
+        .status-transition { background: #f4f6f3; padding: 1rem; border-radius: 8px; margin-bottom: 1rem; }
+        .status-transition h4 { font-size: 0.85rem; color: #53685c; margin: 0 0 0.75rem; }
         .status-btns { display: flex; gap: 0.5rem; flex-wrap: wrap; }
-        .loading-state { display: flex; align-items: center; justify-content: center; padding: 4rem; color: #64748b; }
+        .loading-state { display: flex; align-items: center; justify-content: center; padding: 4rem; color: #65766e; }
         .loading-state i { font-size: 2rem; margin-right: 0.75rem; }
         .error-state { text-align: center; padding: 4rem; color: #dc3545; }
         .edit-field { width: 100%; padding: 0.4rem 0.5rem; border: 1px solid #d1d5db; border-radius: 4px; font-size: 0.9rem; }
-        .edit-field:focus { outline: none; border-color: #1a6b8a; }
-        .btn-save-edit { background: #1a6b8a; color: #fff; border: none; padding: 0.3rem 0.75rem; border-radius: 4px; cursor: pointer; font-size: 0.8rem; margin-top: 0.25rem; }
-        .card h2 .help-link { margin-left: 0.5rem; font-size: 0.72rem; font-weight: 600; color: #1a6b8a; cursor: pointer; border: 1px solid #cbd5e1; border-radius: 999px; padding: 0.15rem 0.6rem; background: #fff; }
-        .card h2 .help-link:hover { background: #e8f0f8; border-color: #1a6b8a; }
+        .edit-field:focus { outline: none; border-color: #1d5949; }
+        .btn-save-edit { background: #1d5949; color: #fff; border: none; padding: 0.3rem 0.75rem; border-radius: 4px; cursor: pointer; font-size: 0.8rem; margin-top: 0.25rem; }
+        .card h2 .help-link { margin-left: 0.5rem; font-size: 0.72rem; font-weight: 600; color: #1d5949; cursor: pointer; border: 1px solid #bdccc4; border-radius: 999px; padding: 0.15rem 0.6rem; background: #fff; }
+        .card h2 .help-link:hover { background: #e9f0e9; border-color: #1d5949; }
         #message { padding: 0.75rem 1rem; border-radius: 6px; margin-bottom: 1rem; display: none; font-size: 0.85rem; }
         #message.success { display: block; background: #e6f4ea; color: #1e7e34; border-left: 4px solid #34a853; }
         #message.error { display: block; background: #fce8e6; color: #d33426; border-left: 4px solid #ea4335; }
         @media (max-width: 600px) { .detail-grid { grid-template-columns: 1fr; } }
     </style>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-
-    <link rel="stylesheet" href="../css/theme.css">
-    <link rel="stylesheet" href="/css/dashboard-responsive.css">
-    <link rel="stylesheet" href="/css/shell.css">
-    </head>
+    <link rel="stylesheet" href="../css/theme.css?brand=20261028">
+    <link rel="stylesheet" href="/css/dashboard-responsive.css?brand=20261028">
+    <link rel="stylesheet" href="/css/shell.css?brand=20261028">
+        <link rel="stylesheet" href="/css/brand.css?v=20261028">
+</head>
 <body>
 
 <div class="app-shell">
@@ -193,7 +191,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-check-compat.js"></script>
-<script src="/js/firebase.js?v=4.0.1"></script>
+<script src="/js/firebase.js?v=4.0.1&brand=20261028"></script>
 <script src="/js/tenant_context.js"></script>
 <script src="/js/department_resolver.js"></script>
 <script src="/js/api/client.js"></script>
@@ -203,11 +201,11 @@ window.SHELL_CONFIG = {
     roleLabel: 'Hazard Management',
 };
 </script>
-<script src="/js/shell.js"></script>
+<script src="/js/shell.js?brand=20261028"></script>
 <script src="/js/hazards.js"></script>
 <script src="/js/verification.js"></script>
 <script src="/js/fishbone.js"></script>
-<script src="/js/srm.js"></script>
+<script src="/js/srm.js?brand=20261028"></script>
 <script src="/js/help-drawer.js"></script>
 <script>
 let hazardData = null;
@@ -321,16 +319,16 @@ async function renderVerificationSection(h) {
         listContainer.innerHTML = '';
 
         if (verifications && verifications.length > 0) {
-            let html = '<h3 style="font-size:0.85rem;color:#475569;margin:0 0 0.75rem;">Verification History</h3>';
+            let html = '<h3 style="font-size:0.85rem;color:#53685c;margin:0 0 0.75rem;">Verification History</h3>';
             verifications.forEach(v => {
                 html += `
-                    <div style="background:#f8fafc;padding:0.75rem;border-radius:6px;margin-bottom:0.5rem;border-left:3px solid ${v.outcome === 'Accepted' ? '#2e7d32' : v.outcome === 'Revision Required' ? '#d97706' : v.outcome === 'Ineffective' ? '#dc3545' : '#7c3aed'};">
+                    <div style="background:#f4f6f3;padding:0.75rem;border-radius:6px;margin-bottom:0.5rem;border-left:3px solid ${v.outcome === 'Accepted' ? '#2e7d32' : v.outcome === 'Revision Required' ? '#d97706' : v.outcome === 'Ineffective' ? '#dc3545' : '#7c3aed'};">
                         <div style="display:flex;justify-content:space-between;align-items:center;">
                             <span class="badge ${verificationOutcomeBadgeClass(v.outcome)}">${v.outcome}</span>
-                            <span style="font-size:0.75rem;color:#94a3b8;">${formatVerificationDate(v.verification_date)}</span>
+                            <span style="font-size:0.75rem;color:#83938a;">${formatVerificationDate(v.verification_date)}</span>
                         </div>
-                        ${v.comments ? `<p style="margin:0.35rem 0 0;font-size:0.85rem;color:#475569;">${v.comments}</p>` : ''}
-                        <div style="font-size:0.75rem;color:#94a3b8;margin-top:0.25rem;">Verified by: ${v.verified_by}</div>
+                        ${v.comments ? `<p style="margin:0.35rem 0 0;font-size:0.85rem;color:#53685c;">${v.comments}</p>` : ''}
+                        <div style="font-size:0.75rem;color:#83938a;margin-top:0.25rem;">Verified by: ${v.verified_by}</div>
                     </div>`;
             });
             listContainer.innerHTML = html;
@@ -346,7 +344,7 @@ async function renderVerificationSection(h) {
                             <div style="background:#e8f5e9;padding:0.75rem;border-radius:6px;">
                                 <div style="display:flex;justify-content:space-between;font-size:0.85rem;">
                                     <span>Approved by: <strong>${closure.approved_by}</strong></span>
-                                    <span style="color:#94a3b8;">${formatVerificationDate(closure.approved_at)}</span>
+                                    <span style="color:#83938a;">${formatVerificationDate(closure.approved_at)}</span>
                                 </div>
                                 ${closure.lessons_learned ? `<p style="margin:0.35rem 0 0;font-size:0.85rem;"><strong>Lessons:</strong> ${closure.lessons_learned}</p>` : ''}
                                 ${closure.recommendations ? `<p style="margin:0.25rem 0 0;font-size:0.85rem;"><strong>Recommendations:</strong> ${closure.recommendations}</p>` : ''}
@@ -358,7 +356,7 @@ async function renderVerificationSection(h) {
                 }
             }
         } else if (h.status === 'Under Review') {
-            listContainer.innerHTML = '<p style="font-size:0.85rem;color:#94a3b8;"><i class="fas fa-hourglass"></i> Pending verification</p>';
+            listContainer.innerHTML = '<p style="font-size:0.85rem;color:#83938a;"><i class="fas fa-hourglass"></i> Pending verification</p>';
         }
 
         // Buttons
@@ -433,7 +431,7 @@ function renderRiskDisplay(h) {
                     <div class="value">Not yet assessed.</div>
                 </div>
                 <div class="detail-field full-width">
-                    <div class="value" style="color:#64748b;">SRAM analysis has not been completed for this hazard. Tolerability and formal risk classification will be recorded once SRAM runs.</div>
+                    <div class="value" style="color:#65766e;">SRAM analysis has not been completed for this hazard. Tolerability and formal risk classification will be recorded once SRAM runs.</div>
                 </div>
                 <div class="detail-field full-width">
                     <button type="button" class="action-btn action-btn-review" onclick="scrollToSramWorkspace()"><i class="fas fa-diagram-project"></i> Open SRAM analysis</button>
@@ -497,7 +495,7 @@ function renderStatusButtons(h) {
 
     const buttons = transitions[current] || [];
     container.innerHTML = buttons.length === 0
-        ? '<p style="font-size:0.85rem;color:#64748b;">No status transitions available.</p>'
+        ? '<p style="font-size:0.85rem;color:#65766e;">No status transitions available.</p>'
         : buttons.map(b =>
             `<button class="action-btn ${b.cls}" onclick="changeStatus('${b.status}')">${b.label}</button>`
         ).join('');
