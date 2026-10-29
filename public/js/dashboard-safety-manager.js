@@ -566,9 +566,9 @@
             stubContainer.id = 'stubViews';
             stubContainer.style.display = 'none';
             
-            var routes = ['reports', 'hazards', 'assurance', 'performance', 'actions',
+            var routes = ['hazards', 'assurance', 'performance', 'actions',
                           'compliance', 'surveys', 'meetings', 'admin'];
-            var titles = ['Reports', 'Hazards & Risks', 'Safety Assurance', 'Safety Performance',
+            var titles = ['Hazards & Risks', 'Safety Assurance', 'Safety Performance',
                           'Actions', 'Compliance', 'Surveys', 'Meetings', 'Settings'];
             
             for (var i = 0; i < routes.length; i++) {
@@ -607,6 +607,9 @@
             if (target) {
                 stubContainer.style.display = '';
                 target.style.display = 'block';
+                if (hash === 'reports') {
+                    renderReports(1);
+                }
             }
         }
 
@@ -624,6 +627,82 @@
                 items[i].classList.remove('active');
             }
         }
+    }
+
+    function renderReports(page) {
+        var body = document.getElementById('reports-body');
+        var metaEl = document.getElementById('reports-pagination-meta');
+        var pageInfo = document.getElementById('reports-page-info');
+        var prevBtn = document.getElementById('reports-prev');
+        var nextBtn = document.getElementById('reports-next');
+        if (!body || !metaEl || !pageInfo || !prevBtn || !nextBtn) return;
+
+        body.innerHTML = '<tr><td colspan="6" style="padding: 20px; text-align: center;">Loading reports...</td></tr>';
+        prevBtn.disabled = true;
+        nextBtn.disabled = true;
+
+        var days = 90;
+        var pageSize = 20;
+        var path = '/api/v1/reports/?days=' + days + '&page=' + page + '&page_size=' + pageSize;
+
+        (async function () {
+            var token = await ApiClient._getToken();
+            if (!token) {
+                body.innerHTML = '<tr><td colspan="6" style="padding: 20px; text-align: center;">Not signed in.</td></tr>';
+                return;
+            }
+            var tenantId = await ApiClient._getTenantId();
+            var headers = {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + token
+            };
+            if (tenantId) headers['X-Tenant-Id'] = tenantId;
+
+            var json;
+            try {
+                var res = await fetch(ApiClient._baseUrl() + path, { headers: headers });
+                if (!res.ok) {
+                    var err = await res.json().catch(function () { return {}; });
+                    throw new Error(err.detail || 'Request failed: ' + res.status);
+                }
+                json = await res.json();
+            } catch (e) {
+                body.innerHTML = '<tr><td colspan="6" style="padding: 20px; text-align: center; color: #dc2626;">' + esc(e.message || 'Failed to load reports.') + '</td></tr>';
+                return;
+            }
+
+            var items = json.data || [];
+            var meta = json.meta || {};
+            var total = Number(meta.total) || 0;
+            var pages = Number(meta.pages) || (total > 0 ? Math.ceil(total / pageSize) : 0);
+
+            if (items.length === 0) {
+                body.innerHTML = '<tr><td colspan="6" style="padding: 20px; text-align: center;">No reports found.</td></tr>';
+            } else {
+                body.innerHTML = '';
+                items.forEach(function (r) {
+                    var typeLabel = String(r.report_type || '');
+                    if (typeLabel) typeLabel = typeLabel.charAt(0).toUpperCase() + typeLabel.slice(1);
+                    var riskScore = r.risk_score == null ? '—' : Number(r.risk_score).toFixed(1);
+                    var tr = document.createElement('tr');
+                    tr.innerHTML =
+                        '<td style="padding: 10px; border-bottom: 1px solid #e5e7eb;">' + esc(fmtDate(r.occurrence_date || r.created_at)) + '</td>' +
+                        '<td style="padding: 10px; border-bottom: 1px solid #e5e7eb;">' + esc(typeLabel) + '</td>' +
+                        '<td style="padding: 10px; border-bottom: 1px solid #e5e7eb;">' + esc(r.location || '—') + '</td>' +
+                        '<td style="padding: 10px; border-bottom: 1px solid #e5e7eb;">' + esc(r.status || '—') + '</td>' +
+                        '<td style="padding: 10px; border-bottom: 1px solid #e5e7eb;">' + esc(r.risk_level || '—') + '</td>' +
+                        '<td style="padding: 10px; border-bottom: 1px solid #e5e7eb;">' + esc(riskScore) + '</td>';
+                    body.appendChild(tr);
+                });
+            }
+
+            metaEl.textContent = total ? ('Showing ' + total + ' report' + (total === 1 ? '' : 's') + ', page ' + page + ' of ' + pages) : 'No reports';
+            pageInfo.textContent = 'Page ' + page;
+            prevBtn.disabled = page <= 1;
+            nextBtn.disabled = page >= pages || total === 0;
+            prevBtn.onclick = function () { renderReports(page - 1); };
+            nextBtn.onclick = function () { renderReports(page + 1); };
+        })();
     }
 
     window.addEventListener('hashchange', applyRoute);

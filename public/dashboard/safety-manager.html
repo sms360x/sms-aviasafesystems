@@ -115,6 +115,38 @@
             </div>
         </div>
 
+        <!-- Reports Page -->
+        <div id="reportsView" class="route-stub" style="display: none; padding: 24px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h1>Safety Reports</h1>
+                <div id="reports-pagination-meta" style="font-size: 0.9rem; color: #6b7280;"></div>
+            </div>
+
+            <div class="exec-table-card" style="background: #fff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); overflow: hidden;">
+                <table class="exec-table" style="width: 100%; border-collapse: collapse;">
+                    <thead style="background: #f9fafb; border-bottom: 1px solid #e5e7eb;">
+                        <tr>
+                            <th style="padding: 12px; text-align: left;">Date</th>
+                            <th style="padding: 12px; text-align: left;">Type</th>
+                            <th style="padding: 12px; text-align: left;">Location</th>
+                            <th style="padding: 12px; text-align: left;">Status</th>
+                            <th style="padding: 12px; text-align: left;">Risk Level</th>
+                            <th style="padding: 12px; text-align: left;">Risk Score</th>
+                        </tr>
+                    </thead>
+                    <tbody id="reports-body">
+                        <tr><td colspan="6" style="padding: 20px; text-align: center;">Loading reports...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div style="display: flex; justify-content: center; gap: 10px; margin-top: 20px;">
+                <button id="reports-prev" class="exec-btn" style="padding: 8px 16px; border: 1px solid #d1d5db; background: #fff; cursor: pointer;" disabled>&larr; Previous</button>
+                <span id="reports-page-info" style="padding: 8px; font-weight: 600;">Page 1</span>
+                <button id="reports-next" class="exec-btn" style="padding: 8px 16px; border: 1px solid #d1d5db; background: #fff; cursor: pointer;" disabled>Next &rarr;</button>
+            </div>
+        </div>
+
         <!-- S2 — 5x5 Risk Matrix -->
         <div class="exec-bento-half exec-card" data-section="s2">
             <div class="exec-card-header">
