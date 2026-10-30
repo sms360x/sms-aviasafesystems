@@ -38,10 +38,10 @@ class MetricsService:
             }
 
         open_count = sum(
-            1 for r in reports if r.get("status") in ("NEW", "PROCESSING")
+            1 for r in reports if r.get("status") in ("Open", "NEW", "PROCESSING")
         )
         closed_count = sum(
-            1 for r in reports if r.get("status") in ("COMPLETED", "SUBMITTED", "ARCHIVED")
+            1 for r in reports if r.get("status") in ("Closed", "COMPLETED", "SUBMITTED", "ARCHIVED")
         )
         high_risk = sum(1 for r in reports if r.get("severity") == "High")
         critical = sum(1 for r in reports if r.get("severity") == "Critical")

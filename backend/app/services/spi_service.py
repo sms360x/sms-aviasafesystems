@@ -627,7 +627,8 @@ class SPIService:
         return sum(
             1
             for r in snap["reports"]
-            if r["report_type"] == report_type and (r["created_at"] or datetime.now(timezone.utc)) >= cutoff
+            if r["report_type"] == report_type
+            and (r.get("occurrence_date") or r.get("created_at") or datetime.now(timezone.utc)) >= cutoff
         )
 
     def _risk_reduction(self, snap: Dict[str, Any]) -> float:
