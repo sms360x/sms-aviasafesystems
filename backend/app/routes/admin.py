@@ -2159,6 +2159,13 @@ async def admin_delete_user(
         pg.delete(UserProfile, "uid", target_uid)
     except Exception as e:
         logger.warning(f"PG user doc delete failed for {target_uid}: {e}")
+    # Spec #5: a deleted user must not keep a cached auth context.
+    try:
+        from app.middleware.user_context_cache import invalidate_cached_context
+
+        invalidate_cached_context(target_email)
+    except Exception:
+        pass
     try:
         db.collection(settings.FIREBASE_COLLECTION_USERS).document(target_uid).delete()
     except Exception as e:
@@ -2270,6 +2277,13 @@ async def admin_delete_user_post(
         pg.delete(UserProfile, "uid", target_uid)
     except Exception as e:
         logger.warning(f"PG user doc delete failed for {target_uid}: {e}")
+    # Spec #5: a deleted user must not keep a cached auth context.
+    try:
+        from app.middleware.user_context_cache import invalidate_cached_context
+
+        invalidate_cached_context(target_email)
+    except Exception:
+        pass
     try:
         db.collection(settings.FIREBASE_COLLECTION_USERS).document(target_uid).delete()
     except Exception as e:

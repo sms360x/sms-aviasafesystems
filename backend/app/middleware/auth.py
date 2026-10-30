@@ -22,6 +22,7 @@ from app.db.db_models import Tenant, UserProfile
 from app.db.rls import clear_current_identity, identity_from_user, set_current_identity
 from app.firebase import verify_firebase_token
 from app.middleware.tenant_status_cache import get_status, set_status
+from app.middleware.user_context_cache import get_cached_context, set_cached_context
 from app.services.tenant_service import get_tenant_slug_from_email
 
 security = HTTPBearer()
@@ -78,7 +79,15 @@ def resolve_user_context(email: str) -> Dict[str, Any]:
     substrate only and is NOT read on any operational path. A missing users
     row yields ``role=None`` / ``tenant_id=None`` and a WARN log; protected
     endpoints then deny.
+
+    Spec #5: resolved contexts are cached for a short TTL
+    (middleware/user_context_cache), keyed by email. A hit skips both the
+    ``users`` and the ``tenants`` lookups; user writes invalidate the entry.
     """
+    cached = get_cached_context(email)
+    if cached is not None:
+        return cached
+
     urow = None
     if email:
         try:
@@ -88,6 +97,8 @@ def resolve_user_context(email: str) -> Dict[str, Any]:
 
     if urow is None:
         logger.warning(f"No users row for user (email={email}).")
+        # Negative results are deliberately not cached: a newly provisioned
+        # user must be able to authenticate on the next request.
         return {"role": None, "tenant_id": None}
 
     ctx = {
@@ -100,7 +111,8 @@ def resolve_user_context(email: str) -> Dict[str, Any]:
     department = urow.get("department")
     if department:
         ctx["department"] = department
-    return ctx
+    set_cached_context(email, ctx)
+    return dict(ctx)
 
 
 SUSPENDED_TENANT_DETAIL = (

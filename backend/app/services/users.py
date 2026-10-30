@@ -161,6 +161,15 @@ def upsert_user_doc(
         logger.error(f"PG mirror upsert failed for {uid}: {e}")
         raise
 
+    # Spec #5: role/tenant/department changes must not wait out the auth
+    # cache TTL — drop the cached context for this email immediately.
+    try:
+        from app.middleware.user_context_cache import invalidate_cached_context
+
+        invalidate_cached_context(email)
+    except Exception:
+        pass
+
     verify = pg.fetch_by(UserProfile, "uid", uid)
     if verify is None:
         _dlq_user_mirror(uid, "row missing after upsert")
