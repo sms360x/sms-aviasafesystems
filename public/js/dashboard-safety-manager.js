@@ -506,7 +506,7 @@
             // nav-config.js role-based NAV_CONFIG).
             var flatNav = [
                 // KPIs
-                { id: 'dashboard', label: 'KPIs', href: '#dashboard', icon: 'fa-table-columns', section: 'KPIs' },
+                { id: 'dashboard', label: 'Home', href: '#dashboard', icon: 'fa-table-columns', section: 'Home' },
 
                 // SMS MATURITY
                 { id: 'surveys', label: 'SMS Survey', href: '#surveys', icon: 'fa-square-poll-vertical', section: 'SMS Maturity' },
@@ -519,7 +519,7 @@
                 // WORKSPACE
                 { id: 'data-management', label: 'Data Management', href: '#data-management', icon: 'fa-database', section: 'Workspace' },
                 { id: 'admin', label: 'Settings', href: '#settings', icon: 'fa-gear' },
-                { id: 'logout', label: 'Logout', href: '#logout', icon: 'fa-right-from-bracket' }
+                { id: 'audit', label: 'Audit & Inspection', href: '#audit', icon: 'fa-clipboard-list' }
             ];
 
             if (window.ExecutiveShell && typeof window.ExecutiveShell.init === 'function') {
@@ -590,7 +590,8 @@
         'surveys':          'surveysView',
         'meetings':         'meetingsView',
         'admin':            'adminView',
-        'data-management':  'dataManagementView'
+        'data-management':  'dataManagementView',
+        'audit':            'auditView'
     };
 
     function applyRoute() {
@@ -606,7 +607,7 @@
             stubContainer.style.display = 'none';
             
             var routes = ['hazards', 'assurance', 'performance', 'actions',
-                          'compliance', 'surveys', 'meetings', 'admin', 'data-management'];
+                          'compliance', 'surveys', 'meetings', 'admin', 'data-management', 'audit'];
             var titles = ['Hazards & Risks', 'Safety Assurance', 'Safety Performance',
                           'Actions', 'Compliance', 'Surveys', 'Meetings', 'Settings', 'Data Management'];
             // placeholder content for data-management
@@ -622,6 +623,8 @@
             }
             var dmView = document.getElementById('data-managementView');
             if (dmView) dmView.innerHTML = '<h1>Data Management</h1><p>Data Management: Upload via ETLx Studio and Download Live Data coming soon.</p>';
+            var auditView = document.getElementById('auditView');
+            if (auditView) auditView.innerHTML = '<h1>Audit & Inspection</h1><p>Last Audit Date: —</p><p>Next Audit Date: —</p>';
             execContent.appendChild(stubContainer);
         }
 
