@@ -525,6 +525,45 @@ async def get_sms_health(
     })
 
 
+@router.get("/needs-attention")
+async def get_needs_attention(
+    days: int = Query(90, ge=0, le=730),
+    user: Dict[str, Any] = Depends(get_tenant_user),
+):
+    from app.db.db_models import ActionItem, Hazard, Tenant
+    from app.db.session import session_scope
+    from app.db.runner import run as _run
+    from datetime import datetime, timezone
+
+    tenant_slug = user.get("tenant_id")
+    items = []
+    try:
+        async def _fetch():
+            async with session_scope() as session:
+                from sqlalchemy import select
+                trow = (await session.execute(select(Tenant).where(Tenant.slug == tenant_slug))).scalar_one_or_none()
+                if not trow:
+                    return items
+                tid = trow.id
+                now = datetime.now(timezone.utc)
+                hazards = (await session.execute(
+                    select(Hazard).where(Hazard.tenant_id == tid, Hazard.risk_level.in_(["High", "Critical"]), Hazard.status == "Open")
+                )).scalars().all()
+                for h in hazards[:5]:
+                    items.append({"type": "Hazard", "message": f"High risk hazard {h.hazard_id} requires review", "link": "#hazards"})
+                actions = (await session.execute(
+                    select(ActionItem).where(ActionItem.tenant_id == tid, ActionItem.status != "Closed", ActionItem.due_date < now)
+                )).scalars().all()
+                for a in actions[:5]:
+                    items.append({"type": "Action", "message": "Overdue action requires attention", "link": "#actions"})
+            return items
+
+        result = _run(_fetch())
+    except Exception as e:
+        result = []
+    return _envelope(result[:5])
+
+
 # ======================================================================
 # CAAN Dashboard (cross-tenant, aggregated)
 # ======================================================================

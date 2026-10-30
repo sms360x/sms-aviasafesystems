@@ -401,6 +401,23 @@
         });
     }
 
+    function renderNeedsAttention(result) {
+        var container = document.getElementById('s6-attention');
+        if (!container) return;
+        var data = (result && result.ok) ? result.data : null;
+        var items = Array.isArray(data) ? data : (data && data.items) || [];
+        if (!items.length) {
+            container.innerHTML = '<div style="color:#16a34a;"><i class="fas fa-check-circle"></i> All clear! No urgent actions or high-risk items.</div>';
+            return;
+        }
+        container.innerHTML = items.map(function (it) {
+            return '<div class="exec-alert-card" style="background:#fef2f2;border-left:4px solid #dc2626;padding:8px;margin-bottom:6px;">' +
+                '<span>' + (it.message || '') + '</span> ' +
+                '<a href="#" onclick="window.location.hash=\'' + (it.link || '#') + '\';return false;" style="color:#dc2626;font-weight:600;">View</a>' +
+                '</div>';
+        }).join('');
+    }
+
     function renderRecent(recent) {
         var tbody = document.getElementById('s6-body');
         if (!tbody) return;
@@ -766,6 +783,7 @@
         var tasks = {
             overview: ApiClient.get('/api/v1/dashboard/overview?days=' + days),
             smsHealth: ApiClient.get('/api/v1/dashboard/sms-health?days=' + days),
+            needsAttention: ApiClient.get('/api/v1/dashboard/needs-attention?days=' + days),
             trends: ApiClient.get('/api/v1/dashboard/trends?days=180'),
             riskMatrix: ApiClient.get('/api/v1/dashboard/risk-matrix'),
             keyIssues: ApiClient.get('/api/v1/dashboard/key-issues?days=90&limit=5'),
@@ -791,6 +809,7 @@
         renderHazards(results.keyIssues);
         renderDonut(results.actionCompletion);
         renderSmsComponents(results.smsHealth);
+        renderNeedsAttention(results.needsAttention);
         renderRecent(results.recent);
         renderSpis(results.spi, tenant);
     }
