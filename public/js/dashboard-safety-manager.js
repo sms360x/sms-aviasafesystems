@@ -519,6 +519,15 @@
 
             applyRoute();
 
+            // Spec #4e — Reports type filter (VSR/MOR): reset to page 1 on change.
+            var reportsTypeFilter = document.getElementById('reports-type-filter');
+            if (reportsTypeFilter && !reportsTypeFilter.dataset.wired) {
+                reportsTypeFilter.dataset.wired = '1';
+                reportsTypeFilter.addEventListener('change', function () {
+                    renderReports(1);
+                });
+            }
+
             if (!window.__sms360x_loaded) {
                 window.__sms360x_loaded = true;
             }
@@ -533,7 +542,14 @@
             DateRangeFilter.mount('#dateFilterContainer', {
                 defaultDays: 90,
                 onChange: function (days) {
-                    loadAll(tenant, days);
+                    // Spec #4e — same date window drives both the dashboard and
+                    // the Reports table.
+                    var route = (window.location.hash || '').replace(/^#/, '');
+                    if (route === 'reports') {
+                        renderReports(1);
+                    } else {
+                        loadAll(tenant, days);
+                    }
                 }
             });
         });
@@ -614,6 +630,8 @@
                 stubContainer.style.display = '';
                 target.style.display = 'block';
                 if (hash === 'reports') {
+                    // The global DateRangeFilter drives the Reports window too.
+                    if (dateFilter) dateFilter.style.display = 'flex';
                     renderReports(1);
                 }
             }
@@ -648,8 +666,21 @@
         nextBtn.disabled = true;
 
         var days = 90;
+        if (window.DateRangeFilter && typeof window.DateRangeFilter.getCurrentDays === 'function') {
+            days = DateRangeFilter.getCurrentDays();
+        }
+        // Backend accepts days 1..365; the filter's "All Time" (0) maps to the max.
+        if (!days || days < 1) days = 365;
+        if (days > 365) days = 365;
+
+        // Spec #4e — VSR (voluntary) / MOR (mandatory) type filter.
+        var typeEl = document.getElementById('reports-type-filter');
+        var reportType = typeEl ? typeEl.value : '';
+        if (reportType !== 'voluntary' && reportType !== 'mandatory') reportType = '';
+
         var pageSize = 20;
         var path = '/api/v1/reports/?days=' + days + '&page=' + page + '&page_size=' + pageSize;
+        if (reportType) path += '&report_type=' + encodeURIComponent(reportType);
 
         (async function () {
             var token = await ApiClient._getToken();
