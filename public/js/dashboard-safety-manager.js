@@ -582,6 +582,12 @@
             execContent.appendChild(stubContainer);
         }
 
+        // Spec #4e — Reparent hand-written views out of the hidden dashboard container
+        var reportsView = document.getElementById('reportsView');
+        if (reportsView && reportsView.parentElement !== stubContainer) {
+            stubContainer.appendChild(reportsView);
+        }
+
         // 2. Hide ALL views (dashboard children + stubs) — NOT execContent itself
         var dashHeader = execContent.querySelector('.exec-page-header');
         var dashBento = execContent.querySelector('.exec-bento');
