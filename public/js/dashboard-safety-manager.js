@@ -506,7 +506,7 @@
             // nav-config.js role-based NAV_CONFIG).
             var flatNav = [
                 // KPIs
-                { id: 'dashboard', label: 'Home', href: '#dashboard', icon: 'fa-table-columns', section: 'Home' },
+                { id: 'dashboard', label: 'KPIs', href: '#dashboard', icon: 'fa-table-columns', section: 'Home' },
 
                 // SMS MATURITY
                 { id: 'surveys', label: 'SMS Survey', href: '#surveys', icon: 'fa-square-poll-vertical', section: 'SMS Maturity' },
