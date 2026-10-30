@@ -134,10 +134,16 @@ async def _get_reports_async(
     page: int = 1,
     page_size: int = 20,
 ) -> dict:
-    stmt = select(Report).where(Report.is_demo == demo_scope())
+    stmt = select(Report)
     if not cross_tenant:
+        # Spec #4f — Tenant-scoped reads surface every row the tenant owns (both
+        # demo and production scope) so admin-seeded demo data stays visible on
+        # the operator Reports page, matching the dashboard query
+        # (repository.ReportRepository.get_all_in_range). Strict demo_scope()
+        # isolation still applies to cross-tenant / system-level reads below.
         stmt = stmt.where(Report.tenant_id == tenant_uuid_value)
     else:
+        stmt = stmt.where(Report.is_demo == demo_scope())
         # VSR (voluntary) is never cross-tenant visible: a VSR is the source of
         # a hazard, and only the hazard is state-facing. MOR/other types remain
         # cross-tenant visible.
