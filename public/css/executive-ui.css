@@ -330,7 +330,14 @@ body.executive-layout {
 /* ─── Stub badge (not-yet-wired sections) ────────────────────────────────── */
 .exec-stub-badge { display: inline-flex; align-items: center; gap: 0.3rem; padding: 0.2rem 0.65rem; border-radius: 999px; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; background: var(--exec-warning-soft); color: var(--exec-warning); }
 
-/* ===== KPI Cards (Section 1) ===== */
+/* ===== Responsive: SMS Component donut grid ===== */
+@media (max-width: 768px) {
+    .exec-donut-grid { grid-template-columns: repeat(2, 1fr) !important; }
+}
+@media (max-width: 480px) {
+    .exec-donut-grid { grid-template-columns: 1fr !important; }
+    .exec-donut-canvas { max-width: 140px; }
+}
 .exec-kpi-row {
     display: grid;
     grid-template-columns: repeat(5, 1fr);
