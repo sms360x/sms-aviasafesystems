@@ -293,7 +293,7 @@ async def submit_vsr(
 
 @router.get("/", response_model=dict)
 async def get_reports(
-    days: int = Query(90, ge=1, le=365),
+    days: int = Query(90, ge=0, le=365),
     report_type: str = Query(None, description="Filter by 'voluntary' or 'mandatory'"),
     status: str = Query(None, description="Filter by status (e.g. open/closed)"),
     page: int = Query(1, ge=1),
