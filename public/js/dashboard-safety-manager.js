@@ -505,21 +505,20 @@
             // Hardcoded executive navigation (SME reference; replaces legacy
             // nav-config.js role-based NAV_CONFIG).
             var flatNav = [
-                // DASHBOARD
-                { id: 'dashboard', label: 'Dashboard', href: '#dashboard', icon: 'fa-table-columns', section: 'Dashboard' },
+                // KPIs
+                { id: 'dashboard', label: 'KPIs', href: '#dashboard', icon: 'fa-table-columns', section: 'KPIs' },
 
-                // MODULE A
-                { id: 'surveys', label: 'SMS Survey', href: '#surveys', icon: 'fa-square-poll-vertical', section: 'Module A: SMS Survey' },
+                // SMS MATURITY
+                { id: 'surveys', label: 'SMS Survey', href: '#surveys', icon: 'fa-square-poll-vertical', section: 'SMS Maturity' },
 
-                // MODULE B
-                { id: 'reports', label: 'Reports', href: '#reports', icon: 'fa-file-lines', section: 'Module B: Hazard & Risk' },
+                // SAFETY RISK MANAGEMENT
+                { id: 'reports', label: 'Reports', href: '#reports', icon: 'fa-file-lines', section: 'Safety Risk Management' },
                 { id: 'hazards', label: 'Hazards & Risks', href: '#hazards', icon: 'fa-triangle-exclamation' },
                 { id: 'actions', label: 'Actions', href: '#actions', icon: 'fa-clipboard-check' },
 
                 // WORKSPACE
                 { id: 'data-management', label: 'Data Management', href: '#data-management', icon: 'fa-database', section: 'Workspace' },
-                { id: 'meetings', label: 'Meetings', href: '#meetings', icon: 'fa-users' },
-                { id: 'admin', label: 'Settings', href: '#admin', icon: 'fa-gear' },
+                { id: 'admin', label: 'Settings', href: '#settings', icon: 'fa-gear' },
                 { id: 'logout', label: 'Logout', href: '#logout', icon: 'fa-right-from-bracket' }
             ];
 

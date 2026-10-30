@@ -71,8 +71,9 @@ body.executive-layout {
 .exec-nav-item.active { background: #1d5949; color: #fff; font-weight: 600; }
 .exec-nav-item i { width: 18px; text-align: center; opacity: 0.9; }
 .exec-nav-section {
-    font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.6px;
-    color: var(--exec-text-muted); padding: 0.75rem 1rem 0.35rem; font-weight: 700;
+    font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.6px;
+    color: #5a6b7c; padding: 0.75rem 1rem 0.35rem; font-weight: 700;
+    margin-top: 1.5rem;
 }
 
 .exec-main { margin-left: var(--exec-sidebar-width); min-height: 100vh; display: flex; flex-direction: column; }
