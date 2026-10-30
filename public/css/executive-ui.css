@@ -341,12 +341,10 @@ body.executive-layout {
 }
 .exec-kpi-row {
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 16px;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
     margin-bottom: 24px;
 }
-@media (max-width: 1400px) { .exec-kpi-row { grid-template-columns: repeat(3, 1fr); } }
-@media (max-width: 900px)  { .exec-kpi-row { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 600px)  { .exec-kpi-row { grid-template-columns: 1fr; } }
 
 .exec-kpi-card {
