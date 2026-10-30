@@ -1,4 +1,4 @@
-# AviaSAFE SMS Platform
+# SMS360X Platform
 
 A multi-tenant aviation **Safety Management System (SMS) intelligence platform** for Nepal,
 aligned with **ICAO Annex 19**, **ICAO Doc 9859**, and **CAAN CAR-19**.
