@@ -527,6 +527,13 @@
                     renderReports(1);
                 });
             }
+            var reportsStatusFilter = document.getElementById('reports-status-filter');
+            if (reportsStatusFilter && !reportsStatusFilter.dataset.wired) {
+                reportsStatusFilter.dataset.wired = '1';
+                reportsStatusFilter.addEventListener('change', function () {
+                    renderReports(1);
+                });
+            }
 
             if (!window.__sms360x_loaded) {
                 window.__sms360x_loaded = true;
@@ -678,9 +685,14 @@
         var reportType = typeEl ? typeEl.value : '';
         if (reportType !== 'voluntary' && reportType !== 'mandatory') reportType = '';
 
+        var statusEl = document.getElementById('reports-status-filter');
+        var statusVal = statusEl ? statusEl.value : '';
+        if (statusVal !== 'open' && statusVal !== 'closed') statusVal = '';
+
         var pageSize = 20;
         var path = '/api/v1/reports/?days=' + days + '&page=' + page + '&page_size=' + pageSize;
         if (reportType) path += '&report_type=' + encodeURIComponent(reportType);
+        if (statusVal) path += '&status=' + encodeURIComponent(statusVal);
 
         (async function () {
             var token = await ApiClient._getToken();

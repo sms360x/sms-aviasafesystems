@@ -53,7 +53,7 @@ window.ExecutiveShell = (function () {
         return '<header class="exec-topbar">' +
             '<button type="button" class="exec-menu-toggle" onclick="ExecutiveShell.toggleSidebar()" style="background:none;border:none;font-size:1.2rem;cursor:pointer;color:#192f35;display:none;" aria-label="Toggle menu"><i class="fas fa-bars"></i></button>' +
             tenantLabel +
-            '<div class="exec-topbar-search"><i class="fas fa-search"></i><input type="search" placeholder="Search safety insights..."></div>' +
+            '<div class="exec-topbar-search" style="display: none;"><i class="fas fa-search"></i><input type="search" placeholder="Search safety insights..."></div>' +
             '<div class="exec-topbar-actions"><div class="exec-user-profile"><div class="exec-user-avatar">' + esc(initial) + '</div><span style="font-size:0.85rem;font-weight:600;color:#192f35;">' + esc(state.role || 'User') + '</span></div></div>' +
             '</header>';
     }

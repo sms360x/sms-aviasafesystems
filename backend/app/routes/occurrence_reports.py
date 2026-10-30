@@ -295,6 +295,7 @@ async def submit_vsr(
 async def get_reports(
     days: int = Query(90, ge=1, le=365),
     report_type: str = Query(None, description="Filter by 'voluntary' or 'mandatory'"),
+    status: str = Query(None, description="Filter by status (e.g. open/closed)"),
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
     user: Dict[str, Any] = Depends(get_current_user),
@@ -322,7 +323,7 @@ async def get_reports(
     # ReportService.get_reports is the sync facade over the async engine
     # (app.db.runner) — it returns the pagination dict directly.
     result = service.get_reports(
-        user, days=days, report_type=report_type, page=page, page_size=page_size)
+        user, days=days, report_type=report_type, status=status, page=page, page_size=page_size)
 
     return {
         "status": "success",

@@ -132,6 +132,7 @@ async def _get_reports_async(
     tenant_uuid_value: uuid.UUID,
     days: int = 90,
     report_type: Optional[str] = None,
+    status: Optional[str] = None,
     page: int = 1,
     page_size: int = 20,
     demo_fallback_used: bool = False,
@@ -161,6 +162,8 @@ async def _get_reports_async(
     stmt = stmt.where(Report.created_at >= cutoff)
     if report_type:
         stmt = stmt.where(Report.report_type == report_type)
+    if status:
+        stmt = stmt.where(Report.status == status)
     stmt = stmt.order_by(Report.created_at.desc())
     # Single round trip: the window count covers the full filtered set
     # (window functions evaluate before LIMIT/OFFSET). A separate count query
@@ -499,6 +502,7 @@ class ReportService:
         self, user: dict,
         days: int = 90,
         report_type: Optional[str] = None,
+        status: Optional[str] = None,
         page: int = 1,
         page_size: int = 20,
     ) -> dict:
@@ -516,7 +520,7 @@ class ReportService:
                 tid = register_tenant(read_slug)
             return run(_get_reports_async(
                 self, cross_tenant, tid,
-                days=days, report_type=report_type,
+                days=days, report_type=report_type, status=status,
                 page=page, page_size=page_size,
                 demo_fallback_used=demo_fallback_used,
             ))
