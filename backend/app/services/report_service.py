@@ -457,7 +457,12 @@ class ReportService:
                 values[key] = _json_safe(raw) if raw is not None else None
                 continue
             if key == "status":
-                values[key] = payload.get("status", "NEW")
+                raw_status = payload.get("status", "Open")
+                norm = str(raw_status or "").strip().lower()
+                if norm in ("closed",):
+                    values[key] = "Closed"
+                else:
+                    values[key] = "Open"
                 continue
             if key == "ai_status":
                 values[key] = payload.get("ai_status", "PENDING")

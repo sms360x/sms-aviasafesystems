@@ -687,7 +687,7 @@
 
         var statusEl = document.getElementById('reports-status-filter');
         var statusVal = statusEl ? statusEl.value : '';
-        if (statusVal !== 'open' && statusVal !== 'closed') statusVal = '';
+        if (statusVal !== 'Open' && statusVal !== 'Closed') statusVal = '';
 
         var pageSize = 20;
         var path = '/api/v1/reports/?days=' + days + '&page=' + page + '&page_size=' + pageSize;

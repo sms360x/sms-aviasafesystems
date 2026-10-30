@@ -16,6 +16,8 @@ class ReportStatus(str, Enum):
     SUBMITTED = "SUBMITTED"
     FAILED = "FAILED"
     ARCHIVED = "ARCHIVED"
+    OPEN = "Open"
+    CLOSED = "Closed"
 
 
 class AiStatus(str, Enum):
