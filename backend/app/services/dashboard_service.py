@@ -14,13 +14,13 @@ from collections import defaultdict
 from typing import Dict, Any, List, Optional
 from loguru import logger
 
-from sqlalchemy import func, select
+from sqlalchemy import func, or_, select
 
 from app.core.config import settings
 from app.db import pg
 from app.db.db_models import Cap, FlightDiversion, Hazard, Report, StateRiskRegisterEntry, Survey, SurveyResponse, Tenant
 from app.db.ids import register_tenant, tenant_slug, tenant_uuid
-from app.db.isolation import demo_scope
+from app.db.isolation import demo_scope, PERMANENT_TENANT_SLUGS
 from app.db.runner import run
 from app.db.session import session_scope
 from app.services.repository import ReportRepository, ReportFilter
@@ -1049,7 +1049,13 @@ class DashboardService:
 
         async def _fetch() -> List[Dict[str, Any]]:
             async with session_scope() as session:
-                stmt = select(Survey).where(Survey.is_demo == demo_scope())
+                permanent_tenant_ids = select(Tenant.id).where(Tenant.slug.in_(list(PERMANENT_TENANT_SLUGS)))
+                stmt = select(Survey).where(
+                    or_(
+                        Survey.is_demo == demo_scope(),
+                        Survey.tenant_id.in_(permanent_tenant_ids),
+                    )
+                )
                 if cutoff:
                     stmt = stmt.where(Survey.submitted_at >= cutoff)
                 rows = (await session.scalars(stmt)).all()
@@ -1088,7 +1094,12 @@ class DashboardService:
 
         async def _fetch() -> List[str]:
             async with session_scope() as session:
-                stmt = select(SurveyResponse).where(SurveyResponse.is_demo == demo_scope())
+                stmt = select(SurveyResponse).where(
+                    or_(
+                        SurveyResponse.is_demo == demo_scope(),
+                        SurveyResponse.tenant_id.in_(select(Tenant.id).where(Tenant.slug.in_(list(PERMANENT_TENANT_SLUGS)))),
+                    )
+                )
                 if cutoff:
                     stmt = stmt.where(SurveyResponse.submitted_at >= cutoff)
                 rows = (await session.scalars(stmt)).all()
