@@ -407,7 +407,7 @@
         var data = (result && result.ok) ? result.data : null;
         var items = Array.isArray(data) ? data : (data && data.items) || [];
         if (!items.length) {
-            container.innerHTML = '<div style="color:#16a34a;"><i class="fas fa-check-circle"></i> All clear! No urgent actions or high-risk items.</div>';
+            container.innerHTML = '<div style="color:#166534;font-size:1.05rem;padding:1rem 1.5rem;"><i class="fas fa-check-circle"></i> ✅ All clear! No urgent actions or high-risk items.</div>';
             return;
         }
         container.innerHTML = items.map(function (it) {
