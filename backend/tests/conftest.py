@@ -48,6 +48,21 @@ def _disable_onboarding_hazard_seed(monkeypatch):
 
 
 @pytest.fixture(autouse=True)
+def _disable_demo_fallback(monkeypatch):
+    """Spec #6 - production reads fall back to the global demo tenant while a
+    tenant owns zero reports. The local/dev database already holds the seeded
+    pilot tenant, so leaving this on would make unrelated tests read that live
+    data instead of their own fixtures. The dedicated spec test re-enables it.
+    """
+    from app.services import demo_fallback
+
+    demo_fallback.invalidate()
+    monkeypatch.setattr(settings, "GLOBAL_DEMO_FALLBACK_ENABLED", False)
+    yield
+    demo_fallback.invalidate()
+
+
+@pytest.fixture(autouse=True)
 def _fresh_tenant_status_cache():
     """The tenant-status cache lives in a module global keyed by tenant slug,
     so a status cached by one test (e.g. SUSPENDED for a slug) can poison a

@@ -37,6 +37,12 @@ services:
         value: "true"
       - key: REDIS_URL
         sync: false
+      # Spec #6 - newly onboarded tenants see the seeded pilot tenant's data
+      # until they create their first report. Set ENABLED=false to disable.
+      - key: GLOBAL_DEMO_TENANT_ID
+        value: sita-air
+      - key: GLOBAL_DEMO_FALLBACK_ENABLED
+        value: "true"
 
       # ── Firebase Admin SDK (Auth-only; Firestore deprec. phase C 2026-09) ──
       - key: FIREBASE_PROJECT_ID

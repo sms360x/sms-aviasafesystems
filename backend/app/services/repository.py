@@ -8,6 +8,7 @@ from app.db import pg
 from app.db.db_models import Report as PgReport
 from app.db.ids import tenant_uuid
 from app.db.isolation import demo_scope
+from app.services import demo_fallback
 
 
 def coerce_utc_datetime(value) -> Optional[datetime]:
@@ -167,63 +168,23 @@ class ReportRepository:
             return cached[1]
 
         try:
-            where = []
-            if not filter.cross_tenant and filter.tenant_id:
-                # Tenant-scoped reads surface every row the tenant owns (both
-                # demo and production scope) so admin-seeded dummy data stays
-                # visible on the operator dashboard — the same rule the hazard
-                # stats and master-register reads already apply. Strict
-                # demo_scope() isolation is preserved for cross-tenant /
-                # system-level reads so no demo data leaks between clusters.
-                try:
-                    where.append(PgReport.tenant_id == tenant_uuid(filter.tenant_id))
-                except Exception:
-                    where.append(PgReport.is_demo == demo_scope())
-            else:
-                where.append(PgReport.is_demo == demo_scope())
-            if filter.report_type:
-                where.append(PgReport.report_type == filter.report_type)
-            if filter.status:
-                where.append(PgReport.status == filter.status)
-            if filter.severity:
-                where.append(PgReport.severity == filter.severity)
-            if filter.occurrence_type:
-                where.append(PgReport.occurrence_type == filter.occurrence_type)
+            results = self._fetch_reports(filter)
 
-            # Push the Python-side date range into SQL so tenant-scoped reads
-            # are bounded by the (tenant_id, created_at) index instead of
-            # pulling every tenant row and discarding out-of-window rows in
-            # Python. The typed sort columns are non-null so the predicate is
-            # equivalent to the Python coerce-UTC comparison below (inclusive).
-            if filter.date_from or filter.date_to:
-                if filter.sort_by in ("created_at", "occurrence_date", "updated_at"):
-                    date_col = getattr(PgReport, filter.sort_by)
-                    if filter.date_from:
-                        where.append(date_col >= filter.date_from)
-                    if filter.date_to:
-                        where.append(date_col <= filter.date_to)
-
-            rows = pg.fetch_all(PgReport, where=where)
-            results: List[Dict[str, Any]] = []
-            for r in rows:
-                d = dict(r)
-                self._serialize_timestamps(d)
-                # Date range filtering (applies to sort_by field)
-                if filter.date_from or filter.date_to:
-                    dt = coerce_utc_datetime(d.get(filter.sort_by))
-                    if dt is None:
-                        # fallback to occurrence_date/created_at
-                        dt = coerce_utc_datetime(d.get("created_at")) or coerce_utc_datetime(d.get("occurrence_date"))
-                    if not self._doc_in_date_range(dt, filter.date_from, filter.date_to):
-                        continue
-                results.append(d)
-
-            # Sorting
-            reverse = filter.sort_order == "desc"
-            def _sort_key(x):
-                v = coerce_utc_datetime(x.get(filter.sort_by)) or coerce_utc_datetime(x.get("created_at"))
-                return v or datetime.min.replace(tzinfo=timezone.utc)
-            results.sort(key=_sort_key, reverse=reverse)
+            # Spec #6 - global demo fallback. Only a tenant-scoped read whose
+            # caller owns ZERO reports falls back to the demo tenant; the probe
+            # is "owns any report", so a report outside the requested date
+            # window still closes the fallback. cross_tenant/system reads never
+            # fall back, and rows are marked so the frontend can label them.
+            if not results and not filter.cross_tenant and filter.tenant_id:
+                demo_slug = demo_fallback.fallback_tenant_for(filter.tenant_id)
+                if demo_slug:
+                    logger.info(
+                        f"Demo fallback: tenant_id={filter.tenant_id} owns no "
+                        f"reports; serving demo tenant {demo_slug}"
+                    )
+                    results = self._fetch_reports(filter, tenant_id=demo_slug)
+                    for item in results:
+                        item["demo_fallback"] = True
 
             if limit:
                 results = results[:limit]
@@ -237,11 +198,87 @@ class ReportRepository:
             logger.error(f"ReportRepository.get_all_in_range failed: {e}")
             raise
 
-    def invalidate_cache(self, prefix: Optional[str] = None):
-        if prefix:
-            self._cache = {k: v for k, v in self._cache.items() if not k.startswith(prefix)}
+    def _fetch_reports(
+        self, filter: ReportFilter, tenant_id: Optional[str] = None
+    ) -> List[Dict[str, Any]]:
+        """Fetch + shape + sort one tenant's reports (the demo fallback reuses
+        this with ``tenant_id`` set to the demo tenant)."""
+        effective_tenant = tenant_id if tenant_id is not None else filter.tenant_id
+
+        where: List[Any] = []
+        if not filter.cross_tenant and effective_tenant:
+            # Tenant-scoped reads surface every row the tenant owns (both
+            # demo and production scope) so admin-seeded dummy data stays
+            # visible on the operator dashboard - the same rule the hazard
+            # stats and master-register reads already apply. Strict
+            # demo_scope() isolation is preserved for cross-tenant /
+            # system-level reads so no demo data leaks between clusters.
+            try:
+                where.append(PgReport.tenant_id == tenant_uuid(effective_tenant))
+            except Exception:
+                where.append(PgReport.is_demo == demo_scope())
         else:
-            self._cache.clear()
+            where.append(PgReport.is_demo == demo_scope())
+        if filter.report_type:
+            where.append(PgReport.report_type == filter.report_type)
+        if filter.status:
+            where.append(PgReport.status == filter.status)
+        if filter.severity:
+            where.append(PgReport.severity == filter.severity)
+        if filter.occurrence_type:
+            where.append(PgReport.occurrence_type == filter.occurrence_type)
+
+        # Push the Python-side date range into SQL so tenant-scoped reads
+        # are bounded by the (tenant_id, created_at) index instead of
+        # pulling every tenant row and discarding out-of-window rows in
+        # Python. The typed sort columns are non-null so the predicate is
+        # equivalent to the Python coerce-UTC comparison below (inclusive).
+        if filter.date_from or filter.date_to:
+            if filter.sort_by in ("created_at", "occurrence_date", "updated_at"):
+                date_col = getattr(PgReport, filter.sort_by)
+                if filter.date_from:
+                    where.append(date_col >= filter.date_from)
+                if filter.date_to:
+                    where.append(date_col <= filter.date_to)
+
+        rows = pg.fetch_all(PgReport, where=where)
+        results: List[Dict[str, Any]] = []
+        for r in rows:
+            d = dict(r)
+            self._serialize_timestamps(d)
+            # Date range filtering (applies to sort_by field)
+            if filter.date_from or filter.date_to:
+                dt = coerce_utc_datetime(d.get(filter.sort_by))
+                if dt is None:
+                    # fallback to occurrence_date/created_at
+                    dt = coerce_utc_datetime(d.get("created_at")) or coerce_utc_datetime(d.get("occurrence_date"))
+                if not self._doc_in_date_range(dt, filter.date_from, filter.date_to):
+                    continue
+            results.append(d)
+
+        # Sorting
+        reverse = filter.sort_order == "desc"
+
+        def _sort_key(x):
+            v = coerce_utc_datetime(x.get(filter.sort_by)) or coerce_utc_datetime(x.get("created_at"))
+            return v or datetime.min.replace(tzinfo=timezone.utc)
+
+        results.sort(key=_sort_key, reverse=reverse)
+        return results
+
+    def invalidate_cache(self, prefix: Optional[str] = None):
+        # `_cache` is a CLASS attribute shared by every ReportRepository
+        # instance (services construct short-lived instances), so mutate it in
+        # place. Rebinding `self._cache` only shadowed the class attribute on a
+        # throwaway instance, leaving stale results - including a demo fallback
+        # - visible until the TTL expired. Spec #6 requires the fallback to
+        # close immediately when the tenant's first report is created.
+        cache = type(self)._cache
+        if prefix:
+            for key in [k for k in cache if k.startswith(prefix)]:
+                cache.pop(key, None)
+        else:
+            cache.clear()
         logger.debug("Repository cache invalidated")
 
     def get_by_id(self, report_id: str, filter: ReportFilter) -> Optional[Dict[str, Any]]:

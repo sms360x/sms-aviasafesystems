@@ -30,6 +30,7 @@ from app.db.isolation import demo_scope
 from app.db.runner import run
 from app.db.session import session_scope
 from app.services.gemini import analyze_report, classify_mandatory
+from app.services import demo_fallback
 from app.services.repository import ReportRepository, coerce_utc_datetime
 from app.services.risk_matrix import (
     compute_risk_index,
@@ -133,14 +134,21 @@ async def _get_reports_async(
     report_type: Optional[str] = None,
     page: int = 1,
     page_size: int = 20,
+    demo_fallback_used: bool = False,
 ) -> dict:
     stmt = select(Report)
     if not cross_tenant:
-        # Spec #4f — Tenant-scoped reads surface every row the tenant owns (both
+        # Spec #4f - Tenant-scoped reads surface every row the tenant owns (both
         # demo and production scope) so admin-seeded demo data stays visible on
         # the operator Reports page, matching the dashboard query
         # (repository.ReportRepository.get_all_in_range). Strict demo_scope()
         # isolation still applies to cross-tenant / system-level reads below.
+        #
+        # Spec #6 - `get_reports` resolves the effective read tenant before
+        # dispatching here: a tenant that owns no report reads the global demo
+        # tenant's rows instead. Resolution happens in the sync facade so the
+        # "owns any report?" probe reuses the hot bridge-loop connection rather
+        # than opening a second one from inside this coroutine.
         stmt = stmt.where(Report.tenant_id == tenant_uuid_value)
     else:
         stmt = stmt.where(Report.is_demo == demo_scope())
@@ -167,13 +175,18 @@ async def _get_reports_async(
         )).all()
 
     total = rows[0][1] if rows else 0
-    return {
+    result = {
         "items": [_report_to_dict(r[0]) for r in rows],
         "total": total,
         "page": page,
         "page_size": page_size,
         "pages": math.ceil(total / page_size) if total > 0 else 0,
     }
+    if demo_fallback_used:
+        # Additive marker only: the payload shape is unchanged, so existing
+        # clients keep working while the UI can label the rows as demo data.
+        result["demo_fallback"] = True
+    return result
 
 
 async def _get_report_async(self, tenant_uuid_value: Optional[uuid.UUID], report_uuid: uuid.UUID, cross_tenant: bool = False):
@@ -477,6 +490,9 @@ class ReportService:
 
         logger.info(f"Report {report_id} created for tenant {self.tenant_id}")
         ReportRepository().invalidate_cache(prefix=f"{self.tenant_id}::")
+        # Spec #6: the first real report closes the demo fallback immediately
+        # (the report list probe is cached for a short TTL).
+        demo_fallback.invalidate(self.tenant_id)
         return data
 
     def get_reports(
@@ -489,12 +505,20 @@ class ReportService:
         try:
             cross_tenant = user.get("role") in settings.CROSS_TENANT_ROLES
             tid = None
+            demo_fallback_used = False
             if not cross_tenant:
-                tid = register_tenant(self.tenant_id)
+                # Spec #6 - resolve here (sync context) so an empty tenant's
+                # Reports page reads the global demo tenant. The fallback closes
+                # as soon as the tenant owns one report.
+                read_slug, demo_fallback_used = demo_fallback.resolve_read_tenant(
+                    self.tenant_id
+                )
+                tid = register_tenant(read_slug)
             return run(_get_reports_async(
                 self, cross_tenant, tid,
                 days=days, report_type=report_type,
                 page=page, page_size=page_size,
+                demo_fallback_used=demo_fallback_used,
             ))
         except Exception as e:
             logger.error(f"Failed to retrieve reports: {e}")
