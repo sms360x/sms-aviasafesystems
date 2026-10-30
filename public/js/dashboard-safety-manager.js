@@ -746,4 +746,9 @@
     } else {
         boot();
     }
+
+    // Spec #4d — expose for router + console (fixes blank Reports page)
+    window.renderReports = renderReports;
+    window.fmtDate = fmtDate;
+    window.esc = esc;
 })();
