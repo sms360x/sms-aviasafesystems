@@ -158,13 +158,20 @@ async def _get_reports_async(
         # cross-tenant visible.
         stmt = stmt.where(Report.report_type != "voluntary")
     # Date window the caller can narrow (days param; formerly the unbounded list).
-    cutoff = datetime.now(timezone.utc) - timedelta(days=days)
-    stmt = stmt.where(Report.created_at >= cutoff)
+    # occurrence_date is the field the seeded reports actually carry (created_at
+    # is left NULL by the seed), so it is the correct filter target.
+    if days and days > 0:
+        cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+        stmt = stmt.where(Report.occurrence_date >= cutoff)
     if report_type:
         stmt = stmt.where(Report.report_type == report_type)
     if status:
-        stmt = stmt.where(Report.status == status)
-    stmt = stmt.order_by(Report.created_at.desc())
+        from sqlalchemy import func as _func
+
+        stmt = stmt.where(
+            _func.lower(_func.trim(Report.status)) == str(status).strip().lower()
+        )
+    stmt = stmt.order_by(Report.occurrence_date.desc())
     # Single round trip: the window count covers the full filtered set
     # (window functions evaluate before LIMIT/OFFSET). A separate count query
     # would add a second prepared statement per request, which trips

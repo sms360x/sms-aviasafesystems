@@ -8,6 +8,7 @@ from app.db import pg
 from app.db.db_models import Report as PgReport
 from app.db.ids import tenant_uuid
 from app.db.isolation import demo_scope
+from sqlalchemy import func
 from app.services import demo_fallback
 
 
@@ -67,7 +68,7 @@ class ReportFilter:
         occurrence_type: Optional[str] = None,
         page: int = 1,
         page_size: int = settings.REPO_DEFAULT_PAGE_SIZE,
-        sort_by: str = "created_at",
+        sort_by: str = "occurrence_date",
         sort_order: str = "desc",
         cursor: Optional[str] = None,
     ):
@@ -222,7 +223,7 @@ class ReportRepository:
         if filter.report_type:
             where.append(PgReport.report_type == filter.report_type)
         if filter.status:
-            where.append(PgReport.status == filter.status)
+            where.append(func.lower(func.trim(PgReport.status)) == str(filter.status).strip().lower())
         if filter.severity:
             where.append(PgReport.severity == filter.severity)
         if filter.occurrence_type:
