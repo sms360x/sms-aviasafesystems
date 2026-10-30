@@ -10,7 +10,7 @@
 # CODE OWNER: AviaSafeSystems
 # ============================================================================
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from typing import Dict, Any, Optional
 from datetime import datetime
 
@@ -81,7 +81,10 @@ async def get_dashboard_overview(
     days: Optional[int] = Query(90, ge=0),
     params: Dict[str, Any] = Depends(dashboard_params),
     user: Dict[str, Any] = Depends(get_tenant_user),
+    response: Response = None,
 ):
+    if response is not None:
+        response.headers["Cache-Control"] = "public, max-age=60"
     days = _resolve_days(days, params, 90)
     logger.info(f"Dashboard overview request: user={user.get('email')}, role={user.get('role')}, tenant_id={user.get('tenant_id')}, days={days}")
     svc = DashboardService(user)
@@ -464,7 +467,10 @@ async def get_airline_sms_maturity(
 async def get_sms_health(
     days: int = Query(365, ge=30, le=730),
     user: Dict[str, Any] = Depends(get_tenant_user),
+    response: Response = None,
 ):
+    if response is not None:
+        response.headers["Cache-Control"] = "public, max-age=60"
     """Overall SMS maturity score for the Safety Manager KPI.
 
     Reuses the existing airline SMS maturity service (get_airline_sms_maturity)

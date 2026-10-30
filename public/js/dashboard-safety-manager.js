@@ -490,21 +490,20 @@
             var flatNav = [
                 // DASHBOARD
                 { id: 'dashboard', label: 'Dashboard', href: '#dashboard', icon: 'fa-table-columns', section: 'Dashboard' },
-                { id: 'reports', label: 'Reports', href: '#reports', icon: 'fa-file-lines' },
 
-                // SAFETY
-                { id: 'hazards', label: 'Hazards & Risks', href: '#hazards', icon: 'fa-triangle-exclamation', section: 'Safety' },
-                { id: 'assurance', label: 'Safety Assurance', href: '#assurance', icon: 'fa-shield-halved' },
-                { id: 'performance', label: 'Safety Performance', href: '#performance', icon: 'fa-chart-line' },
+                // MODULE A
+                { id: 'surveys', label: 'SMS Survey', href: '#surveys', icon: 'fa-square-poll-vertical', section: 'Module A: SMS Survey' },
+
+                // MODULE B
+                { id: 'reports', label: 'Reports', href: '#reports', icon: 'fa-file-lines', section: 'Module B: Hazard & Risk' },
+                { id: 'hazards', label: 'Hazards & Risks', href: '#hazards', icon: 'fa-triangle-exclamation' },
                 { id: 'actions', label: 'Actions', href: '#actions', icon: 'fa-clipboard-check' },
 
-                // REGULATORY
-                { id: 'compliance', label: 'Compliance', href: '#compliance', icon: 'fa-scale-balanced', section: 'Regulatory' },
-
                 // WORKSPACE
-                { id: 'surveys', label: 'Surveys', href: '#surveys', icon: 'fa-square-poll-vertical', section: 'Workspace' },
+                { id: 'data-management', label: 'Data Management', href: '#data-management', icon: 'fa-database', section: 'Workspace' },
                 { id: 'meetings', label: 'Meetings', href: '#meetings', icon: 'fa-users' },
-                { id: 'admin', label: 'Settings', href: '#admin', icon: 'fa-gear' }
+                { id: 'admin', label: 'Settings', href: '#admin', icon: 'fa-gear' },
+                { id: 'logout', label: 'Logout', href: '#logout', icon: 'fa-right-from-bracket' }
             ];
 
             if (window.ExecutiveShell && typeof window.ExecutiveShell.init === 'function') {
@@ -572,9 +571,10 @@
         'performance': 'performanceView',
         'actions':     'actionsView',
         'compliance':  'complianceView',
-        'surveys':     'surveysView',
-        'meetings':    'meetingsView',
-        'admin':       'adminView'
+        'surveys':          'surveysView',
+        'meetings':         'meetingsView',
+        'admin':            'adminView',
+        'data-management':  'dataManagementView'
     };
 
     function applyRoute() {
@@ -590,9 +590,11 @@
             stubContainer.style.display = 'none';
             
             var routes = ['hazards', 'assurance', 'performance', 'actions',
-                          'compliance', 'surveys', 'meetings', 'admin'];
+                          'compliance', 'surveys', 'meetings', 'admin', 'data-management'];
             var titles = ['Hazards & Risks', 'Safety Assurance', 'Safety Performance',
-                          'Actions', 'Compliance', 'Surveys', 'Meetings', 'Settings'];
+                          'Actions', 'Compliance', 'Surveys', 'Meetings', 'Settings', 'Data Management'];
+            // placeholder content for data-management
+            // (filled below)
             
             for (var i = 0; i < routes.length; i++) {
                 var stub = document.createElement('div');
@@ -602,6 +604,8 @@
                 stub.innerHTML = '<h1>' + titles[i] + '</h1><p>Coming Soon — under construction.</p>';
                 stubContainer.appendChild(stub);
             }
+            var dmView = document.getElementById('data-managementView');
+            if (dmView) dmView.innerHTML = '<h1>Data Management</h1><p>Data Management: Upload via ETLx Studio and Download Live Data coming soon.</p>';
             execContent.appendChild(stubContainer);
         }
 
@@ -766,7 +770,7 @@
             riskMatrix: ApiClient.get('/api/v1/dashboard/risk-matrix'),
             keyIssues: ApiClient.get('/api/v1/dashboard/key-issues?days=90&limit=5'),
             actionCompletion: ApiClient.get('/api/v1/dashboard/action-completion'),
-            recent: ApiClient.get('/api/v1/dashboard/recent?days=90&page=1&page_size=10')
+            recent: Promise.resolve({ ok: true, data: { items: [] } })
         };
         if (tenant) {
             tasks.spi = ApiClient.get('/api/v1/spi/tenant/' + encodeURIComponent(tenant) + '/trend?months=12');
