@@ -677,7 +677,8 @@
             days = DateRangeFilter.getCurrentDays();
         }
         // Backend accepts days 1..365; the filter's "All Time" (0) maps to the max.
-        if (!days || days < 1) days = 365;
+        if (days === null || days === undefined) days = 90;
+        if (days < 0) days = 0;
         if (days > 365) days = 365;
 
         // Spec #4e — VSR (voluntary) / MOR (mandatory) type filter.

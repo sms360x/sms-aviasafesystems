@@ -28,6 +28,7 @@ from __future__ import annotations
 
 import threading
 import time
+from contextvars import ContextVar
 from typing import Dict, Optional, Tuple
 
 from loguru import logger
@@ -45,6 +46,27 @@ _TTL_SECONDS = float(
 # slug -> (has_any_report, expires_at_monotonic)
 _has_reports: Dict[str, Tuple[bool, float]] = {}
 _lock = threading.Lock()
+
+# Per-request cache so a single page load (which calls the fallback probe from
+# several KPI paths) does not hit the database N times.
+_request_cache: ContextVar[Optional[Dict[str, bool]]] = ContextVar(
+    "demo_fallback_request_cache", default=None
+)
+
+
+def _request_cache_get(slug: str) -> Optional[bool]:
+    cache = _request_cache.get()
+    if cache is not None and slug in cache:
+        return cache[slug]
+    return None
+
+
+def _request_cache_set(slug: str, value: bool) -> None:
+    cache = _request_cache.get()
+    if cache is None:
+        cache = {}
+        _request_cache.set(cache)
+    cache[slug] = value
 
 
 def demo_tenant_slug() -> Optional[str]:
@@ -72,10 +94,15 @@ def tenant_has_reports(tenant_slug: str) -> bool:
     if not slug:
         return False
 
+    cached = _request_cache_get(slug)
+    if cached is not None:
+        return cached
+
     now = time.monotonic()
     with _lock:
         entry = _has_reports.get(slug)
         if entry is not None and now <= entry[1]:
+            _request_cache_set(slug, entry[0])
             return entry[0]
 
     try:
@@ -93,10 +120,12 @@ def tenant_has_reports(tenant_slug: str) -> bool:
             f"Demo-fallback probe failed for tenant {slug}: {exc} "
             "(failing closed: no demo fallback)"
         )
+        _request_cache_set(slug, True)
         return True
 
     with _lock:
         _has_reports[slug] = (has_reports, now + _TTL_SECONDS)
+    _request_cache_set(slug, has_reports)
     return has_reports
 
 
@@ -129,6 +158,11 @@ def invalidate(tenant_slug: Optional[str] = None) -> None:
     Called by ReportService.create_report so a tenant's first real report
     closes the fallback on the very next request.
     """
+    # Reset the per-request cache too: a new logical request must re-probe.
+    try:
+        _request_cache.set(None)
+    except Exception:
+        pass
     if tenant_slug is None:
         with _lock:
             _has_reports.clear()
