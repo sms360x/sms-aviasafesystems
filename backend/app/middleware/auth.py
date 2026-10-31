@@ -92,18 +92,28 @@ def resolve_user_context(email: str) -> Dict[str, Any]:
     if email:
         try:
             urow = pg.fetch_by(UserProfile, "email", email)
+            if urow is None:
+                logger.warning(f"[AUTH DEBUG] No users row for email={email} (DB query returned None — DB may be disconnected or user not provisioned)")
         except Exception as e:
-            logger.warning(f"User lookup failed for {email}: {e}")
+            logger.error(f"[AUTH DEBUG] User lookup DB error for {email}: {type(e).__name__}: {e}")
+            # TEMP DEBUG: re-raise to see full traceback in logs
+            import traceback
+            logger.error(f"[AUTH DEBUG] Traceback: {traceback.format_exc()}")
+            return {"role": None, "tenant_id": None}
 
     if urow is None:
-        logger.warning(f"No users row for user (email={email}).")
+        if email:
+            logger.warning(f"[AUTH DEBUG] No users row for user (email={email}).")
         # Negative results are deliberately not cached: a newly provisioned
         # user must be able to authenticate on the next request.
         return {"role": None, "tenant_id": None}
 
+    raw_tenant_id = urow.get("tenant_id")
+    resolved_slug = _tenant_slug(raw_tenant_id)
+    logger.info(f"[AUTH DEBUG] User {email}: role={urow.get('role')}, raw_tenant_id={raw_tenant_id}, resolved_slug={resolved_slug}")
     ctx = {
         "role": urow.get("role"),
-        "tenant_id": _tenant_slug(urow.get("tenant_id")),
+        "tenant_id": resolved_slug,
     }
     # 2C.7: carry the users-row department (authoritative) so the
     # department-based raw-VSR rule does not depend on token freshness. Omitted
@@ -197,6 +207,7 @@ async def get_tenant_user(
     user: Dict[str, Any] = Depends(get_current_user)
 ) -> Dict[str, Any]:
     if not user.get('tenant_id'):
+        logger.warning(f"[AUTH DEBUG] 403 for user={user.get('email')}: role={user.get('role')}, tenant_id={user.get('tenant_id')}, claims={user.get('claims')}")
         raise HTTPException(
             status_code=403,
             detail="User does not have tenant access"
