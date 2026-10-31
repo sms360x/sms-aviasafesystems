@@ -31,6 +31,9 @@ CANONICAL_ALLOWED_ORIGINS = (
     "https://smssurvey.gsacharya.com",
     "https://sms.nac.com.np",
     "https://ssp.caanepal.gov.np",
+    # Local development frontend (live Supabase DB, local FastAPI backend)
+    "http://localhost:8080",
+    "http://127.0.0.1:8080",
 )
 
 # Every header the frontend (and the multi-tenant demo/routing layer) sends on

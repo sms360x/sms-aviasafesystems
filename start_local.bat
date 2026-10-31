@@ -1,0 +1,6 @@
+@echo off
+echo Starting Local Backend...
+start cmd /k "cd backend && .venv\Scripts\activate && uvicorn app.main:app --reload --port 8000"
+
+echo Starting Local Frontend...
+start cmd /k "python -m http.server 8080 --directory public"

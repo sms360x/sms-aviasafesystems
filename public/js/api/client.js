@@ -2,6 +2,11 @@ const ApiClient = {
     // Single runtime mapping: the consolidated Render backend. Priority:
     // APP_CONFIG.apiBaseUrl (set by public/js/firebase.js) else hostname mapping.
     _baseUrl: () => {
+        // Local development: route to the locally-running FastAPI backend
+        // (live Supabase database, backend on localhost:8000).
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+            return 'http://localhost:8000';
+        }
         if (window.APP_CONFIG && window.APP_CONFIG.apiBaseUrl) return window.APP_CONFIG.apiBaseUrl;
         if (window.API_BASE_URL) return window.API_BASE_URL;
         return 'https://aviasafe-unified-platform.onrender.com';
