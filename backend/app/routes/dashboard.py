@@ -88,12 +88,16 @@ async def get_dashboard_overview(
         response.headers["Cache-Control"] = "public, max-age=60"
     days = _resolve_days(days, params, 90)
     logger.info(f"Dashboard overview request: user={user.get('email')}, role={user.get('role')}, tenant_id={user.get('tenant_id')}, days={days}")
+    # TEMP DEBUG: verify tenant resolution and date filter on Vercel
+    logger.info(f"DEBUG: Resolved tenant for dashboard: tenant_id={user.get('tenant_id')}")
+    logger.info(f"DEBUG: Date filter applied: days={days}")
     svc = DashboardService(user)
     try:
         with _perf_timed("firestore"):
             data = svc.get_airline_overview(days=days)
         kpi_count = (data.get("kpis") or {}).get("total_reports", -1)
         logger.info(f"Dashboard overview result for tenant {user.get('tenant_id')}: total_reports={kpi_count}")
+        logger.info(f"DEBUG: Total reports found for this query: {kpi_count}")
         return _envelope(data)
     except Exception as e:
         logger.error(f"Dashboard overview failed for tenant {user.get('tenant_id')}: {e}")
