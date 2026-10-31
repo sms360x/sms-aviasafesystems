@@ -29,9 +29,10 @@ async def get_redis():
         return None
     if _redis_client is None:
         try:
-            # socket_timeout bounds ALL socket operations (not just connect)
-            # so a slow/unresponsive Redis server can never hang the request.
-            kwargs = dict(socket_connect_timeout=2, socket_timeout=2)
+            # socket_connect_timeout bounds the initial TCP handshake so a slow/
+            # unresponsive Redis server fails fast. socket_timeout is NOT passed
+            # here because redis-py 8.x from_url() does not accept it directly.
+            kwargs = dict(socket_connect_timeout=2)
             if redis_url.startswith("rediss://"):
                 kwargs["ssl_cert_reqs"] = "none"
             elif redis_url.startswith("redis://"):

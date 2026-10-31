@@ -95,7 +95,14 @@ async def login_endpoint(
         raise HTTPException(status_code=401, detail="Invalid email or password")
 
     await clear_login_failures(request)
-    custom_token = await asyncio.to_thread(login_service.mint_custom_token, user["uid"])
+    try:
+        custom_token = await asyncio.to_thread(login_service.mint_custom_token, user["uid"])
+    except Exception as e:
+        logger.error(f"mint_custom_token failed for uid={user['uid']}: {type(e).__name__}: {e}")
+        raise HTTPException(
+            status_code=503,
+            detail="Authentication provider unavailable. Please try again shortly.",
+        ) from e
 
     ip, request_id = request_context(request)
     log_audit(
