@@ -31,19 +31,19 @@
             box-shadow: 0 1px 3px rgba(0,0,0,0.08); text-align: center;
         }
         .donut-card h3 { font-size: 0.95rem; font-weight: 600; color: #192f35; margin-bottom: 16px; }
-        .donut-card canvas { max-width: 200px; max-height: 200px; margin: 0 auto; }
+        .donut-card canvas { width: 200px !important; height: 200px !important; margin: 0 auto; display: block; }
         .donut-score { font-size: 1.4rem; font-weight: 700; color: #235a4a; margin-top: 8px; }
         /* Footer */
         .exec-footer {
-            margin-top: auto; padding: 24px 40px; border-top: 1px solid #e5e7eb;
-            text-align: center; font-size: 0.8rem; color: #9ca3af;
+            clear: both; width: 100%; text-align: center; padding: 2rem 0;
+            font-size: 0.8rem; color: #9ca3af; border-top: 1px solid #e5e7eb;
         }
         .exec-footer a { color: #235a4a; text-decoration: none; }
     </style>
 </head>
 <body class="executive-layout">
 
-<div id="pageContent" style="display: flex; flex-direction: column; min-height: 100vh;">
+<div id="pageContent">
     <!-- Global Header: Date Filter (persistent across all routes) -->
     <div id="globalHeader" style="padding: 0 40px;">
         <div id="dateFilterContainer" style="display:flex; justify-content:flex-end; padding: 12px 0;"></div>
@@ -242,5 +242,10 @@ document.addEventListener('DOMContentLoaded', function() {
     addLogoutButton();
 });
 </script>
-<footer style="text-align:center;font-size:0.85rem;color:#6b7280;padding:2rem 0;">© 2026 SMS360X. All rights reserved. | sms360x.com</footer>`n</body>
+<footer class="exec-footer">
+        &copy; 2026 <a href="/">SMS360X</a> by AviaSafe Systems. All rights reserved.
+        | <a href="/privacy.html">Privacy Policy</a>
+        | <a href="/terms.html">Terms of Service</a>
+    </footer>
+</body>
 </html>

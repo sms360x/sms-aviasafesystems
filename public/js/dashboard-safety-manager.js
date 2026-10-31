@@ -838,6 +838,34 @@
                 charts['donut_' + pid].destroy();
             }
 
+            // Render center-text plugin for each donut
+            var centerTextPlugin = {
+                id: 'centerText',
+                afterDraw: function (chart) {
+                    var ctx = chart.ctx;
+                    var area = chart.chartArea;
+                    var cx = (area.left + area.right) / 2;
+                    var cy = (area.top + area.bottom) / 2;
+                    var val = score != null ? Math.round(score) : null;
+                    ctx.save();
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    if (val != null) {
+                        ctx.font = '700 22px system-ui, sans-serif';
+                        ctx.fillStyle = '#235a4a';
+                        ctx.fillText(val + '%', cx, cy - 6);
+                        ctx.font = '500 11px system-ui, sans-serif';
+                        ctx.fillStyle = '#6b7280';
+                        ctx.fillText('Achieved', cx, cy + 12);
+                    } else {
+                        ctx.font = '600 14px system-ui, sans-serif';
+                        ctx.fillStyle = '#9ca3af';
+                        ctx.fillText('No data', cx, cy);
+                    }
+                    ctx.restore();
+                }
+            };
+
             charts['donut_' + pid] = new Chart(canvas, {
                 type: 'doughnut',
                 data: {
@@ -850,8 +878,8 @@
                 },
                 options: {
                     responsive: true,
-                    maintainAspectRatio: true,
-                    cutout: '65%',
+                    maintainAspectRatio: false,
+                    cutout: '70%',
                     plugins: {
                         legend: { display: false },
                         tooltip: {
@@ -862,7 +890,8 @@
                             }
                         }
                     }
-                }
+                },
+                plugins: [centerTextPlugin]
             });
         }
     }
