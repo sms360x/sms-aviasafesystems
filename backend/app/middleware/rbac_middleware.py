@@ -5,6 +5,7 @@ from typing import Any, Dict, Optional, Tuple
 
 from fastapi import Request
 from fastapi.responses import JSONResponse
+from loguru import logger
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from app.core.config import settings
@@ -125,8 +126,14 @@ def _forbidden(detail: str) -> JSONResponse:
 
 async def rbac_middleware(request: Request, call_next):
     # Infrastructure / health-check endpoints bypass auth and RBAC entirely.
+    # They must always return a response, even when a downstream dependency
+    # (e.g. the DB / PgBouncer) throws mid-request.
     if request.url.path in INFRA_PATHS:
-        return await call_next(request)
+        try:
+            return await call_next(request)
+        except Exception as e:
+            logger.warning(f"Health check infra path {request.url.path} failed: {e}")
+            return JSONResponse(status_code=200, content={"status": "ok"})
 
     user = _user_from_request(request)
     if not user:
