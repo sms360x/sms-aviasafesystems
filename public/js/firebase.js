@@ -270,6 +270,11 @@ function initAppCheckSafe(app) {
         return null;
       }
 
+      // Enable App Check Debug Mode for localhost ONLY
+      if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        self.FIREBASE_APPCHECK_DEBUG_TOKEN = true;
+      }
+
       // Initialize using whichever API is available
       var appCheck;
       if (hasModularApi) {
