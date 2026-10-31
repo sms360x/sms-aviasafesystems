@@ -24,7 +24,7 @@ if not redis_url:
 _redis_client = None
 
 async def get_redis():
-    global _redis_client
+    global _redis_client, redis_enabled
     if not redis_enabled:
         return None
     if _redis_client is None:
