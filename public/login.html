@@ -208,6 +208,7 @@ AUTHOR: AviaSAFE Systems
 <!-- ===== SHARED FIREBASE CONFIG ===== -->
 <script src="/js/demo-prospects.js"></script>
 <script src="/js/firebase.js?v=4.0.1&brand=20261028"></script>
+<script src="/js/api/client.js?v=4.0.1&brand=20261028"></script>
 <script src="/js/tenant_context.js"></script>
 <script src="/js/department_resolver.js"></script>
 <script src="/js/input_guard.js"></script>
@@ -289,7 +290,15 @@ function waitForFirebase() {
 // ============================================================================
 
 function getApiBaseUrl() {
+    // Delegate to ApiClient._baseUrl() so localhost (127.0.0.1 / localhost)
+    // routes to http://localhost:8000 (Spec #23) while production keeps the
+    // Render URL. Falls back through APP_CONFIG / API_BASE_URL if ApiClient
+    // has not yet loaded.
+    if (window.ApiClient && typeof window.ApiClient._baseUrl === 'function') {
+        return window.ApiClient._baseUrl();
+    }
     if (window.APP_CONFIG && window.APP_CONFIG.apiBaseUrl) return window.APP_CONFIG.apiBaseUrl;
+    if (window.API_BASE_URL) return window.API_BASE_URL;
     return 'https://aviasafe-unified-platform.onrender.com';
 }
 
