@@ -63,10 +63,15 @@ def _validate_production_config() -> None:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    import time as _time
+    _t0 = _time.perf_counter()
+
     _validate_production_config()
+    logger.info(f"[startup] config validated ({_time.perf_counter() - _t0:.2f}s)")
 
     try:
         initialize_firebase()
+        logger.info(f"[startup] firebase initialized ({_time.perf_counter() - _t0:.2f}s)")
     except Exception as e:
         logger.warning(f"Firebase initialization failed at startup: {e}. Lazy init will retry on first request.")
 
@@ -77,8 +82,11 @@ async def lifespan(app: FastAPI):
     from app.core.lifecycle import start_scheduler, stop_scheduler
     if os.environ.get("VERCEL") != "1":
         start_scheduler()
+        logger.info(f"[startup] APScheduler started ({_time.perf_counter() - _t0:.2f}s)")
     else:
         logger.info("APScheduler disabled on Vercel serverless")
+
+    logger.info(f"[startup] total startup time: {_time.perf_counter() - _t0:.2f}s")
 
     yield
 

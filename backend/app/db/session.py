@@ -171,6 +171,9 @@ def get_engine() -> AsyncEngine:
                 "server_settings": {
                     "statement_timeout": "15000",
                 },
+                # connect_timeout: fail fast on unreachable DB (Vercel cold start)
+                # instead of hanging for 30+ s on the default OS TCP timeout.
+                "connect_timeout": 5,
                 "command_timeout": 15,
             },
         )
