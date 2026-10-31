@@ -165,15 +165,15 @@ def get_engine() -> AsyncEngine:
             # names that cannot collide on a shared backend.
             # command_timeout is an asyncpg connect() kwarg: fail fast on a
             # stalled pooler query rather than waiting for the server-side
-            # statement_timeout.
+            # statement_timeout. (Note: asyncpg does NOT support a
+            # connect_timeout kwarg through SQLAlchemy — passing one raises
+            # TypeError on every connection. The OS TCP timeout is adequate
+            # for NullPool since connections are transient.)
             connect_args={
                 "statement_cache_size": 0,
                 "server_settings": {
                     "statement_timeout": "15000",
                 },
-                # connect_timeout: fail fast on unreachable DB (Vercel cold start)
-                # instead of hanging for 30+ s on the default OS TCP timeout.
-                "connect_timeout": 5,
                 "command_timeout": 15,
             },
         )
