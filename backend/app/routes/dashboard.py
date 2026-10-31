@@ -480,7 +480,7 @@ async def get_airline_sms_maturity(
 
 @router.get("/sms-health")
 async def get_sms_health(
-    days: int = Query(365, ge=30, le=730),
+    days: int = Query(365, ge=0, le=730),
     user: Dict[str, Any] = Depends(get_tenant_user),
     response: Response = None,
 ):
