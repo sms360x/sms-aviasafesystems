@@ -107,37 +107,41 @@ class PerfTimingMiddleware(BaseHTTPMiddleware):
         response = None
         try:
             response = await call_next(request)
-        finally:
+        except Exception:
+            # call_next raised (unhandled downstream error): log the timing
+            # and re-raise so Starlette's error handler owns the response.
+            # Never return None from a finally block — that swallows the
+            # exception and surfaces as "RuntimeError: No response returned".
             total_ms = (time.perf_counter() - t0) * 1000
             components = _timings_ctx.get() or {}
             _timings_ctx.reset(token)
             uptime_s = int(time.time() - _PROCESS_START)
-            if response is None:
-                # call_next raised (unhandled downstream error): keep the
-                # original exception visible to the server error handler
-                # instead of masking it with an UnboundLocalError here.
-                logger.info(f"[PERF] {watch_key} status=ERR total={total_ms:.0f}ms uptime={uptime_s}s")
-            else:
-                if reflect and hasattr(response, "headers"):
-                    response.headers["X-Perf-Total-Ms"] = f"{total_ms:.0f}"
-                    response.headers["X-Perf-Uptime-S"] = str(uptime_s)
-                    if components.get("db_ms"):
-                        response.headers["X-Perf-Db-Ms"] = f"{components['db_ms']:.0f}"
-                    if components.get("db_calls"):
-                        response.headers["X-Perf-Queries"] = str(components["db_calls"])
-                    slow = components.get("slow_sql") or []
-                    if slow:
-                        response.headers["X-Perf-Slow"] = ";".join(str(s) for s in slow[:8])
-                if watched or total_ms >= _SLOW_MS or components.get("db_ms", 0) >= _SLOW_MS:
-                    extra = "".join(
-                        f" {k}={v}ms" for k, v in components.items()
-                        if k not in ("db_calls", "slow_sql") and not isinstance(v, (list, dict, tuple))
-                    )
-                    if components.get("db_calls"):
-                        extra += f" queries={components['db_calls']}"
-                    status = getattr(response, "status_code", "-")
-                    logger.info(
-                        f"[PERF] {watch_key} status={status} total={total_ms:.0f}ms "
-                        f"uptime={uptime_s}s{extra}"
-                    )
+            logger.info(f"[PERF] {watch_key} status=ERR total={total_ms:.0f}ms uptime={uptime_s}s")
+            raise
+        total_ms = (time.perf_counter() - t0) * 1000
+        components = _timings_ctx.get() or {}
+        _timings_ctx.reset(token)
+        uptime_s = int(time.time() - _PROCESS_START)
+        if reflect and hasattr(response, "headers"):
+            response.headers["X-Perf-Total-Ms"] = f"{total_ms:.0f}"
+            response.headers["X-Perf-Uptime-S"] = str(uptime_s)
+            if components.get("db_ms"):
+                response.headers["X-Perf-Db-Ms"] = f"{components['db_ms']:.0f}"
+            if components.get("db_calls"):
+                response.headers["X-Perf-Queries"] = str(components["db_calls"])
+            slow = components.get("slow_sql") or []
+            if slow:
+                response.headers["X-Perf-Slow"] = ";".join(str(s) for s in slow[:8])
+        if watched or total_ms >= _SLOW_MS or components.get("db_ms", 0) >= _SLOW_MS:
+            extra = "".join(
+                f" {k}={v}ms" for k, v in components.items()
+                if k not in ("db_calls", "slow_sql") and not isinstance(v, (list, dict, tuple))
+            )
+            if components.get("db_calls"):
+                extra += f" queries={components['db_calls']}"
+            status = getattr(response, "status_code", "-")
+            logger.info(
+                f"[PERF] {watch_key} status={status} total={total_ms:.0f}ms "
+                f"uptime={uptime_s}s{extra}"
+            )
         return response

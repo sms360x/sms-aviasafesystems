@@ -49,6 +49,11 @@ _NORMALIZE_ROLES = {
     "ACCOUNTABLE_EXECUTIVE", "SAG_MEMBER", "SAFETY_OFFICER",
 }
 
+# Infrastructure / health-check endpoints are never gated by auth or RBAC.
+# They must always return a response even when the auth subsystem or a
+# downstream dependency is misbehaving (e.g. local dev without Firebase).
+INFRA_PATHS = ("/health", "/live", "/ready")
+
 
 def get_module_for_path(path: str) -> str:
     for prefix, module in ENDPOINT_MODULE_MAP.items():
@@ -119,6 +124,10 @@ def _forbidden(detail: str) -> JSONResponse:
 
 
 async def rbac_middleware(request: Request, call_next):
+    # Infrastructure / health-check endpoints bypass auth and RBAC entirely.
+    if request.url.path in INFRA_PATHS:
+        return await call_next(request)
+
     user = _user_from_request(request)
     if not user:
         return await call_next(request)
