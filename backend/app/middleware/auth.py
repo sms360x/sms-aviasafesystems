@@ -159,8 +159,13 @@ def _tenant_is_suspended(tenant_id: str) -> bool:
 async def get_current_user(
     credentials: HTTPAuthorizationCredentials = Security(security)
 ) -> Dict[str, Any]:
+    import time as _time
+    _t0 = _time.perf_counter()
     token = credentials.credentials
     decoded_token = verify_firebase_token(token)
+    _elapsed = _time.perf_counter() - _t0
+    if _elapsed > 1.0:
+        logger.warning(f"[PERF] verify_firebase_token took {_elapsed:.2f}s (check_revoked=False)")
 
     if not decoded_token:
         raise HTTPException(

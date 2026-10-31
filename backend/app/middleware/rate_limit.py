@@ -1,3 +1,4 @@
+import asyncio
 import os
 import time
 import uuid
@@ -28,13 +29,22 @@ async def get_redis():
         return None
     if _redis_client is None:
         try:
-            kwargs = dict(socket_connect_timeout=3)
-            if not redis_url.startswith("rediss://"):
+            # socket_timeout bounds ALL socket operations (not just connect)
+            # so a slow/unresponsive Redis server can never hang the request.
+            kwargs = dict(socket_connect_timeout=2, socket_timeout=2)
+            if redis_url.startswith("rediss://"):
+                kwargs["ssl_cert_reqs"] = "none"
+            elif redis_url.startswith("redis://"):
+                # Non-TLS Upstash still needs SSL; attach SSL connection class.
                 from redis.asyncio.connection import SSLConnection
                 kwargs["connection_class"] = SSLConnection
-            kwargs["ssl_cert_reqs"] = "none"
+                kwargs["ssl_cert_reqs"] = "none"
+            else:
+                logger.warning(f"Redis URL scheme invalid (must be redis:// or rediss://). Disabling rate limiting.")
+                redis_enabled = False
+                return None
             _redis_client = aioredis.from_url(redis_url, **kwargs)
-            await _redis_client.ping()
+            await asyncio.wait_for(_redis_client.ping(), timeout=3)
             logger.info("Connected to Upstash Redis")
         except Exception as e:
             logger.warning(f"Redis unavailable, rate limiting disabled: {e}")
