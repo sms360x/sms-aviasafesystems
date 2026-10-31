@@ -18,6 +18,7 @@ from app.core.config import settings
 from app.core.perf import timed as _perf_timed
 from app.middleware.auth import get_current_user, get_tenant_user, get_caan_user, get_admin_user
 from app.services.dashboard_service import DashboardService
+from app.services.demo_fallback import resolve_read_tenant
 from app.routes.dashboard_params import dashboard_params
 from loguru import logger
 
@@ -154,7 +155,17 @@ async def get_monthly_trends(
     user: Dict[str, Any] = Depends(get_tenant_user),
 ):
     days = _resolve_days(days, params, 180)
-    svc = DashboardService(user)
+    # Spec #22 — Date Filter Cascade: days=0 (All Time) defaults to the last
+    # 12 calendar months so the trend chart stays bounded and readable.
+    if days == 0:
+        days = 365
+    # Spec #22 — Demo Fallback: resolve the read tenant via resolve_read_tenant
+    # from demo_fallback.py so an empty tenant reads the global demo tenant.
+    # Never bypass the fallback.
+    read_slug, _used_fallback = resolve_read_tenant(user.get("tenant_id"))
+    svc_user = dict(user)
+    svc_user["tenant_id"] = read_slug
+    svc = DashboardService(svc_user)
     data = _safe_airline("get_monthly_trends", svc, days=days)
     return _envelope(data)
 

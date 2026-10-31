@@ -182,9 +182,12 @@
             renderEmpty('s3-body', 'No data', 'No report trend data in period.');
             return;
         }
-        var last = rows.slice(-3);
-        var labels = last.map(function (m) { return monthName(m.month) + ' ' + m.year; });
-        var values = last.map(function (m) { return m.total; });
+        // Spec #22 — two-line VSR/MOR trend chart. The values come from the
+        // same normalized `report_type` enum the backend aggregates
+        // (voluntary -> VSR, mandatory -> MOR); no client-side re-derivation.
+        var labels = rows.map(function (m) { return monthName(m.month) + ' ' + m.year; });
+        var vsr = rows.map(function (m) { return Number(m.voluntary) || 0; });
+        var mor = rows.map(function (m) { return Number(m.mandatory) || 0; });
         var canvas = document.getElementById('s3-reports-trend');
         if (canvas && window.Chart) {
             destroyChart('reportsTrend');
@@ -192,18 +195,35 @@
                 type: 'line',
                 data: {
                     labels: labels,
-                    datasets: [{
-                        label: 'Reports',
-                        data: values,
-                        borderColor: '#235a4b',
-                        backgroundColor: 'rgba(35, 90, 75,0.12)',
-                        fill: true,
-                        tension: 0.25,
-                        pointRadius: 3,
-                        spanGaps: true
-                    }]
+                    datasets: [
+                        {
+                            label: 'VSR',
+                            data: vsr,
+                            borderColor: '#235a4b',
+                            backgroundColor: 'rgba(35, 90, 75,0.12)',
+                            fill: false,
+                            tension: 0.25,
+                            pointRadius: 3,
+                            spanGaps: true
+                        },
+                        {
+                            label: 'MOR',
+                            data: mor,
+                            borderColor: '#dc2626',
+                            backgroundColor: 'rgba(220, 38, 38,0.12)',
+                            fill: false,
+                            tension: 0.25,
+                            pointRadius: 3,
+                            spanGaps: true
+                        }
+                    ]
                 },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: true, position: 'top' } },
+                    scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+                }
             });
         }
     }
@@ -407,7 +427,7 @@
         var data = (result && result.ok) ? result.data : null;
         var items = Array.isArray(data) ? data : (data && data.items) || [];
         if (!items.length) {
-            container.innerHTML = '<div style="color:#166534;font-size:1.05rem;padding:1rem 1.5rem;"><i class="fas fa-check-circle"></i> ✅ All clear! No urgent actions or high-risk items.</div>';
+            container.innerHTML = '<div style="color: #166534; font-weight: 600; padding: 1rem;">✅ All clear! No urgent actions or high-risk items.</div>';
             return;
         }
         container.innerHTML = items.map(function (it) {
@@ -786,7 +806,7 @@
             overview: ApiClient.get('/api/v1/dashboard/overview?days=' + days),
             smsHealth: ApiClient.get('/api/v1/dashboard/sms-health?days=' + days),
             needsAttention: ApiClient.get('/api/v1/dashboard/needs-attention?days=' + days),
-            trends: ApiClient.get('/api/v1/dashboard/trends?days=180'),
+            trends: ApiClient.get('/api/v1/dashboard/trends?days=' + days),
             riskMatrix: ApiClient.get('/api/v1/dashboard/risk-matrix'),
             keyIssues: ApiClient.get('/api/v1/dashboard/key-issues?days=90&limit=5'),
             actionCompletion: ApiClient.get('/api/v1/dashboard/action-completion'),
