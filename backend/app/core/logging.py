@@ -1,4 +1,5 @@
 import json
+import os
 import time
 import uuid
 import sys
@@ -14,21 +15,25 @@ from app.core.metrics import record_request
 def setup_logging():
     logger.remove()
 
+    # 1. Always log to console (Vercel + Render read this sink)
     logger.add(
-        sys.stdout,
+        sys.stderr,
         format="{time:YYYY-MM-DD HH:mm:ss.SSS} | {level:<7} | {extra[request_id]:<36} | {message}",
         level="INFO",
         colorize=True,
     )
 
-    logger.add(
-        "logs/aviasafe.json",
-        format="{time} | {level} | {message}",
-        level="INFO",
-        rotation="100 MB",
-        retention="30 days",
-        serialize=True,
-    )
+    # 2. Only log to file if NOT on Vercel (Vercel has a read-only file system)
+    if os.environ.get("VERCEL") != "1":
+        os.makedirs("logs", exist_ok=True)
+        logger.add(
+            "logs/aviasafe.json",
+            format="{time} | {level} | {message}",
+            level="INFO",
+            rotation="100 MB",
+            retention="30 days",
+            serialize=True,
+        )
 
     logger.configure(extra={"request_id": "-"})
 
