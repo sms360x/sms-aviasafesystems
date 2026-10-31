@@ -9,7 +9,7 @@ const ApiClient = {
         }
         if (window.APP_CONFIG && window.APP_CONFIG.apiBaseUrl) return window.APP_CONFIG.apiBaseUrl;
         if (window.API_BASE_URL) return window.API_BASE_URL;
-        return 'https://aviasafe-unified-platform.onrender.com';
+        return 'https://sms360xtest.vercel.app';
     },
 
     _waitForFirebase: () => {
@@ -177,3 +177,4 @@ const ApiClient = {
 };
 
 window.ApiClient = ApiClient;
+

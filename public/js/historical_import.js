@@ -1,4 +1,4 @@
-const API_URL = 'https://aviasafe-unified-platform.onrender.com';
+const API_URL = 'https://sms360xtest.vercel.app';
 let currentBatchId = null;
 let currentFile = null;
 

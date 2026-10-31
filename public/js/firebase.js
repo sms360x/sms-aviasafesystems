@@ -47,7 +47,7 @@ const RECAPTCHA_SITE_KEY = firebaseConfig.appCheckSiteKey || '';
 
 // Centralized application configuration (single source of truth)
 const APP_CONFIG = {
-    apiBaseUrl: 'https://aviasafe-unified-platform.onrender.com',
+    apiBaseUrl: 'https://sms360xtest.vercel.app',
     environment: 'production',
     recaptchaSiteKey: RECAPTCHA_SITE_KEY,
     pagination: { defaultPageSize: 20, maxPageSize: 100 },

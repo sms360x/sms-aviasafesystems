@@ -8,7 +8,7 @@ const path = require('path');
 const ROOT = path.join(__dirname, '..', '..');
 const API_KEY = "AIzaSyCdCtUuyOcUIoCBEaiWGbhp6_XwZKHsicc";
 const AUTH_URL = "https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword";
-const BASE = "https://aviasafe-unified-platform.onrender.com";
+const BASE = "https://sms360xtest.vercel.app";
 const CREDS = path.join(ROOT, "BETA_CREDENTIALS_2026-08-08.md");
 
 function loadCredentials() {
@@ -94,3 +94,4 @@ async function main() {
 }
 
 main().catch((e) => { console.error("FATAL", e); process.exit(1); });
+

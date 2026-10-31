@@ -66,7 +66,7 @@ async function tenantApi(path) {
     try {
         var user = (typeof firebase !== 'undefined' && firebase.auth) ? firebase.auth().currentUser : null;
         var token = user ? await user.getIdToken(false) : null;
-        var base = (window.APP_CONFIG && window.APP_CONFIG.apiBaseUrl) || window.API_BASE_URL || 'https://aviasafe-unified-platform.onrender.com';
+        var base = (window.APP_CONFIG && window.APP_CONFIG.apiBaseUrl) || window.API_BASE_URL || 'https://sms360xtest.vercel.app';
         var res = await fetch(base + path, {
             headers: token ? { 'Authorization': 'Bearer ' + token } : {}
         });

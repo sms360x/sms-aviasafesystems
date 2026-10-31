@@ -10,7 +10,7 @@ const AviaSDCPSApi = (function () {
 
   // Base API configuration
   const API_CONFIG = {
-    baseUrl: 'https://aviasafe-unified-platform.onrender.com/api/v1',
+    baseUrl: 'https://sms360xtest.vercel.app/api/v1',
     defaultTenant: 'fishtail-air'
   };
 

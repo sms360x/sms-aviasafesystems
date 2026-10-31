@@ -315,7 +315,7 @@ function enforceSurveyWindow(surveyConfig, config) {
 
 function getApiBaseUrl() {
     if (window.APP_CONFIG && window.APP_CONFIG.apiBaseUrl) return window.APP_CONFIG.apiBaseUrl;
-    return 'https://aviasafe-unified-platform.onrender.com';
+    return 'https://sms360xtest.vercel.app';
 }
 
 // ── UI RENDERING FRAMEWORK ──
