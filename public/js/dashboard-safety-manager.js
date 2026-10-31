@@ -124,18 +124,22 @@
             reportsTrend.className = 'exec-kpi-trend';
         }
 
-        // Card 4: Overdue Actions
+        // Card 4: Overdue Actions (element may be absent from some layouts)
         var actionsEl = document.getElementById('s1-action-completion');
         var actionsNote = document.getElementById('s1-action-completion-note');
-        if (actionRes && actionRes.ok && actionRes.data) {
-            var overdue = actionRes.data.overdue || 0;
-            actionsEl.textContent = overdue;
-            actionsNote.textContent = overdue > 0 
-                ? 'high priority items' 
-                : 'No overdue actions';
-        } else {
-            actionsEl.textContent = '0';
-            actionsNote.textContent = 'No overdue actions';
+        if (actionsEl) {
+            if (actionRes && actionRes.ok && actionRes.data) {
+                var overdue = actionRes.data.overdue || 0;
+                actionsEl.textContent = overdue;
+                if (actionsNote) {
+                    actionsNote.textContent = overdue > 0 
+                        ? 'high priority items' 
+                        : 'No overdue actions';
+                }
+            } else {
+                actionsEl.textContent = '0';
+                if (actionsNote) actionsNote.textContent = 'No overdue actions';
+            }
         }
 
         // Card 5: Regulatory Compliance (static until Compliance module exists)

@@ -70,13 +70,20 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logger.warning(f"Firebase initialization failed at startup: {e}. Lazy init will retry on first request.")
 
-    # Start APScheduler background jobs (weekly SSP + monthly tenant dispatch + daily DLQ replay)
+    # Start APScheduler background jobs (weekly SSP + monthly tenant dispatch + daily DLQ replay).
+    # APScheduler uses a daemon thread that is incompatible with Vercel serverless (the
+    # instance can be frozen/thawed at any time, losing the thread). Skip it entirely on
+    # Vercel — scheduled jobs run on Render's always-on worker instead.
     from app.core.lifecycle import start_scheduler, stop_scheduler
-    start_scheduler()
+    if os.environ.get("VERCEL") != "1":
+        start_scheduler()
+    else:
+        logger.info("APScheduler disabled on Vercel serverless")
 
     yield
 
-    stop_scheduler()
+    if os.environ.get("VERCEL") != "1":
+        stop_scheduler()
 
 
 app = FastAPI(
