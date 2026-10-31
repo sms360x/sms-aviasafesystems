@@ -516,6 +516,8 @@
             try {
                 tr = await user.getIdTokenResult();
                 role = (tr.claims && tr.claims.role) || 'USER';
+                // Store the ID token for API calls (surveys donuts)
+                window.__idToken = await user.getIdToken();
             } catch (e) {
                 window.location.href = '/login.html';
                 return;
@@ -556,7 +558,16 @@
                 });
             }
 
+            initSubTabs();
             applyRoute();
+
+            // Re-apply route on hash change (tab clicks, back/forward)
+            if (!window.__hashListenerWired) {
+                window.__hashListenerWired = true;
+                window.addEventListener('hashchange', function () {
+                    applyRoute();
+                });
+            }
 
             // Spec #4e — Reports type filter (VSR/MOR): reset to page 1 on change.
             var reportsTypeFilter = document.getElementById('reports-type-filter');
@@ -623,26 +634,32 @@
         var execContent = document.getElementById('execContent');
         if (!execContent) return;
 
+        var isDashboard = (hash === 'dashboard' || !ROUTE_MAP[hash]);
+
         // 1. Ensure stub container exists inside execContent
         var stubContainer = document.getElementById('stubViews');
         if (!stubContainer) {
             stubContainer = document.createElement('div');
             stubContainer.id = 'stubViews';
             stubContainer.style.display = 'none';
-            
+
             var routes = ['hazards', 'assurance', 'performance', 'actions',
                           'compliance', 'surveys', 'meetings', 'admin', 'data-management', 'audit'];
             var titles = ['Hazards & Risks', 'Safety Assurance', 'Safety Performance',
-                          'Actions', 'Compliance', 'Surveys', 'Meetings', 'Settings', 'Data Management'];
-            // placeholder content for data-management
-            // (filled below)
-            
+                          'Actions', 'Compliance', 'SMS Survey Maturity', 'Meetings', 'Settings', 'Data Management'];
+
             for (var i = 0; i < routes.length; i++) {
                 var stub = document.createElement('div');
                 stub.id = routes[i] + 'View';
                 stub.className = 'route-stub';
                 stub.style.display = 'none';
-                stub.innerHTML = '<h1>' + titles[i] + '</h1><p>Coming Soon — under construction.</p>';
+
+                // Surveys page gets the 2x2 donut grid, not "Coming Soon"
+                if (routes[i] === 'surveys') {
+                    stub.innerHTML = buildSurveysView();
+                } else {
+                    stub.innerHTML = '<h1>' + titles[i] + '</h1><p>Coming Soon — under construction.</p>';
+                }
                 stubContainer.appendChild(stub);
             }
             var dmView = document.getElementById('data-managementView');
@@ -663,20 +680,24 @@
         var dashBento = execContent.querySelector('.exec-bento');
         if (dashHeader) dashHeader.style.display = 'none';
         if (dashBento) dashBento.style.display = 'none';
-        var dateFilter = document.getElementById('dateFilterContainer');
-        if (dateFilter) dateFilter.style.display = 'none';
-        
+
+        // Attention banner: visible ONLY on dashboard route
+        var attentionBanner = document.getElementById('attention-banner-container');
+        if (attentionBanner) attentionBanner.style.display = isDashboard ? '' : 'none';
+
         stubContainer.style.display = 'none';
-        var stubs = stubContainer.querySelectorAll('.route-stub');
+        var stubs = stubContainer.querySelectorAll('.route-stub, #' + routesOrIds().join(', #'));
         for (var j = 0; j < stubs.length; j++) {
             stubs[j].style.display = 'none';
         }
 
         // 3. Show target
-        if (hash === 'dashboard' || !ROUTE_MAP[hash]) {
+        if (isDashboard) {
             if (dashHeader) dashHeader.style.display = '';
             if (dashBento) dashBento.style.display = '';
-            if (dateFilter) dateFilter.style.display = 'flex';
+            // Restore active sub-tab
+            var activeTab = document.querySelector('.dashboard-subtab.active');
+            if (activeTab) showSubTab(activeTab.dataset.tab);
         } else {
             var targetId = ROUTE_MAP[hash];
             var target = document.getElementById(targetId);
@@ -684,14 +705,166 @@
                 stubContainer.style.display = '';
                 target.style.display = 'block';
                 if (hash === 'reports') {
-                    // The global DateRangeFilter drives the Reports window too.
-                    if (dateFilter) dateFilter.style.display = 'flex';
                     renderReports(1);
+                } else if (hash === 'surveys') {
+                    loadSmsHealthDonuts();
                 }
             }
         }
 
         setActiveNav(hash);
+    }
+
+    // Helper to get all route view IDs for hiding
+    function routesOrIds() {
+        return Object.values(ROUTE_MAP);
+    }
+
+    // ─── Dashboard Sub-Tabs ───────────────────────────────────────────────
+    function initSubTabs() {
+        var subTabs = document.querySelectorAll('.dashboard-subtab');
+        for (var i = 0; i < subTabs.length; i++) {
+            subTabs[i].addEventListener('click', function () {
+                showSubTab(this.dataset.tab);
+            });
+        }
+        // Default: show overview
+        showSubTab('overview');
+    }
+
+    function showSubTab(tabName) {
+        // Update active button
+        var subTabs = document.querySelectorAll('.dashboard-subtab');
+        for (var i = 0; i < subTabs.length; i++) {
+            if (subTabs[i].dataset.tab === tabName) {
+                subTabs[i].classList.add('active');
+            } else {
+                subTabs[i].classList.remove('active');
+            }
+        }
+
+        // Show only the matching section(s) inside exec-bento
+        var bento = document.getElementById('dashboardBento');
+        if (!bento) return;
+
+        // Section mapping: which data-section belongs to which sub-tab
+        var tabSections = {
+            'overview': ['s1'],
+            'tasks': ['s7'],
+            'issues': ['s4'],
+            'trends': ['s3']
+        };
+
+        var showSections = tabSections[tabName] || ['s1'];
+        var allSections = bento.querySelectorAll('.exec-bento-full, .exec-bento-half, .exec-bento-third, .exec-kpi-row');
+        for (var j = 0; j < allSections.length; j++) {
+            var sec = allSections[j];
+            var secName = sec.getAttribute('data-section') || sec.id;
+            var shouldShow = false;
+            for (var k = 0; k < showSections.length; k++) {
+                if (secName === showSections[k] || sec.id === showSections[k] || sec.id === showSections[k] + '-body') {
+                    shouldShow = true;
+                    break;
+                }
+            }
+            sec.style.display = shouldShow ? '' : 'none';
+        }
+    }
+
+    // ─── Surveys Donut Page ────────────────────────────────────────────────
+    function buildSurveysView() {
+        var pillars = [
+            { id: 'safety_policy', label: 'Safety Policy & Objectives' },
+            { id: 'safety_risk_management', label: 'Safety Risk Management' },
+            { id: 'safety_assurance', label: 'Safety Assurance' },
+            { id: 'safety_promotion', label: 'Safety Promotion' }
+        ];
+
+        var html = '<div style="padding: 24px 0;">';
+        html += '<h2 style="font-size:1.3rem;font-weight:700;margin-bottom:4px;">SMS Maturity — ICAO SSP Pillars</h2>';
+        html += '<p style="color:#6b7280;font-size:0.9rem;margin-bottom:20px;">Aggregated from safety culture survey responses.</p>';
+        html += '<div class="donut-grid">';
+        for (var i = 0; i < pillars.length; i++) {
+            html += '<div class="donut-card" id="donut-' + pillars[i].id + '">';
+            html += '<h3>' + pillars[i].label + '</h3>';
+            html += '<canvas id="canvas-' + pillars[i].id + '"></canvas>';
+            html += '<div class="donut-score" id="score-' + pillars[i].id + '">—</div>';
+            html += '</div>';
+        }
+        html += '</div></div>';
+        return html;
+    }
+
+    function loadSmsHealthDonuts() {
+        var days = 90;
+        // Try to read the current DateRangeFilter value
+        if (window.DateRangeFilter && typeof DateRangeFilter.getCurrentDays === 'function') {
+            days = DateRangeFilter.getCurrentDays() || 90;
+        }
+        var apiBase = '';
+        if (window.APP_CONFIG && window.APP_CONFIG.apiBaseUrl) {
+            apiBase = window.APP_CONFIG.apiBaseUrl;
+        } else if (window.API_BASE_URL) {
+            apiBase = window.API_BASE_URL;
+        }
+
+        fetch(apiBase + '/api/v1/dashboard/sms-health?days=' + days, {
+            headers: { 'Authorization': 'Bearer ' + (window.__idToken || '') }
+        })
+        .then(function (r) { return r.json(); })
+        .then(function (resp) {
+            renderDonuts(resp && resp.data ? resp.data : null);
+        })
+        .catch(function (err) {
+            console.warn('[Surveys] sms-health fetch failed:', err);
+            renderDonuts(null);
+        });
+    }
+
+    function renderDonuts(data) {
+        var pillars = ['safety_policy', 'safety_risk_management', 'safety_assurance', 'safety_promotion'];
+        var colors = ['#235a4a', '#2e7d6b', '#3da68f', '#5bc4a8'];
+
+        for (var i = 0; i < pillars.length; i++) {
+            var pid = pillars[i];
+            var score = (data && data.pillars && data.pillars[pid] != null) ? data.pillars[pid] : null;
+            var scoreEl = document.getElementById('score-' + pid);
+            if (scoreEl) scoreEl.textContent = score != null ? Math.round(score) + '%' : '—';
+
+            var canvas = document.getElementById('canvas-' + pid);
+            if (!canvas || !window.Chart) continue;
+
+            if (charts['donut_' + pid]) {
+                charts['donut_' + pid].destroy();
+            }
+
+            charts['donut_' + pid] = new Chart(canvas, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Achieved', 'Gap'],
+                    datasets: [{
+                        data: score != null ? [score, 100 - score] : [0, 100],
+                        backgroundColor: [colors[i], '#e5e7eb'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    cutout: '65%',
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function (ctx) {
+                                    return ctx.label + ': ' + Math.round(ctx.parsed) + '%';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
     }
 
     function setActiveNav(activeId) {

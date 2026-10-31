@@ -13,22 +13,60 @@
         .route-stub { padding: 32px 40px; }
         .route-stub h1 { font-size: 1.6rem; font-weight: 700; margin-bottom: 12px; }
         .route-stub p  { color: #6b7280; }
+        /* Dashboard sub-tabs */
+        .dashboard-subtabs { display: flex; gap: 4px; margin-bottom: 20px; border-bottom: 2px solid #e5e7eb; flex-wrap: wrap; }
+        .dashboard-subtab {
+            padding: 10px 20px; font-size: 0.9rem; font-weight: 600; color: #6b7280;
+            cursor: pointer; border: none; background: none;
+            border-bottom: 3px solid transparent; margin-bottom: -2px;
+            transition: color 0.2s, border-color 0.2s;
+        }
+        .dashboard-subtab:hover { color: #192f35; }
+        .dashboard-subtab.active { color: #192f35; border-bottom-color: #235a4a; }
+        .dashboard-subtab:focus { outline: none; }
+        /* Surveys donut grid */
+        .donut-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; padding: 20px 0; }
+        .donut-card {
+            background: #fff; border-radius: 12px; padding: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08); text-align: center;
+        }
+        .donut-card h3 { font-size: 0.95rem; font-weight: 600; color: #192f35; margin-bottom: 16px; }
+        .donut-card canvas { max-width: 200px; max-height: 200px; margin: 0 auto; }
+        .donut-score { font-size: 1.4rem; font-weight: 700; color: #235a4a; margin-top: 8px; }
+        /* Footer */
+        .exec-footer {
+            margin-top: auto; padding: 24px 40px; border-top: 1px solid #e5e7eb;
+            text-align: center; font-size: 0.8rem; color: #9ca3af;
+        }
+        .exec-footer a { color: #235a4a; text-decoration: none; }
     </style>
 </head>
 <body class="executive-layout">
 
-<div id="pageContent">
-    <div class="exec-page-header">
-        <h1>Safety Manager Dashboard</h1>
-        <p>Operational safety intelligence for the Safety Manager.</p>
+<div id="pageContent" style="display: flex; flex-direction: column; min-height: 100vh;">
+    <!-- Global Header: Date Filter (persistent across all routes) -->
+    <div id="globalHeader" style="padding: 0 40px;">
+        <div id="dateFilterContainer" style="display:flex; justify-content:flex-end; padding: 12px 0;"></div>
     </div>
 
-    <div id="dateFilterContainer" style="display:flex; justify-content:flex-end; margin: -8px 0 16px 0;"></div>
+    <div class="exec-page-header" id="dashboardHeader" style="padding: 0 40px;">
+        <h1>Safety Manager Dashboard</h1>
+        <p>Operational safety intelligence for the Safety Manager.</p>
+        <!-- Dashboard Sub-Tabs -->
+        <div class="dashboard-subtabs" id="dashboardSubTabs">
+            <button class="dashboard-subtab active" data-tab="overview">Overview</button>
+            <button class="dashboard-subtab" data-tab="tasks">My Tasks &amp; Approvals</button>
+            <button class="dashboard-subtab" data-tab="issues">Key Safety Issues</button>
+            <button class="dashboard-subtab" data-tab="trends">Reports Trend</button>
+        </div>
+    </div>
 
-        <!-- S6 — Needs Your Attention (Alert Banner) -->
+    <!-- S6 — Needs Your Attention (Alert Banner) — only visible on #dashboard -->
+    <div id="attention-banner-container" style="padding: 0 40px;">
         <div id="s6-attention" class="exec-attention-list" style="margin-bottom:16px;padding:12px;border-left:4px solid #16a34a;background:#f0fdf4;font-weight:600;"></div>
+    </div>
 
-    <div class="exec-bento">
+    <div class="exec-bento" id="dashboardBento">
 
         <div class="exec-bento-full" data-section="s1">
             <div class="exec-kpi-row" id="s1-body">
@@ -151,6 +189,13 @@
 
 
     </div>
+
+    <!-- Footer -->
+    <footer class="exec-footer">
+        &copy; 2026 <a href="/">SMS360X</a> by AviaSafe Systems. All rights reserved.
+        | <a href="/privacy.html">Privacy Policy</a>
+        | <a href="/terms.html">Terms of Service</a>
+    </footer>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
