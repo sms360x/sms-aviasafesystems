@@ -13,17 +13,6 @@
         .route-stub { padding: 32px 40px; }
         .route-stub h1 { font-size: 1.6rem; font-weight: 700; margin-bottom: 12px; }
         .route-stub p  { color: #6b7280; }
-        /* Dashboard sub-tabs */
-        .dashboard-subtabs { display: flex; gap: 4px; margin-bottom: 20px; border-bottom: 2px solid #e5e7eb; flex-wrap: wrap; }
-        .dashboard-subtab {
-            padding: 10px 20px; font-size: 0.9rem; font-weight: 600; color: #6b7280;
-            cursor: pointer; border: none; background: none;
-            border-bottom: 3px solid transparent; margin-bottom: -2px;
-            transition: color 0.2s, border-color 0.2s;
-        }
-        .dashboard-subtab:hover { color: #192f35; }
-        .dashboard-subtab.active { color: #192f35; border-bottom-color: #235a4a; }
-        .dashboard-subtab:focus { outline: none; }
         /* Surveys donut grid */
         .donut-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; padding: 20px 0; }
         .donut-card {
@@ -31,12 +20,12 @@
             box-shadow: 0 1px 3px rgba(0,0,0,0.08); text-align: center;
         }
         .donut-card h3 { font-size: 0.95rem; font-weight: 600; color: #192f35; margin-bottom: 16px; }
-        .donut-card canvas { width: 200px !important; height: 200px !important; margin: 0 auto; display: block; }
         .donut-score { font-size: 1.4rem; font-weight: 700; color: #235a4a; margin-top: 8px; }
-        /* Footer */
+        /* Footer — natural document flow (single-scroll dashboard) */
         .exec-footer {
-            clear: both; width: 100%; text-align: center; padding: 2rem 0;
+            width: 100%; text-align: center; padding: 2rem 0;
             font-size: 0.8rem; color: #9ca3af; border-top: 1px solid #e5e7eb;
+            margin-top: 2rem;
         }
         .exec-footer a { color: #235a4a; text-decoration: none; }
     </style>
@@ -52,13 +41,6 @@
     <div class="exec-page-header" id="dashboardHeader" style="padding: 0 40px;">
         <h1>Safety Manager Dashboard</h1>
         <p>Operational safety intelligence for the Safety Manager.</p>
-        <!-- Dashboard Sub-Tabs -->
-        <div class="dashboard-subtabs" id="dashboardSubTabs">
-            <button class="dashboard-subtab active" data-tab="overview">Overview</button>
-            <button class="dashboard-subtab" data-tab="tasks">My Tasks &amp; Approvals</button>
-            <button class="dashboard-subtab" data-tab="issues">Key Safety Issues</button>
-            <button class="dashboard-subtab" data-tab="trends">Reports Trend</button>
-        </div>
     </div>
 
     <!-- S6 — Needs Your Attention (Alert Banner) — only visible on #dashboard -->
@@ -242,10 +224,5 @@ document.addEventListener('DOMContentLoaded', function() {
     addLogoutButton();
 });
 </script>
-<footer class="exec-footer">
-        &copy; 2026 <a href="/">SMS360X</a> by AviaSafe Systems. All rights reserved.
-        | <a href="/privacy.html">Privacy Policy</a>
-        | <a href="/terms.html">Terms of Service</a>
-    </footer>
 </body>
 </html>

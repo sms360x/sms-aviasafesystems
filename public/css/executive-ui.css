@@ -179,38 +179,12 @@ body.executive-layout {
 .exec-bento-quarter { grid-column: span 3; }
 
 .exec-kpi-row {
-    display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1rem; margin-bottom: 1.25rem;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+    margin-bottom: 24px;
 }
-.exec-kpi {
-    background: var(--exec-surface); border: 1px solid var(--exec-border);
-    border-radius: var(--exec-radius-md); padding: 1.1rem 1.25rem;
-    box-shadow: var(--exec-shadow-sm);
-    display: flex; align-items: center; gap: 1rem;
-    transition: box-shadow 0.15s;
-}
-.exec-kpi:hover { box-shadow: var(--exec-shadow-md); }
-.exec-kpi-icon {
-    width: 44px; height: 44px; border-radius: var(--exec-radius-sm);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 1.1rem; flex-shrink: 0;
-}
-.exec-kpi-icon.blue { background: var(--exec-accent-soft); color: var(--exec-accent); }
-.exec-kpi-icon.green { background: var(--exec-success-soft); color: var(--exec-success); }
-.exec-kpi-icon.amber { background: var(--exec-warning-soft); color: var(--exec-warning); }
-.exec-kpi-icon.red { background: var(--exec-danger-soft); color: var(--exec-danger); }
-.exec-kpi-icon.navy { background: #e9f0e9; color: var(--exec-navy-900); }
-.exec-kpi-body { flex: 1; min-width: 0; }
-.exec-kpi-label {
-    font-size: 0.75rem; font-weight: 600; color: #65766e;
-    text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 0.25rem;
-    white-space: normal;
-}
-.exec-kpi-value { font-size: 2rem; font-weight: 800; color: var(--exec-text-primary); line-height: 1.1; }
-.exec-kpi-trend { font-size: 0.72rem; font-weight: 600; margin-top: 0.25rem; }
-.exec-kpi-trend.up { color: var(--exec-success); }
-.exec-kpi-trend.down { color: var(--exec-danger); }
-.exec-kpi-trend.flat { color: var(--exec-text-muted); }
+
 
 .exec-card {
     background: #ffffff; border: 1px solid var(--exec-border);
@@ -315,6 +289,20 @@ body.executive-layout {
 .exec-donut-legend-swatch { width: 12px; height: 12px; border-radius: 3px; flex-shrink: 0; }
 .exec-donut-center-label { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; pointer-events: none; }
 
+/* ─── SMS Survey donuts: fixed 200×200 container ──────────────────────────── */
+.donut-canvas-wrap {
+    width: 200px;
+    height: 200px;
+    margin: 0 auto;
+    position: relative;
+    flex-shrink: 0;
+}
+.donut-canvas-wrap canvas {
+    width: 100% !important;
+    height: 100% !important;
+    display: block;
+}
+
 /* ─── Legend (line/bar charts) ───────────────────────────────────────────── */
 .exec-legend { display: flex; flex-wrap: wrap; gap: 0.75rem; }
 .exec-legend-item { display: flex; align-items: center; gap: 0.4rem; font-size: 0.78rem; color: var(--exec-text-secondary); }
@@ -339,14 +327,6 @@ body.executive-layout {
     .exec-donut-grid { grid-template-columns: 1fr !important; }
     .exec-donut-canvas { max-width: 140px; }
 }
-.exec-kpi-row {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 1.5rem;
-    margin-bottom: 24px;
-}
-@media (max-width: 600px)  { .exec-kpi-row { grid-template-columns: 1fr; } }
-
 .exec-kpi-card {
     display: flex;
     align-items: center;
@@ -356,7 +336,9 @@ body.executive-layout {
     border-radius: 12px;
     padding: 18px 20px;
     box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+    transition: box-shadow 0.15s;
 }
+.exec-kpi-card:hover { box-shadow: var(--exec-shadow-md); }
 
 .exec-kpi-icon {
     width: 48px;

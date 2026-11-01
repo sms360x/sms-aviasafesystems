@@ -558,7 +558,6 @@
                 });
             }
 
-            initSubTabs();
             applyRoute();
 
             // Re-apply route on hash change (tab clicks, back/forward)
@@ -695,9 +694,11 @@
         if (isDashboard) {
             if (dashHeader) dashHeader.style.display = '';
             if (dashBento) dashBento.style.display = '';
-            // Restore active sub-tab
-            var activeTab = document.querySelector('.dashboard-subtab.active');
-            if (activeTab) showSubTab(activeTab.dataset.tab);
+            // Single-scroll: show ALL dashboard sections (no tab filtering)
+            var allSections = dashBento.querySelectorAll('.exec-bento-full, .exec-bento-half, .exec-bento-third, .exec-kpi-row');
+            for (var j = 0; j < allSections.length; j++) {
+                allSections[j].style.display = '';
+            }
         } else {
             var targetId = ROUTE_MAP[hash];
             var target = document.getElementById(targetId);
@@ -720,57 +721,6 @@
         return Object.values(ROUTE_MAP);
     }
 
-    // ─── Dashboard Sub-Tabs ───────────────────────────────────────────────
-    function initSubTabs() {
-        var subTabs = document.querySelectorAll('.dashboard-subtab');
-        for (var i = 0; i < subTabs.length; i++) {
-            subTabs[i].addEventListener('click', function () {
-                showSubTab(this.dataset.tab);
-            });
-        }
-        // Default: show overview
-        showSubTab('overview');
-    }
-
-    function showSubTab(tabName) {
-        // Update active button
-        var subTabs = document.querySelectorAll('.dashboard-subtab');
-        for (var i = 0; i < subTabs.length; i++) {
-            if (subTabs[i].dataset.tab === tabName) {
-                subTabs[i].classList.add('active');
-            } else {
-                subTabs[i].classList.remove('active');
-            }
-        }
-
-        // Show only the matching section(s) inside exec-bento
-        var bento = document.getElementById('dashboardBento');
-        if (!bento) return;
-
-        // Section mapping: which data-section belongs to which sub-tab
-        var tabSections = {
-            'overview': ['s1'],
-            'tasks': ['s7'],
-            'issues': ['s4'],
-            'trends': ['s3']
-        };
-
-        var showSections = tabSections[tabName] || ['s1'];
-        var allSections = bento.querySelectorAll('.exec-bento-full, .exec-bento-half, .exec-bento-third, .exec-kpi-row');
-        for (var j = 0; j < allSections.length; j++) {
-            var sec = allSections[j];
-            var secName = sec.getAttribute('data-section') || sec.id;
-            var shouldShow = false;
-            for (var k = 0; k < showSections.length; k++) {
-                if (secName === showSections[k] || sec.id === showSections[k] || sec.id === showSections[k] + '-body') {
-                    shouldShow = true;
-                    break;
-                }
-            }
-            sec.style.display = shouldShow ? '' : 'none';
-        }
-    }
-
     // ─── Surveys Donut Page ────────────────────────────────────────────────
     function buildSurveysView() {
         var pillars = [
@@ -787,7 +737,7 @@
         for (var i = 0; i < pillars.length; i++) {
             html += '<div class="donut-card" id="donut-' + pillars[i].id + '">';
             html += '<h3>' + pillars[i].label + '</h3>';
-            html += '<canvas id="canvas-' + pillars[i].id + '"></canvas>';
+            html += '<div class="donut-canvas-wrap"><canvas id="canvas-' + pillars[i].id + '"></canvas></div>';
             html += '<div class="donut-score" id="score-' + pillars[i].id + '">—</div>';
             html += '</div>';
         }
