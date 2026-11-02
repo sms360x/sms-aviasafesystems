@@ -12,11 +12,10 @@
     var MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
     var charts = {};
-    var renderTokens = { reportsTrend: 0, donut: 0 };
     // Monotonic generation for asynchronous data requests. Every route change
-    // and every new dashboard data load starts a new generation, so responses
+    // and every filter change starts a new generation, so responses
     // from an older generation can be rejected before they touch the DOM.
-    var requestGeneration = 0;
+    var currentGeneration = 0;
     var currentTenant = '';
     var currentDays = 90;
     window.__dashboardCharts = charts;
@@ -77,85 +76,7 @@
 
     // ─── Section renderers ─────────────────────────────────────────────────
 
-    function renderKpis(overviewRes, smsHealthRes, actionRes) {
-        // Card 1: SMS Health (uses overall_score, NOT score)
-        var healthEl = document.getElementById('s1-sms-health');
-        var healthTier = document.getElementById('s1-sms-health-tier');
-        if (smsHealthRes && smsHealthRes.ok && smsHealthRes.data) {
-            var score = smsHealthRes.data.overall_score;
-            var tier = smsHealthRes.data.tier_label || smsHealthRes.data.tier || 'unknown';
-            if (score !== undefined && score !== null) {
-                healthEl.textContent = Math.round(score) + '%';
-                healthTier.textContent = tier;
-            } else {
-                healthEl.textContent = 'N/A';
-                healthTier.textContent = 'No survey data';
-            }
-        } else {
-            healthEl.textContent = 'N/A';
-            healthTier.textContent = 'No survey data';
-        }
 
-        // Card 2: Significant Risks (uses .kpis.high_risk_reports)
-        var risksEl = document.getElementById('s1-high-risks');
-        var risksNote = document.getElementById('s1-high-risks-note');
-        if (overviewRes && overviewRes.ok && overviewRes.data && overviewRes.data.kpis) {
-            var highRisks = overviewRes.data.kpis.high_risk_reports || 0;
-            risksEl.textContent = highRisks;
-            risksNote.textContent = highRisks > 0 
-                ? 'require executive attention' 
-                : 'No significant risks';
-        } else {
-            risksEl.textContent = '0';
-            risksNote.textContent = 'No significant risks';
-        }
-
-        // Card 3: Safety Reports (uses .kpis.total_reports; honest trend)
-        var reportsEl = document.getElementById('s1-safety-reports');
-        var reportsTrend = document.getElementById('s1-safety-reports-trend');
-        if (overviewRes && overviewRes.ok && overviewRes.data && overviewRes.data.kpis) {
-            var total = overviewRes.data.kpis.total_reports || 0;
-            var prev = overviewRes.data.kpis.previous_period_total;
-            reportsEl.textContent = total;
-            if (typeof prev === 'number' && prev > 0) {
-                var pct = Math.round(((total - prev) / prev) * 100);
-                var arrow = pct >= 0 ? '\u2191' : '\u2193';
-                reportsTrend.textContent = arrow + ' ' + Math.abs(pct) + '% vs previous period';
-                reportsTrend.className = 'exec-kpi-trend ' + (pct >= 0 ? 'trend-up' : 'trend-down');
-            } else {
-                reportsTrend.textContent = 'vs previous period';
-                reportsTrend.className = 'exec-kpi-trend';
-            }
-        } else {
-            reportsEl.textContent = '0';
-            reportsTrend.textContent = 'vs previous period';
-            reportsTrend.className = 'exec-kpi-trend';
-        }
-
-        // Card 4: Overdue Actions (element may be absent from some layouts)
-        var actionsEl = document.getElementById('s1-action-completion');
-        var actionsNote = document.getElementById('s1-action-completion-note');
-        if (actionsEl) {
-            if (actionRes && actionRes.ok && actionRes.data) {
-                var overdue = actionRes.data.overdue || 0;
-                actionsEl.textContent = overdue;
-                if (actionsNote) {
-                    actionsNote.textContent = overdue > 0 
-                        ? 'high priority items' 
-                        : 'No overdue actions';
-                }
-            } else {
-                actionsEl.textContent = '0';
-                if (actionsNote) actionsNote.textContent = 'No overdue actions';
-            }
-        }
-
-        // Card 5: Regulatory Compliance (static until Compliance module exists)
-        var complianceEl = document.getElementById('s1-compliance');
-        var complianceNote = document.getElementById('s1-compliance-note');
-        complianceEl.textContent = 'On Track';
-        complianceNote.textContent = 'No open State Regulator findings';
-    }
     function renderSmsHealth(smsHealth) {
         var val = document.getElementById('s1-sms-health');
         var tier = document.getElementById('s1-sms-health-tier');
@@ -182,246 +103,9 @@
         if (el) el.textContent = text;
     }
 
-    function renderTrends(trends) {
-        var canvas = document.getElementById('s3-reports-trend');
-        if (!canvas || !canvas.parentElement) {
-            console.error('[renderTrends] Canvas not found, aborting');
-            return;
-        }
-        if (!window.Chart) {
-            console.error('[renderTrends] Chart.js not loaded, aborting');
-            return;
-        }
-        if (!trends || !trends.ok || !Array.isArray(trends.data)) {
-            renderEmpty('s3-body', 'Failed to load', trends && trends.reason ? trends.reason : 'trends unavailable');
-            return;
-        }
-        var rows = trends.data;
-        if (!rows.length) {
-            renderEmpty('s3-body', 'No data', 'No report trend data in period.');
-            return;
-        }
-        // Parse API response: [{month:"10", year:2026, voluntary:16, mandatory:14}, ...]
-        var monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-        var labels = [];
-        var voluntaryData = [];
-        var mandatoryData = [];
-        rows.forEach(function (item) {
-            var m = parseInt(item.month, 10) - 1;
-            if (m >= 0 && m <= 11) {
-                labels.push(monthNames[m] + ' ' + item.year);
-            } else {
-                labels.push(String(item.month) + ' ' + item.year);
-            }
-            voluntaryData.push(item.voluntary || 0);
-            mandatoryData.push(item.mandatory || 0);
-        });
-        // Reset canvas to clear any corrupted 0x0 dimensions from prior hidden render
-        canvas.width = 0;
-        canvas.height = 0;
-        destroyChart('reportsTrend');
-        var renderToken = ++renderTokens.reportsTrend;
 
-        // Create the chart only after the browser has completed layout/paint of the
-        // now-visible container. A single rAF can still run before paint, so use a
-        // nested rAF to guarantee the container has non-zero dimensions when
-        // Chart.js measures the canvas.
-        requestAnimationFrame(function () {
-            requestAnimationFrame(function () {
-                // A newer render (e.g. sub-route fetch racing loadAll) superseded this one.
-                if (renderToken !== renderTokens.reportsTrend) return;
-                charts.reportsTrend = new Chart(canvas, {
-                    type: 'line',
-                    data: {
-                        labels: labels,
-                        datasets: [
-                            {
-                                label: 'VSR',
-                                data: voluntaryData,
-                                borderColor: '#1E6B52',
-                                backgroundColor: 'rgba(30, 107, 82, 0.12)',
-                                fill: false,
-                                tension: 0.4,
-                                pointRadius: 4,
-                                pointBackgroundColor: '#1E6B52',
-                                spanGaps: true
-                            },
-                            {
-                                label: 'MOR',
-                                data: mandatoryData,
-                                borderColor: '#EF4444',
-                                backgroundColor: 'rgba(239, 68, 68, 0.12)',
-                                fill: false,
-                                tension: 0.4,
-                                pointRadius: 4,
-                                pointBackgroundColor: '#EF4444',
-                                spanGaps: true
-                            }
-                        ]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: { display: true, position: 'top' },
-                            tooltip: { mode: 'index', intersect: false }
-                        },
-                        scales: {
-                            y: { beginAtZero: true, ticks: { precision: 0 } },
-                            x: { offset: true, grid: { display: false } }
-                        }
-                    }
-                });
-                charts.reportsTrend.resize();
-                charts.reportsTrend.update();
-            });
-        });
-    }
 
-    function renderRiskMatrix(riskMatrix) {
-        var el = document.getElementById('s2-matrix');
-        var caption = document.getElementById('s2-caption');
-        if (!el) return;
-        var data = (riskMatrix && riskMatrix.ok) ? riskMatrix.data : null;
-        if (!data || !data.severity_scale || !data.probability_scale) {
-            el.innerHTML = '<div class="exec-empty" style="grid-column:1 / -1;">' +
-                '<div class="exec-empty-title">Failed to load</div>' +
-                '<div class="exec-empty-note">' + esc(riskMatrix && riskMatrix.reason ? riskMatrix.reason : 'risk matrix unavailable') + '</div></div>';
-            if (caption) caption.textContent = '\u2014';
-            return;
-        }
-        // ICAO Doc 9859 orientation: Y-axis severity Catastrophic (A) -> Negligible (E),
-        // X-axis probability Frequent (5) -> Extremely Improbable (1).
-        var severities = data.severity_scale.slice().sort(function (a, b) { return b.value - a.value; });
-        var probabilities = data.probability_scale.slice().sort(function (a, b) { return b.value - a.value; });
-        var cells = {};
-        (data.cells || []).forEach(function (c) {
-            cells[c.probability + '|' + c.severity] = c;
-        });
-        var letters = { 5: 'A', 4: 'B', 3: 'C', 2: 'D', 1: 'E' };
 
-        var html = '<div class="exec-risk-axis-label"></div>';
-        probabilities.forEach(function (p) {
-            html += '<div class="exec-risk-axis-label exec-risk-axis-x">' +
-                esc(p.label) + ' (' + esc(p.value) + ')</div>';
-        });
-        severities.forEach(function (s) {
-            var letter = s.letter || letters[s.value] || '';
-            html += '<div class="exec-risk-axis-label exec-risk-axis-y">' +
-                esc(s.label) + ' (' + esc(letter) + ')</div>';
-            probabilities.forEach(function (p) {
-                var cell = cells[p.value + '|' + s.value] || {};
-                var count = Number(cell.count) || 0;
-                var index = cell.risk_index || (String(p.value) + letter);
-                var tolerability = cell.tolerability || 'Unclassified';
-                var cls = String(tolerability).toLowerCase();
-                var title = index + ' \u2014 ' + p.label + ' \u00d7 ' + s.label +
-                    ' (' + tolerability + '): ' + count + ' hazard' + (count === 1 ? '' : 's');
-                html += '<div class="exec-risk-cell ' + esc(cls) + (count === 0 ? ' is-empty' : '') +
-                    '" title="' + esc(title) + '">' +
-                    '<span class="exec-risk-index">' + esc(index) + '</span>' +
-                    '<span class="exec-risk-count">' + count + '</span></div>';
-            });
-        });
-        el.innerHTML = html;
-        if (caption) {
-            var total = Number(data.total) || 0;
-            caption.textContent = total + ' hazard' + (total === 1 ? '' : 's') +
-                ' plotted on the ICAO Doc 9859 tolerability grid.';
-        }
-    }
-
-    function renderHazards(keyIssues) {
-        var tbody = document.getElementById('s4-body');
-        if (!tbody) return;
-        var data = (keyIssues && keyIssues.ok) ? keyIssues.data : null;
-        if (!data) {
-            renderTableEmpty('s4-body', 'Failed to load \u2014 ' + (keyIssues && keyIssues.reason ? keyIssues.reason : 'key issues unavailable'));
-            return;
-        }
-        var items = Array.isArray(data) ? data : (data.items || []);
-        if (!items.length) {
-            renderTableEmpty('s4-body', 'No hazard data in period.');
-            return;
-        }
-        var trendLabel = { rising: '\u25b2 Rising', falling: '\u25bc Falling', flat: '\u25cf Flat' };
-        tbody.innerHTML = items.slice(0, 5).map(function (h) {
-            var label = h.occurrence_type || h.category || '\u2014';
-            var trend = h.trend_direction || h.trend;
-            return '<tr><td>' + esc(label) + '</td><td>' + esc(h.count == null ? '\u2014' : String(h.count)) +
-                '</td><td>' + esc(trendLabel[trend] || '\u2014') + '</td></tr>';
-        }).join('');
-    }
-
-    function renderDonut(actionCompletion) {
-        var data = (actionCompletion && actionCompletion.ok) ? actionCompletion.data : null;
-        if (!data) {
-            renderEmpty('s5-body', 'Failed to load',
-                actionCompletion && actionCompletion.reason ? actionCompletion.reason : 'action completion unavailable');
-            return;
-        }
-        // Server-side CAP state machine (human-in-the-loop): no date math here.
-        var order = ['Overdue', 'Due \u226430d', 'On Track', 'Pending Review', 'Closed', 'Missing due date'];
-        var colors = {
-            'Overdue': '#dc2626',
-            'Due \u226430d': '#d97706',
-            'On Track': '#16a34a',
-            'Pending Review': '#235a4b',
-            'Closed': '#53685c',
-            'Missing due date': '#83938a'
-        };
-        var counts = {
-            'Overdue': Number(data.overdue) || 0,
-            'Due \u226430d': Number(data.due_within_30_days) || 0,
-            'On Track': Number(data.on_track) || 0,
-            'Pending Review': Number(data.pending_review) || 0,
-            'Closed': Number(data.closed) || 0,
-            'Missing due date': Number(data.no_due_date) || 0
-        };
-        var values = order.map(function (k) { return counts[k]; });
-        var sum = values.reduce(function (a, b) { return a + b; }, 0);
-        var total = (data.total == null) ? sum : (Number(data.total) || 0);
-
-        var center = document.getElementById('s5-donut-center');
-        if (center) center.textContent = String(total);
-
-        var legend = document.getElementById('s5-donut-legend');
-        if (legend) {
-            legend.innerHTML = order.map(function (k) {
-                return '<div class="exec-legend-item"><span class="exec-donut-legend-swatch" style="background:' + colors[k] + ';"></span><span>' + esc(k) + '</span><span style="margin-left:auto;font-weight:600;">' + counts[k] + '</span></div>';
-            }).join('');
-        }
-
-        var canvas = document.getElementById('s5-donut-canvas');
-        if (canvas && window.Chart) {
-            // Reset canvas to clear any corrupted 0x0 dimensions from prior hidden render
-            canvas.width = 0;
-            canvas.height = 0;
-            destroyChart('donut');
-            var renderToken = ++renderTokens.donut;
-
-            // Create the chart only after the browser has completed layout/paint of the
-            // now-visible container. A single rAF can still run before paint, so use a
-            // nested rAF to guarantee the container has non-zero dimensions when
-            // Chart.js measures the canvas.
-            requestAnimationFrame(function () {
-                requestAnimationFrame(function () {
-                    // A newer render (e.g. sub-route fetch racing loadAll) superseded this one.
-                    if (renderToken !== renderTokens.donut) return;
-                    charts.donut = new Chart(canvas, {
-                        type: 'doughnut',
-                        data: {
-                            labels: order,
-                            datasets: [{ data: values, backgroundColor: order.map(function (k) { return colors[k]; }), borderWidth: 0 }]
-                        },
-                        options: { responsive: true, maintainAspectRatio: false, cutout: '65%', plugins: { legend: { display: false } } }
-                    });
-                    charts.donut.resize();
-                    charts.donut.update();
-                });
-            });
-        }
-    }
 
     function renderSmsComponents(smsHealthResult) {
         var data = (smsHealthResult && smsHealthResult.ok) ? smsHealthResult.data : null;
@@ -641,7 +325,7 @@
                 });
             }
 
-            applyRoute();
+            // Initial route is loaded by the period filter callback.
 
             // Re-apply route on hash change (tab clicks, back/forward)
             if (!window.__hashListenerWired) {
@@ -674,22 +358,14 @@
             if (typeof window.DateRangeFilter === 'undefined') {
                 console.error('[Boot] DateRangeFilter component not loaded. ' +
                     'Falling back to default 90-day load.');
-                loadAll(tenant, 90);
+                applyRoute();
                 return;
             }
 
             DateRangeFilter.mount('#dateFilterContainer', {
                 defaultDays: 90,
                 onChange: function (days) {
-                    currentDays = days;
-                    // Spec #4e — same date window drives both the dashboard and
-                    // the Reports table.
-                    var route = (window.location.hash || '').replace(/^#/, '');
-                    if (route === 'reports') {
-                        renderReports(1);
-                    } else {
-                        loadAll(tenant, days);
-                    }
+                    changePeriod(days);
                 }
             });
         });
@@ -712,17 +388,461 @@
         'audit':            'auditView'
     };
 
+    var currentModule = null;
+    var moduleTemplates = null;
+
+    function captureModuleTemplates() {
+        if (moduleTemplates) return;
+        var bento = document.getElementById('dashboardBento');
+        moduleTemplates = {};
+        ['s1', 's3', 's4', 's7'].forEach(function (id) {
+            var section = bento.querySelector('[data-section="' + id + '"]');
+            moduleTemplates[id] = section.outerHTML;
+        });
+        bento.innerHTML = '';
+    }
+
+    function makeModule(section, title, requests, render) {
+        var root;
+        var contentTemplate;
+        return {
+            mount: function (container) {
+                container.innerHTML = section;
+                root = container.firstElementChild;
+                root.style.display = '';
+                root.classList.add('exec-solo-view');
+                var status = document.createElement('div');
+                status.className = 'module-status';
+                status.setAttribute('role', 'status');
+                root.prepend(status);
+                root.style.gridColumn = '1 / -1';
+                root.style.minWidth = '0';
+                contentTemplate = root.innerHTML;
+                document.querySelector('#dashboardHeader h1').textContent = title;
+            },
+            load: async function (ctx) {
+                destroyChart('reportsTrend');
+                destroyChart('donut');
+                root.innerHTML = contentTemplate;
+                var status = root.querySelector('.module-status');
+                status.textContent = 'Loading…';
+                var paths = requests(ctx);
+                var keys = Object.keys(paths);
+                // Independent requests render individually; one slow service cannot
+                // hold the other KPI cards hostage.
+                var results = {};
+                await Promise.all(keys.map(async function (key) {
+                    try {
+                        var data = await ApiClient.get(paths[key]);
+                        if (data == null) throw new Error('No response');
+                        results[key] = { ok: true, data: data };
+                    } catch (error) {
+                        results[key] = { ok: false, reason: error.message };
+                    }
+                    if (ctx.generation !== currentGeneration) return;
+                    try { render(results); } catch (error) {
+                        status.textContent = 'Unable to display this information. Select this menu again to retry.';
+                        console.error('[Dashboard module]', error);
+                        return;
+                    }
+                    var failed = Object.keys(results).some(function (k) { return !results[k].ok; });
+                    status.textContent = failed ? 'Some information could not be loaded. Select this menu again to retry.' :
+                        (Object.keys(results).length === keys.length ? '' : 'Loading…');
+                }));
+            },
+            dispose: function () {
+                destroyChart('reportsTrend');
+                destroyChart('donut');
+                if (root) root.remove();
+                root = null;
+            }
+        };
+    }
+
+    var MODULES;
+    function initializeModules() {
+        if (MODULES) return;
+        // Rendering implementations owned by the modules below. Risk matrix is
+        // preserved for the deferred Hazards module; it is not fetched this sprint.
+        function renderKpis(overviewRes, smsHealthRes, actionRes) {
+            // Card 1: SMS Health (uses overall_score, NOT score)
+            var healthEl = document.getElementById('s1-sms-health');
+            var healthTier = document.getElementById('s1-sms-health-tier');
+            if (smsHealthRes && smsHealthRes.ok && smsHealthRes.data) {
+                var score = smsHealthRes.data.overall_score;
+                var tier = smsHealthRes.data.tier_label || smsHealthRes.data.tier || 'unknown';
+                if (score !== undefined && score !== null) {
+                    healthEl.textContent = Math.round(score) + '%';
+                    healthTier.textContent = tier;
+                } else {
+                    healthEl.textContent = 'N/A';
+                    healthTier.textContent = 'No survey data';
+                }
+            } else {
+                healthEl.textContent = 'N/A';
+                healthTier.textContent = 'No survey data';
+            }
+
+            // Card 2: Significant Risks (uses .kpis.high_risk_reports)
+            var risksEl = document.getElementById('s1-high-risks');
+            var risksNote = document.getElementById('s1-high-risks-note');
+            if (overviewRes && overviewRes.ok && overviewRes.data && overviewRes.data.kpis) {
+                var highRisks = overviewRes.data.kpis.high_risk_reports || 0;
+                risksEl.textContent = highRisks;
+                risksNote.textContent = highRisks > 0
+                    ? 'require executive attention'
+                    : 'No significant risks';
+            } else {
+                risksEl.textContent = '0';
+                risksNote.textContent = 'No significant risks';
+            }
+
+            // Card 3: Safety Reports (uses .kpis.total_reports; honest trend)
+            var reportsEl = document.getElementById('s1-safety-reports');
+            var reportsTrend = document.getElementById('s1-safety-reports-trend');
+            if (overviewRes && overviewRes.ok && overviewRes.data && overviewRes.data.kpis) {
+                var total = overviewRes.data.kpis.total_reports || 0;
+                var prev = overviewRes.data.kpis.previous_period_total;
+                reportsEl.textContent = total;
+                if (typeof prev === 'number' && prev > 0) {
+                    var pct = Math.round(((total - prev) / prev) * 100);
+                    var arrow = pct >= 0 ? '\u2191' : '\u2193';
+                    reportsTrend.textContent = arrow + ' ' + Math.abs(pct) + '% vs previous period';
+                    reportsTrend.className = 'exec-kpi-trend ' + (pct >= 0 ? 'trend-up' : 'trend-down');
+                } else {
+                    reportsTrend.textContent = 'vs previous period';
+                    reportsTrend.className = 'exec-kpi-trend';
+                }
+            } else {
+                reportsEl.textContent = '0';
+                reportsTrend.textContent = 'vs previous period';
+                reportsTrend.className = 'exec-kpi-trend';
+            }
+
+            // Card 4: Overdue Actions (element may be absent from some layouts)
+            var actionsEl = document.getElementById('s1-action-completion');
+            var actionsNote = document.getElementById('s1-action-completion-note');
+            if (actionsEl) {
+                if (actionRes && actionRes.ok && actionRes.data) {
+                    var overdue = actionRes.data.overdue || 0;
+                    actionsEl.textContent = overdue;
+                    if (actionsNote) {
+                        actionsNote.textContent = overdue > 0
+                            ? 'high priority items'
+                            : 'No overdue actions';
+                    }
+                } else {
+                    actionsEl.textContent = '0';
+                    if (actionsNote) actionsNote.textContent = 'No overdue actions';
+                }
+            }
+
+            // Card 5: Regulatory Compliance (static until Compliance module exists)
+            var complianceEl = document.getElementById('s1-compliance');
+            var complianceNote = document.getElementById('s1-compliance-note');
+            complianceEl.textContent = 'On Track';
+            complianceNote.textContent = 'No open State Regulator findings';
+        }
+        function renderTrends(trends) {
+            var canvas = document.getElementById('s3-reports-trend');
+            if (!canvas || !canvas.parentElement) {
+                console.error('[renderTrends] Canvas not found, aborting');
+                return;
+            }
+            if (!window.Chart) {
+                console.error('[renderTrends] Chart.js not loaded, aborting');
+                return;
+            }
+            if (!trends || !trends.ok || !Array.isArray(trends.data)) {
+                renderEmpty('s3-body', 'Failed to load', trends && trends.reason ? trends.reason : 'trends unavailable');
+                return;
+            }
+            var rows = trends.data;
+            if (!rows.length) {
+                renderEmpty('s3-body', 'No data', 'No report trend data in period.');
+                return;
+            }
+            // Parse API response: [{month:"10", year:2026, voluntary:16, mandatory:14}, ...]
+            var monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            var labels = [];
+            var voluntaryData = [];
+            var mandatoryData = [];
+            rows.forEach(function (item) {
+                var m = parseInt(item.month, 10) - 1;
+                if (m >= 0 && m <= 11) {
+                    labels.push(monthNames[m] + ' ' + item.year);
+                } else {
+                    labels.push(String(item.month) + ' ' + item.year);
+                }
+                voluntaryData.push(item.voluntary || 0);
+                mandatoryData.push(item.mandatory || 0);
+            });
+            destroyChart('reportsTrend');
+            charts.reportsTrend = new Chart(canvas, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'VSR',
+                            data: voluntaryData,
+                            borderColor: '#1E6B52',
+                            backgroundColor: 'rgba(30, 107, 82, 0.12)',
+                            fill: false,
+                            tension: 0.4,
+                            pointRadius: 4,
+                            pointBackgroundColor: '#1E6B52',
+                            spanGaps: true
+                        },
+                        {
+                            label: 'MOR',
+                            data: mandatoryData,
+                            borderColor: '#EF4444',
+                            backgroundColor: 'rgba(239, 68, 68, 0.12)',
+                            fill: false,
+                            tension: 0.4,
+                            pointRadius: 4,
+                            pointBackgroundColor: '#EF4444',
+                            spanGaps: true
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: true, position: 'top' },
+                        tooltip: { mode: 'index', intersect: false }
+                    },
+                    scales: {
+                        y: { beginAtZero: true, ticks: { precision: 0 } },
+                        x: { offset: true, grid: { display: false } }
+                    }
+                }
+            });
+            charts.reportsTrend.resize();
+            charts.reportsTrend.update();
+        }
+        function renderRiskMatrix(riskMatrix) {
+            var el = document.getElementById('s2-matrix');
+            var caption = document.getElementById('s2-caption');
+            if (!el) return;
+            var data = (riskMatrix && riskMatrix.ok) ? riskMatrix.data : null;
+            if (!data || !data.severity_scale || !data.probability_scale) {
+                el.innerHTML = '<div class="exec-empty" style="grid-column:1 / -1;">' +
+                    '<div class="exec-empty-title">Failed to load</div>' +
+                    '<div class="exec-empty-note">' + esc(riskMatrix && riskMatrix.reason ? riskMatrix.reason : 'risk matrix unavailable') + '</div></div>';
+                if (caption) caption.textContent = '\u2014';
+                return;
+            }
+            // ICAO Doc 9859 orientation: Y-axis severity Catastrophic (A) -> Negligible (E),
+            // X-axis probability Frequent (5) -> Extremely Improbable (1).
+            var severities = data.severity_scale.slice().sort(function (a, b) { return b.value - a.value; });
+            var probabilities = data.probability_scale.slice().sort(function (a, b) { return b.value - a.value; });
+            var cells = {};
+            (data.cells || []).forEach(function (c) {
+                cells[c.probability + '|' + c.severity] = c;
+            });
+            var letters = { 5: 'A', 4: 'B', 3: 'C', 2: 'D', 1: 'E' };
+
+            var html = '<div class="exec-risk-axis-label"></div>';
+            probabilities.forEach(function (p) {
+                html += '<div class="exec-risk-axis-label exec-risk-axis-x">' +
+                    esc(p.label) + ' (' + esc(p.value) + ')</div>';
+            });
+            severities.forEach(function (s) {
+                var letter = s.letter || letters[s.value] || '';
+                html += '<div class="exec-risk-axis-label exec-risk-axis-y">' +
+                    esc(s.label) + ' (' + esc(letter) + ')</div>';
+                probabilities.forEach(function (p) {
+                    var cell = cells[p.value + '|' + s.value] || {};
+                    var count = Number(cell.count) || 0;
+                    var index = cell.risk_index || (String(p.value) + letter);
+                    var tolerability = cell.tolerability || 'Unclassified';
+                    var cls = String(tolerability).toLowerCase();
+                    var title = index + ' \u2014 ' + p.label + ' \u00d7 ' + s.label +
+                        ' (' + tolerability + '): ' + count + ' hazard' + (count === 1 ? '' : 's');
+                    html += '<div class="exec-risk-cell ' + esc(cls) + (count === 0 ? ' is-empty' : '') +
+                        '" title="' + esc(title) + '">' +
+                        '<span class="exec-risk-index">' + esc(index) + '</span>' +
+                        '<span class="exec-risk-count">' + count + '</span></div>';
+                });
+            });
+            el.innerHTML = html;
+            if (caption) {
+                var total = Number(data.total) || 0;
+                caption.textContent = total + ' hazard' + (total === 1 ? '' : 's') +
+                    ' plotted on the ICAO Doc 9859 tolerability grid.';
+            }
+        }
+        function renderHazards(keyIssues) {
+            var tbody = document.getElementById('s4-body');
+            if (!tbody) return;
+            var data = (keyIssues && keyIssues.ok) ? keyIssues.data : null;
+            if (!data) {
+                renderTableEmpty('s4-body', 'Failed to load \u2014 ' + (keyIssues && keyIssues.reason ? keyIssues.reason : 'key issues unavailable'));
+                return;
+            }
+            var items = Array.isArray(data) ? data : (data.items || []);
+            if (!items.length) {
+                renderTableEmpty('s4-body', 'No hazard data in period.');
+                return;
+            }
+            var trendLabel = { rising: '\u25b2 Rising', falling: '\u25bc Falling', flat: '\u25cf Flat' };
+            tbody.innerHTML = items.slice(0, 5).map(function (h) {
+                var label = h.occurrence_type || h.category || '\u2014';
+                var trend = h.trend_direction || h.trend;
+                return '<tr><td>' + esc(label) + '</td><td>' + esc(h.count == null ? '\u2014' : String(h.count)) +
+                    '</td><td>' + esc(trendLabel[trend] || '\u2014') + '</td></tr>';
+            }).join('');
+        }
+        function renderDonut(actionCompletion) {
+            var data = (actionCompletion && actionCompletion.ok) ? actionCompletion.data : null;
+            if (!data) {
+                renderEmpty('s5-body', 'Failed to load',
+                    actionCompletion && actionCompletion.reason ? actionCompletion.reason : 'action completion unavailable');
+                return;
+            }
+            // Server-side CAP state machine (human-in-the-loop): no date math here.
+            var order = ['Overdue', 'Due \u226430d', 'On Track', 'Pending Review', 'Closed', 'Missing due date'];
+            var colors = {
+                'Overdue': '#dc2626',
+                'Due \u226430d': '#d97706',
+                'On Track': '#16a34a',
+                'Pending Review': '#235a4b',
+                'Closed': '#53685c',
+                'Missing due date': '#83938a'
+            };
+            var counts = {
+                'Overdue': Number(data.overdue) || 0,
+                'Due \u226430d': Number(data.due_within_30_days) || 0,
+                'On Track': Number(data.on_track) || 0,
+                'Pending Review': Number(data.pending_review) || 0,
+                'Closed': Number(data.closed) || 0,
+                'Missing due date': Number(data.no_due_date) || 0
+            };
+            var values = order.map(function (k) { return counts[k]; });
+            var sum = values.reduce(function (a, b) { return a + b; }, 0);
+            var total = (data.total == null) ? sum : (Number(data.total) || 0);
+
+            var center = document.getElementById('s5-donut-center');
+            if (center) center.textContent = String(total);
+
+            var legend = document.getElementById('s5-donut-legend');
+            if (legend) {
+                legend.innerHTML = order.map(function (k) {
+                    return '<div class="exec-legend-item"><span class="exec-donut-legend-swatch" style="background:' + colors[k] + ';"></span><span>' + esc(k) + '</span><span style="margin-left:auto;font-weight:600;">' + counts[k] + '</span></div>';
+                }).join('');
+            }
+
+            var canvas = document.getElementById('s5-donut-canvas');
+            if (canvas && window.Chart) {
+                    destroyChart('donut');
+                charts.donut = new Chart(canvas, {
+                    type: 'doughnut',
+                    data: {
+                        labels: order,
+                        datasets: [{ data: values, backgroundColor: order.map(function (k) { return colors[k]; }), borderWidth: 0 }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false, cutout: '65%', plugins: { legend: { display: false } } }
+                });
+                charts.donut.resize();
+                charts.donut.update();
+            }
+        }
+        captureModuleTemplates();
+        var capNote = '<p>Tenant-wide CAP status as of now. The period filter does not apply. Department tasks and approvals are not included.</p>';
+        MODULES = {
+            'kpis': makeModule(moduleTemplates.s1, 'Safety Manager Dashboard', function (ctx) {
+                return { overview: '/api/v1/dashboard/overview?days=' + ctx.days,
+                    health: '/api/v1/dashboard/sms-health?days=' + ctx.days,
+                    attention: '/api/v1/dashboard/needs-attention?days=' + ctx.days };
+            }, function (r) {
+                renderKpis(r.overview, r.health);
+                renderNeedsAttention(r.attention);
+                if (!r.overview || !r.overview.ok) {
+                    setText('s1-high-risks', '—'); setText('s1-high-risks-note', 'Unavailable');
+                    setText('s1-safety-reports', '—'); setText('s1-safety-reports-trend', 'Unavailable');
+                }
+                if (!r.health || !r.health.ok) {
+                    setText('s1-sms-health', '—'); setText('s1-sms-health-tier', 'Unavailable');
+                }
+                setText('s1-compliance', '—');
+                setText('s1-compliance-note', 'Compliance data is not connected');
+            }),
+            // TEMPORARY: will be replaced by /api/v1/dashboard/my-tasks/summary (Safety Department scope) next sprint.
+            'tasks-summary': makeModule('<section class="exec-card"><h2>CAP Summary (Tenant-Wide)</h2>' + capNote +
+                '<div id="cap-summary-body"></div><a href="#actions">View full CAP status summary</a></section>',
+                'CAP Summary (Tenant-Wide)', function () { return { cap: '/api/v1/dashboard/action-completion' }; }, function (r) {
+                    var data = r.cap && r.cap.ok ? r.cap.data : null;
+                    var buckets = [
+                        ['Overdue', 'overdue'], ['Due ≤30d', 'due_within_30_days'],
+                        ['On Track', 'on_track'], ['Pending Review', 'pending_review'],
+                        ['Closed', 'closed'], ['Missing due date', 'no_due_date']
+                    ];
+                    document.getElementById('cap-summary-body').innerHTML = data ?
+                        '<dl>' + buckets.map(function (bucket) {
+                            return '<div class="exec-legend-item"><dt>' + bucket[0] + '</dt><dd>' +
+                                esc(data[bucket[1]] == null ? '—' : data[bucket[1]]) + '</dd></div>';
+                        }).join('') + '</dl>' : '<p>CAP summary unavailable.</p>';
+                }),
+            'trends': makeModule(moduleTemplates.s3, 'Reports Trend', function (ctx) {
+                return { trends: '/api/v1/dashboard/trends?days=' + ctx.days };
+            }, function (r) { renderTrends(r.trends); }),
+            'issues': makeModule(moduleTemplates.s4, 'Key Safety Issues', function (ctx) {
+                return { issues: '/api/v1/dashboard/key-issues?days=' + ctx.days + '&limit=5' };
+            }, function (r) { renderHazards(r.issues); }),
+            'actions': makeModule(moduleTemplates.s7
+                .replace('href="#dashboard/tasks"', 'href="/can_cap/caps.html"')
+                .replace('<div class="exec-card-body"', capNote + '<div class="exec-card-body"'),
+                'Actions — CAP Status Summary', function () { return { cap: '/api/v1/dashboard/action-completion' }; },
+                function (r) { renderDonut(r.cap); })
+        };
+    }
+
     function applyRoute() {
         var hash = (window.location.hash || '#dashboard').replace(/^#/, '');
         var execContent = document.getElementById('execContent');
         if (!execContent) return;
+        if (currentModule) currentModule.dispose();
+        ++currentGeneration;
+        currentModule = null;
+        initializeModules();
+        var banner = document.getElementById('attention-banner-container');
+        banner.style.display = 'none';
+        banner.setAttribute('data-has-data', '0');
+        var routeModules = { dashboard: 'kpis', 'dashboard/tasks': 'tasks-summary',
+            'dashboard/trends': 'trends', 'dashboard/issues': 'issues', actions: 'actions' };
+        var name = routeModules[hash];
+        if (!name && !ROUTE_MAP[hash]) { hash = 'dashboard'; name = 'kpis'; }
+        if (!name) { showLegacyRoute(hash, execContent); return; }
+        var reports = document.getElementById('reportsView');
+        if (reports) reports.style.display = 'none';
+        var stubs = document.getElementById('stubViews');
+        if (stubs) stubs.style.display = 'none';
+        var host = document.getElementById('dashboardBento');
+        host.style.display = '';
+        document.getElementById('dashboardHeader').style.display = '';
+        currentModule = MODULES[name];
+        currentModule.mount(host);
+        setActiveNav(hash);
+        currentModule.load({ tenant: currentTenant, days: currentDays, generation: currentGeneration });
+    }
 
-        // Invalidate every in-flight data request from the previous route/view.
-        var requestToken = ++requestGeneration;
+    function changePeriod(days) {
+        currentDays = days;
+        if (!currentModule) {
+            // Bootstrap, or preserve the filter behavior of out-of-scope routes.
+            applyRoute();
+            return;
+        }
+        ++currentGeneration;
+        var banner = document.getElementById('attention-banner-container');
+        if (banner) banner.style.display = 'none';
+        currentModule.load({ tenant: currentTenant, days: currentDays, generation: currentGeneration });
+    }
 
-        var isDashboard = (hash === 'dashboard' || !ROUTE_MAP[hash] || hash.indexOf('dashboard/') === 0);
-        var subRoute = (hash.indexOf('dashboard/') === 0) ? hash.split('/')[1] : null;
-
+    function showLegacyRoute(hash, execContent) {
         // 1. Ensure stub container exists inside execContent
         var stubContainer = document.getElementById('stubViews');
         if (!stubContainer) {
@@ -770,8 +890,7 @@
 
         // Attention banner: visible ONLY when we have real attention data.
         var attentionBanner = document.getElementById('attention-banner-container');
-        var hasAttentionData = !!(attentionBanner && attentionBanner.getAttribute('data-has-data') === '1');
-        if (attentionBanner) attentionBanner.style.display = (isDashboard && hasAttentionData) ? '' : 'none';
+        if (attentionBanner) attentionBanner.style.display = 'none';
 
         stubContainer.style.display = 'none';
         var stubs = stubContainer.querySelectorAll('.route-stub, #' + routesOrIds().join(', #'));
@@ -779,54 +898,6 @@
             stubs[j].style.display = 'none';
         }
 
-        // 3. Show target
-        if (isDashboard) {
-            if (dashHeader) dashHeader.style.display = '';
-            if (dashBento) dashBento.style.display = '';
-            // Attention banner visible only when loadAll produced real items
-            if (attentionBanner) attentionBanner.style.display = hasAttentionData ? '' : 'none';
-
-            // Hide every dashboard section (direct children only). Sections are now
-            // siblings, so hiding the wrapper is enough — never hide inner rows.
-            var allSections = dashBento.querySelectorAll(':scope > [data-section]');
-            for (var j = 0; j < allSections.length; j++) {
-                allSections[j].style.display = 'none';
-                allSections[j].classList.remove('exec-solo-view');
-            }
-
-            if (subRoute) {
-                // Sub-route: show only the targeted card, spanning full content width
-                var targetMap = {
-                    'tasks': 's7',
-                    'trends': 's3',
-                    'issues': 's4'
-                };
-                var targetSection = targetMap[subRoute];
-                if (targetSection) {
-                    var target = dashBento.querySelector('[data-section="' + targetSection + '"]');
-                    if (target) {
-                        target.style.display = '';
-                        target.classList.add('exec-solo-view');
-                    }
-                }
-
-                // Fetch and render ONLY the data needed for this sub-route
-                var days = 90;
-                if (window.DateRangeFilter && typeof DateRangeFilter.getCurrentDays === 'function') {
-                    days = DateRangeFilter.getCurrentDays() || 90;
-                }
-
-                // Fetch and render ONLY the data needed for this sub-route.
-                // The request token is checked when the response arrives so a
-                // slow response from a route the user already left is dropped.
-                fetchSubRouteData(subRoute, days, requestToken);
-            } else {
-                // Default #dashboard: show ONLY KPI cards (s1) and fetch fresh data.
-                var kpiSection = dashBento.querySelector('[data-section="s1"]');
-                if (kpiSection) kpiSection.style.display = '';
-                if (currentTenant) loadAll(currentTenant, currentDays);
-            }
-        } else {
             var targetId = ROUTE_MAP[hash];
             var target = document.getElementById(targetId);
             if (target) {
@@ -838,51 +909,7 @@
                     loadSmsHealthDonuts();
                 }
             }
-        }
-
         setActiveNav(hash);
-    }
-
-    // Fetch the single dataset required by a dashboard sub-route. Responses are
-    // gated by the generation token captured when the route was applied; a late
-    // response from a route the user has already left is discarded silently.
-    function fetchSubRouteData(subRoute, days, requestToken) {
-        var isStale = function () { return requestToken !== requestGeneration; };
-        var path;
-        var onData;
-        var label;
-
-        if (subRoute === 'trends') {
-            path = '/api/v1/dashboard/trends?days=' + days;
-            label = 'Trends';
-            onData = function (resp) {
-                if (isStale()) return;
-                renderTrends({ ok: true, data: resp });
-            };
-        } else if (subRoute === 'issues') {
-            path = '/api/v1/dashboard/key-issues?days=' + days + '&limit=5';
-            label = 'Issues';
-            onData = function (resp) {
-                if (isStale()) return;
-                renderHazards({ ok: true, data: resp });
-            };
-        } else if (subRoute === 'tasks') {
-            path = '/api/v1/dashboard/action-completion';
-            label = 'Tasks';
-            onData = function (resp) {
-                if (isStale()) return;
-                renderDonut({ ok: true, data: resp });
-            };
-        } else {
-            return;
-        }
-
-        ApiClient.get(path).then(function (resp) {
-            onData(resp);
-        }).catch(function (err) {
-            if (isStale()) return;
-            console.error('[SubRoute ' + label + '] Fetch failed:', err);
-        });
     }
 
     // Helper to get all route view IDs for hiding
@@ -918,7 +945,7 @@
         var days = 90;
         // Try to read the current DateRangeFilter value
         if (window.DateRangeFilter && typeof DateRangeFilter.getCurrentDays === 'function') {
-            days = DateRangeFilter.getCurrentDays() || 90;
+            days = DateRangeFilter.getCurrentDays();
         }
         var apiBase = '';
         if (window.APP_CONFIG && window.APP_CONFIG.apiBaseUrl) {
@@ -1130,60 +1157,6 @@
             prevBtn.onclick = function () { renderReports(page - 1); };
             nextBtn.onclick = function () { renderReports(page + 1); };
         })();
-    }
-
-    function isSectionVisible(section) {
-        var el = document.querySelector('[data-section="' + section + '"]');
-        return !!(el && el.getClientRects().length);
-    }
-
-    async function loadAll(tenant, days) {
-        if (days === undefined) days = 90;
-        // This batch supersedes any older route/sub-route request. If another
-        // load starts (or the user navigates) before this resolves, drop it.
-        var requestToken = ++requestGeneration;
-        var tasks = {
-            overview: ApiClient.get('/api/v1/dashboard/overview?days=' + days),
-            smsHealth: ApiClient.get('/api/v1/dashboard/sms-health?days=' + days),
-            needsAttention: ApiClient.get('/api/v1/dashboard/needs-attention?days=' + days),
-            trends: ApiClient.get('/api/v1/dashboard/trends?days=' + days),
-            riskMatrix: ApiClient.get('/api/v1/dashboard/risk-matrix'),
-            keyIssues: ApiClient.get('/api/v1/dashboard/key-issues?days=90&limit=5'),
-            actionCompletion: ApiClient.get('/api/v1/dashboard/action-completion'),
-            recent: Promise.resolve({ ok: true, data: { items: [] } })
-        };
-        if (tenant) {
-            tasks.spi = ApiClient.get('/api/v1/spi/tenant/' + encodeURIComponent(tenant) + '/trend?months=12');
-        }
-
-        var keys = Object.keys(tasks);
-        var settled = await Promise.allSettled(keys.map(function (k) { return tasks[k]; }));
-        var results = {};
-        settled.forEach(function (r, i) {
-            results[keys[i]] = r.status === 'fulfilled'
-                ? { ok: true, data: r.value }
-                : { ok: false, reason: (r.reason && r.reason.message) || 'request failed' };
-        });
-
-        // A newer load or a route change has superseded this batch.
-        if (requestToken !== requestGeneration) return;
-
-        try {
-            renderKpis(results.overview, results.smsHealth, results.actionCompletion);
-            // Only render chart sections that are actually visible on the current
-            // route. Rendering hidden sections creates 0x0 canvases and races the
-            // sub-route fetch that renders the same canvas.
-            if (isSectionVisible('s3')) renderTrends(results.trends);
-            if (isSectionVisible('s2')) renderRiskMatrix(results.riskMatrix);
-            if (isSectionVisible('s4')) renderHazards(results.keyIssues);
-            if (isSectionVisible('s7')) renderDonut(results.actionCompletion);
-            renderSmsComponents(results.smsHealth);
-            renderNeedsAttention(results.needsAttention);
-            renderRecent(results.recent);
-            renderSpis(results.spi, tenant);
-        } catch (e) {
-            console.error('[loadAll] Render error:', e);
-        }
     }
 
     if (document.readyState === 'loading') {
