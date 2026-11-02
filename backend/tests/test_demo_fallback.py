@@ -204,7 +204,9 @@ class _FakeCtx:
 def _install_session(monkeypatch, rows):
     sess = _FakeSession(rows)
     monkeypatch.setattr(rs, "session_scope", lambda: _FakeCtx(sess))
-    monkeypatch.setattr(rs, "_report_to_dict", lambda row: {"id": row.id})
+    monkeypatch.setattr(
+        rs, "_report_to_dict", lambda row, **kwargs: {"id": row.id}
+    )
     return sess
 
 
@@ -259,7 +261,9 @@ def test_create_report_writes_own_tenant_and_closes_fallback(monkeypatch):
     monkeypatch.setattr(
         rs, "run", lambda coro: asyncio.run(coro) if asyncio.iscoroutine(coro) else coro
     )
-    monkeypatch.setattr(rs, "_report_to_dict", lambda row: {"id": row.id})
+    monkeypatch.setattr(
+        rs, "_report_to_dict", lambda row, **kwargs: {"id": row.id}
+    )
 
     # 1. An empty tenant is currently in demo fallback.
     repo = ReportRepository()

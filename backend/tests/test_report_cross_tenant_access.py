@@ -107,7 +107,10 @@ def test_cross_tenant_detail_vsr_returns_none(monkeypatch):
 # T5 — cross-tenant detail of a MOR still returns the report.
 def test_cross_tenant_detail_mor_returns_report(monkeypatch):
     _install_fake_session(monkeypatch, rows=[_Row(report_type="mandatory")])
-    monkeypatch.setattr(rs, "_report_to_dict", lambda row: {"report_type": row.report_type})
+    monkeypatch.setattr(
+        rs, "_report_to_dict",
+        lambda row, **kwargs: {"report_type": row.report_type},
+    )
     out = asyncio.run(
         rs._get_report_async(_svc(), None, uuid.uuid4(), cross_tenant=True)
     )
@@ -129,7 +132,10 @@ def test_same_tenant_list_keeps_vsr(monkeypatch):
 # T4 — same-tenant detail of a VSR is returned (Safety Department access intact).
 def test_same_tenant_detail_vsr_returns_report(monkeypatch):
     _install_fake_session(monkeypatch, rows=[_Row(report_type="voluntary")])
-    monkeypatch.setattr(rs, "_report_to_dict", lambda row: {"report_type": row.report_type})
+    monkeypatch.setattr(
+        rs, "_report_to_dict",
+        lambda row, **kwargs: {"report_type": row.report_type},
+    )
     out = asyncio.run(
         rs._get_report_async(_svc(), uuid.uuid4(), uuid.uuid4(), cross_tenant=False)
     )
@@ -139,7 +145,10 @@ def test_same_tenant_detail_vsr_returns_report(monkeypatch):
 # T6 — Safety Department (same tenant) keeps full VSR access (explicit alias of T4).
 def test_safety_department_same_tenant_can_read_vsr(monkeypatch):
     _install_fake_session(monkeypatch, rows=[_Row(report_type="voluntary")])
-    monkeypatch.setattr(rs, "_report_to_dict", lambda row: {"report_type": row.report_type})
+    monkeypatch.setattr(
+        rs, "_report_to_dict",
+        lambda row, **kwargs: {"report_type": row.report_type},
+    )
     out = asyncio.run(
         rs._get_report_async(_svc(), uuid.uuid4(), uuid.uuid4(), cross_tenant=False)
     )
@@ -168,7 +177,10 @@ def test_same_tenant_put_risk_assessment_vsr_returns_report(monkeypatch):
     _install_fake_session(
         monkeypatch, rows=[_Row(report_type="voluntary", tenant_id=uuid.uuid4())]
     )
-    monkeypatch.setattr(rs, "_report_to_dict", lambda row: {"report_type": row.report_type})
+    monkeypatch.setattr(
+        rs, "_report_to_dict",
+        lambda row, **kwargs: {"report_type": row.report_type},
+    )
     out = asyncio.run(
         rs._confirm_risk_assessment_async(
             _svc(), uuid.uuid4(), 3, 2,

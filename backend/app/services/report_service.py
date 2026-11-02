@@ -96,7 +96,9 @@ def external_ai_blocked_for_report_type(report_type: Optional[str]) -> bool:
     return (report_type or "").strip().lower() in _EXTERNAL_AI_BLOCKED_REPORT_TYPES
 
 
-def _report_to_dict(row: Report) -> dict:
+def _report_to_dict(
+    row: Report, include_tolerability_tier: bool = True
+) -> dict:
     data = {}
     for col in Report.__table__.columns:
         value = getattr(row, col.name)
@@ -104,7 +106,11 @@ def _report_to_dict(row: Report) -> dict:
             value = str(value)
         data[col.name] = value
     data["tenant_id"] = tenant_slug(row.tenant_id)
-    if row.risk_index is not None:
+    # The Reports list projection (_to_list_item) drops tolerability_tier, so
+    # resolving the risk matrix once per row there is pure overhead: the nested
+    # bridge-loop path opens a fresh session/connection for every lookup.
+    # Detail and write paths keep the default (True).
+    if include_tolerability_tier and row.risk_index is not None:
         data["tolerability_tier"] = get_tolerability_tier(
             row.risk_index, get_thresholds(data["tenant_id"])
         )
@@ -186,7 +192,10 @@ async def _get_reports_async(
 
     total = rows[0][1] if rows else 0
     result = {
-        "items": [_report_to_dict(r[0]) for r in rows],
+        "items": [
+            _report_to_dict(r[0], include_tolerability_tier=False)
+            for r in rows
+        ],
         "total": total,
         "page": page,
         "page_size": page_size,
