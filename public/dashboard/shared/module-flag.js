@@ -210,7 +210,7 @@
                     '<div class="dash-empty-illus" aria-hidden="true">🧩</div>' +
                     '<p class="dash-empty-title">This module is not enabled</p>' +
                     '<p class="dash-empty-sub">' + message.replace(/</g, '&lt;') + '</p>' +
-                    '<a class="dash-btn dash-btn-primary" href="/safety.html">Back to Dashboard</a></div>';
+                    '<a class="dash-btn dash-btn-primary" href="/dashboard/safety-manager.html">Back to Dashboard</a></div>';
             }
         } catch (e) { /* never throw from a guard */ }
         return false;

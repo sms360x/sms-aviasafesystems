@@ -50,10 +50,10 @@ var NAV_CONFIG = {
         icon: 'fa-gauge-high',
         roles: ['ALL'],
         items: [
-            { id: 'key-indicators', href: '/safety.html', label: 'Key Indicators', roles: ['SAFETY'], module: 'module_b_srm' },
+            { id: 'key-indicators', href: '/dashboard/safety-manager.html', label: 'Key Indicators', roles: ['SAFETY'], module: 'module_b_srm' },
             { id: 'my-tasks', href: '/dashboard/my-tasks.html', label: 'My Tasks', roles: ['ALL'], badge: true, module: 'module_b_can_cap' },
             { id: 'ae-dashboard', href: '/dashboard/ae-dashboard.html', label: 'Executive', roles: ['AE'], module: 'module_b_srm' },
-            { id: 'caan-dashboard', href: '/state-oversight.html', label: 'CAAN Oversight', roles: ['CAAN'], module: 'module_c_regulator' },
+            { id: 'caan-dashboard', href: '/dashboard/state-oversight.html', label: 'CAAN Oversight', roles: ['CAAN'], module: 'module_c_regulator' },
         ]
     },
 
@@ -152,7 +152,7 @@ var NAV_CONFIG = {
             // Phase 3A.2 — SUPER_ADMIN-only governance surfaces.
             { id: 'audit-chain', href: '/admin/audit-chain.html', label: 'Audit Chain', roles: ['SUPER'] },
             { id: 'system-config', href: '/admin/system-config.html', label: 'System Configs', roles: ['SUPER'] },
-            { id: 'historical-import', href: '/safety.html#historical-import-section', label: 'Historical Import', roles: ['SAFETY', 'SUPER'] },
+            { id: 'historical-import', href: '/dashboard/safety-manager.html#historical-import-section', label: 'Historical Import', roles: ['SAFETY', 'SUPER'] },
         ]
     },
 };

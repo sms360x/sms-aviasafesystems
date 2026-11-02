@@ -286,7 +286,7 @@
                 return;
             }
             if (['SUPER_ADMIN', 'TENANT_ADMIN', 'SAFETY_OFFICER', 'STATE_SMD'].indexOf(role) === -1) {
-                window.location.href = '/safety.html';
+                window.location.href = '/dashboard/safety-manager.html';
                 return;
             }
             tenant = (tr.claims && tr.claims.tenant_id) || '';

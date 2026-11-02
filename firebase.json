@@ -28,7 +28,7 @@
         },
         {
           "source": "/caan.html",
-          "destination": "/state-oversight.html",
+          "destination": "/dashboard/state-oversight.html",
           "type": 301
         },
         {

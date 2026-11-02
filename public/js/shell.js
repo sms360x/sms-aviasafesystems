@@ -59,7 +59,7 @@
     //     heroTitle: 'Custom Page Title',           // optional page title override
     //     heroSubtitle: 'Custom subtitle',          // optional subtitle override
     //     nav: [                                    // optional: replaces the
-    //       { href: '/safety.html', label: 'Key Indicators', icon: 'fa-chart-simple' },
+    //       { href: '/dashboard/safety-manager.html', label: 'Key Indicators', icon: 'fa-chart-simple' },
     //       { href: '/settings/team.html', label: 'Team', icon: 'fa-users-gear',
     //         roles: ['TENANT_ADMIN'] },   // optional role gate
     //     ],
@@ -587,7 +587,7 @@
     }
 
     // Department persona (DEPT_ADMIN) must not see the Home link
-    // (it points at /safety.html, the Safety Manager landing page) and the
+    // (it points at /dashboard/safety-manager.html, the Safety Manager landing page) and the
     // brand logo routes it to My Tasks instead. Same for AE, whose home
     // is the Executive dashboard. Runs inside
     // applyNavVisibility so it re-applies once auth claims resolve —
@@ -606,14 +606,14 @@
         var home = document.getElementById('shellHomeLink');
         if (home) home.style.display = (isDept || isAE) ? 'none' : '';
         var brandLink = document.getElementById('shellBrandLink');
-        if (brandLink) brandLink.href = isAE ? '/dashboard/ae-dashboard.html' : (isDept ? '/dashboard/my-tasks.html' : '/safety.html');
+        if (brandLink) brandLink.href = isAE ? '/dashboard/ae-dashboard.html' : (isDept ? '/dashboard/my-tasks.html' : '/dashboard/safety-manager.html');
     }
 
     // Choose which role-keyed set (SHELL_CONFIG.navByRole) is visible once the
     // role resolves. Sets are all present in the DOM; this shows the one whose
     // key matches getUserRoleType() and hides the rest, falling back to the
     // 'default' set for unlisted roles. When the chosen set carries its own
-    // "Home" entry, the generic auto-Home (/safety.html) is hidden so the set's
+    // "Home" entry, the generic auto-Home (/dashboard/safety-manager.html) is hidden so the set's
     // Home wins (e.g. state → /state-oversight.html). Pages without navByRole
     // have no .nav-role-set and return immediately.
     function applyRoleKeyedNav() {
@@ -658,7 +658,7 @@
         const brand = document.createElement('a');
         brand.className = 'header-brand';
         brand.id = 'shellBrandLink';
-        brand.href = '/safety.html';
+        brand.href = '/dashboard/safety-manager.html';
         brand.innerHTML = '<img src="/images/sms360x-logo.png" alt="SMS360X" style="height: 36px; width: 36px; border-radius: 50%; margin-right: 10px; vertical-align: middle;"> <span style="font-size: 1.25rem; font-weight: 700; vertical-align: middle;">sms360x</span>';
         left.appendChild(brand);
         top.appendChild(left);
@@ -695,10 +695,10 @@
 
         // Conditional Home link - show on all pages except landing (safety.html)
         const path = window.location.pathname || '';
-        const isLandingPage = path === '/safety.html' || path === '/' || path === '/index.html' || path.endsWith('/safety.html');
+        const isLandingPage = path === '/dashboard/safety-manager.html' || path === '/' || path === '/index.html' || path.endsWith('/dashboard/safety-manager.html');
         if (!isLandingPage && !cfg.suppressAutoHome) {
             const homeLink = document.createElement('a');
-            homeLink.href = '/safety.html';
+            homeLink.href = '/dashboard/safety-manager.html';
             homeLink.id = 'shellHomeLink';
             homeLink.className = 'nav-link nav-home';
             const homeIcon = document.createElement('span');

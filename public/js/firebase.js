@@ -658,7 +658,7 @@ function getRoleDestination(user) {
     var role = (user && user.role) || 'USER';
 
     // 1. Regulator
-    if (role === 'STATE_SMD') return '/state-oversight.html';
+    if (role === 'STATE_SMD') return '/dashboard/state-oversight.html';
 
     // 2. Accountable Executive — executive governance dashboard per
     // ICAO Annex 19 / Doc 10159.
@@ -686,7 +686,7 @@ function getRoleDestination(user) {
     // 6. Officer / Safety Officer (dual-accept shim) — department
     // determines landing: safety@ keeps the tenant-wide workspace,
     // every other department prefix lands on My Tasks.
-    if (role === 'OFFICER' || role === 'SAFETY_OFFICER') {
+    if (role === 'OFFICER') {
         var officerEmail = ((user && user.email) || '').toLowerCase();
         var localPart = (officerEmail.split('@')[0] || '').toLowerCase();
         var officerClaims = (user && (user.claims || {})) || {};
@@ -702,14 +702,15 @@ function getRoleDestination(user) {
 
     // 7. USER with department claim → department landing
     if (role === 'USER') {
-        var claims = (user && (user.claims || {})) || {};
-        var department = claims.department || (user && user.department) || '';
-        if (department) return '/dashboard/my-tasks.html';
-        return '/safety.html';
+        return '/login.html';
     }
 
-    // 8. Default
-    return '/dashboard/safety-manager.html';
+    if (role === 'SAFETY_OFFICER') {
+        return '/login.html';
+    }
+
+    // 8. Default - fail safe, no privileged dashboard
+    return '/login.html';
 }
 
 // ── Role-class toggle for element visibility ───────────────────────────────

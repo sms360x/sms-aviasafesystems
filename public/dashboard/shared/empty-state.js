@@ -94,7 +94,7 @@
             'This module is not enabled',
             help,
             '🧩',
-            ctaHtml('Back to Dashboard', '/safety.html')
+            ctaHtml('Back to Dashboard', '/dashboard/safety-manager.html')
         );
         return paint(container, html);
     }
@@ -106,7 +106,7 @@
             'This view requires the ' + (requiredRole || 'authorized') +
             ' role. Contact your tenant administrator if you need access.',
             '🔒',
-            ctaHtml('Back to Dashboard', '/safety.html')
+            ctaHtml('Back to Dashboard', '/dashboard/safety-manager.html')
         );
         return paint(container, html);
     }

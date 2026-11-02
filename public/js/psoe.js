@@ -670,7 +670,7 @@
                     '  <i class="fas fa-lock" style="font-size:2.5rem;color:#dc3545;"></i>' +
                     '  <h2 style="color:#dc3545;margin-top:1rem;">Access Denied</h2>' +
                     '  <p style="color:#65766e;">PSOE surveillance audits are available to Safety Managers and CAAN SMD only.</p>' +
-                    '  <a href="/safety.html" class="btn btn-outline btn-sm" style="margin-top:1rem;"><i class="fas fa-arrow-left"></i> Back to Dashboard</a>' +
+                    '  <a href="/dashboard/safety-manager.html" class="btn btn-outline btn-sm" style="margin-top:1rem;"><i class="fas fa-arrow-left"></i> Back to Dashboard</a>' +
                     '</div>';
             }
             return;
