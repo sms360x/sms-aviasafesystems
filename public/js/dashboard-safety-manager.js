@@ -285,8 +285,11 @@
                 window.location.href = '/login.html';
                 return;
             }
-            if (['SUPER_ADMIN', 'TENANT_ADMIN', 'SAFETY_OFFICER', 'STATE_SMD'].indexOf(role) === -1) {
-                window.location.href = '/dashboard/safety-manager.html';
+            var department = String((tr.claims && tr.claims.department) || '').toLowerCase().trim();
+            var isAllowed = (role === 'SUPER_ADMIN' || role === 'TENANT_ADMIN' ||
+                (role === 'OFFICER' && (department === 'safety' || department === 'corporate_safety')));
+            if (!isAllowed) {
+                window.location.href = '/login.html';
                 return;
             }
             tenant = (tr.claims && tr.claims.tenant_id) || '';
