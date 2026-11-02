@@ -387,11 +387,63 @@ class DashboardService:
         return MetricsService.calculate_risk_distribution(reports)
 
     def get_monthly_trends(self, **overrides) -> List[Dict[str, Any]]:
-        f = self._base_filter(**overrides)
+        days = overrides.get("days", self.DEFAULT_DAYS)
+        if days:
+            f = self._base_filter(**overrides)
+        else:
+            # All Time: no historical lower bound, but still exclude
+            # future-dated occurrences using the current UTC time.
+            f = self._base_filter(days=0)
+            f.date_to = datetime.now(timezone.utc)
         reports = self.repo.get_all_in_range(f)
         trends = MetricsService.calculate_monthly_trends(reports)
-        self._merge_diversion_trends(trends, overrides.get("days", self.DEFAULT_DAYS))
+        # Restore consecutive calendar months so the chart cannot imply
+        # continuous activity across months with zero recorded reports.
+        if days:
+            cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+            start = cutoff.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+            end = datetime.now(timezone.utc).replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+            trends = self._pad_monthly_trends(trends, start, end)
+        elif reports:
+            first = min(
+                (r.get("occurrence_date") for r in reports if r.get("occurrence_date")),
+                default=None,
+            )
+            if first is not None:
+                if isinstance(first, str):
+                    first = datetime.fromisoformat(first.replace("Z", "+00:00"))
+                if first.tzinfo is None:
+                    first = first.replace(tzinfo=timezone.utc)
+                start = first.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+                end = datetime.now(timezone.utc).replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+                trends = self._pad_monthly_trends(trends, start, end)
+        self._merge_diversion_trends(trends, days)
         return trends
+
+    @staticmethod
+    def _pad_monthly_trends(trends, start, end):
+        existing = {(int(r["year"]), int(r["month"])): r for r in trends}
+        result = []
+        y, m = start.year, start.month
+        while (y, m) <= (end.year, end.month):
+            row = existing.get((y, m))
+            if row is None:
+                row = {
+                    "month": str(m),
+                    "year": y,
+                    "total": 0,
+                    "voluntary": 0,
+                    "mandatory": 0,
+                    "high_risk": 0,
+                    "prediction": None,
+                }
+            result.append(row)
+            if m == 12:
+                y += 1
+                m = 1
+            else:
+                m += 1
+        return result
 
     def _tenant_type(self) -> Optional[str]:
         """Resolve the authenticated tenant's `type` from its tenant doc."""

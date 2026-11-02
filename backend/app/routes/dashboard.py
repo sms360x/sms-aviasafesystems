@@ -162,11 +162,10 @@ async def get_monthly_trends(
     user: Dict[str, Any] = Depends(get_tenant_user),
 ):
     days = _resolve_days(days, params, 180)
-    # Spec #22 — Date Filter Cascade: days=0 (All Time) defaults to the last
-    # 12 calendar months so the trend chart stays bounded and readable.
-    if days == 0:
-        days = 365
-    # Spec #22 — Demo Fallback: resolve the read tenant via resolve_read_tenant
+    # TREND-02: days=0 means All Time. The service applies an upper bound
+    # (current UTC) but no historical lower bound. Do not collapse All Time
+    # into a 365-day rolling window.
+    # Spec #22 - Demo Fallback: resolve the read tenant via resolve_read_tenant
     # from demo_fallback.py so an empty tenant reads the global demo tenant.
     # Never bypass the fallback.
     read_slug, _used_fallback = resolve_read_tenant(user.get("tenant_id"))

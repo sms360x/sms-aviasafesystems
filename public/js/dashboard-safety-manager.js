@@ -558,6 +558,21 @@
                 return;
             }
             var rows = trends.data;
+            var rangeEl = document.getElementById('s3-trend-range');
+            if (!rangeEl) {
+                rangeEl = document.createElement('div');
+                rangeEl.id = 's3-trend-range';
+                rangeEl.style.cssText = 'font-size:12px;color:#6b7280;margin:4px 0 8px;';
+                if (canvas && canvas.parentElement) canvas.parentElement.insertBefore(rangeEl, canvas);
+            }
+            if (rows.length) {
+                var first = rows[0], last = rows[rows.length - 1];
+                var firstLabel = (monthNames[parseInt(first.month, 10) - 1] || first.month) + ' ' + first.year;
+                var lastLabel = (monthNames[parseInt(last.month, 10) - 1] || last.month) + ' ' + last.year;
+                rangeEl.textContent = 'Period shown: ' + firstLabel + ' - ' + lastLabel + ' (monthly buckets; zero-report months shown as 0).';
+            } else {
+                rangeEl.textContent = '';
+            }
             if (!rows.length) {
                 renderEmpty('s3-body', 'No data', 'No report trend data in period.');
                 return;
@@ -589,10 +604,10 @@
                             borderColor: '#1E6B52',
                             backgroundColor: 'rgba(30, 107, 82, 0.12)',
                             fill: false,
-                            tension: 0.4,
+                            tension: 0,
                             pointRadius: 4,
                             pointBackgroundColor: '#1E6B52',
-                            spanGaps: true
+                            spanGaps: false
                         },
                         {
                             label: 'MOR',
