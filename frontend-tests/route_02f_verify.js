@@ -51,7 +51,17 @@ assert(global.tenantMembershipError({role:'TENANT_ADMIN', tenantId:'sita-airline
 // Unknown host
 setHost('unknown.sms360x.com'); setTenantResolver({});
 global.__ACTIVE_TENANT = null;
-assert(global.tenantMembershipError({role:'TENANT_ADMIN', tenantId:'sita-air'}) === null, 'unknown host returns null (no scope)');
+assert(global.tenantMembershipError({role:'TENANT_ADMIN', tenantId:'sita-air'}) !== null, 'unknown host rejected');
+
+// Lookalike dev hostname rejected
+setHost('localhost.evil.com'); setTenantResolver({});
+global.__ACTIVE_TENANT = null;
+assert(global.tenantMembershipError({role:'TENANT_ADMIN', tenantId:'sita-air'}) !== null, 'lookalike localhost rejected');
+
+// Generic root portal allowed
+setHost('sms360x.com'); setTenantResolver({});
+global.__ACTIVE_TENANT = null;
+assert(global.tenantMembershipError({role:'TENANT_ADMIN', tenantId:'sita-air'}) === null, 'root portal allowed');
 // Missing tenant identity
 setHost('sita.sms360x.com'); setTenantResolver({'sita':'sita-air'});
 assert(global.tenantMembershipError({role:'TENANT_ADMIN', tenantId:null}) !== null, 'missing tenant rejected');

@@ -579,7 +579,15 @@ function tenantMembershipError(user) {
     var role = (user && user.role) || '';
     if (role === 'SUPER_ADMIN' || role === 'STATE_SMD') return null;
     var activeTenant = getActiveTenant();
-    if (!activeTenant) return null; // root production host — no subdomain scope
+    if (!activeTenant) {
+        var host = (window.location.hostname || '').toLowerCase().replace(/\.$/, '');
+        var isGenericPortal = (host === 'sms360x.com' || host === 'www.sms360x.com');
+        var isDevPortal = (host === 'localhost' || host === '127.0.0.1');
+        if (isGenericPortal || isDevPortal) {
+            return null;
+        }
+        return 'Unable to complete sign-in\n\nWe couldn\'t sign you in through this organization\'s portal. Please check that you\'re using the correct sign-in page.\n\nIf you\'ve forgotten your password or need assistance accessing your account, please contact your Safety Department.';
+    }
     var normalizedActive = activeTenant;
     var normalizedUser = (user && user.tenantId) ? user.tenantId : null;
     if (typeof TenantResolver !== 'undefined' && TenantResolver.normalizeTenantId) {
