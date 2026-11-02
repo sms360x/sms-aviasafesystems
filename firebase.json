@@ -27,11 +27,6 @@
           "type": 301
         },
         {
-          "source": "/caan.html",
-          "destination": "/dashboard/state-oversight.html",
-          "type": 301
-        },
-        {
           "source": "/dashboard/caan-sms-maturity.html",
           "destination": "/dashboard/state-sms-maturity.html",
           "type": 301

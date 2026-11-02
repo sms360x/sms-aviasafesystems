@@ -90,7 +90,7 @@ function check(name, cond, detail) {
     subject: "SSP Reporting",
     message: "Live verification feedback from CAAN dashboard (Priority 3).",
     rating: 4,
-    page: "/caan.html",
+    page: "/dashboard/state-oversight.html",
   });
   check(
     "CAAN feedback stored (201 + id)",
@@ -108,7 +108,7 @@ function check(name, cond, detail) {
 
   // 4. Deployed pages include the widget + CAAN SSP link.
   const pages = [
-    { url: "https://sms.aviasafesystems.com/caan.html", has: ["/js/feedback.js", "/reports/generate.html"] },
+    { url: "https://sms.aviasafesystems.com/dashboard/state-oversight.html", has: ["/js/feedback.js", "/reports/generate.html"] },
     { url: "https://sms.aviasafesystems.com/safety.html", has: ["/js/feedback.js"] },
   ];
   for (const p of pages) {
