@@ -10,6 +10,9 @@
     <link rel="stylesheet" href="/css/executive-ui.css?brand=20261031a">
     <link rel="stylesheet" href="/css/brand.css?v=20261029">
     <style>
+        /* FOUC: hide page content until shell takes over */
+        body.executive-layout #pageContent { visibility: hidden; opacity: 0; }
+        body.executive-layout.shell-ready #pageContent { visibility: visible; opacity: 1; transition: opacity 0.3s ease; }
         .route-stub { padding: 32px 40px; }
         .route-stub h1 { font-size: 1.6rem; font-weight: 700; margin-bottom: 12px; }
         .route-stub p  { color: #6b7280; }
@@ -25,7 +28,8 @@
         .exec-footer {
             width: 100%; text-align: center; padding: 2rem 0;
             font-size: 0.8rem; color: #9ca3af; border-top: 1px solid #e5e7eb;
-            margin-top: 2rem;
+            margin-top: auto;
+            flex-shrink: 0;
         }
         .exec-footer a { color: #235a4a; text-decoration: none; }
     </style>
@@ -85,70 +89,29 @@
                     </div>
                 </div>
             </div>
+        </div>
 
-        <!-- S7 — My Tasks & Approvals -->
+        <!-- S7 — Corrective Actions (CAP Summary) -->
         <div class="exec-bento-third exec-card" data-section="s7">
             <div class="exec-card-header">
-                <h2 class="exec-card-title">My Tasks &amp; Approvals</h2>
-                <a href="#" class="exec-card-link">View all</a>
+                <h3 class="exec-card-title">Corrective Actions</h3>
+                <a href="#dashboard/tasks" class="exec-card-link">View all</a>
             </div>
-
-
-        </div>
-
-
-        <!-- Reports Page -->
-        <div id="reportsView" class="route-stub" style="display: none; padding: 24px;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                <h1>Safety Reports</h1>
-            </div>
-
-            <div class="reports-filter-bar" style="display: flex; gap: 1rem; align-items: center; margin-bottom: 1rem;">
-                <label for="reports-type-filter" style="font-size: 0.9rem; color: #374151;">Type:</label>
-                <select id="reports-type-filter" class="drf-select" style="padding: 6px 10px; border: 1px solid #d1d5db; border-radius: 6px; background: #fff;">
-                    <option value="">All Types</option>
-                    <option value="voluntary">VSR (Voluntary)</option>
-                    <option value="mandatory">MOR (Mandatory)</option>
-                </select>
-                <label for="reports-status-filter" style="font-size: 0.9rem; color: #374151;">Status:</label>
-                <select id="reports-status-filter" class="drf-select" style="padding: 6px 10px; border: 1px solid #d1d5db; border-radius: 6px; background: #fff;">
-                    <option value="">All Statuses</option>
-                    <option value="Open">Open</option>
-                    <option value="Closed">Closed</option>
-                </select>
-                <div id="reports-pagination-meta" style="font-size: 0.9rem; color: #6b7280;"></div>
-            </div>
-
-            <div class="exec-table-card" style="background: #fff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); overflow: hidden;">
-                <table class="exec-table" style="width: 100%; border-collapse: collapse;">
-                    <thead style="background: #f9fafb; border-bottom: 1px solid #e5e7eb;">
-                        <tr>
-                            <th style="padding: 12px; text-align: left;">Date</th>
-                            <th style="padding: 12px; text-align: left;">Type</th>
-                            <th style="padding: 12px; text-align: left;">Location</th>
-                            <th style="padding: 12px; text-align: left;">Status</th>
-                            <th style="padding: 12px; text-align: left;">Risk Level</th>
-                            <th style="padding: 12px; text-align: left;">Risk Score</th>
-                        </tr>
-                    </thead>
-                    <tbody id="reports-body">
-                        <tr><td colspan="6" style="padding: 20px; text-align: center;">Loading reports...</td></tr>
-                    </tbody>
-                </table>
-            </div>
-
-            <div style="display: flex; justify-content: center; gap: 10px; margin-top: 20px;">
-                <button id="reports-prev" class="exec-btn" style="padding: 8px 16px; border: 1px solid #d1d5db; background: #fff; cursor: pointer;" disabled>&larr; Previous</button>
-                <span id="reports-page-info" style="padding: 8px; font-weight: 600;">Page 1</span>
-                <button id="reports-next" class="exec-btn" style="padding: 8px 16px; border: 1px solid #d1d5db; background: #fff; cursor: pointer;" disabled>Next &rarr;</button>
+            <div class="exec-card-body" id="s5-body">
+                <div id="s5-donut-canvas-wrapper" style="position:relative; width:200px; height:200px; margin:0 auto;">
+                    <canvas id="s5-donut-canvas"></canvas>
+                    <div id="s5-donut-center" style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); text-align:center;"></div>
+                </div>
+                <div id="s5-donut-legend"></div>
             </div>
         </div>
+
 
         <!-- S3 — Reports Trend -->
         <div class="exec-bento-half exec-card" data-section="s3">
             <div class="exec-card-header">
                 <h2 class="exec-card-title">Reports Trend</h2>
-                <a href="#" class="exec-card-link">View all</a>
+                <a href="#dashboard/trends" class="exec-card-link">View all</a>
             </div>
             <div class="exec-chart-wrap" id="s3-body"><canvas id="s3-reports-trend"></canvas></div>
         </div>
@@ -157,7 +120,7 @@
         <div class="exec-bento-full exec-card" data-section="s4">
             <div class="exec-card-header">
                 <h2 class="exec-card-title">Top 5 Key Safety Issues</h2>
-                <a href="#hazards" class="exec-card-link">View all</a>
+                <a href="#dashboard/issues" class="exec-card-link">View all</a>
             </div>
             <div class="exec-table-card">
                 <table class="exec-table">
@@ -168,16 +131,55 @@
         </div>
 
 
-
-
     </div>
 
-    <!-- Footer -->
-    <footer class="exec-footer">
-        &copy; 2026 <a href="/">SMS360X</a> by AviaSafe Systems. All rights reserved.
-        | <a href="/privacy.html">Privacy Policy</a>
-        | <a href="/terms.html">Terms of Service</a>
-    </footer>
+    <!-- Reports Page (route view, reparented into #stubViews by the router) -->
+    <div id="reportsView" class="route-stub" style="display: none; padding: 24px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h1>Safety Reports</h1>
+        </div>
+
+        <div class="reports-filter-bar" style="display: flex; gap: 1rem; align-items: center; margin-bottom: 1rem;">
+            <label for="reports-type-filter" style="font-size: 0.9rem; color: #374151;">Type:</label>
+            <select id="reports-type-filter" class="drf-select" style="padding: 6px 10px; border: 1px solid #d1d5db; border-radius: 6px; background: #fff;">
+                <option value="">All Types</option>
+                <option value="voluntary">VSR (Voluntary)</option>
+                <option value="mandatory">MOR (Mandatory)</option>
+            </select>
+            <label for="reports-status-filter" style="font-size: 0.9rem; color: #374151;">Status:</label>
+            <select id="reports-status-filter" class="drf-select" style="padding: 6px 10px; border: 1px solid #d1d5db; border-radius: 6px; background: #fff;">
+                <option value="">All Statuses</option>
+                <option value="Open">Open</option>
+                <option value="Closed">Closed</option>
+            </select>
+            <div id="reports-pagination-meta" style="font-size: 0.9rem; color: #6b7280;"></div>
+        </div>
+
+        <div class="exec-table-card" style="background: #fff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); overflow: hidden;">
+            <table class="exec-table" style="width: 100%; border-collapse: collapse;">
+                <thead style="background: #f9fafb; border-bottom: 1px solid #e5e7eb;">
+                    <tr>
+                        <th style="padding: 12px; text-align: left;">Date</th>
+                        <th style="padding: 12px; text-align: left;">Type</th>
+                        <th style="padding: 12px; text-align: left;">Location</th>
+                        <th style="padding: 12px; text-align: left;">Status</th>
+                        <th style="padding: 12px; text-align: left;">Risk Level</th>
+                        <th style="padding: 12px; text-align: left;">Risk Score</th>
+                    </tr>
+                </thead>
+                <tbody id="reports-body">
+                    <tr><td colspan="6" style="padding: 20px; text-align: center;">Loading reports...</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div style="display: flex; justify-content: center; gap: 10px; margin-top: 20px;">
+            <button id="reports-prev" class="exec-btn" style="padding: 8px 16px; border: 1px solid #d1d5db; background: #fff; cursor: pointer;" disabled>&larr; Previous</button>
+            <span id="reports-page-info" style="padding: 8px; font-weight: 600;">Page 1</span>
+            <button id="reports-next" class="exec-btn" style="padding: 8px 16px; border: 1px solid #d1d5db; background: #fff; cursor: pointer;" disabled>Next &rarr;</button>
+        </div>
+    </div>
+
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -224,5 +226,10 @@ document.addEventListener('DOMContentLoaded', function() {
     addLogoutButton();
 });
 </script>
+    <footer class="exec-footer">
+        &copy; 2026 SMS36x. All rights reserved.
+        | <a href="/privacy.html">Privacy Policy</a>
+        | <a href="/terms.html">Terms of Service</a>
+    </footer>
 </body>
 </html>

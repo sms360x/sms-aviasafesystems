@@ -12,6 +12,12 @@
     var MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
     var charts = {};
+    var renderTokens = { reportsTrend: 0, donut: 0 };
+    // Monotonic generation for asynchronous data requests. Every route change
+    // and every new dashboard data load starts a new generation, so responses
+    // from an older generation can be rejected before they touch the DOM.
+    var requestGeneration = 0;
+    window.__dashboardCharts = charts;
 
     function esc(v) {
         return String(v == null ? '' : v)
@@ -175,8 +181,15 @@
     }
 
     function renderTrends(trends) {
-        var body = document.getElementById('s3-body');
-        if (!body) return;
+        var canvas = document.getElementById('s3-reports-trend');
+        if (!canvas || !canvas.parentElement) {
+            console.error('[renderTrends] Canvas not found, aborting');
+            return;
+        }
+        if (!window.Chart) {
+            console.error('[renderTrends] Chart.js not loaded, aborting');
+            return;
+        }
         if (!trends || !trends.ok || !Array.isArray(trends.data)) {
             renderEmpty('s3-body', 'Failed to load', trends && trends.reason ? trends.reason : 'trends unavailable');
             return;
@@ -186,50 +199,81 @@
             renderEmpty('s3-body', 'No data', 'No report trend data in period.');
             return;
         }
-        // Spec #22 — two-line VSR/MOR trend chart. The values come from the
-        // same normalized `report_type` enum the backend aggregates
-        // (voluntary -> VSR, mandatory -> MOR); no client-side re-derivation.
-        var labels = rows.map(function (m) { return monthName(m.month) + ' ' + m.year; });
-        var vsr = rows.map(function (m) { return Number(m.voluntary) || 0; });
-        var mor = rows.map(function (m) { return Number(m.mandatory) || 0; });
-        var canvas = document.getElementById('s3-reports-trend');
-        if (canvas && window.Chart) {
-            destroyChart('reportsTrend');
-            charts.reportsTrend = new Chart(canvas, {
-                type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [
-                        {
-                            label: 'VSR',
-                            data: vsr,
-                            borderColor: '#235a4b',
-                            backgroundColor: 'rgba(35, 90, 75,0.12)',
-                            fill: false,
-                            tension: 0.25,
-                            pointRadius: 3,
-                            spanGaps: true
+        // Parse API response: [{month:"10", year:2026, voluntary:16, mandatory:14}, ...]
+        var monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        var labels = [];
+        var voluntaryData = [];
+        var mandatoryData = [];
+        rows.forEach(function (item) {
+            var m = parseInt(item.month, 10) - 1;
+            if (m >= 0 && m <= 11) {
+                labels.push(monthNames[m] + ' ' + item.year);
+            } else {
+                labels.push(String(item.month) + ' ' + item.year);
+            }
+            voluntaryData.push(item.voluntary || 0);
+            mandatoryData.push(item.mandatory || 0);
+        });
+        // Reset canvas to clear any corrupted 0x0 dimensions from prior hidden render
+        canvas.width = 0;
+        canvas.height = 0;
+        destroyChart('reportsTrend');
+        var renderToken = ++renderTokens.reportsTrend;
+
+        // Create the chart only after the browser has completed layout/paint of the
+        // now-visible container. A single rAF can still run before paint, so use a
+        // nested rAF to guarantee the container has non-zero dimensions when
+        // Chart.js measures the canvas.
+        requestAnimationFrame(function () {
+            requestAnimationFrame(function () {
+                // A newer render (e.g. sub-route fetch racing loadAll) superseded this one.
+                if (renderToken !== renderTokens.reportsTrend) return;
+                charts.reportsTrend = new Chart(canvas, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [
+                            {
+                                label: 'VSR',
+                                data: voluntaryData,
+                                borderColor: '#1E6B52',
+                                backgroundColor: 'rgba(30, 107, 82, 0.12)',
+                                fill: false,
+                                tension: 0.4,
+                                pointRadius: 4,
+                                pointBackgroundColor: '#1E6B52',
+                                spanGaps: true
+                            },
+                            {
+                                label: 'MOR',
+                                data: mandatoryData,
+                                borderColor: '#EF4444',
+                                backgroundColor: 'rgba(239, 68, 68, 0.12)',
+                                fill: false,
+                                tension: 0.4,
+                                pointRadius: 4,
+                                pointBackgroundColor: '#EF4444',
+                                spanGaps: true
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: true, position: 'top' },
+                            tooltip: { mode: 'index', intersect: false }
                         },
-                        {
-                            label: 'MOR',
-                            data: mor,
-                            borderColor: '#dc2626',
-                            backgroundColor: 'rgba(220, 38, 38,0.12)',
-                            fill: false,
-                            tension: 0.25,
-                            pointRadius: 3,
-                            spanGaps: true
+                        scales: {
+                            y: { beginAtZero: true, ticks: { precision: 0 } },
+                            x: { grid: { display: false } }
                         }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: true, position: 'top' } },
-                    scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
-                }
+                    }
+                });
+                charts.reportsTrend.resize();
+                charts.reportsTrend.update();
             });
-        }
+        });
     }
 
     function renderRiskMatrix(riskMatrix) {
@@ -348,14 +392,31 @@
 
         var canvas = document.getElementById('s5-donut-canvas');
         if (canvas && window.Chart) {
+            // Reset canvas to clear any corrupted 0x0 dimensions from prior hidden render
+            canvas.width = 0;
+            canvas.height = 0;
             destroyChart('donut');
-            charts.donut = new Chart(canvas, {
-                type: 'doughnut',
-                data: {
-                    labels: order,
-                    datasets: [{ data: values, backgroundColor: order.map(function (k) { return colors[k]; }), borderWidth: 0 }]
-                },
-                options: { responsive: true, maintainAspectRatio: false, cutout: '65%', plugins: { legend: { display: false } } }
+            var renderToken = ++renderTokens.donut;
+
+            // Create the chart only after the browser has completed layout/paint of the
+            // now-visible container. A single rAF can still run before paint, so use a
+            // nested rAF to guarantee the container has non-zero dimensions when
+            // Chart.js measures the canvas.
+            requestAnimationFrame(function () {
+                requestAnimationFrame(function () {
+                    // A newer render (e.g. sub-route fetch racing loadAll) superseded this one.
+                    if (renderToken !== renderTokens.donut) return;
+                    charts.donut = new Chart(canvas, {
+                        type: 'doughnut',
+                        data: {
+                            labels: order,
+                            datasets: [{ data: values, backgroundColor: order.map(function (k) { return colors[k]; }), borderWidth: 0 }]
+                        },
+                        options: { responsive: true, maintainAspectRatio: false, cutout: '65%', plugins: { legend: { display: false } } }
+                    });
+                    charts.donut.resize();
+                    charts.donut.update();
+                });
             });
         }
     }
@@ -531,8 +592,11 @@
             // Hardcoded executive navigation (SME reference; replaces legacy
             // nav-config.js role-based NAV_CONFIG).
             var flatNav = [
-                // KPIs
-                { id: 'dashboard', label: 'KPIs', href: '#dashboard', icon: 'fa-table-columns', section: 'Home' },
+                // Home section — all items are sub-items
+                { id: 'dashboard', label: 'KPIs', href: '#dashboard', icon: 'fa-table-columns', section: 'Home', parent: 'home' },
+                { id: 'dashboard-tasks', label: 'Corrective Actions', href: '#dashboard/tasks', icon: 'fa-clipboard-check', parent: 'home' },
+                { id: 'dashboard-trends', label: 'Reports Trend', href: '#dashboard/trends', icon: 'fa-chart-line', parent: 'home' },
+                { id: 'dashboard-issues', label: 'Key Safety Issues', href: '#dashboard/issues', icon: 'fa-triangle-exclamation', parent: 'home' },
 
                 // SMS MATURITY
                 { id: 'surveys', label: 'SMS Survey', href: '#surveys', icon: 'fa-square-poll-vertical', section: 'SMS Maturity' },
@@ -545,7 +609,7 @@
                 // WORKSPACE
                 { id: 'data-management', label: 'Data Management', href: '#data-management', icon: 'fa-database', section: 'Workspace' },
                 { id: 'admin', label: 'Settings', href: '#settings', icon: 'fa-gear' },
-                { id: 'audit', label: 'Audit & Inspection', href: '#audit', icon: 'fa-clipboard-list' }
+                { id: 'audit', label: 'Audit &amp; Inspection', href: '#audit', icon: 'fa-clipboard-list' }
             ];
 
             if (window.ExecutiveShell && typeof window.ExecutiveShell.init === 'function') {
@@ -633,7 +697,11 @@
         var execContent = document.getElementById('execContent');
         if (!execContent) return;
 
-        var isDashboard = (hash === 'dashboard' || !ROUTE_MAP[hash]);
+        // Invalidate every in-flight data request from the previous route/view.
+        var requestToken = ++requestGeneration;
+
+        var isDashboard = (hash === 'dashboard' || !ROUTE_MAP[hash] || hash.indexOf('dashboard/') === 0);
+        var subRoute = (hash.indexOf('dashboard/') === 0) ? hash.split('/')[1] : null;
 
         // 1. Ensure stub container exists inside execContent
         var stubContainer = document.getElementById('stubViews');
@@ -694,10 +762,43 @@
         if (isDashboard) {
             if (dashHeader) dashHeader.style.display = '';
             if (dashBento) dashBento.style.display = '';
-            // Single-scroll: show ALL dashboard sections (no tab filtering)
-            var allSections = dashBento.querySelectorAll('.exec-bento-full, .exec-bento-half, .exec-bento-third, .exec-kpi-row');
+            // Attention banner visible on all dashboard views
+            if (attentionBanner) attentionBanner.style.display = '';
+
+            // Hide every dashboard section (direct children only). Sections are now
+            // siblings, so hiding the wrapper is enough — never hide inner rows.
+            var allSections = dashBento.querySelectorAll(':scope > [data-section]');
             for (var j = 0; j < allSections.length; j++) {
-                allSections[j].style.display = '';
+                allSections[j].style.display = 'none';
+            }
+
+            if (subRoute) {
+                // Sub-route: show only the targeted card
+                var targetMap = {
+                    'tasks': 's7',
+                    'trends': 's3',
+                    'issues': 's4'
+                };
+                var targetSection = targetMap[subRoute];
+                if (targetSection) {
+                    var target = dashBento.querySelector('[data-section="' + targetSection + '"]');
+                    if (target) target.style.display = '';
+                }
+
+                // Fetch and render ONLY the data needed for this sub-route
+                var days = 90;
+                if (window.DateRangeFilter && typeof DateRangeFilter.getCurrentDays === 'function') {
+                    days = DateRangeFilter.getCurrentDays() || 90;
+                }
+
+                // Fetch and render ONLY the data needed for this sub-route.
+                // The request token is checked when the response arrives so a
+                // slow response from a route the user already left is dropped.
+                fetchSubRouteData(subRoute, days, requestToken);
+            } else {
+                // Default #dashboard: show ONLY KPI cards (s1)
+                var kpiSection = dashBento.querySelector('[data-section="s1"]');
+                if (kpiSection) kpiSection.style.display = '';
             }
         } else {
             var targetId = ROUTE_MAP[hash];
@@ -714,6 +815,48 @@
         }
 
         setActiveNav(hash);
+    }
+
+    // Fetch the single dataset required by a dashboard sub-route. Responses are
+    // gated by the generation token captured when the route was applied; a late
+    // response from a route the user has already left is discarded silently.
+    function fetchSubRouteData(subRoute, days, requestToken) {
+        var isStale = function () { return requestToken !== requestGeneration; };
+        var path;
+        var onData;
+        var label;
+
+        if (subRoute === 'trends') {
+            path = '/api/v1/dashboard/trends?days=' + days;
+            label = 'Trends';
+            onData = function (resp) {
+                if (isStale()) return;
+                renderTrends({ ok: true, data: resp });
+            };
+        } else if (subRoute === 'issues') {
+            path = '/api/v1/dashboard/key-issues?days=' + days + '&limit=5';
+            label = 'Issues';
+            onData = function (resp) {
+                if (isStale()) return;
+                renderHazards({ ok: true, data: resp });
+            };
+        } else if (subRoute === 'tasks') {
+            path = '/api/v1/dashboard/action-completion';
+            label = 'Tasks';
+            onData = function (resp) {
+                if (isStale()) return;
+                renderDonut({ ok: true, data: resp });
+            };
+        } else {
+            return;
+        }
+
+        ApiClient.get(path).then(function (resp) {
+            onData(resp);
+        }).catch(function (err) {
+            if (isStale()) return;
+            console.error('[SubRoute ' + label + '] Fetch failed:', err);
+        });
     }
 
     // Helper to get all route view IDs for hiding
@@ -847,14 +990,23 @@
     }
 
     function setActiveNav(activeId) {
+        var isSubRoute = (activeId && activeId.indexOf('dashboard/') === 0);
         var items = document.querySelectorAll('.exec-sidebar-nav a');
         for (var i = 0; i < items.length; i++) {
             var href = items[i].getAttribute('href') || '';
             var itemId = href.replace(/^#/, '').replace(/^.*safety-manager\.html.*$/, 'dashboard');
-            if (itemId === activeId) {
-                items[i].classList.add('active');
+            items[i].classList.remove('active');
+
+            if (isSubRoute) {
+                // Sub-route active: highlight ONLY the matching sub-item, not parent
+                if (itemId === activeId) {
+                    items[i].classList.add('active');
+                }
             } else {
-                items[i].classList.remove('active');
+                // Top-level dashboard (or other route): highlight only the matching item
+                if (itemId === activeId) {
+                    items[i].classList.add('active');
+                }
             }
         }
     }
@@ -956,8 +1108,16 @@
 
     window.addEventListener('hashchange', applyRoute);
 
+    function isSectionVisible(section) {
+        var el = document.querySelector('[data-section="' + section + '"]');
+        return !!(el && el.getClientRects().length);
+    }
+
     async function loadAll(tenant, days) {
         if (days === undefined) days = 90;
+        // This batch supersedes any older route/sub-route request. If another
+        // load starts (or the user navigates) before this resolves, drop it.
+        var requestToken = ++requestGeneration;
         var tasks = {
             overview: ApiClient.get('/api/v1/dashboard/overview?days=' + days),
             smsHealth: ApiClient.get('/api/v1/dashboard/sms-health?days=' + days),
@@ -981,15 +1141,25 @@
                 : { ok: false, reason: (r.reason && r.reason.message) || 'request failed' };
         });
 
-        renderKpis(results.overview, results.smsHealth, results.actionCompletion);
-        renderTrends(results.trends);
-        renderRiskMatrix(results.riskMatrix);
-        renderHazards(results.keyIssues);
-        renderDonut(results.actionCompletion);
-        renderSmsComponents(results.smsHealth);
-        renderNeedsAttention(results.needsAttention);
-        renderRecent(results.recent);
-        renderSpis(results.spi, tenant);
+        // A newer load or a route change has superseded this batch.
+        if (requestToken !== requestGeneration) return;
+
+        try {
+            renderKpis(results.overview, results.smsHealth, results.actionCompletion);
+            // Only render chart sections that are actually visible on the current
+            // route. Rendering hidden sections creates 0x0 canvases and races the
+            // sub-route fetch that renders the same canvas.
+            if (isSectionVisible('s3')) renderTrends(results.trends);
+            if (isSectionVisible('s2')) renderRiskMatrix(results.riskMatrix);
+            if (isSectionVisible('s4')) renderHazards(results.keyIssues);
+            if (isSectionVisible('s7')) renderDonut(results.actionCompletion);
+            renderSmsComponents(results.smsHealth);
+            renderNeedsAttention(results.needsAttention);
+            renderRecent(results.recent);
+            renderSpis(results.spi, tenant);
+        } catch (e) {
+            console.error('[loadAll] Render error:', e);
+        }
     }
 
     if (document.readyState === 'loading') {

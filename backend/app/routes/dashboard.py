@@ -88,6 +88,9 @@ async def get_dashboard_overview(
         response.headers["Cache-Control"] = "public, max-age=60"
     days = _resolve_days(days, params, 90)
     logger.info(f"Dashboard overview request: user={user.get('email')}, role={user.get('role')}, tenant_id={user.get('tenant_id')}, days={days}")
+    # DEBUG: trace tenant resolution and fallback
+    _read_slug, _used_fallback = resolve_read_tenant(user.get("tenant_id"))
+    logger.warning(f"[DEBUG] /overview tenant_slug={user.get('tenant_id')} resolved={_read_slug} fallback={_used_fallback}")
     # TEMP DEBUG: verify tenant resolution and date filter on Vercel
     logger.info(f"DEBUG: Resolved tenant for dashboard: tenant_id={user.get('tenant_id')}")
     logger.info(f"DEBUG: Date filter applied: days={days}")
@@ -167,10 +170,13 @@ async def get_monthly_trends(
     # from demo_fallback.py so an empty tenant reads the global demo tenant.
     # Never bypass the fallback.
     read_slug, _used_fallback = resolve_read_tenant(user.get("tenant_id"))
+    # DEBUG: trace tenant resolution, fallback, and data shape
+    logger.warning(f"[DEBUG] /trends tenant_slug={user.get('tenant_id')} resolved={read_slug} fallback={_used_fallback} days={days}")
     svc_user = dict(user)
     svc_user["tenant_id"] = read_slug
     svc = DashboardService(svc_user)
     data = _safe_airline("get_monthly_trends", svc, days=days)
+    logger.warning(f"[DEBUG] /trends data_type={type(data).__name__} len={len(data) if hasattr(data, '__len__') else 'N/A'} sample={str(data)[:200]}")
     return _envelope(data)
 
 

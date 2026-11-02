@@ -69,6 +69,11 @@ body.executive-layout {
 }
 .exec-nav-item:hover { background: #edf2ed; color: var(--exec-text-primary); }
 .exec-nav-item.active { background: #1d5949; color: #fff; font-weight: 600; }
+.exec-nav-subitem {
+    padding-left: 2.2rem;
+    font-size: 0.85rem;
+    opacity: 0.85;
+}
 .exec-nav-item i { width: 18px; text-align: center; opacity: 0.9; }
 .exec-nav-section {
     font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.6px;
@@ -167,7 +172,18 @@ body.executive-layout {
     font-weight: 700; font-size: 0.85rem;
 }
 
-.exec-content { padding: 1.5rem; flex: 1; }
+.exec-content { padding: 1.5rem; flex: 1 0 auto; display: flex; flex-direction: column; }
+
+/* Sticky date-range filter — sticks below the 64px topbar */
+#globalHeader {
+    position: sticky;
+    top: var(--exec-topbar-height);
+    z-index: 10;
+    background: var(--exec-bg);
+    padding-top: 12px;
+    padding-bottom: 12px;
+}
+
 .exec-page-header { margin-bottom: 1.5rem; }
 .exec-page-header h1 { font-size: 1.5rem; font-weight: 800; margin: 0 0 0.35rem; color: var(--exec-text-primary); }
 .exec-page-header p { font-size: 0.95rem; color: var(--exec-text-secondary); margin: 0; }

@@ -39,7 +39,8 @@ window.ExecutiveShell = (function () {
                 html += '<div class="exec-nav-section">' + esc(item.section) + '</div>';
                 lastSection = item.section;
             }
-            var cls = 'exec-nav-item' + (item.id === state.activeNav ? ' active' : '');
+            var isSub = !!item.parent;
+            var cls = 'exec-nav-item' + (isSub ? ' exec-nav-subitem' : '') + (item.id === state.activeNav ? ' active' : '');
             var icon = item.icon ? '<i class="fas ' + esc(item.icon) + '"></i>' : '';
             html += '<a href="' + esc(item.href || '#') + '" class="' + cls + '">' + icon + '<span>' + esc(item.label) + '</span></a>';
         });
@@ -91,6 +92,16 @@ window.ExecutiveShell = (function () {
                 document.body.classList.toggle('sidebar-collapsed');
             });
         }
+
+        // Safeguard: Remove any stray footers left at the body level due to race conditions
+        var strayFooters = document.querySelectorAll('body > footer, body > .exec-footer, body > #pageContent');
+        strayFooters.forEach(function(el) {
+            el.remove();
+            console.log('[ExecutiveShell] Cleaned up stray ghost element:', el.className || el.id || 'footer');
+        });
+
+        // Remove FOUC: reveal content now that shell has taken over
+        document.body.classList.add('shell-ready');
     }
 
     function init(config) {
