@@ -194,6 +194,20 @@ body.executive-layout {
 .exec-bento-third { grid-column: span 4; }
 .exec-bento-quarter { grid-column: span 3; }
 
+/* A sub-route card owns the full content width (not the viewport). */
+.exec-card.exec-solo-view {
+    grid-column: 1 / -1 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box;
+}
+@media (max-width: 768px) {
+    .exec-card.exec-solo-view {
+        margin-left: 0;
+        margin-right: 0;
+    }
+}
+
 .exec-kpi-row {
     display: grid;
     grid-template-columns: repeat(2, 1fr);

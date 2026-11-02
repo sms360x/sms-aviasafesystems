@@ -17,6 +17,8 @@
     // and every new dashboard data load starts a new generation, so responses
     // from an older generation can be rejected before they touch the DOM.
     var requestGeneration = 0;
+    var currentTenant = '';
+    var currentDays = 90;
     window.__dashboardCharts = charts;
 
     function esc(v) {
@@ -266,7 +268,7 @@
                         },
                         scales: {
                             y: { beginAtZero: true, ticks: { precision: 0 } },
-                            x: { grid: { display: false } }
+                            x: { offset: true, grid: { display: false } }
                         }
                     }
                 });
@@ -489,12 +491,28 @@
     function renderNeedsAttention(result) {
         var container = document.getElementById('s6-attention');
         if (!container) return;
+        var banner = document.getElementById('attention-banner-container');
         var data = (result && result.ok) ? result.data : null;
         var items = Array.isArray(data) ? data : (data && data.items) || [];
-        if (!items.length) {
-            container.innerHTML = '<div style="color: #166534; font-weight: 600; padding: 1rem;">✅ All clear! No urgent actions or high-risk items.</div>';
+
+        // Never show the green "All clear" state for a failed or empty fetch:
+        // hide the banner unless the API returned actual attention items.
+        if (!result || !result.ok || !items.length) {
+            container.innerHTML = '';
+            if (banner) {
+                banner.setAttribute('data-has-data', '0');
+                banner.style.display = 'none';
+            }
             return;
         }
+
+        if (banner) {
+            banner.setAttribute('data-has-data', '1');
+            var route = (window.location.hash || '#dashboard').replace(/^#/, '');
+            var isDashboardRoute = route === 'dashboard' || route.indexOf('dashboard/') === 0 || !ROUTE_MAP[route];
+            banner.style.display = isDashboardRoute ? '' : 'none';
+        }
+
         container.innerHTML = items.map(function (it) {
             return '<div class="exec-alert-card" style="background:#fef2f2;border-left:4px solid #dc2626;padding:8px;margin-bottom:6px;">' +
                 '<span>' + (it.message || '') + '</span> ' +
@@ -588,13 +606,14 @@
                 return;
             }
             tenant = (tr.claims && tr.claims.tenant_id) || '';
+            currentTenant = tenant;
 
             // Hardcoded executive navigation (SME reference; replaces legacy
             // nav-config.js role-based NAV_CONFIG).
             var flatNav = [
                 // Home section — all items are sub-items
                 { id: 'dashboard', label: 'KPIs', href: '#dashboard', icon: 'fa-table-columns', section: 'Home', parent: 'home' },
-                { id: 'dashboard-tasks', label: 'Corrective Actions', href: '#dashboard/tasks', icon: 'fa-clipboard-check', parent: 'home' },
+                { id: 'dashboard-tasks', label: 'My Tasks & Approvals', href: '#dashboard/tasks', icon: 'fa-clipboard-check', parent: 'home' },
                 { id: 'dashboard-trends', label: 'Reports Trend', href: '#dashboard/trends', icon: 'fa-chart-line', parent: 'home' },
                 { id: 'dashboard-issues', label: 'Key Safety Issues', href: '#dashboard/issues', icon: 'fa-triangle-exclamation', parent: 'home' },
 
@@ -662,6 +681,7 @@
             DateRangeFilter.mount('#dateFilterContainer', {
                 defaultDays: 90,
                 onChange: function (days) {
+                    currentDays = days;
                     // Spec #4e — same date window drives both the dashboard and
                     // the Reports table.
                     var route = (window.location.hash || '').replace(/^#/, '');
@@ -748,9 +768,10 @@
         if (dashHeader) dashHeader.style.display = 'none';
         if (dashBento) dashBento.style.display = 'none';
 
-        // Attention banner: visible ONLY on dashboard route
+        // Attention banner: visible ONLY when we have real attention data.
         var attentionBanner = document.getElementById('attention-banner-container');
-        if (attentionBanner) attentionBanner.style.display = isDashboard ? '' : 'none';
+        var hasAttentionData = !!(attentionBanner && attentionBanner.getAttribute('data-has-data') === '1');
+        if (attentionBanner) attentionBanner.style.display = (isDashboard && hasAttentionData) ? '' : 'none';
 
         stubContainer.style.display = 'none';
         var stubs = stubContainer.querySelectorAll('.route-stub, #' + routesOrIds().join(', #'));
@@ -762,18 +783,19 @@
         if (isDashboard) {
             if (dashHeader) dashHeader.style.display = '';
             if (dashBento) dashBento.style.display = '';
-            // Attention banner visible on all dashboard views
-            if (attentionBanner) attentionBanner.style.display = '';
+            // Attention banner visible only when loadAll produced real items
+            if (attentionBanner) attentionBanner.style.display = hasAttentionData ? '' : 'none';
 
             // Hide every dashboard section (direct children only). Sections are now
             // siblings, so hiding the wrapper is enough — never hide inner rows.
             var allSections = dashBento.querySelectorAll(':scope > [data-section]');
             for (var j = 0; j < allSections.length; j++) {
                 allSections[j].style.display = 'none';
+                allSections[j].classList.remove('exec-solo-view');
             }
 
             if (subRoute) {
-                // Sub-route: show only the targeted card
+                // Sub-route: show only the targeted card, spanning full content width
                 var targetMap = {
                     'tasks': 's7',
                     'trends': 's3',
@@ -782,7 +804,10 @@
                 var targetSection = targetMap[subRoute];
                 if (targetSection) {
                     var target = dashBento.querySelector('[data-section="' + targetSection + '"]');
-                    if (target) target.style.display = '';
+                    if (target) {
+                        target.style.display = '';
+                        target.classList.add('exec-solo-view');
+                    }
                 }
 
                 // Fetch and render ONLY the data needed for this sub-route
@@ -796,9 +821,10 @@
                 // slow response from a route the user already left is dropped.
                 fetchSubRouteData(subRoute, days, requestToken);
             } else {
-                // Default #dashboard: show ONLY KPI cards (s1)
+                // Default #dashboard: show ONLY KPI cards (s1) and fetch fresh data.
                 var kpiSection = dashBento.querySelector('[data-section="s1"]');
                 if (kpiSection) kpiSection.style.display = '';
+                if (currentTenant) loadAll(currentTenant, currentDays);
             }
         } else {
             var targetId = ROUTE_MAP[hash];
@@ -1105,8 +1131,6 @@
             nextBtn.onclick = function () { renderReports(page + 1); };
         })();
     }
-
-    window.addEventListener('hashchange', applyRoute);
 
     function isSectionVisible(section) {
         var el = document.querySelector('[data-section="' + section + '"]');
