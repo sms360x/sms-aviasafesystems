@@ -242,7 +242,10 @@ async def get_action_completion(
         data = svc.get_action_completion()
     except Exception as e:
         logger.error(f"Action completion failed for tenant {user.get('tenant_id')}: {e}")
-        data = DashboardService.empty_action_completion()
+        raise HTTPException(
+            status_code=503,
+            detail="CAP action completion data is temporarily unavailable",
+        )
     return _envelope(data)
 
 

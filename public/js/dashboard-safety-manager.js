@@ -532,8 +532,8 @@
                             : 'No overdue actions';
                     }
                 } else {
-                    actionsEl.textContent = '0';
-                    if (actionsNote) actionsNote.textContent = 'No overdue actions';
+                    actionsEl.textContent = 'Unavailable';
+                    if (actionsNote) actionsNote.textContent = 'CAP data unavailable';
                 }
             }
 

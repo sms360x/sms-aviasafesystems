@@ -159,6 +159,7 @@ class DashboardService:
                 f"CAP action-completion query failed for tenant {self.tenant_id}: {e}"
             )
             action_completion = self.empty_action_completion()
+            action_completion["cap_available"] = False
         # Replace the legacy hardcoded zero with the date-derived CAP count.
         org_kpis["safety_actions_overdue"] = action_completion["overdue"]
         return {
@@ -625,6 +626,7 @@ class DashboardService:
             "closed": 0,
             "no_due_date": 0,
             "total": 0,
+            "cap_available": True,
             "as_of_date": now.date().isoformat(),
             "generated_at": now.isoformat(),
         }
