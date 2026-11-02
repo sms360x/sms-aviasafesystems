@@ -689,7 +689,14 @@ function getRoleDestination(user) {
     if (role === 'OFFICER' || role === 'SAFETY_OFFICER') {
         var officerEmail = ((user && user.email) || '').toLowerCase();
         var localPart = (officerEmail.split('@')[0] || '').toLowerCase();
-        if (localPart === 'safety') return '/dashboard/safety-manager.html';
+        var officerClaims = (user && (user.claims || {})) || {};
+        var officerClaims = (user && (user.claims || {})) || {};
+        var officerDepartment = String(officerClaims.department || (user && user.department) || '').toLowerCase().trim();
+        // Department authorization comes from verified claims, not email.
+        // Canonical Safety Department codes are 'safety' and 'corporate_safety'.
+        if (officerDepartment === 'safety' || officerDepartment === 'corporate_safety') {
+            return '/dashboard/safety-manager.html';
+        }
         return '/dashboard/my-tasks.html';
     }
 

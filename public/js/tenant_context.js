@@ -69,6 +69,7 @@
         'yeti': 'yeti-airlines',
         'summit': 'summit-air',
         'sita': 'sita-air',
+        'saurya': 'saurya-airlines',
         'simrik': 'simrik-air',
         'tara': 'tara-air',
         'buddha-air': 'buddha-air',
@@ -79,6 +80,7 @@
         'yeti-airlines': 'yeti-airlines',
         'summit-air': 'summit-air',
         'sita-air': 'sita-air',
+        'saurya-airlines': 'saurya-airlines',
         'simrik-air': 'simrik-air',
         'tara-air': 'tara-air',
         'himalaya-airlines-demo': 'himalaya-airlines-demo',
@@ -99,6 +101,7 @@
         'yeti-airlines': 'AIRLINE_FIXED_WING',
         'summit-air': 'AIRLINE_FIXED_WING',
         'sita-air': 'AIRLINE_FIXED_WING',
+        'saurya-airlines': 'AIRLINE_FIXED_WING',
         'tara-air': 'AIRLINE_FIXED_WING',
         'himalaya-airlines-demo': 'AIRLINE_FIXED_WING',
         'yeti-tara-demo': 'AIRLINE_FIXED_WING',
@@ -132,7 +135,10 @@
             // WITHOUT falling back to the ?tenant= query param so the login
             // never auto-fills or redirects to ?tenant=betasms on root hosts.
             if (RESERVED_SUBDOMAINS.indexOf(sub) !== -1) return null;
-            return sub;
+            if (Object.prototype.hasOwnProperty.call(SUBDOMAIN_TO_TENANT_ID, sub)) {
+                return sub;
+            }
+            return null;
         }
         try {
             var params = new URLSearchParams(global.location.search);
