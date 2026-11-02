@@ -137,6 +137,12 @@ def fallback_tenant_for(tenant_slug: Optional[str]) -> Optional[str]:
     """
     slug = _norm(tenant_slug)
     demo = demo_tenant_slug()
+    # Security containment (DEMO-03B): the shared-demo fallback exists only for
+    # the simulated (is_demo=true) data scope. In the live (is_demo=false)
+    # scope it must never redirect a tenant to another tenant's real records,
+    # even if GLOBAL_DEMO_FALLBACK_ENABLED is misconfigured in production.
+    if not demo_scope():
+        return None
     if not _enabled() or not slug or not demo or slug == demo:
         return None
     if tenant_has_reports(slug):
