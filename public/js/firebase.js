@@ -831,7 +831,7 @@ if (typeof firebase !== 'undefined' && firebase.auth) {
                 u.getIdTokenResult(false).then(function (tr) {
                     var role = tr.claims && tr.claims.role;
                     if (role !== 'DEPT_ADMIN') return;
-                    var correctDest = '/dashboard/my-tasks.html';
+                    var correctDest = '/dashboard/dept-home.html';
                     if (window.location.pathname === correctDest) return;
                     // DEPT_ADMIN must never stay on safety.html (or any non-responsible-manager page
                     // that gates as Access Denied). Clear stale flags and redirect once.

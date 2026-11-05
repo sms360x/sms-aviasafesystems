@@ -78,5 +78,7 @@
   document.getElementById('wsLogout').addEventListener('click', function(){ if(firebase&&firebase.auth){firebase.auth().signOut().then(function(){window.location.href='/login.html';});}else{window.location.href='/login.html';} });
 })();
 </script>
+<script src="/js/feedback.js"></script>
+<script>if (typeof initFeedbackWidget === 'function') initFeedbackWidget();</script>
 </body>
 </html>
