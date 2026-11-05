@@ -676,12 +676,12 @@ function getRoleDestination(user) {
             try { resolveTenantContext({ email: tenantEmail }); } catch (e) { /* non-fatal */ }
             return '/dashboard/ae-dashboard.html';
         }
-        return '/dashboard/safety-manager.html';
+        return '/dashboard/safety-workspace.html';
     }
 
     // 5. Department Manager — responsible-manager dashboard (avoids the
     // Access Denied routing loop on safety.html).
-    if (role === 'DEPT_ADMIN') return '/dashboard/my-tasks.html';
+    if (role === 'DEPT_ADMIN') return '/dashboard/dept-home.html';
 
     // 6. Officer / Safety Officer (dual-accept shim) — department
     // determines landing: safety@ keeps the tenant-wide workspace,
@@ -695,9 +695,9 @@ function getRoleDestination(user) {
         // Department authorization comes from verified claims, not email.
         // Canonical Safety Department codes are 'safety' and 'corporate_safety'.
         if (officerDepartment === 'safety' || officerDepartment === 'corporate_safety') {
-            return '/dashboard/safety-manager.html';
+            return '/dashboard/safety-workspace.html';
         }
-        return '/dashboard/my-tasks.html';
+        return '/dashboard/dept-home.html';
     }
 
     // 7. USER with department claim → department landing
