@@ -22,6 +22,68 @@ from app.services.audit_service import log_audit, request_context
 
 router = APIRouter()
 
+from app.db.pg import fetch_all
+from app.db.db_models import Can, Cap
+from datetime import datetime, timezone, timedelta
+from collections import defaultdict
+
+@router.get("/activity-trend", response_model=dict)
+async def can_cap_activity_trend(user: Dict[str, Any] = Depends(get_current_user)):
+    tenant_id = user.get("tenant_id")
+    if not tenant_id:
+        raise HTTPException(status_code=403, detail="Tenant access required")
+    role = str(user.get("role") or "")
+    department = user.get("department")
+    # DEMO/LIVE: default LIVE (is_demo=False)
+    is_demo = False
+    # Build 12-month window
+    now = datetime.now(timezone.utc)
+    months = []
+    for i in range(11, -1, -1):
+        # month start
+        y = now.year
+        m = now.month - i
+        while m <= 0:
+            m += 12
+            y -= 1
+        months.append(f"{y:04d}-{m:02d}")
+    month_set = set(months)
+    can_counts = defaultdict(int)
+    cap_counts = defaultdict(int)
+    # fetch cans
+    where = [Can.tenant_id == tenant_id, Can.is_demo == is_demo]
+    if department:
+        where.append(Can.department == department)
+    cans = fetch_all(Can, where=where)
+    for c in cans:
+        dt = c.get("issued_at")
+        if not dt:
+            continue
+        try:
+            d = datetime.fromisoformat(str(dt).replace("Z","+00:00"))
+        except Exception:
+            continue
+        key = f"{d.year:04d}-{d.month:02d}"
+        if key in month_set:
+            can_counts[key] += 1
+    where2 = [Cap.tenant_id == tenant_id, Cap.is_demo == is_demo]
+    if department:
+        where2.append(Cap.department == department)
+    caps = fetch_all(Cap, where=where2)
+    for c in caps:
+        dt = c.get("submitted_at")
+        if not dt:
+            continue
+        try:
+            d = datetime.fromisoformat(str(dt).replace("Z","+00:00"))
+        except Exception:
+            continue
+        key = f"{d.year:04d}-{d.month:02d}"
+        if key in month_set:
+            cap_counts[key] += 1
+    series = [{"month": m, "cans_issued": can_counts.get(m,0), "caps_submitted": cap_counts.get(m,0)} for m in months]
+    return {"months": months, "series": series}
+
 
 # ─── CAN Endpoints ───
 
