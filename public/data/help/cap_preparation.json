@@ -1,0 +1,39 @@
+{
+  "topic": "cap_preparation",
+  "title": "Corrective Action Plan (CAP) Preparation",
+  "subtitle": "Guidance for preparing a CAP (CAAN SMS Implementation Guidance Material, March 2019)",
+  "overview": [
+    "A CAP documents how an assigned finding or safety concern will be addressed, including root causes, actions, owners, dates and evidence.",
+    "CAAN principles (application-specific fields may vary): understand the finding, identify causes, define corrective actions, assign responsibility and dates, identify evidence, and verify effectiveness."
+  ],
+  "method": {
+    "title": "Method & Preparation Rules",
+    "paragraphs": [
+      "Understand the assigned finding or safety concern before drafting actions.",
+      "Identify contributing factors and underlying causes rather than symptoms.",
+      "Define corrective actions that directly address those causes.",
+      "Assign responsibilities and realistic completion dates.",
+      "Identify implementation evidence and how completion/effectiveness will be verified."
+    ],
+    "bullets": [
+      "CAAN §3.5.6: investigation responsibilities and corrective actions.",
+      "CAAN §3.5.9: developing recommendations.",
+      "CAAN §3.5.11: monitoring investigation outcomes.",
+      "CAAN §3.6: safety risk assessment and mitigation.",
+      "CAAN §4.7: continuous improvement and follow-up."
+    ]
+  },
+  "mapping": {
+    "title": "Application Mapping",
+    "paragraphs": [
+      "The CAP form fields (action plan, timeline, resources, root causes, action items, residual risk) are application-specific and support the CAAN principles above."
+    ]
+  },
+  "example": {
+    "title": "Worked Example",
+    "paragraphs": [
+      "Finding: FOD repeatedly observed on apron near Gate 3.",
+      "CAP: daily FOD sweep procedure, checklist, sweep logs as evidence, short-term mitigation and long-term fix; root cause promoted to control measure; sign-off and closure."
+    ]
+  }
+}
