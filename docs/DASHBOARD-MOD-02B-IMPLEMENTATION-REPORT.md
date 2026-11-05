@@ -1,17 +1,10 @@
 # DASHBOARD-MOD-02B Implementation Report
 
+## Root cause
+Frontend requested relative `/api/can-cap/activity-trend` against hosting origin, returning HTML (DOCTYPE). Fixed to use APP_CONFIG.apiBaseUrl and validate content-type.
+
 ## Changed files
-- backend/app/routes/can_cap.py (added /activity-trend endpoint)
-- public/dashboard/dept-home.html (hero chart + Chart.js)
-
-## Endpoint
-- GET {API_PREFIX}/activity-trend (likely /api/can-cap/activity-trend)
-- Auth: get_current_user; tenant/department/is_demo enforced.
-
-## Status
-- Backend aggregation implemented in Python using fetch_all filtered by tenant/department/is_demo.
-- Frontend renders two-series line chart with Chart.js.
-- Loading/error states present.
+- public/dashboard/dept-home.html
 
 ## Verification
-- UNVERIFIED: runtime execution (no DB in this environment).
+- UNVERIFIED runtime; corrected request base.

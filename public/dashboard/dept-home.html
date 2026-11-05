@@ -89,8 +89,11 @@
 (function(){
   var statusEl = document.getElementById('trendStatus');
   // Lightweight fetch; backend endpoint may be unavailable yet.
-  fetch('/api/can-cap/activity-trend', {credentials:'include'}).then(function(r){
-    if(!r.ok) throw new Error('HTTP '+r.status);
+  var base = (window.APP_CONFIG && window.APP_CONFIG.apiBaseUrl) || window.API_BASE_URL || '';
+  fetch(base + '/api/can-cap/activity-trend', {credentials:'include'}).then(function(r){
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    var ct = r.headers.get('content-type') || '';
+    if (ct.indexOf('application/json') === -1) throw new Error('Non-JSON response');
     return r.json();
   }).then(function(data){
     var months = data.months || [];
