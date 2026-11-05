@@ -86,6 +86,21 @@
 </head>
 <body>
 
+<div class="ws-header" style="background:#155a43;color:#fff;padding:1.25rem 1.5rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.75rem;">
+  <div style="display:flex;align-items:center;gap:.85rem;flex:1;min-width:0;">
+    <div style="width:48px;height:48px;border-radius:8px;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:1.4rem;color:#fff;"><i class="fas fa-building" aria-hidden="true"></i></div>
+    <div>
+      <h1 id="wsAirline" style="margin:0;font-size:1.5rem;font-weight:700;color:#fff;">Loading…</h1>
+      <p id="wsDept" style="margin:.25rem 0 0;font-size:.95rem;color:rgba(255,255,255,.85);"></p>
+      <p id="wsEmail" style="margin:.15rem 0 0;font-size:.85rem;color:rgba(255,255,255,.7);"></p>
+    </div>
+  </div>
+  <div style="display:flex;gap:.5rem;align-items:center;">
+    <a id="backHome" href="/dashboard/dept-home.html" style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);padding:.5rem 1rem;border-radius:6px;text-decoration:none;font-size:.9rem;">Back to Home</a>
+    <button id="wsLogout" style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);padding:.5rem 1rem;border-radius:6px;cursor:pointer;font-size:.9rem;">Logout</button>
+  </div>
+</div>
+
 <div class="app-shell" id="appShell">
 <div class="mor-layout">
     <aside class="mor-sidebar">
@@ -581,6 +596,7 @@ window.SHELL_CONFIG = {
 };
 </script>
 <script src="/js/nav-config.js"></script>
+<script>window.SHELL_CONFIG = window.SHELL_CONFIG || {}; window.SHELL_CONFIG.suppressHeader = true;</script>
 <script src="/js/shell.js?brand=20261028"></script>
 </body>
 </html>

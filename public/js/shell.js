@@ -606,7 +606,7 @@
         var home = document.getElementById('shellHomeLink');
         if (home) home.style.display = (isDept || isAE) ? 'none' : '';
         var brandLink = document.getElementById('shellBrandLink');
-        if (brandLink) brandLink.href = isAE ? '/dashboard/ae-dashboard.html' : (isDept ? '/dashboard/my-tasks.html' : '/dashboard/safety-manager.html');
+        if (brandLink) brandLink.href = isAE ? '/dashboard/ae-dashboard.html' : (isDept ? '/dashboard/my-tasks.html' : '/dashboard/safety-workspace.html');
     }
 
     // Choose which role-keyed set (SHELL_CONFIG.navByRole) is visible once the
@@ -658,7 +658,7 @@
         const brand = document.createElement('a');
         brand.className = 'header-brand';
         brand.id = 'shellBrandLink';
-        brand.href = '/dashboard/safety-manager.html';
+        brand.href = '/dashboard/safety-workspace.html';
         brand.innerHTML = '<img src="/images/sms360x-logo.png" alt="SMS360X" style="height: 36px; width: 36px; border-radius: 50%; margin-right: 10px; vertical-align: middle;"> <span style="font-size: 1.25rem; font-weight: 700; vertical-align: middle;">sms360x</span>';
         left.appendChild(brand);
         top.appendChild(left);
@@ -695,10 +695,10 @@
 
         // Conditional Home link - show on all pages except landing (safety.html)
         const path = window.location.pathname || '';
-        const isLandingPage = path === '/dashboard/safety-manager.html' || path === '/' || path === '/index.html' || path.endsWith('/dashboard/safety-manager.html');
+        const isLandingPage = path === '/dashboard/safety-workspace.html' || path === '/dashboard/safety-manager.html' || path === '/' || path === '/index.html' || path.endsWith('/dashboard/safety-workspace.html') || path.endsWith('/dashboard/safety-manager.html');
         if (!isLandingPage && !cfg.suppressAutoHome) {
             const homeLink = document.createElement('a');
-            homeLink.href = '/dashboard/safety-manager.html';
+            homeLink.href = '/dashboard/safety-workspace.html';
             homeLink.id = 'shellHomeLink';
             homeLink.className = 'nav-link nav-home';
             const homeIcon = document.createElement('span');
@@ -1024,7 +1024,9 @@
         content.className = 'shell-content';
         while (shell.firstChild) content.appendChild(shell.firstChild);
 
-        main.appendChild(buildHeader());
+        if (!(cfg && cfg.suppressHeader)) {
+            main.appendChild(buildHeader());
+        }
         main.appendChild(buildHero());
         main.appendChild(content);
         if (!document.querySelector('footer.app-footer')) {
