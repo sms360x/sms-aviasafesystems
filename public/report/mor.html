@@ -598,5 +598,27 @@ window.SHELL_CONFIG = {
 <script src="/js/nav-config.js"></script>
 <script>window.SHELL_CONFIG = window.SHELL_CONFIG || {}; window.SHELL_CONFIG.suppressHeader = true;</script>
 <script src="/js/shell.js?brand=20261028"></script>
+<script>
+(function(){
+  if (typeof firebase === 'undefined' || !firebase.auth) { return; }
+  firebase.auth().onAuthStateChanged(function(user){
+    if(!user){ return; }
+    user.getIdTokenResult().then(function(tr){
+      var claims = tr.claims||{};
+      var tenant = claims.tenant_id||'';
+      var airlineName = tenant;
+      if (typeof TenantResolver !== 'undefined' && TenantResolver.prettifySlug) airlineName = TenantResolver.prettifySlug(tenant)||airlineName;
+      else airlineName = tenant.replace(/-/g,' ').replace(/\b\w/g,function(c){return c.toUpperCase();});
+      document.getElementById('wsAirline').textContent = airlineName || 'Workspace';
+      var dept = (claims.department||'').replace(/[_-]/g,' ').replace(/\b\w/g,function(c){return c.toUpperCase();});
+      if (dept && !/Department$/i.test(dept)) dept += ' Department';
+      document.getElementById('wsDept').textContent = dept;
+      document.getElementById('wsEmail').textContent = user.email||'';
+    });
+  });
+  var lo = document.getElementById('wsLogout');
+  if (lo) lo.addEventListener('click', function(){ if(firebase&&firebase.auth){firebase.auth().signOut().then(function(){window.location.href='/login.html';});} });
+})();
+</script>
 </body>
 </html>

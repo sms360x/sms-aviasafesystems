@@ -1,10 +1,8 @@
 # DASHBOARD-MOD-02D MOR Integration Report
 
-## Changed files
-- public/js/shell.js (added suppressHeader config)
-- public/report/mor.html (modern header, suppressHeader)
+## Files changed
+- public/report/mor.html
+- public/js/shell.js
 
 ## Verification
-- Legacy header suppressed via config.
-- Modern header added.
-- Runtime checks UNVERIFIED.
+- Runtime checks UNVERIFIED (not executed).
