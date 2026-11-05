@@ -59,6 +59,15 @@
         .skel-stat { height: 72px; border-radius: 10px; }
         .skel-row { height: 18px; margin: 6px 0; }
         @media (max-width: 768px) { .filter-bar { flex-direction: column; align-items: stretch; } }
+        :root { --teal: #1E6B52; --teal-dark: #155a43; }
+        .ws-header { background: var(--teal-dark); color: #fff; padding: 1.25rem 1.5rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem; }
+        .ws-logo { width:48px;height:48px;border-radius:8px;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:1.4rem;color:#fff; }
+        .ws-identity h1 { margin:0;font-size:1.5rem;font-weight:700; }
+        .ws-identity .dept { margin:.25rem 0 0;font-size:.95rem;opacity:.9; }
+        .ws-identity .email { margin:.15rem 0 0;font-size:.85rem;opacity:.8; }
+        .ws-logout { background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);padding:.5rem 1rem;border-radius:6px;cursor:pointer;font-size:.9rem; }
+        .ws-home { background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);padding:.5rem 1rem;border-radius:6px;text-decoration:none;font-size:.9rem;margin-right:.5rem; }
+        .ws-home:hover, .ws-logout:hover { background:rgba(255,255,255,.25); }
     </style>
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="../css/theme.css?brand=20261028">
@@ -70,8 +79,20 @@
     </head>
 <body>
 
-<div class="app-shell">
-
+<div class="ws-header">
+  <div style="display:flex;align-items:center;gap:.85rem;flex:1;min-width:0;">
+    <div class="ws-logo" id="wsLogo" aria-label="Airline logo"><i class="fas fa-building" aria-hidden="true"></i></div>
+    <div class="ws-identity">
+      <h1 id="wsAirline">Loading…</h1>
+      <p class="dept" id="wsDept"></p>
+      <p class="email" id="wsEmail"></p>
+    </div>
+  </div>
+  <div>
+    <a class="ws-home" id="wsHome" href="/dashboard/dept-home.html">Back to Home</a>
+    <button class="ws-logout" id="wsLogout">Logout</button>
+  </div>
+</div>
 <div class="page">
     <div class="header-bar">
         <h2><i class="fas fa-list-check"></i> Assigned CANs & CAPs</h2>
@@ -145,7 +166,6 @@ window.SHELL_CONFIG = {
 };
 </script>
 <script src="/js/nav-config.js"></script>
-<script src="/js/shell.js?brand=20261028"></script>
 <script>
 let currentUser = null;
 let allRows = [];
@@ -172,10 +192,28 @@ firebase.auth().onAuthStateChanged(async function(user) {
         // department-only.
         const repBtn = document.getElementById('submitReportBtn');
         if (repBtn && (myRole === 'DEPT_ADMIN' || myRole === 'OFFICER')) repBtn.style.display = '';
-        const t = (tokenResult.claims && tokenResult.claims.tenant_id) || '';
-        if (t && typeof updateShellTenant === 'function') {
-            updateShellTenant(t.replace(/-/g, ' ').toUpperCase(), myDepartment || undefined);
-        }
+        const claims = tokenResult.claims || {};
+        const tenant = claims.tenant_id || '';
+        // ws-header identity
+        const logoUrl = claims.logo_url || (tenant ? '/assets/airline-logos/'+tenant+'-logo.webp' : null);
+        const logoEl = document.getElementById('wsLogo');
+        if (logoUrl && logoEl) { var img=new Image(); img.alt='Airline logo'; img.style.width='48px';img.style.height='48px';img.style.borderRadius='8px';img.style.objectFit='contain'; img.onerror=function(){}; img.onload=function(){logoEl.innerHTML='';logoEl.appendChild(img);}; img.src=logoUrl; }
+        let airlineName = tenant;
+        if (typeof TenantResolver !== 'undefined' && TenantResolver.prettifySlug) airlineName = TenantResolver.prettifySlug(tenant)||airlineName;
+        else airlineName = tenant.replace(/-/g,' ').replace(/\b\w/g,function(c){return c.toUpperCase();});
+        document.getElementById('wsAirline').textContent = airlineName || 'Workspace';
+        let dept = (claims.department||'').replace(/[_-]/g,' ').replace(/\b\w/g,function(c){return c.toUpperCase();});
+        if (dept && !/Department$/i.test(dept)) dept += ' Department';
+        document.getElementById('wsDept').textContent = dept;
+        document.getElementById('wsEmail').textContent = user.email||'';
+        // role-aware Back to Home
+        const homeEl = document.getElementById('wsHome');
+        let dest = '/dashboard/safety-workspace.html';
+        if (myRole === 'DEPT_ADMIN') dest = '/dashboard/dept-home.html';
+        else if (myRole === 'OFFICER' && !/safety|corporate_safety/i.test(claims.department||'')) dest = '/dashboard/dept-home.html';
+        else if (myRole === 'ACCOUNTABLE_EXECUTIVE') dest = '/dashboard/ae-dashboard.html';
+        else if (myRole === 'STATE_SMD') dest = '/dashboard/state-oversight.html';
+        if (homeEl) homeEl.href = dest;
         if (myDepartment) {
             document.getElementById('infoBanner').style.display = 'flex';
             document.getElementById('assigneeLabel').textContent = 'you (' + myDepartment + ')';
@@ -327,6 +365,12 @@ function renderTable() {
     });
 }
 
+</script>
+
+<script src="/js/feedback.js"></script>
+<script>
+document.getElementById('wsLogout').addEventListener('click', function(){ if(firebase&&firebase.auth){firebase.auth().signOut().then(function(){window.location.href='/login.html';});}else{window.location.href='/login.html';} });
+if (typeof initFeedbackWidget === 'function') initFeedbackWidget();
 </script>
 
 </body>
