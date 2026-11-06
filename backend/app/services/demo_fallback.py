@@ -7,7 +7,7 @@
 #          empty. Tenant-scoped READ paths therefore resolve an "effective read
 #          tenant": the caller's own tenant when it owns at least one report in
 #          the current write scope, otherwise the configured global demo tenant
-#          (GLOBAL_DEMO_TENANT_ID, default "sita-air" - the seeded pilot data).
+#          (GLOBAL_DEMO_TENANT_ID, no silent default - unset means no fallback).
 #
 #          Once the tenant creates its first report the probe turns true and
 #          the fallback closes permanently (1 real report > demo data).

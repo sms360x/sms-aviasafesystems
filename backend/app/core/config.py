@@ -146,9 +146,10 @@ class Settings(BaseSettings):
     # current write scope. This gives a newly onboarded tenant a populated
     # dashboard immediately; the UI header still shows the caller's own tenant
     # name. The fallback closes on the first real report the tenant creates.
-    # Value is a tenant SLUG (the seeded pilot tenant is "sita-air"). Writes are
-    # never affected: create/update/delete always use the authenticated tenant.
-    GLOBAL_DEMO_TENANT_ID: Optional[str] = "sita-air"
+    # Value is a tenant SLUG (the seeded pilot tenant is "sita-air").
+    # No silent fallback: when unset, shared-demo reads fail closed.
+    # Writes are never affected: create/update/delete always use the authenticated tenant.
+    GLOBAL_DEMO_TENANT_ID: Optional[str] = None
     # Kill switch. Set GLOBAL_DEMO_FALLBACK_ENABLED=false to make every tenant
     # see only its own data (e.g. a state deployment that must never surface
     # pilot data).
@@ -157,11 +158,6 @@ class Settings(BaseSettings):
     # Report creation invalidates it immediately; this only bounds staleness for
     # writes made by another process. Set 0 to probe on every empty read.
     GLOBAL_DEMO_FALLBACK_TTL_SECONDS: int = 60
-    # TEMPORARY: comma-separated slugs of airline tenants authorized to read the
-    # shared demonstration CAN dataset. Empty disables shared-demo CAN reads
-    # entirely (fail closed). Remove before operational onboarding.
-    SHARED_DEMO_CAN_TENANTS: str = "saurya-airlines,sita-air,air-dynasty"
-
     # ── Module A — SMS maturity assessment cache (MODULE_A_CONTRACT.md §7) ──
     # TTL for the cached LLM assessment; survey submission / manual refresh
     # invalidate it, and a stale read triggers a background re-analysis (P2-1).

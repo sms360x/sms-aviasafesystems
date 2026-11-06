@@ -45,6 +45,7 @@ from app.db.isolation import demo_scope
 from app.db.runner import run
 from app.db.schema_init import ensure_v2_schema_async
 from app.db.session import session_scope
+from app.services.demo_eligibility import demo_read_tenant, demo_write_blocked
 from app.services.risk_matrix import compute_risk_index
 from app.services.users import get_user_department
 
@@ -256,13 +257,16 @@ def _dt_close(a: Optional[datetime], b: Optional[datetime]) -> bool:
         return False
 
 
-def _lookup_hazard_stmt(tenant_uuid_value: str, value: str):
+def _lookup_hazard_stmt(
+    tenant_uuid_value: str, value: str, demo_flag: Optional[bool] = None
+):
     conds = [Hazard.hazard_id == str(value)]
     try:
         conds.append(Hazard.id == uuid.UUID(str(value)))
     except (ValueError, AttributeError, TypeError):
         pass
-    scope = [Hazard.is_demo == demo_scope()]
+    flag = demo_scope() if demo_flag is None else demo_flag
+    scope = [Hazard.is_demo == flag]
     if tenant_uuid_value:
         return (
             select(Hazard)
@@ -306,6 +310,11 @@ class HazardService:
         return run(self._create_hazard_v1_async(payload, user))
 
     async def _create_hazard_v1_async(self, payload: dict, user: dict) -> dict:
+        # DEMO-ELIGIBILITY-02C, Section C: demonstration users may not mutate
+        # records while accessing the shared seeded workflow.
+        blocked = demo_write_blocked(user)
+        if blocked:
+            raise PermissionError(blocked)
         now = datetime.now(timezone.utc)
         year = now.year
 
@@ -448,9 +457,24 @@ class HazardService:
         except (TypeError, ValueError):
             limit = min(int(filters.get("page_size") or 100), 500)
 
-        stmt = select(Hazard).where(Hazard.is_demo == demo_scope())
-        if user.get("role") not in settings.CROSS_TENANT_ROLES:
-            stmt = stmt.where(Hazard.tenant_id == register_tenant(self.tenant_id))
+        # DEMO-ELIGIBILITY-02C, Sections A & B: a demo-eligible tenant reads the
+        # shared seeded dataset (GLOBAL_DEMO_TENANT_ID) with is_demo=true.
+        # Cross-tenant roles keep the existing all-tenant demo_scope() behavior.
+        if user.get("role") in settings.CROSS_TENANT_ROLES:
+            tid = None
+            demo_flag = demo_scope()
+        else:
+            read_slug, shared_demo, _eligibility = demo_read_tenant(user)
+            if shared_demo:
+                tid = register_tenant(read_slug)
+                demo_flag = True
+            else:
+                tid = register_tenant(self.tenant_id)
+                demo_flag = demo_scope()
+
+        stmt = select(Hazard).where(Hazard.is_demo == demo_flag)
+        if tid is not None:
+            stmt = stmt.where(Hazard.tenant_id == tid)
 
         clamp = {
             "status": Hazard.status,
@@ -472,6 +496,9 @@ class HazardService:
         results = []
         for row in rows:
             data = _row_to_dict(row)
+            # Do not leak the shared source tenant's identity.
+            if shared_demo:
+                data["tenant_id"] = self.tenant_id
             if filters.get("status") and data.get("status") != filters["status"]:
                 continue
             if filters.get("priority") and data.get("priority") != filters["priority"]:
@@ -498,20 +525,39 @@ class HazardService:
         return run(self._get_hazard_by_id_async(hazard_id_or_doc_id, user))
 
     async def _get_hazard_by_id_async(self, hazard_id_or_doc_id: str, user: dict) -> Optional[dict]:
-        tid = None
-        if user.get("role") not in settings.CROSS_TENANT_ROLES:
-            tid = register_tenant(self.tenant_id)
-        stmt = _lookup_hazard_stmt(tid, hazard_id_or_doc_id)
+        # DEMO-ELIGIBILITY-02C, Sections A & B: shared-demo read routing.
+        # Cross-tenant roles keep the existing all-tenant demo_scope() behavior.
+        if user.get("role") in settings.CROSS_TENANT_ROLES:
+            tid = None
+            demo_flag = demo_scope()
+        else:
+            read_slug, shared_demo, _eligibility = demo_read_tenant(user)
+            if shared_demo:
+                tid = register_tenant(read_slug)
+                demo_flag = True
+            else:
+                tid = register_tenant(self.tenant_id)
+                demo_flag = demo_scope()
+        stmt = _lookup_hazard_stmt(tid, hazard_id_or_doc_id, demo_flag)
         async with session_scope() as session:
             row = (await session.execute(stmt)).scalars().first()
         if not row:
             return None
-        return _row_to_dict(row)
+        data = _row_to_dict(row)
+        # Do not leak the shared source tenant's identity.
+        if shared_demo:
+            data["tenant_id"] = self.tenant_id
+        return data
 
     def update_hazard(self, hazard_id: str, payload: dict, user: dict) -> Optional[dict]:
         return run(self._update_hazard_async(hazard_id, payload, user))
 
     async def _update_hazard_async(self, hazard_id: str, payload: dict, user: dict) -> Optional[dict]:
+        # DEMO-ELIGIBILITY-02C, Section C: demonstration users may not mutate
+        # records while accessing the shared seeded workflow.
+        blocked = demo_write_blocked(user)
+        if blocked:
+            raise PermissionError(blocked)
         tid = register_tenant(self.tenant_id)
         now = datetime.now(timezone.utc)
         async with session_scope() as session:
@@ -584,6 +630,11 @@ class HazardService:
         return run(self._update_status_async(hazard_id, status, user))
 
     async def _update_status_async(self, hazard_id: str, status: str, user: dict) -> Optional[dict]:
+        # DEMO-ELIGIBILITY-02C, Section C: demonstration users may not mutate
+        # records while accessing the shared seeded workflow.
+        blocked = demo_write_blocked(user)
+        if blocked:
+            raise PermissionError(blocked)
         tid = register_tenant(self.tenant_id)
         now = datetime.now(timezone.utc)
         async with session_scope() as session:
@@ -605,6 +656,11 @@ class HazardService:
     async def _assign_hazard_async(
         self, hazard_id: str, assigned_to: str, assigned_to_uid: str, user: dict
     ) -> Optional[dict]:
+        # DEMO-ELIGIBILITY-02C, Section C: demonstration users may not mutate
+        # records while accessing the shared seeded workflow.
+        blocked = demo_write_blocked(user)
+        if blocked:
+            raise PermissionError(blocked)
         tid = register_tenant(self.tenant_id)
         async with session_scope() as session:
             row = (await session.execute(_lookup_hazard_stmt(tid, hazard_id))).scalars().first()
@@ -621,13 +677,25 @@ class HazardService:
         return run(self._get_hazard_stats_async(user))
 
     async def _get_hazard_stats_async(self, user: dict) -> dict:
-        # For demo tenants (is_demo=True in Firestore), show demo data even in production
-        # where demo_scope() is False. Query both is_demo states for the tenant and filter in Python,
-        # or just not filter by is_demo for dashboard stats (show all for tenant).
-        # To keep demo data visible in production, we do not filter by is_demo here.
-        stmt = select(Hazard)
-        if user.get("role") not in settings.CROSS_TENANT_ROLES:
-            stmt = stmt.where(Hazard.tenant_id == register_tenant(self.tenant_id))
+        # DEMO-ELIGIBILITY-02E: eligible demonstration tenants read hazard
+        # statistics from the shared seeded dataset (GLOBAL_DEMO_TENANT_ID)
+        # with explicit is_demo=true filtering, matching the Hazard Register
+        # they see. LIVE tenants keep their own tenant isolation.
+        read_slug, shared_demo, _eligibility = demo_read_tenant(user)
+        if shared_demo:
+            tid = register_tenant(read_slug)
+            demo_flag = True
+        else:
+            tid = (
+                None
+                if user.get("role") in settings.CROSS_TENANT_ROLES
+                else register_tenant(self.tenant_id)
+            )
+            demo_flag = demo_scope()
+
+        stmt = select(Hazard).where(Hazard.is_demo == demo_flag)
+        if tid is not None:
+            stmt = stmt.where(Hazard.tenant_id == tid)
 
         async with session_scope() as session:
             rows = (await session.scalars(stmt)).all()

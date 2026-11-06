@@ -31,6 +31,7 @@ from app.db.runner import run
 from app.db.session import session_scope
 from app.services.gemini import analyze_report, classify_mandatory
 from app.services import demo_fallback
+from app.services.demo_eligibility import demo_read_tenant, demo_write_blocked
 from app.services.repository import ReportRepository, coerce_utc_datetime
 from app.services.risk_matrix import (
     compute_risk_index,
@@ -117,8 +118,14 @@ def _report_to_dict(
     return _json_safe(data)
 
 
-def _report_lookup_stmt(tenant_uuid_value: Optional[uuid.UUID], value: uuid.UUID):
-    stmt = select(Report).where(Report.id == value, Report.is_demo == demo_scope())
+def _report_lookup_stmt(tenant_uuid_value: Optional[uuid.UUID], value: uuid.UUID, demo_flag: Optional[bool] = None):
+    stmt = select(Report).where(Report.id == value)
+    if demo_flag is not None:
+        # Shared-DEMO read (DEMO-ELIGIBILITY-02C, Sections A & B): only
+        # is_demo=true rows of the shared seeded dataset are exposed.
+        stmt = stmt.where(Report.is_demo == demo_flag)
+    else:
+        stmt = stmt.where(Report.is_demo == demo_scope())
     if tenant_uuid_value is not None:
         stmt = stmt.where(Report.tenant_id == tenant_uuid_value)
     return stmt
@@ -142,6 +149,8 @@ async def _get_reports_async(
     page: int = 1,
     page_size: int = 20,
     demo_fallback_used: bool = False,
+    is_demo: Optional[bool] = None,
+    shared_demo: bool = False,
 ) -> dict:
     stmt = select(Report)
     if not cross_tenant:
@@ -157,6 +166,11 @@ async def _get_reports_async(
         # "owns any report?" probe reuses the hot bridge-loop connection rather
         # than opening a second one from inside this coroutine.
         stmt = stmt.where(Report.tenant_id == tenant_uuid_value)
+        if is_demo is not None:
+            # Shared-DEMO reads (DEMO-ELIGIBILITY-02E, Sections A & B): the
+            # effective read tenant is the shared seeded dataset and only
+            # is_demo=true rows are exposed, at the database query level.
+            stmt = stmt.where(Report.is_demo == is_demo)
     else:
         stmt = stmt.where(Report.is_demo == demo_scope())
         # VSR (voluntary) is never cross-tenant visible: a VSR is the source of
@@ -205,13 +219,16 @@ async def _get_reports_async(
         # Additive marker only: the payload shape is unchanged, so existing
         # clients keep working while the UI can label the rows as demo data.
         result["demo_fallback"] = True
+    if shared_demo:
+        # Additive marker: the payload came from the shared seeded dataset.
+        result["shared_demo"] = True
     return result
 
 
-async def _get_report_async(self, tenant_uuid_value: Optional[uuid.UUID], report_uuid: uuid.UUID, cross_tenant: bool = False):
+async def _get_report_async(self, tenant_uuid_value: Optional[uuid.UUID], report_uuid: uuid.UUID, cross_tenant: bool = False, demo_flag: Optional[bool] = None):
     async with session_scope() as session:
         row = (
-            await session.execute(_report_lookup_stmt(tenant_uuid_value, report_uuid))
+            await session.execute(_report_lookup_stmt(tenant_uuid_value, report_uuid, demo_flag))
         ).scalars().first()
         if not row:
             return None
@@ -407,6 +424,11 @@ class ReportService:
         self.tenant_id = tenant_id
 
     def create_report(self, payload: dict, user: dict) -> dict:
+        # DEMO-ELIGIBILITY-02C, Section C: demonstration users may not create
+        # operational records while accessing the shared seeded workflow.
+        blocked = demo_write_blocked(user)
+        if blocked:
+            raise PermissionError(blocked)
         now = datetime.now(timezone.utc)
         tid = register_tenant(self.tenant_id)
 
@@ -531,19 +553,30 @@ class ReportService:
             cross_tenant = user.get("role") in settings.CROSS_TENANT_ROLES
             tid = None
             demo_fallback_used = False
+            shared_demo = False
+            is_demo = None
             if not cross_tenant:
-                # Spec #6 - resolve here (sync context) so an empty tenant's
-                # Reports page reads the global demo tenant. The fallback closes
-                # as soon as the tenant owns one report.
-                read_slug, demo_fallback_used = demo_fallback.resolve_read_tenant(
-                    self.tenant_id
-                )
-                tid = register_tenant(read_slug)
+                # DEMO-ELIGIBILITY-02C, Sections A & B: a demo-eligible tenant
+                # reads the shared seeded dataset (GLOBAL_DEMO_TENANT_ID) with
+                # is_demo=true. This takes precedence over Spec #6 demo fallback
+                # (an empty tenant's own-data fallback), because shared-demo
+                # consumers must see the shared workflow, not their own empty set.
+                read_slug, shared_demo, _eligibility = demo_read_tenant(user)
+                if shared_demo:
+                    tid = register_tenant(read_slug)
+                    is_demo = True
+                else:
+                    read_slug, demo_fallback_used = demo_fallback.resolve_read_tenant(
+                        self.tenant_id
+                    )
+                    tid = register_tenant(read_slug)
             return run(_get_reports_async(
                 self, cross_tenant, tid,
                 days=days, report_type=report_type, status=status,
                 page=page, page_size=page_size,
                 demo_fallback_used=demo_fallback_used,
+                is_demo=is_demo,
+                shared_demo=shared_demo,
             ))
         except Exception as e:
             logger.error(f"Failed to retrieve reports: {e}")
@@ -556,9 +589,17 @@ class ReportService:
                 return None
             cross_tenant = user.get("role") in settings.CROSS_TENANT_ROLES
             tid = None
+            demo_flag = None
             if not cross_tenant:
-                tid = register_tenant(self.tenant_id)
-            return run(_get_report_async(self, tid, report_uuid, cross_tenant))
+                # DEMO-ELIGIBILITY-02C, Sections A & B: a demo-eligible tenant
+                # reads the shared seeded dataset (is_demo=true) at query level.
+                read_slug, shared_demo, _eligibility = demo_read_tenant(user)
+                if shared_demo:
+                    tid = register_tenant(read_slug)
+                    demo_flag = True
+                else:
+                    tid = register_tenant(self.tenant_id)
+            return run(_get_report_async(self, tid, report_uuid, cross_tenant, demo_flag))
         except Exception as e:
             logger.error(f"Failed to retrieve report {report_id}: {e}")
             raise
@@ -578,6 +619,11 @@ class ReportService:
     def confirm_risk_assessment(
         self, report_id: str, severity: int, probability: int, user: dict, notes: str = None
     ) -> dict:
+        # DEMO-ELIGIBILITY-02C, Section C: demonstration users may not mutate
+        # records while accessing the shared seeded workflow.
+        blocked = demo_write_blocked(user)
+        if blocked:
+            raise PermissionError(blocked)
         try:
             report_uuid = _as_uuid(report_id)
             if report_uuid is None:

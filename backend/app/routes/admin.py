@@ -465,6 +465,12 @@ class TenantCreate(BaseModel):
     contact_phone: Optional[str] = None
     contact_title: Optional[str] = None
     kind: Optional[str] = None
+    # DEMO-ELIGIBILITY-02C, Section D: explicit DEMO eligibility selected by the
+    # Super Admin when provisioning an airline. Stored on
+    # tenants.module_access.shared_demo (existing JSONB column) — not a manual
+    # slug list.
+    shared_demo: bool = False
+    module_access: Optional[Dict[str, Any]] = None
     # 2B.4a: tenant-specific Safety Department (canonical department CODE).
     safety_department_name: Optional[str] = None
 
@@ -497,6 +503,10 @@ class TenantUpdate(BaseModel):
     contact_title: Optional[str] = None
     regulator_id: Optional[str] = None
     kind: Optional[str] = None
+    # DEMO-ELIGIBILITY-02C, Section D: toggle DEMO eligibility on an existing
+    # tenant via tenants.module_access.shared_demo.
+    shared_demo: Optional[bool] = None
+    module_access: Optional[Dict[str, Any]] = None
     # 2B.4a: tenant-specific Safety Department (canonical department CODE).
     safety_department_name: Optional[str] = None
 
@@ -642,6 +652,13 @@ async def admin_create_tenant(
             detail=f"Invalid tenant kind '{kind}'. Must be one of {settings.TENANT_KINDS}",
         )
     data["kind"] = kind
+    # DEMO-ELIGIBILITY-02C, Section D: explicit DEMO eligibility is stored on
+    # the existing tenants.module_access JSONB column (shared_demo=true),
+    # never on a manually maintained slug list.
+    if data.get("shared_demo") is True:
+        module_access = dict(data.get("module_access") or {})
+        module_access["shared_demo"] = True
+        data["module_access"] = module_access
     # 2B.4a — optional Safety Department code (free-text, length-validated).
     sdn = (data.get("safety_department_name") or "").strip()
     if len(sdn) > 200:
@@ -728,6 +745,21 @@ async def admin_update_tenant(
     fields = {k: v for k, v in req.model_dump().items() if k != "setup_key" and v is not None}
     if not fields:
         raise HTTPException(status_code=422, detail="No updatable fields provided")
+    # DEMO-ELIGIBILITY-02C, Section D: shared_demo is stored inside the existing
+    # tenants.module_access JSONB column, not as a top-level column. Merge it
+    # into the current module_access map so other module flags are preserved.
+    if "shared_demo" in fields or "module_access" in fields:
+        from app.db import pg as _pg
+        from app.db.db_models import Tenant as _Tenant
+        _existing = _pg.fetch_by(_Tenant, "slug", tenant_id)
+        if _existing is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Unknown tenant: {tenant_id}")
+        _ma = dict(_existing.get("module_access") or {})
+        if "module_access" in fields:
+            _ma.update(fields.pop("module_access"))
+        if "shared_demo" in fields:
+            _ma["shared_demo"] = bool(fields.pop("shared_demo"))
+        fields["module_access"] = _ma
     # 2A.3c — validate the kind when supplied; otherwise leave it unchanged.
     if "kind" in fields:
         kind = str(fields["kind"]).strip().lower()

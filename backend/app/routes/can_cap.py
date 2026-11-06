@@ -300,7 +300,7 @@ async def delete_can(
         )
     tenant_id = user["tenant_id"]
     service = CanCapService(tenant_id)
-    deleted = service.delete_can(can_id)
+    deleted = service.delete_can(can_id, user)
     if not deleted:
         raise HTTPException(status_code=404, detail="CAN not found")
     ip, request_id = request_context(request)

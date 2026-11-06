@@ -43,8 +43,6 @@ services:
         value: sita-air
       - key: GLOBAL_DEMO_FALLBACK_ENABLED
         value: "true"
-   - key: SHARED_DEMO_CAN_TENANTS
-        value: "saurya-airlines,sita-air,air-dynasty"
 
       # ── Firebase Admin SDK (Auth-only; Firestore deprec. phase C 2026-09) ──
       - key: FIREBASE_PROJECT_ID

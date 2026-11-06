@@ -374,6 +374,11 @@ def create_tenant(data: Dict[str, Any], actor: Dict[str, Any]) -> Dict[str, Any]
     else:
         regulator = None
     doc["module_access"] = _tenant_modules_from_regulator(regulator)
+    # Honor an explicit module_access map from the provisioning request so a
+    # Super Admin can select DEMO eligibility (module_access.shared_demo=true).
+    explicit_ma = data.get("module_access")
+    if isinstance(explicit_ma, dict):
+        doc["module_access"] = {**doc["module_access"], **{k: v for k, v in explicit_ma.items()}}
     # Keep the legacy/typed `modules` field in sync with module_access.
     doc["modules"] = dict(doc["module_access"])
     sm = data.get("safety_manager")
