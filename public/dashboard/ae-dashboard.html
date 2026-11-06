@@ -47,9 +47,69 @@
 <link rel="stylesheet" href="/css/shell.css?brand=20261028">
     
     <link rel="stylesheet" href="/css/brand.css?v=20261028">
+<style>
+  .app-shell, .page, .hero { max-width: 1500px; margin: 0 auto; }
+  .card, .kpi, .chart-card { border-radius: 14px; box-shadow: 0 4px 16px rgba(0,0,0,0.06); }
+  @media (max-width: 900px) { .exec-shell > div { grid-template-columns: 1fr !important; } }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+</style>
+<style>
+  .exec-shell { max-width: 1500px; margin: 0 auto; padding: 1.5rem; }
+  .exec-section { background: rgba(255,255,255,0.85); backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.6); border-radius: 15px; padding: 1.25rem; margin-bottom: 1rem; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+  .exec-section h2 { margin: 0 0 0.75rem; font-size: 1.1rem; color: #1f2937; }
+  .exec-cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; }
+  @media (max-width: 900px) { .exec-cards { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 520px) { .exec-cards { grid-template-columns: 1fr; } }
+  .exec-card { background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 1rem; box-shadow: 0 1px 4px rgba(0,0,0,0.05); }
+  @media (max-width: 900px) { .exec-shell > div { grid-template-columns: 1fr !important; } }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+</style>
 </head>
 <body>
 
+<div class="ws-header" id="wsHeader" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.75rem;background:#155a43;color:#fff;padding:1.25rem 1.5rem;">
+  <div style="display:flex;align-items:center;gap:0.85rem;flex:1;min-width:0;">
+    <div class="ws-logo" id="wsLogo" aria-label="Airline logo" style="width:48px;height:48px;border-radius:8px;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:1.4rem;color:#fff;">
+      <i class="fas fa-building" aria-hidden="true"></i>
+    </div>
+    <div class="identity">
+      <h1 id="wsAirline" style="margin:0;font-size:1.5rem;font-weight:700;color:#fff;">Loading…</h1>
+      <p class="dept" id="wsDept" style="margin:0.25rem 0 0;font-size:0.95rem;color:rgba(255,255,255,0.85);"></p>
+      <p class="email" id="wsEmail" style="margin:0.15rem 0 0;font-size:0.85rem;color:rgba(255,255,255,0.7);"></p>
+    </div>
+  </div>
+  <button class="logout" id="wsLogout" style="background:rgba(255,255,255,0.15);color:#fff;border:1px solid rgba(255,255,255,0.3);padding:0.5rem 1rem;border-radius:6px;cursor:pointer;font-size:0.9rem;">Logout</button>
+</div>
+
+<div class="exec-shell" style="max-width:1500px;margin:0 auto;padding:1.5rem;">
+  <section id="exec-summary" class="exec-hero" style="background:linear-gradient(135deg,#155a43,#1E6B52);color:#fff;border-radius:15px;padding:1.5rem;margin-bottom:1rem;box-shadow:0 4px 16px rgba(0,0,0,0.12);">
+    <h2 style="margin:0 0 0.25rem;font-size:1.3rem;color:#fff;">Executive Summary</h2>
+    <p style="margin:0;opacity:0.9;font-size:0.95rem;line-height:1.6;">
+      AI-generated executive safety analysis will appear here after integration with authorized dashboard data. This area is reserved for future multi-paragraph executive summaries.
+    </p>
+  </section>
+
+  <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:1rem;">
+    <section id="panel-safety-performance" class="exec-panel" style="background:#fff;border:1px solid #e5e7eb;border-radius:15px;padding:1.25rem;box-shadow:0 2px 8px rgba(0,0,0,0.06);">
+      <h2 style="margin:0 0 0.75rem;">Safety Performance</h2>
+      <div style="height:260px;border:1px dashed #cbd5e1;border-radius:12px;display:flex;align-items:center;justify-content:center;color:#64748b;background:#f8fafc;">Awaiting visual development</div>
+    </section>
+    <section id="panel-risk-exposure" class="exec-panel" style="background:#fff;border:1px solid #e5e7eb;border-radius:15px;padding:1.25rem;box-shadow:0 2px 8px rgba(0,0,0,0.06);">
+      <h2 style="margin:0 0 0.75rem;">Risk Exposure</h2>
+      <div style="height:260px;border:1px dashed #cbd5e1;border-radius:12px;display:flex;align-items:center;justify-content:center;color:#64748b;background:#f8fafc;">Awaiting visual development</div>
+    </section>
+    <section id="panel-sms-maturity" class="exec-panel" style="background:#fff;border:1px solid #e5e7eb;border-radius:15px;padding:1.25rem;box-shadow:0 2px 8px rgba(0,0,0,0.06);">
+      <h2 style="margin:0 0 0.75rem;">SMS Maturity</h2>
+      <div style="height:260px;border:1px dashed #cbd5e1;border-radius:12px;display:flex;align-items:center;justify-content:center;color:#64748b;background:#f8fafc;">Awaiting visual development</div>
+    </section>
+    <section id="panel-to-be-decided" class="exec-panel" style="background:#fff;border:1px solid #e5e7eb;border-radius:15px;padding:1.25rem;box-shadow:0 2px 8px rgba(0,0,0,0.06);">
+      <h2 style="margin:0 0 0.75rem;">To Be Decided</h2>
+      <div style="height:260px;border:1px dashed #cbd5e1;border-radius:12px;display:flex;align-items:center;justify-content:center;color:#64748b;background:#f8fafc;">Awaiting visual development</div>
+    </section>
+  </div>
+</div>
+
+<div class="legacy-functional" style="display:none;">
 <div class="app-shell">
 <section class="hero">
     <h1 id="heroTitle">Executive Oversight</h1>
@@ -195,14 +255,6 @@
     </div>
 </div>
 
-<script>
-window.SHELL_CONFIG = {
-    brand: 'AviaSAFE',
-    roleLabel: 'Accountable Executive',
-};
-</script>
-<script src="/js/nav-config.js"></script>
-
 <!-- Reuse original AE logic but with minimalist DOM -->
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
@@ -212,7 +264,7 @@ window.SHELL_CONFIG = {
 <script src="/js/firebase.js?v=4.0.1&brand=20261028"></script>
 <script src="/js/api/client.js"></script>
 <script src="/js/chart-theme.js?brand=20261028"></script>
-<script src="/js/shell.js?brand=20261028"></script>
+<!-- shell removed: legacy duplicate navigation -->
 <script>
 // Minimalist AE — reuses ae-dashboard.html logic but hides non-executive panels
 let myEmail=null, myDomain=null, charts={}, gPsoeList=[], gCans=[], gCaps=[], gHazards=[], gReports=[], gAeKpis=null, gOverlays={}, currentDecisionCapId=null;
@@ -689,5 +741,43 @@ function renderSituationalBanner(){
 }
 </script>
 
+</div>
+<script>
+(function () {
+  function initIdentity() {
+    if (typeof firebase === 'undefined' || !firebase.auth) return;
+    firebase.auth().onAuthStateChanged(function (user) {
+      if (!user) return;
+      user.getIdTokenResult().then(function (tr) {
+        var claims = tr.claims || {};
+        var tenant = claims.tenant_id || '';
+        var dept = (claims.department || '').toLowerCase().trim();
+        var email = user.email || '';
+        var logoUrl = claims.logo_url || null;
+        if (!logoUrl && tenant) logoUrl = '/assets/airline-logos/' + tenant + '-logo.webp';
+        var logoEl = document.getElementById('wsLogo');
+        if (logoUrl && logoEl) {
+          var img = new Image();
+          img.alt = 'Airline logo'; img.style.width='48px'; img.style.height='48px'; img.style.borderRadius='8px'; img.style.objectFit='contain';
+          img.onerror = function(){};
+          img.onload = function(){ logoEl.innerHTML=''; logoEl.appendChild(img); };
+          img.src = logoUrl;
+        }
+        var airlineName = tenant;
+        if (typeof TenantResolver !== 'undefined' && TenantResolver.prettifySlug) airlineName = TenantResolver.prettifySlug(tenant) || airlineName;
+        else airlineName = tenant.replace(/-/g,' ').replace(/\b\w/g,function(c){return c.toUpperCase();});
+        document.getElementById('wsAirline').textContent = airlineName || 'Workspace';
+        var deptLabel = dept ? dept.replace(/[_-]/g,' ').replace(/\b\w/g,function(c){return c.toUpperCase();}) : '';
+        if (deptLabel && !/Department$/i.test(deptLabel)) deptLabel += ' Department';
+        document.getElementById('wsDept').textContent = deptLabel;
+        document.getElementById('wsEmail').textContent = email;
+      }).catch(function(){});
+    });
+    var btn = document.getElementById('wsLogout');
+    if (btn) btn.addEventListener('click', function(){ if (firebase && firebase.auth) firebase.auth().signOut().then(function(){window.location.href='/login.html';}).catch(function(){window.location.href='/login.html';}); else window.location.href='/login.html'; });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initIdentity); else initIdentity();
+})();
+</script>
 </body>
 </html>

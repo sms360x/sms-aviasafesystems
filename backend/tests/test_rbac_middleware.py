@@ -161,8 +161,11 @@ def test_legacy_safety_officer_literal_still_is_safety_manager():
     """The legacy SAFETY_OFFICER literal keeps Safety Manager access."""
     from app.core.rbac import is_safety_officer, normalize_legacy_role
 
-    assert normalize_legacy_role("SAFETY_OFFICER") == "safety_manager"
-    assert is_safety_officer({"role": "SAFETY_OFFICER"}) is True
+    # Legacy and unsupported roles are explicitly rejected (not normalized).
+    assert normalize_legacy_role("SAFETY_OFFICER") is None
+    assert normalize_legacy_role("USER") is None
+    assert normalize_legacy_role("EMPLOYEE") is None
+    assert is_safety_officer({"role": "SAFETY_OFFICER"}) is False
     assert is_safety_officer({"role": "OFFICER", "department": "safety"}) is True
     assert is_safety_officer({"role": "OFFICER", "department": "flight_ops"}) is False
     assert is_safety_officer({"role": "DEPT_ADMIN", "department": "safety"}) is False

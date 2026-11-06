@@ -19,6 +19,8 @@ import time
 from dataclasses import dataclass
 from typing import Dict, Optional, Tuple
 
+from loguru import logger
+
 from app.core.config import settings
 from app.db import pg
 from app.db.db_models import (
@@ -162,6 +164,20 @@ def assess_demo_eligibility(user: dict) -> DemoEligibility:
     user = user or {}
     tenant_slug = (user.get("tenant_id") or "").strip().lower()
     if not tenant_slug:
+        logger.info(
+            "demo-eligibility",
+            extra={
+                "event": "demo_eligibility",
+                "tenant_slug": None,
+                "role": str(user.get("role") or ""),
+                "reason": "no authenticated tenant",
+                "eligible": False,
+                "shared_demo": False,
+                "source_configured": bool(
+                    getattr(settings, "GLOBAL_DEMO_TENANT_ID", None)
+                ),
+            },
+        )
         return DemoEligibility(
             eligible=False,
             reason="no authenticated tenant",
@@ -181,6 +197,20 @@ def assess_demo_eligibility(user: dict) -> DemoEligibility:
             tenant_slug=tenant_slug,
         )
         _cache(tenant_slug, result)
+        logger.info(
+            "demo-eligibility",
+            extra={
+                "event": "demo_eligibility",
+                "tenant_slug": tenant_slug,
+                "role": str(user.get("role") or ""),
+                "reason": result.reason,
+                "eligible": result.eligible,
+                "shared_demo": result.shared_demo,
+                "source_configured": bool(
+                    getattr(settings, "GLOBAL_DEMO_TENANT_ID", None)
+                ),
+            },
+        )
         return result
 
     tenant_uuid_value = row.get("id")
@@ -194,6 +224,20 @@ def assess_demo_eligibility(user: dict) -> DemoEligibility:
             tenant_uuid=str(tenant_uuid_value) if tenant_uuid_value else None,
         )
         _cache(tenant_slug, result)
+        logger.info(
+            "demo-eligibility",
+            extra={
+                "event": "demo_eligibility",
+                "tenant_slug": tenant_slug,
+                "role": str(user.get("role") or ""),
+                "reason": result.reason,
+                "eligible": result.eligible,
+                "shared_demo": result.shared_demo,
+                "source_configured": bool(
+                    getattr(settings, "GLOBAL_DEMO_TENANT_ID", None)
+                ),
+            },
+        )
         return result
 
     # 4. Require explicit module_access.shared_demo == true.
@@ -206,6 +250,20 @@ def assess_demo_eligibility(user: dict) -> DemoEligibility:
             tenant_uuid=str(tenant_uuid_value) if tenant_uuid_value else None,
         )
         _cache(tenant_slug, result)
+        logger.info(
+            "demo-eligibility",
+            extra={
+                "event": "demo_eligibility",
+                "tenant_slug": tenant_slug,
+                "role": str(user.get("role") or ""),
+                "reason": result.reason,
+                "eligible": result.eligible,
+                "shared_demo": result.shared_demo,
+                "source_configured": bool(
+                    getattr(settings, "GLOBAL_DEMO_TENANT_ID", None)
+                ),
+            },
+        )
         return result
 
     # 5. DEMO-to-LIVE: the tenant must not be operationally LIVE. Fail closed
@@ -219,6 +277,20 @@ def assess_demo_eligibility(user: dict) -> DemoEligibility:
             tenant_uuid=str(tenant_uuid_value) if tenant_uuid_value else None,
         )
         _cache(tenant_slug, result)
+        logger.info(
+            "demo-eligibility",
+            extra={
+                "event": "demo_eligibility",
+                "tenant_slug": tenant_slug,
+                "role": str(user.get("role") or ""),
+                "reason": result.reason,
+                "eligible": result.eligible,
+                "shared_demo": result.shared_demo,
+                "source_configured": bool(
+                    getattr(settings, "GLOBAL_DEMO_TENANT_ID", None)
+                ),
+            },
+        )
         return result
     if operational:
         result = DemoEligibility(
@@ -229,6 +301,20 @@ def assess_demo_eligibility(user: dict) -> DemoEligibility:
             operational=True,
         )
         _cache(tenant_slug, result)
+        logger.info(
+            "demo-eligibility",
+            extra={
+                "event": "demo_eligibility",
+                "tenant_slug": tenant_slug,
+                "role": str(user.get("role") or ""),
+                "reason": result.reason,
+                "eligible": result.eligible,
+                "shared_demo": result.shared_demo,
+                "source_configured": bool(
+                    getattr(settings, "GLOBAL_DEMO_TENANT_ID", None)
+                ),
+            },
+        )
         return result
 
     # 6. Eligible: read the shared seeded dataset under GLOBAL_DEMO_TENANT_ID.
@@ -244,6 +330,18 @@ def assess_demo_eligibility(user: dict) -> DemoEligibility:
             tenant_uuid=str(tenant_uuid_value) if tenant_uuid_value else None,
         )
         _cache(tenant_slug, result)
+        logger.info(
+            "demo-eligibility",
+            extra={
+                "event": "demo_eligibility",
+                "tenant_slug": tenant_slug,
+                "role": str(user.get("role") or ""),
+                "reason": result.reason,
+                "eligible": result.eligible,
+                "shared_demo": result.shared_demo,
+                "source_configured": False,
+            },
+        )
         return result
     result = DemoEligibility(
         eligible=True,
@@ -255,6 +353,19 @@ def assess_demo_eligibility(user: dict) -> DemoEligibility:
         read_tenant_slug=read_tenant_slug,
     )
     _cache(tenant_slug, result)
+    logger.info(
+        "demo-eligibility",
+        extra={
+            "event": "demo_eligibility",
+            "tenant_slug": tenant_slug,
+            "role": str(user.get("role") or ""),
+            "reason": result.reason,
+            "eligible": result.eligible,
+            "shared_demo": result.shared_demo,
+            "read_tenant_slug": result.read_tenant_slug,
+            "source_configured": True,
+        },
+    )
     return result
 
 

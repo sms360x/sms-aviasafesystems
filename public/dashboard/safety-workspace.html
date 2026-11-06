@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Workspace - SMS360X</title>
+<link rel="stylesheet" href="/css/variables.css?brand=20261028">
+<link rel="stylesheet" href="/css/main.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+  :root { --teal: #1E6B52; --teal-dark: #155a43; --neutral: #f4f6f8; }
+  body { margin: 0; font-family: system-ui, -apple-system, sans-serif; background: var(--neutral); }
+  .ws-header { background: var(--teal-dark); color: #fff; padding: 1.25rem 1.5rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem; }
+  .ws-header .identity h1 { margin: 0; font-size: 1.5rem; font-weight: 700; }
+  .ws-header .identity .dept { margin: 0.25rem 0 0; font-size: 0.95rem; opacity: 0.9; }
+  .ws-header .identity .email { margin: 0.15rem 0 0; font-size: 0.85rem; opacity: 0.8; }
+  .ws-header .logout { background: rgba(255,255,255,0.15); color: #fff; border: 1px solid rgba(255,255,255,0.3); padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; font-size: 0.9rem; }
+  .ws-header .logout:hover { background: rgba(255,255,255,0.25); }
+  .ws-main { max-width: 960px; margin: 2rem auto; padding: 0 1rem; }
+  .ws-title { font-size: 1.1rem; font-weight: 600; color: #374151; margin-bottom: 1rem; }
+  .ws-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; background: linear-gradient(135deg, rgba(30,107,82,0.04) 0%, rgba(244,246,248,0) 100%); padding: 0.5rem; border-radius: 12px; }
+  @media (max-width: 640px) { .ws-grid { grid-template-columns: 1fr; } }
+  .ws-card { background: rgba(255,255,255,0.82); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.6); border-radius: 15px; padding: 1.25rem; display: flex; align-items: center; gap: 0.75rem; text-decoration: none; color: #1f2937; transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease; cursor: default; box-shadow: 0 2px 8px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04); }
+  .ws-card:hover { transform: translateY(-4px); box-shadow: 0 8px 24px rgba(0,0,0,0.10), 0 2px 6px rgba(0,0,0,0.06); border-color: var(--teal); }
+  .ws-card:focus { outline: 2px solid var(--teal); outline-offset: 2px; }
+  .ws-card .icon { width: 36px; height: 36px; border-radius: 8px; background: rgba(30,107,82,0.1); color: var(--teal); display: flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0; transition: transform 0.22s ease; }
+  .ws-card:hover .icon { transform: scale(1.05); }
+  .ws-card .name { font-weight: 600; font-size: 0.95rem; }
+  .ws-card.unavailable { opacity: 0.75; cursor: default; }
+  @media (prefers-reduced-motion: reduce) {
+    .ws-card, .ws-card .icon { transition: none; }
+    .ws-card:hover { transform: none; }
+    .ws-card:hover .icon { transform: none; }
+  }
+  @supports not (backdrop-filter: blur(10px)) {
+    .ws-card { background: #fff; }
+  }
+  .ws-loading { text-align: center; padding: 3rem; color: #6b7280; }
+</style>
+</head>
+<body>
+<div class="ws-header" id="wsHeader" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.75rem;">
+  <div style="display:flex;align-items:center;gap:0.85rem;flex:1;min-width:0;">
+    <div class="ws-logo" id="wsLogo" aria-label="Airline logo" style="width:48px;height:48px;border-radius:8px;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:1.4rem;color:#fff;">
+      <i class="fas fa-building" aria-hidden="true"></i>
+    </div>
+    <div class="identity">
+      <h1 id="wsAirline" style="margin:0;font-size:1.5rem;font-weight:700;color:#fff;">Loading…</h1>
+      <p class="dept" id="wsDept" style="margin:0.25rem 0 0;font-size:0.95rem;color:rgba(255,255,255,0.85);"></p>
+      <p class="email" id="wsEmail" style="margin:0.15rem 0 0;font-size:0.85rem;color:rgba(255,255,255,0.7);"></p>
+    </div>
+  </div>
+  <button class="logout" id="wsLogout">Logout</button>
+</div>
+<div class="ws-main">
+  <div class="ws-title">Home · Select a module</div>
+  <div class="ws-grid" id="wsGrid"></div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+<script src="/js/tenant_context.js"></script>
+<script src="/js/firebase.js?v=4.0.1&brand=20261028"></script>
+<script>
+(function () {
+  var modules = [
+    { name: 'Safety Performance', icon: 'fa-chart-line', available: false },
+    { name: 'Reports Trend', icon: 'fa-chart-area', available: false },
+    { name: 'Hazards & Risks', icon: 'fa-triangle-exclamation', available: false },
+    { name: 'CAN / CAP Register', icon: 'fa-clipboard-check', available: false },
+    { name: 'SMS Surveys', icon: 'fa-square-poll-vertical', available: false },
+    { name: 'Daily Operations', icon: 'fa-calendar-day', available: false },
+  ];
+
+  function renderModules() {
+    var grid = document.getElementById('wsGrid');
+    grid.innerHTML = '';
+    modules.forEach(function (m) {
+      var card = document.createElement(m.available ? 'a' : 'div');
+      card.className = 'ws-card' + (m.available ? '' : ' unavailable');
+      if (m.available && m.href) card.href = m.href;
+      card.setAttribute('tabindex', m.available ? '0' : '-1');
+      card.innerHTML = '<div class="icon"><i class="fas ' + m.icon + '"></i></div><div class="name">' + m.name + '</div>';
+      grid.appendChild(card);
+    });
+  }
+
+  function init() {
+    if (typeof firebase === 'undefined' || !firebase.auth) {
+      window.location.href = '/login.html';
+      return;
+    }
+    firebase.auth().onAuthStateChanged(function (user) {
+      if (!user) { window.location.href = '/login.html'; return; }
+      user.getIdTokenResult().then(function (tr) {
+        var claims = tr.claims || {};
+        var tenant = claims.tenant_id || '';
+        var dept = (claims.department || '').toLowerCase().trim();
+        var role = (claims.role || '').toUpperCase();
+        var email = user.email || '';
+        // Authorization: TENANT_ADMIN or OFFICER in Safety/Corporate Safety.
+        var allowed = (role === 'TENANT_ADMIN') ||
+                      (role === 'OFFICER' && (dept === 'safety' || dept === 'corporate_safety'));
+        if (!allowed || !tenant) {
+          window.location.href = '/login.html';
+          return;
+        }
+        // Resolve logo: existing configured path, or standardized path from tenant slug.
+        var logoUrl = claims.logo_url || null;
+        if (!logoUrl && tenant) {
+          logoUrl = '/assets/airline-logos/' + tenant + '-logo.webp';
+        }
+        var logoEl = document.getElementById('wsLogo');
+        if (logoUrl && logoEl) {
+          var img = new Image();
+          img.alt = 'Airline logo';
+          img.style.width = '48px';
+          img.style.height = '48px';
+          img.style.borderRadius = '8px';
+          img.style.objectFit = 'contain';
+          img.onerror = function () { /* keep placeholder */ };
+          img.onload = function () { logoEl.innerHTML = ''; logoEl.appendChild(img); };
+          img.src = logoUrl;
+        }
+        var airlineName = tenant;
+        if (typeof TenantResolver !== 'undefined' && TenantResolver.prettifySlug) {
+          airlineName = TenantResolver.prettifySlug(tenant) || airlineName;
+        } else {
+          airlineName = tenant.replace(/-/g, ' ').replace(/\b\w/g, function (c) { return c.toUpperCase(); });
+        }
+        document.getElementById('wsAirline').textContent = airlineName || 'Workspace';
+        var deptLabel = dept ? dept.replace(/[_-]/g, ' ').replace(/\b\w/g, function (c) { return c.toUpperCase(); }) : '';
+        if (deptLabel && !/Department$/i.test(deptLabel)) deptLabel += ' Department';
+        document.getElementById('wsDept').textContent = deptLabel;
+        document.getElementById('wsEmail').textContent = email;
+      }).catch(function () {
+        window.location.href = '/login.html';
+      });
+    });
+    document.getElementById('wsLogout').addEventListener('click', function () {
+      if (typeof firebase !== 'undefined' && firebase.auth) {
+        firebase.auth().signOut().then(function () { window.location.href = '/login.html'; }).catch(function () { window.location.href = '/login.html'; });
+      } else {
+        window.location.href = '/login.html';
+      }
+    });
+    renderModules();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
+</script>
+</body>
+</html>

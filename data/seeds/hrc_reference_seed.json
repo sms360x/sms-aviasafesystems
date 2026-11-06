@@ -1,0 +1,41 @@
+{
+  "source_documents": [
+    {
+      "id": "ICAO-GASP-2026-2028",
+      "title": "Global Aviation Safety Plan 2026-2028",
+      "issuing_authority": "ICAO",
+      "edition": "2026-2028",
+      "jurisdiction": "GLOBAL",
+      "publication_period": "2026-2028",
+      "sha256": "DD52DB115509E9E82238C4E180399C24977F0875C9C2EC92EED94E566BE57D7C",
+      "verification_status": "verified"
+    },
+    {
+      "id": "CAAN-NASP-2023-2025",
+      "title": "National Aviation Safety Plan, Nepal 2023-2025",
+      "issuing_authority": "Civil Aviation Authority of Nepal",
+      "edition": "2023-2025",
+      "jurisdiction": "NP",
+      "publication_period": "2023-2025",
+      "sha256": "D77B1A4176CEA8260160FD303B08C837612AEADE4448D63E9B3DB0E3D0A97DEC",
+      "verification_status": "verified"
+    }
+  ],
+  "categories": [
+    {"code":"CFIT","classification":"GLOBAL_HRC","title":"Controlled flight into terrain","source_document_id":"ICAO-GASP-2026-2028","source_section":"Section 3.3 (p.30)"},
+    {"code":"LOC-I","classification":"GLOBAL_HRC","title":"Loss of control in-flight","source_document_id":"ICAO-GASP-2026-2028","source_section":"Section 3.3 (p.30)"},
+    {"code":"MAC","classification":"GLOBAL_HRC","title":"Mid-air collision","source_document_id":"ICAO-GASP-2026-2028","source_section":"Section 3.3 (p.30)"},
+    {"code":"RE","classification":"GLOBAL_HRC","title":"Runway excursion","source_document_id":"ICAO-GASP-2026-2028","source_section":"Section 3.3 (p.30)"},
+    {"code":"RI","classification":"GLOBAL_HRC","title":"Runway incursion","source_document_id":"ICAO-GASP-2026-2028","source_section":"Section 3.3 (p.30)"},
+    {"code":"ARC","classification":"GLOBAL_OTHER_RISK","title":"Abnormal runway contact","source_document_id":"ICAO-GASP-2026-2028","source_section":"Section 3.4 (p.30)"},
+    {"code":"SCF-NP","classification":"GLOBAL_OTHER_RISK","title":"System/component failure or malfunction (non-powerplant)","source_document_id":"ICAO-GASP-2026-2028","source_section":"Section 3.4 (p.30)"},
+    {"code":"TURB","classification":"GLOBAL_OTHER_RISK","title":"Turbulence encounter","source_document_id":"ICAO-GASP-2026-2028","source_section":"Section 3.4 (p.30)"},
+    {"code":"CFIT","classification":"NATIONAL_HRC","title":"Controlled Flight Into Terrain","source_document_id":"CAAN-NASP-2023-2025","source_section":"Section 4 (p.13)","jurisdiction":"NP"},
+    {"code":"LOC-I","classification":"NATIONAL_HRC","title":"Loss of Control - In flight","source_document_id":"CAAN-NASP-2023-2025","source_section":"Section 4 (p.13)","jurisdiction":"NP"},
+    {"code":"MAC","classification":"NATIONAL_HRC","title":"Mid Air Collision","source_document_id":"CAAN-NASP-2023-2025","source_section":"Section 4 (p.13)","jurisdiction":"NP"},
+    {"code":"RE","classification":"NATIONAL_HRC","title":"Runway Excursion","source_document_id":"CAAN-NASP-2023-2025","source_section":"Section 4 (p.13)","jurisdiction":"NP"},
+    {"code":"RI","classification":"NATIONAL_HRC","title":"Runway Incursion","source_document_id":"CAAN-NASP-2023-2025","source_section":"Section 4 (p.13)","jurisdiction":"NP"},
+    {"code":"ARC","classification":"NATIONAL_HRC","title":"Abnormal Runway Contact","source_document_id":"CAAN-NASP-2023-2025","source_section":"Section 4 (p.13)","jurisdiction":"NP"},
+    {"code":"WS","classification":"NATIONAL_HRC","title":"Wildlife Strike on and in vicinity of Aerodrome","source_document_id":"CAAN-NASP-2023-2025","source_section":"Section 4 (p.13)","jurisdiction":"NP"}
+  ]
+}

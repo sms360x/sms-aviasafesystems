@@ -42,7 +42,7 @@ function openConfirm(title, html, action) {
     document.getElementById('confirmTitle').textContent = title;
     document.getElementById('confirmText').innerHTML = html;
     // Show setup-key field for destructive actions — prompt inside the warning modal
-    var needsKey = action && (action.type === 'demo' || action.type === 'psoe' || action.type === 'stateRisk' || action.type === 'purgeUnified' || action.type === 'purgePsoeDemo' || action.type === 'purgeStateRiskDemo' || action.type === 'deleteDemoTenants' || action.type === 'deleteUser');
+    var needsKey = action && (action.type === 'demo' || action.type === 'psoe' || action.type === 'stateRisk' || action.type === 'purgeUnified' || action.type === 'purgePsoeDemo' || action.type === 'purgeStateRiskDemo' || action.type === 'deleteDemoTenants' || action.type === 'deleteUser' || action.type === 'resetPassword');
     var wrap = document.getElementById('confirmSetupKeyWrap');
     var input = document.getElementById('confirmSetupKey');
     var errEl = document.getElementById('confirmSetupKeyError');

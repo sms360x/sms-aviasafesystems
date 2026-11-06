@@ -32,5 +32,9 @@
 - Operational code blocks untouched.
 - Runtime verification (auth flows, tenant isolation, mobile layouts) requires owner/manual testing.
 
+## Deployment
+- Commit: c92ce8a (pushed to origin/main)
+- Deployment: owner-only action required. Trigger the established sms360x frontend hosting workflow from the `main` branch (e.g., Vercel/Netlify project → Redeploy latest main). No DB/Firebase/backend changes.
+
 ## Unresolved issues
 - None identified statically. Recommend manual verification of role-based Home destinations and feedback widget functionality.

@@ -46,8 +46,8 @@ _FLAG_CACHE: Dict[str, Tuple[float, Dict[str, Any]]] = {}
 _FLAG_TTL_SECONDS = 60.0
 
 _NORMALIZE_ROLES = {
-    "TENANT_ADMIN", "STATE_SMD", "DEPT_ADMIN", "USER", "OFFICER",
-    "ACCOUNTABLE_EXECUTIVE", "SAG_MEMBER", "SAFETY_OFFICER",
+    "TENANT_ADMIN", "STATE_SMD", "DEPT_ADMIN", "OFFICER",
+    "ACCOUNTABLE_EXECUTIVE", "SAG_MEMBER",
 }
 
 # Infrastructure / health-check endpoints are never gated by auth or RBAC.

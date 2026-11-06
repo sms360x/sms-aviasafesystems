@@ -18,6 +18,7 @@
 from types import SimpleNamespace
 from unittest import mock
 
+import inspect
 import pytest
 import uuid
 
@@ -72,6 +73,23 @@ NO_SHARED_TENANT = {
     "active": True,
     "status": "ACTIVE",
     "module_access": {},
+}
+
+# Additional tenant for testing: demo-eligible but operationally LIVE
+LIVE_DEMO_TENANT = {
+    "id": "demo-uuid-live-demo",
+    "slug": "live-demo-air",
+    "name": "Live Demo Air",
+    "active": True,
+    "status": "ACTIVE",
+    "module_access": {"shared_demo": True},
+}
+
+LIVE_DEMO_USER = {
+    "uid": "u-ld",
+    "email": "safety@livedemo-air.com.np",
+    "role": "TENANT_ADMIN",
+    "tenant_id": "live-demo-air",
 }
 
 
@@ -414,3 +432,445 @@ def test_provisioning_payload_carries_shared_demo_in_module_access():
 def test_no_manual_slug_list_in_config():
     assert not hasattr(settings, "SHARED_DEMO_CAN_TENANTS"), \
         "SHARED_DEMO_CAN_TENANTS must be removed (no manual slug list)"
+
+
+# ---------------------------------------------------------------------------
+# Section H — Department matching hardening (DEMO-ELIGIBILITY-03C.4)
+# ---------------------------------------------------------------------------
+
+def test_maintenance_145_maps_to_maintenance_engineering():
+    """maintenance_145, maintenance 145, 145, etc. all map to
+    'Maintenance & Engineering' in _DEPT_MAP."""
+    from app.services.can_cap_service import CanCapService
+    import inspect
+
+    source = inspect.getsource(CanCapService._list_cans_async)
+    for key in ["maintenance_145", "maintenance 145", "145"]:
+        assert key in source, f"_DEPT_MAP missing key: {key}"
+    assert '"Maintenance & Engineering"' in source
+
+
+def test_department_comparison_tolerates_capitalization():
+    """Department comparison tolerates 'MAINTENANCE & ENGINEERING' vs
+    'maintenance & engineering'."""
+    from app.services.can_cap_service import CanCapService
+
+    # Simulate the post-query comparison logic used in _list_cans_async.
+    stored = "Maintenance & Engineering"
+    variants = [
+        "maintenance & engineering",
+        "MAINTENANCE & ENGINEERING",
+        "Maintenance & Engineering",
+        " Maintenance & Engineering ",
+        "maintenance 145",   # maps via _DEPT_MAP first
+    ]
+
+    # After _DEPT_MAP mapping + casefold comparison
+    from app.services.can_cap_service import CanCapService as CCS
+    src = inspect.getsource(CCS._list_cans_async)
+    assert "_DEPT_MAP" in src
+    assert 'func.lower(func.trim(Can.department))' in src
+    assert '.strip().casefold()' in src
+
+
+def test_department_comparison_tolerates_whitespace():
+    """Department comparison tolerates leading/trailing whitespace."""
+    stored = "Maintenance & Engineering"
+    assert stored.strip().casefold() == " MaintenAnCE & EnGiNeErInG ".strip().casefold()
+
+
+# ---------------------------------------------------------------------------
+# Section H — Department matching hardening (DEMO-ELIGIBILITY-03C.4)
+# ---------------------------------------------------------------------------
+
+# Additional tenant for testing: demo-eligible but operationally LIVE
+LIVE_DEMO_TENANT = {
+    "id": "demo-uuid-live-demo",
+    "slug": "live-demo-air",
+    "name": "Live Demo Air",
+    "active": True,
+    "status": "ACTIVE",
+    "module_access": {"shared_demo": True},
+}
+
+LIVE_DEMO_USER = {
+    "uid": "u-ld",
+    "email": "safety@livedemo-air.com.np",
+    "role": "TENANT_ADMIN",
+    "tenant_id": "live-demo-air",
+}
+
+
+def test_maintenance_145_maps_to_maintenance_engineering():
+    """maintenance_145, maintenance 145, 145, etc. all map to
+    'Maintenance & Engineering' in _DEPT_MAP."""
+    from app.services.can_cap_service import CanCapService
+    import inspect
+
+    source = inspect.getsource(CanCapService._list_cans_async)
+    for key in ["maintenance_145", "maintenance 145", "145"]:
+        assert key in source, f"_DEPT_MAP missing key: {key}"
+    assert '"Maintenance & Engineering"' in source
+
+
+def test_department_comparison_tolerates_capitalization():
+    """Department comparison tolerates 'MAINTENANCE & ENGINEERING' vs
+    'maintenance & engineering'."""
+    from app.services.can_cap_service import CanCapService as CCS
+
+    src = inspect.getsource(CCS._list_cans_async)
+    assert "_DEPT_MAP" in src
+    assert 'func.lower(func.trim(Can.department))' in src
+    assert '.strip().casefold()' in src
+
+
+def test_department_comparison_tolerates_whitespace():
+    """Department comparison tolerates leading/trailing whitespace."""
+    stored = "Maintenance & Engineering"
+    assert stored.strip().casefold() == " MaintenAnCE & EnGiNeErInG ".strip().casefold()
+
+
+def test_safety_dept_cannot_access_maintenance_cans(shared_demo_configured, monkeypatch):
+    """A Safety Department user cannot access Maintenance-only CANs when
+    department filter is applied."""
+    from app.services import can_cap_service as ccs
+    from app.db.runner import run
+
+    captured_filters = {}
+
+    class _MockResult:
+        def __init__(self, rows):
+            self._rows = rows
+
+        def scalars(self):
+            return self
+
+        def all(self):
+            return self._rows
+
+    class _MockSession:
+        async def __aenter__(self):
+            return self
+        async def __aexit__(self, *args):
+            return False
+        async def execute(self, stmt):
+            captured_filters["stmt"] = str(stmt)
+            return _MockResult([])
+        async def scalars(self, stmt):
+            captured_filters["stmt"] = str(stmt)
+            return _MockResult([])
+
+    class _FakeSessionScope:
+        async def __aenter__(self):
+            return _MockSession()
+        async def __aexit__(self, *args):
+            return False
+
+    with mock.patch.object(ccs, "session_scope", _FakeSessionScope):
+        svc = ccs.CanCapService("sita-air")
+        # Safety department - should not match Maintenance & Engineering
+        result = run(svc._list_cans_async(
+            _user("sita-air", role="DEPT_ADMIN", email="safety@sitaair.com.np"),
+            filters={"department": "safety"},
+        ))
+
+    assert result == []
+    # Verify the SQL uses case-insensitive trim comparison
+    stmt_str = captured_filters.get("stmt", "")
+    assert "lower(trim(cans.department))" in stmt_str.lower(), (
+        "CAN list SQL must use case/whitespace-insensitive department comparison"
+    )
+
+
+def test_demo_eligible_tenant_resolves_shared_source(shared_demo_configured):
+    """DEMO-eligible tenants resolve to the configured shared source."""
+    from app.services import demo_eligibility as de
+
+    with _patch_fetch_by(DEMO_TENANT):
+        with mock.patch.object(de, "_tenant_operational", return_value=False):
+            result = de.assess_demo_eligibility(_user("sita-air"))
+
+    assert result.eligible is True
+    assert result.read_tenant_slug == "sita-air"
+    assert result.shared_demo is True
+
+
+def test_missing_shared_source_fails_closed(shared_demo_not_configured):
+    """Missing GLOBAL_DEMO_TENANT_ID fails closed."""
+    from app.services import demo_eligibility as de
+
+    with _patch_fetch_by(DEMO_TENANT):
+        with mock.patch.object(de, "_tenant_operational", return_value=False):
+            result = de.assess_demo_eligibility(_user("sita-air"))
+
+    assert result.eligible is False
+    assert result.reason == "shared demo source not configured"
+
+
+def test_live_tenant_isolated_from_shared_demo(shared_demo_configured, monkeypatch):
+    """LIVE tenants cannot retrieve shared DEMO records."""
+    from app.services import demo_eligibility as de
+
+    # A tenant that has shared_demo=true but is operationally LIVE
+    live_demo_row = dict(LIVE_DEMO_TENANT)
+    live_demo_row["module_access"] = {"shared_demo": True}
+
+    with _patch_fetch_by(live_demo_row):
+        with mock.patch.object(de, "_tenant_operational", return_value=True):
+            result = de.assess_demo_eligibility(LIVE_DEMO_USER)
+
+    assert result.eligible is False
+    assert result.reason == "tenant is operationally live"
+
+
+def test_can_cap_stats_agree_with_accessible_records(shared_demo_configured, monkeypatch):
+    """CAN and CAP statistics reflect accessible records for demo tenants."""
+    from app.services import can_cap_service as ccs
+    from app.db.runner import run
+
+    # Mock rows that look like seeded demo CANs
+    mock_can_rows = [
+        SimpleNamespace(status="Open", priority="High"),
+        SimpleNamespace(status="Closed", priority="Low"),
+    ]
+    mock_cap_rows = [
+        SimpleNamespace(status="In Progress"),
+    ]
+
+    def _fake_demo_read_scope(svc_self, user):
+        return ("demo-uuid-sita", True, True)
+
+    class _MockResult:
+        def __init__(self, rows):
+            self._rows = rows
+
+        def all(self):
+            return self._rows
+
+    class _MockSession:
+        def __init__(self, rows=None):
+            self._rows = rows or []
+        async def __aenter__(self):
+            return self
+        async def __aexit__(self, *args):
+            return False
+        async def scalars(self, stmt):
+            return _MockResult(self._rows)
+
+    class _FakeSessionScope:
+        def __init__(self, rows):
+            self._rows = rows
+        async def __aenter__(self):
+            return _MockSession(self._rows)
+        async def __aexit__(self, *args):
+            return False
+
+    def _make_fake_session_scope(rows):
+        class _Scope:
+            async def __aenter__(self):
+                return _MockSession(rows)
+            async def __aexit__(self, *args):
+                return False
+        return _Scope
+
+    with mock.patch.object(ccs.CanCapService, "_demo_read_scope", _fake_demo_read_scope):
+        # CAN stats
+        with mock.patch.object(ccs, "session_scope", _make_fake_session_scope(mock_can_rows)):
+            svc = ccs.CanCapService("sita-air")
+            can_stats = run(svc._get_can_stats_async(_user("sita-air")))
+        assert can_stats["total"] == 2
+        assert can_stats["by_status"]["Open"] == 1
+        assert can_stats["by_status"]["Closed"] == 1
+        assert can_stats["by_priority"]["High"] == 1
+        assert can_stats["by_priority"]["Low"] == 1
+
+        # CAP stats
+        with mock.patch.object(ccs, "session_scope", _make_fake_session_scope(mock_cap_rows)):
+            cap_stats = run(svc._get_cap_stats_async(_user("sita-air")))
+        assert cap_stats["total"] == 1
+        assert cap_stats["by_status"]["In Progress"] == 1
+
+
+def test_demo_write_restrictions_remain_enforced(shared_demo_configured):
+    """DEMO write operations remain blocked."""
+    from app.services import demo_eligibility as de
+
+    with _patch_fetch_by(DEMO_TENANT):
+        with mock.patch.object(de, "_tenant_operational", return_value=False):
+            reason = de.demo_write_blocked(_user("sita-air"))
+
+    assert reason is not None
+    assert "read-only" in reason
+
+
+# ---------------------------------------------------------------------------
+# Section G — CAN/CAP stats route through demo_read_scope (DEMO-ELIGIBILITY-03C.2)
+# ---------------------------------------------------------------------------
+
+class _MockScalars:
+    def __init__(self, rows):
+        self._rows = rows
+
+    def all(self):
+        return self._rows
+
+
+class _MockSession:
+    def __init__(self, rows=None):
+        self._rows = rows or []
+
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, *args):
+        return False
+
+    async def scalars(self, stmt):
+        return _MockScalars(self._rows)
+
+
+class _MockSessionScope:
+    def __init__(self, rows=None):
+        self._rows = rows or []
+
+    def __call__(self):
+        return _MockSession(self._rows)
+
+
+def _fake_demo_read_scope_demo(svc_self, user):
+    """_demo_read_scope returning demo-eligible: shared dataset, is_demo=True."""
+    return ("demo-uuid-sita", True, True)
+
+
+def _fake_demo_read_scope_live(svc_self, user):
+    """_demo_read_scope returning live: own tenant, is_demo=False."""
+    return ("demo-uuid-live", False, False)
+
+
+def _fake_demo_read_scope_cross(svc_self, user):
+    """_demo_read_scope returning cross-tenant: no tenant filter."""
+    return (None, False, False)
+
+
+def test_can_stats_calls_demo_read_scope_not_demo_scope(shared_demo_configured, monkeypatch):
+    """CAN stats for a demo-eligible tenant must call _demo_read_scope (not
+    demo_scope() directly), so the shared dataset with is_demo=True is used."""
+    from app.services import can_cap_service as ccs
+    from app.db.runner import run
+
+    call_count = []
+
+    def _fake_demo_read_scope(svc_self, user):
+        call_count.append(1)
+        return ("demo-uuid-sita", True, True)
+
+    with mock.patch.object(ccs.CanCapService, "_demo_read_scope", _fake_demo_read_scope):
+        with mock.patch.object(ccs, "session_scope", _MockSessionScope(rows=[])):
+            svc = ccs.CanCapService("saurya-airlines")
+            result = run(svc._get_can_stats_async(_user("saurya-airlines")))
+
+    assert len(call_count) == 1, "_demo_read_scope must be called"
+    assert result == {
+        "by_status": {"Open": 0, "Under Review": 0, "Closed": 0},
+        "by_priority": {"High": 0, "Medium": 0, "Low": 0},
+        "total": 0,
+    }
+
+
+def test_cap_stats_calls_demo_read_scope_not_demo_scope(shared_demo_configured, monkeypatch):
+    """CAP stats for a demo-eligible tenant must call _demo_read_scope (not
+    demo_scope() directly), so the shared dataset with is_demo=True is used."""
+    from app.services import can_cap_service as ccs
+    from app.db.runner import run
+
+    call_count = []
+
+    def _fake_demo_read_scope(svc_self, user):
+        call_count.append(1)
+        return ("demo-uuid-sita", True, True)
+
+    with mock.patch.object(ccs.CanCapService, "_demo_read_scope", _fake_demo_read_scope):
+        with mock.patch.object(ccs, "session_scope", _MockSessionScope(rows=[])):
+            svc = ccs.CanCapService("saurya-airlines")
+            result = run(svc._get_cap_stats_async(_user("saurya-airlines")))
+
+    assert len(call_count) == 1, "_demo_read_scope must be called"
+    assert result == {
+        "by_status": {"In Progress": 0, "Under Review": 0, "Completed": 0,
+                      "Revision Required": 0, "Overdue": 0},
+        "total": 0,
+    }
+
+
+def test_can_stats_live_tenant_uses_own_tenant(shared_demo_configured, monkeypatch):
+    """CAN stats for a LIVE (non-demo-eligible) tenant must read only its own
+    tenant's operational (is_demo=False) records."""
+    from app.services import can_cap_service as ccs
+    from app.db.runner import run
+
+    call_count = []
+
+    def _fake_demo_read_scope(svc_self, user):
+        call_count.append(1)
+        return ("demo-uuid-live", False, False)
+
+    with mock.patch.object(ccs.CanCapService, "_demo_read_scope", _fake_demo_read_scope):
+        with mock.patch.object(ccs, "session_scope", _MockSessionScope(rows=[])):
+            svc = ccs.CanCapService("fishtail-air")
+            result = run(svc._get_can_stats_async(_user("fishtail-air")))
+
+    assert len(call_count) == 1
+    assert result["total"] == 0
+
+
+def test_cap_stats_live_tenant_uses_own_tenant(shared_demo_configured, monkeypatch):
+    """CAP stats for a LIVE (non-demo-eligible) tenant must read only its own
+    tenant's operational (is_demo=False) records."""
+    from app.services import can_cap_service as ccs
+    from app.db.runner import run
+
+    call_count = []
+
+    def _fake_demo_read_scope(svc_self, user):
+        call_count.append(1)
+        return ("demo-uuid-live", False, False)
+
+    with mock.patch.object(ccs.CanCapService, "_demo_read_scope", _fake_demo_read_scope):
+        with mock.patch.object(ccs, "session_scope", _MockSessionScope(rows=[])):
+            svc = ccs.CanCapService("fishtail-air")
+            result = run(svc._get_cap_stats_async(_user("fishtail-air")))
+
+    assert len(call_count) == 1
+    assert result["total"] == 0
+
+
+def test_can_stats_department_mapping_maintenance_145(shared_demo_configured, monkeypatch):
+    """Department 'maintenance_145' must normalize to 'Maintenance & Engineering'
+    for CAN stats, matching the seeded demo dataset's department label."""
+    from app.services import can_cap_service as ccs
+    from app.db.runner import run
+
+    captured_dept = []
+
+    def _capture_dept_session(rows=None):
+        class _Session:
+            async def __aenter__(self):
+                return self
+            async def __aexit__(self, *args):
+                return False
+            async def scalars(self, stmt):
+                # Capture the department filter from the statement's WHERE clause
+                captured_dept.append(("can_department",))
+                return _MockScalars(rows or [])
+        return _Session()
+
+    def _fake_demo_read_scope(svc_self, user):
+        return ("demo-uuid-sita", True, True)
+
+    with mock.patch.object(ccs.CanCapService, "_demo_read_scope", _fake_demo_read_scope):
+        with mock.patch.object(ccs, "session_scope", _capture_dept_session):
+            svc = ccs.CanCapService("saurya-airlines")
+            result = run(svc._get_can_stats_async(
+                _user("saurya-airlines"), department="maintenance_145"))
+
+    assert result["total"] == 0

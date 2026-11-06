@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Tasks</title>
+    <link rel="stylesheet" href="/css/variables.css?brand=20261028">
+    <link rel="stylesheet" href="/css/main.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { --teal: #1E6B52; --teal-dark: #155a43; }
+        .ws-header { background: var(--teal-dark); color: #fff; padding: 1.25rem 1.5rem; }
+        .ws-header .logout { background: rgba(255,255,255,0.15); color: #fff; border: 1px solid rgba(255,255,255,0.3); padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; font-size: 0.9rem; }
+        .app-shell { display: block; }
+        .page { max-width: 1400px; margin: 0 auto; padding: 1.5rem; }
+        .stats-row { grid-template-columns: repeat(4, 1fr); }
+        @media (max-width: 900px) { .stats-row { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 520px) { .stats-row { grid-template-columns: 1fr; } }
+        body { background: #edf2ed; font-family: 'DM Sans', system-ui, -apple-system, sans-serif; color: #192f35; margin: 0; }
+        .page { max-width: 1200px; margin: 0 auto; padding: 1.5rem; }
+        .nav { background: #192f35; color: #fff; padding: 0.75rem 1.5rem; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
+        .nav h1 { font-size: 1.1rem; font-weight: 600; margin: 0; }
+        .nav h1 i { margin-right: 0.5rem; }
+        .nav-actions { display: flex; align-items: center; gap: 1rem; }
+        .nav-actions span { font-size: 0.8rem; opacity: 0.8; }
+        .btn-logout { background: transparent; border: 1px solid rgba(255,255,255,0.3); color: #fff; padding: 0.4rem 1rem; border-radius: 6px; cursor: pointer; font-size: 0.8rem; }
+        .btn-logout:hover { background: rgba(255,255,255,0.1); }
+        .header-bar { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem; }
+        .header-bar h2 { margin: 0; color: #192f35; }
+        .filter-bar { display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center; background: #fff; padding: 1rem 1.25rem; border-radius: 10px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); margin-bottom: 1.5rem; }
+        .filter-bar label { font-size: 0.8rem; font-weight: 600; color: #53685c; }
+        .filter-bar select, .filter-bar input { padding: 0.4rem 0.75rem; border: 1px solid #d7e4dc; border-radius: 6px; font-size: 0.85rem; background: #fff; }
+        .filter-bar .btn-search { background: #1d5949; color: #fff; border: none; padding: 0.4rem 1rem; border-radius: 6px; cursor: pointer; font-size: 0.85rem; }
+        .table-card { background: #fff; border-radius: 10px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); overflow: hidden; }
+        .table-card table { width: 100%; border-collapse: collapse; }
+        .table-card th { background: #f4f6f3; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; color: #65766e; padding: 0.85rem 1rem; text-align: left; border-bottom: 2px solid #d7e4dc; }
+        .table-card td { padding: 0.75rem 1rem; border-bottom: 1px solid #edf2ed; font-size: 0.875rem; }
+        .table-card tbody tr { cursor: pointer; }
+        .table-card tbody tr:hover { background: #f4f6f3; }
+        .badge { display: inline-block; padding: 0.2rem 0.6rem; border-radius: 999px; font-size: 0.75rem; font-weight: 600; }
+        .badge-critical { background: #fde8e8; color: #dc3545; }
+        .badge-high { background: #fff3e0; color: #e65100; }
+        .badge-medium { background: #fff8e1; color: #f9a825; }
+        .badge-low { background: #e8f5e9; color: #2e7d32; }
+        .badge-default { background: #edf2ed; color: #65766e; }
+        .badge-new { background: #e3f2fd; color: #1565c0; }
+        .badge-processing { background: #fff3e0; color: #e65100; }
+        .badge-warning { background: #fef3c7; color: #d97706; }
+        .badge-completed { background: #e8f5e9; color: #2e7d32; }
+        .badge-danger { background: #fde8e8; color: #b91c1c; }
+        .badge-type-hazard { background: #e3f2fd; color: #1565c0; }
+        .badge-type-can { background: #ede7f6; color: #5e35b1; }
+        .badge-type-cap { background: #fce4ec; color: #c2185b; }
+        .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+        .stat-card { background: #fff; padding: 1rem; border-radius: 10px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); text-align: center; }
+        .stat-card .num { font-size: 1.5rem; font-weight: 700; color: #192f35; }
+        .stat-card .lbl { font-size: 0.75rem; color: #65766e; text-transform: uppercase; letter-spacing: 0.3px; margin-top: 0.25rem; }
+        .stat-card.red { border-top: 3px solid #dc3545; }
+        .stat-card.red .num { color: #dc3545; }
+        .loading-state { display: flex; align-items: center; justify-content: center; padding: 3rem; color: #65766e; }
+        .loading-state i { font-size: 1.5rem; margin-right: 0.5rem; }
+        .empty-state { text-align: center; padding: 3rem; color: #65766e; }
+        .info-banner { background: #e3f2fd; color: #1565c0; border-radius: 10px; padding: 1rem 1.25rem; margin-bottom: 1.5rem; font-size: 0.9rem; display: flex; align-items: center; gap: 0.75rem; }
+        /* Skeleton loaders for cold-start — shown until real stats arrive */
+        .skeleton { background: linear-gradient(90deg, #d7e4dc 25%, #edf2ed 37%, #d7e4dc 63%); background-size: 400% 100%; animation: shimmer 1.4s ease infinite; border-radius: 6px; }
+        @keyframes shimmer { 0% { background-position: 100% 0; } 100% { background-position: -100% 0; } }
+        .skel-stat { height: 72px; border-radius: 10px; }
+        .skel-row { height: 18px; margin: 6px 0; }
+        @media (max-width: 768px) { .filter-bar { flex-direction: column; align-items: stretch; } }
+    </style>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="../css/theme.css?brand=20261028">
+    <link rel="stylesheet" href="/css/dashboard-responsive.css?brand=20261028">
+<link rel="stylesheet" href="/css/shell.css?brand=20261028">
+    
+    <link rel="stylesheet" href="/css/brand.css?v=20261028">
+</head>
+    </head>
+<body>
+
+<div class="ws-header" id="wsHeader" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.75rem;">
+  <div style="display:flex;align-items:center;gap:0.85rem;flex:1;min-width:0;">
+    <div class="ws-logo" id="wsLogo" aria-label="Airline logo" style="width:48px;height:48px;border-radius:8px;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:1.4rem;color:#fff;">
+      <i class="fas fa-building" aria-hidden="true"></i>
+    </div>
+    <div class="identity">
+      <h1 id="wsAirline" style="margin:0;font-size:1.5rem;font-weight:700;color:#fff;">Loading…</h1>
+      <p class="dept" id="wsDept" style="margin:0.25rem 0 0;font-size:0.95rem;color:rgba(255,255,255,0.85);"></p>
+      <p class="email" id="wsEmail" style="margin:0.15rem 0 0;font-size:0.85rem;color:rgba(255,255,255,0.7);"></p>
+    </div>
+  </div>
+  <div style="display:flex;align-items:center;gap:0.75rem;">
+    <button class="logout" id="wsLogout">Logout</button>
+  </div>
+</div>
+
+<div class="dept-menu" style="max-width:1200px;margin:0.75rem auto 0;padding:0 1.5rem;display:flex;gap:0.5rem;flex-wrap:wrap;">
+  <a href="/dashboard/previews/my-tasks.html" style="padding:0.4rem 0.8rem;border-radius:6px;background:#fff;color:#192f35;text-decoration:none;font-size:0.85rem;font-weight:600;">My Tasks</a>
+  <a href="/dashboard/master-register.html" style="padding:0.4rem 0.8rem;border-radius:6px;background:#fff;color:#192f35;text-decoration:none;font-size:0.85rem;">Master Register</a>
+  <a href="/can_cap/cans.html" style="padding:0.4rem 0.8rem;border-radius:6px;background:#fff;color:#192f35;text-decoration:none;font-size:0.85rem;">CAN Register</a>
+  <a href="/can_cap/caps.html" style="padding:0.4rem 0.8rem;border-radius:6px;background:#fff;color:#192f35;text-decoration:none;font-size:0.85rem;">CAP Register</a>
+</div>
+
+<div class="app-shell">
+
+<div class="page">
+    <div class="header-bar">
+        <h2><i class="fas fa-list-check"></i> Assigned CANs & CAPs</h2>
+        <div>
+            <a id="submitReportBtn" href="/report/mor.html" class="btn btn-outline btn-sm" style="display:none;margin-right:0.5rem;"><i class="fas fa-plus"></i> Submit MOR</a>
+        </div>
+    </div>
+
+    <div id="infoBanner" class="info-banner" style="display:none;">
+        <i class="fas fa-circle-info"></i>
+        <span>Showing items assigned to <strong id="assigneeLabel">you</strong> in your department.</span>
+    </div>
+
+    <div id="statsRow" class="stats-row">
+        <!-- Skeleton shown while waiting for Render cold-boot / API response -->
+        <div class="stat-card skel-stat skeleton"></div>
+        <div class="stat-card skel-stat skeleton"></div>
+        <div class="stat-card skel-stat skeleton"></div>
+        <div class="stat-card skel-stat skeleton"></div>
+    </div>
+
+    <div class="filter-bar">
+        <label>Status:</label>
+        <select id="filterStatus"><option value="">All</option></select>
+        <label>Type:</label>
+        <select id="filterType">
+            <option value="">All</option>
+            <option value="CAN">CAN</option>
+            <option value="CAP">CAP</option>
+        </select>
+        <button class="btn-search" onclick="loadTasks()"><i class="fas fa-search"></i> Apply</button>
+    </div>
+
+    <div class="table-card">
+        <table>
+            <thead>
+                <tr>
+                    <th>Reference</th>
+                    <th>Title</th>
+                    <th>Type</th>
+                    <th>Status</th>
+                    <th>Priority</th>
+                    <th>Target Date</th>
+                </tr>
+            </thead>
+            <tbody id="tasksBody"></tbody>
+        </table>
+        <div id="loadingIndicator" class="loading-state" style="display:none;">
+            <i class="fas fa-spinner fa-spin"></i> Loading tasks...
+        </div>
+        <div id="emptyIndicator" class="empty-state" style="display:none;">
+            <i class="fas fa-inbox" style="font-size:2rem;margin-bottom:0.5rem;"></i>
+            <p>No tasks assigned to you.</p>
+        </div>
+    </div>
+</div>
+
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-check-compat.js"></script>
+<script src="/js/firebase.js?v=4.0.1&brand=20261028"></script>
+<script src="/js/tenant_context.js"></script>
+<script src="/js/department_resolver.js"></script>
+<script src="/js/api/client.js"></script>
+<!-- shell/nav removed in preview to avoid duplicate header; compact department menu below -->
+<script>
+let currentUser = null;
+let allRows = [];
+let myUid = null;
+let myEmail = null;
+let myDepartment = null;
+
+firebase.auth().onAuthStateChanged(async function(user) {
+    if (!user) { window.location.href = '/login.html'; return; }
+    currentUser = user;
+    if (typeof applyDepartmentContext === 'function') {
+        applyDepartmentContext(user.email);
+    }
+    try {
+        const tokenResult = await user.getIdTokenResult();
+        myUid = user.uid;
+        myEmail = user.email;
+        myDepartment = (tokenResult.claims && tokenResult.claims.department) || '';
+        const myRole = (tokenResult.claims && tokenResult.claims.role) || '';
+        // Role-conditional header actions: department personas (DEPT_ADMIN,
+        // plus OFFICER which absorbed the retired STAFF role) work on the
+        // department register and submit MOR only via /report/mor.html;
+        // everyone else uses the unified register. Submit MOR stays
+        // department-only.
+        const repBtn = document.getElementById('submitReportBtn');
+        if (repBtn && (myRole === 'DEPT_ADMIN' || myRole === 'OFFICER')) repBtn.style.display = '';
+        const t = (tokenResult.claims && tokenResult.claims.tenant_id) || '';
+        if (t && typeof updateShellTenant === 'function') {
+            updateShellTenant(t.replace(/-/g, ' ').toUpperCase(), myDepartment || undefined);
+        }
+        if (myDepartment) {
+            document.getElementById('infoBanner').style.display = 'flex';
+            document.getElementById('assigneeLabel').textContent = 'you (' + myDepartment + ')';
+        }
+    } catch (e) {
+        myUid = user.uid;
+        myEmail = user.email;
+    }
+    loadTasks();
+});
+
+function formatDate(iso) {
+    if (!iso) return '-';
+    try { return new Date(iso).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }); }
+    catch (e) { return iso; }
+}
+
+function typeBadgeClass(type) {
+    return type === 'CAN' ? 'badge-type-can' : 'badge-type-cap';
+}
+
+function statusBadgeClass(status) {
+    const map = {
+        'Open': 'badge-new',
+        'Under Review': 'badge-warning',
+        'Closed': 'badge-completed',
+        'In Progress': 'badge-processing',
+        'Completed': 'badge-completed',
+        'Revision Required': 'badge-critical',
+        'Overdue': 'badge-danger',
+        'Escalated': 'badge-danger',
+    };
+    return map[status] || 'badge-default';
+}
+
+function priorityBadgeClass(priority) {
+    const map = { 'High': 'badge-high', 'Medium': 'badge-medium', 'Low': 'badge-low' };
+    return map[priority] || 'badge-default';
+}
+
+async function loadTasks() {
+    const tbody = document.getElementById('tasksBody');
+    const loading = document.getElementById('loadingIndicator');
+    const empty = document.getElementById('emptyIndicator');
+    const statusSel = document.getElementById('filterStatus');
+    const statsRow = document.getElementById('statsRow');
+    tbody.innerHTML = '';
+    loading.style.display = 'flex';
+    empty.style.display = 'none';
+    // Keep skeleton visible until real stats render; never show "No tasks" during loading
+    if (statsRow) statsRow.style.opacity = '0.7';
+
+    try {
+        const params = new URLSearchParams();
+        if (myUid) params.set('assigned_to_uid', myUid);
+        if (myEmail) params.set('assigned_to', myEmail);
+        if (myDepartment) params.set('user_department', myDepartment);
+        const qs = params.toString() ? '?' + params.toString() : '';
+        const payload = await ApiClient.get('/api/v1/dashboard/master-register' + qs);
+        const data = payload || {};
+        // Keep the full row set for the KPI cards (incl. hazards); the table
+        // below renders the CAN/CAP task list only.
+        allRows = data.rows || [];
+
+        const current = statusSel.value;
+        statusSel.innerHTML = '<option value="">All</option>';
+        Object.keys(data.by_status || {}).sort().forEach(function(s) {
+            const opt = document.createElement('option');
+            opt.value = s; opt.textContent = s;
+            statusSel.appendChild(opt);
+        });
+        statusSel.value = current;
+
+        renderStats(allRows);
+        if (statsRow) statsRow.style.opacity = '1';
+        renderTable();
+        loading.style.display = 'none';
+    } catch (err) {
+        if (statsRow) statsRow.style.opacity = '1';
+        // On error (e.g. Render cold-boot 502/timeout), keep empty hidden and show error row
+        empty.style.display = 'none';
+        loading.style.display = 'none';
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:#dc3545;padding:2rem;"><i class="fas fa-exclamation-circle"></i> Error: ${err.message} — backend waking, please wait and retry.</td></tr>`;
+    }
+}
+
+function normType(r) {
+    return String(r && r.type || '').trim().toUpperCase();
+}
+
+function renderStats(rows) {
+    const container = document.getElementById('statsRow');
+
+    // Case-insensitive type buckets (guards against 'can'/'CAN' drift).
+    const hazards = rows.filter(function(r) { return normType(r) === 'HAZARD'; });
+    const cans = rows.filter(function(r) { return normType(r) === 'CAN'; });
+    const caps = rows.filter(function(r) { return normType(r) === 'CAP'; });
+
+    const activeCans = cans.filter(function(r) {
+        return String(r.status || '').toLowerCase() !== 'closed';
+    }).length;
+    const pendingCaps = caps.filter(function(r) {
+        const s = String(r.status || '').toLowerCase();
+        return s !== 'completed' && s !== 'closed';
+    }).length;
+
+    const byStatus = {};
+    rows.forEach(function(r) { byStatus[r.status] = (byStatus[r.status] || 0) + 1; });
+    const overdue = (byStatus['Overdue'] || 0) + (byStatus['Escalated'] || 0);
+
+    let html = '';
+    html += '<div class="stat-card"><div class="num">' + (activeCans + pendingCaps) + '</div><div class="lbl">Total Actionable Tasks</div></div>';
+    html += '<div class="stat-card"><div class="num">' + hazards.length + '</div><div class="lbl">Total Hazards</div></div>';
+    html += '<div class="stat-card"><div class="num">' + activeCans + '</div><div class="lbl">Active CANs</div></div>';
+    html += '<div class="stat-card red"><div class="num">' + overdue + '</div><div class="lbl">Overdue / Escalated</div></div>';
+    container.innerHTML = html;
+}
+
+function renderTable() {
+    const tbody = document.getElementById('tasksBody');
+    const empty = document.getElementById('emptyIndicator');
+    let rows = allRows.filter(function(r) { return normType(r) === 'CAN' || normType(r) === 'CAP'; });
+    const statusFilter = document.getElementById('filterStatus').value;
+    if (statusFilter) rows = rows.filter(function(r) { return r.status === statusFilter; });
+    const typeFilter = document.getElementById('filterType').value;
+    if (typeFilter) rows = rows.filter(function(r) { return normType(r) === typeFilter; });
+
+    tbody.innerHTML = '';
+    if (rows.length === 0) {
+        empty.style.display = 'block';
+        return;
+    }
+    empty.style.display = 'none';
+    rows.forEach(function(r) {
+        const tr = document.createElement('tr');
+        tr.style.cursor = 'pointer';
+        tr.addEventListener('click', function() {
+            window.location.href = r.detail_url;
+        });
+        tr.innerHTML = `
+            <td><strong>${r.reference}</strong></td>
+            <td>${r.title}</td>
+            <td><span class="badge ${typeBadgeClass(r.type)}">${r.type}</span></td>
+            <td><span class="badge ${statusBadgeClass(r.status)}">${r.status}</span></td>
+            <td><span class="badge ${priorityBadgeClass(r.priority)}">${r.priority || '-'}</span></td>
+            <td>${formatDate(r.target_date)}</td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+</script>
+
+<script>
+(function () {
+  function initIdentity() {
+    if (typeof firebase === 'undefined' || !firebase.auth) return;
+    firebase.auth().onAuthStateChanged(function (user) {
+      if (!user) return;
+      user.getIdTokenResult().then(function (tr) {
+        var claims = tr.claims || {};
+        var tenant = claims.tenant_id || '';
+        var dept = (claims.department || '').toLowerCase().trim();
+        var email = user.email || '';
+        var logoUrl = claims.logo_url || null;
+        if (!logoUrl && tenant) logoUrl = '/assets/airline-logos/' + tenant + '-logo.webp';
+        var logoEl = document.getElementById('wsLogo');
+        if (logoUrl && logoEl) {
+          var img = new Image();
+          img.alt = 'Airline logo'; img.style.width='48px'; img.style.height='48px'; img.style.borderRadius='8px'; img.style.objectFit='contain';
+          img.onerror = function(){};
+          img.onload = function(){ logoEl.innerHTML=''; logoEl.appendChild(img); };
+          img.src = logoUrl;
+        }
+        var airlineName = tenant;
+        if (typeof TenantResolver !== 'undefined' && TenantResolver.prettifySlug) airlineName = TenantResolver.prettifySlug(tenant) || airlineName;
+        else airlineName = tenant.replace(/-/g,' ').replace(/\b\w/g,function(c){return c.toUpperCase();});
+        document.getElementById('wsAirline').textContent = airlineName || 'Workspace';
+        var deptLabel = dept ? dept.replace(/[_-]/g,' ').replace(/\b\w/g,function(c){return c.toUpperCase();}) : '';
+        if (deptLabel && !/Department$/i.test(deptLabel)) deptLabel += ' Department';
+        document.getElementById('wsDept').textContent = deptLabel;
+        document.getElementById('wsEmail').textContent = email;
+      }).catch(function(){});
+    });
+    var btn = document.getElementById('wsLogout');
+    if (btn) btn.addEventListener('click', function(){ if (firebase && firebase.auth) firebase.auth().signOut().then(function(){window.location.href='/login.html';}).catch(function(){window.location.href='/login.html';}); else window.location.href='/login.html'; });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initIdentity); else initIdentity();
+})();
+</script>
+</body>
+</html>

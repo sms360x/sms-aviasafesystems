@@ -2577,3 +2577,33 @@ class Occurrence(Base):
     department: Mapped[object] = mapped_column(Text, nullable=True)
     remarks: Mapped[object] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=datetime.utcnow)
+
+
+class TenantHrcVersion(Base):
+    __tablename__ = "tenant_hrc_versions"
+
+    id: Mapped[object] = _uuid_pk()
+    tenant_id: Mapped[object] = mapped_column(Uuid(as_uuid=True), ForeignKey("tenants.id"), nullable=False)
+    code: Mapped[str] = mapped_column(Text, nullable=False)
+    title: Mapped[str] = mapped_column(Text, nullable=False)
+    description: Mapped[object] = mapped_column(Text, nullable=True)
+    version: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    approval_status: Mapped[str] = mapped_column(Text, nullable=False, default="draft")
+    approved_by: Mapped[object] = mapped_column(Text, nullable=True)
+    approved_at: Mapped[object] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_by: Mapped[object] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=datetime.utcnow)
+    effective_from: Mapped[object] = mapped_column(DateTime(timezone=True), nullable=True)
+    retired_at: Mapped[object] = mapped_column(DateTime(timezone=True), nullable=True)
+
+
+class HrcCategoryMapping(Base):
+    __tablename__ = "hrc_category_mappings"
+
+    id: Mapped[object] = _uuid_pk()
+    source_table: Mapped[str] = mapped_column(Text, nullable=False)
+    source_id: Mapped[object] = mapped_column(Uuid(as_uuid=True), nullable=False)
+    target_table: Mapped[str] = mapped_column(Text, nullable=False)
+    target_id: Mapped[object] = mapped_column(Uuid(as_uuid=True), nullable=False)
+    mapping_type: Mapped[str] = mapped_column(Text, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=datetime.utcnow)

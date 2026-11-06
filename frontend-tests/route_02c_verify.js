@@ -30,9 +30,9 @@ console.assert(getTenant('unknown.sms360x.com') === null, 'unknown rejected');
 
 // role routing
 function dest(u){ return fb.getRoleDestination(u); }
-console.assert(dest({role:'TENANT_ADMIN',email:'safety@sitaair.com.np'}) === '/dashboard/safety-manager.html', 'tenant admin');
-console.assert(dest({role:'OFFICER',email:'x@y.com',claims:{department:'safety'}}) === '/dashboard/safety-manager.html', 'officer safety');
-console.assert(dest({role:'OFFICER',email:'x@y.com',claims:{department:'corporate_safety'}}) === '/dashboard/safety-manager.html', 'officer corporate_safety');
+console.assert(dest({role:'TENANT_ADMIN',email:'safety@sitaair.com.np'}) === '/dashboard/safety-workspace.html', 'tenant admin');
+console.assert(dest({role:'OFFICER',email:'x@y.com',claims:{department:'safety'}}) === '/dashboard/safety-workspace.html', 'officer safety');
+console.assert(dest({role:'OFFICER',email:'x@y.com',claims:{department:'corporate_safety'}}) === '/dashboard/safety-workspace.html', 'officer corporate_safety');
 console.assert(dest({role:'OFFICER',email:'safety@x.com',claims:{department:'maintenance'}}) === '/dashboard/my-tasks.html', 'officer safety email but non-safety dept');
 console.assert(dest({role:'OFFICER',email:'ops@x.com',claims:{department:'maintenance'}}) === '/dashboard/my-tasks.html', 'officer non-safety');
 console.assert(dest({role:'DEPT_ADMIN',email:'x@y.com',department:'maintenance'}) === '/dashboard/my-tasks.html', 'dept admin maintenance');

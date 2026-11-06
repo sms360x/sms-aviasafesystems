@@ -51,8 +51,8 @@ _BSV_ELEMENTS = tuple(risk_calculator.BSV_ELEMENT_WEIGHTS.keys())
 # on the INITIAL risk tolerability and is NON-DELEGABLE.
 AUTHORITY_ROLES = {
     "Intolerable": {"ACCOUNTABLE_EXECUTIVE"},
-    "Tolerable": {"SAFETY_OFFICER", "OFFICER", "TENANT_ADMIN"},
-    "Acceptable": {"SAFETY_OFFICER", "OFFICER", "SAG_MEMBER", "TENANT_ADMIN"},
+    "Tolerable": {"OFFICER", "TENANT_ADMIN"},
+    "Acceptable": {"OFFICER", "SAG_MEMBER", "TENANT_ADMIN"},
 }
 
 

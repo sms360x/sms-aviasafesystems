@@ -23,7 +23,7 @@ from datetime import datetime, timezone, timedelta
 from typing import Any, Dict, List, Optional
 
 from loguru import logger
-from sqlalchemy import or_, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.exc import IntegrityError
 
 from app.core.config import settings
@@ -560,6 +560,12 @@ class CanCapService:
         # their own tenant + demo_scope() behaviour.
         tid, demo_flag, shared_demo = self._demo_read_scope(user)
 
+        # Diagnostics: structured, non-sensitive log for DEMO-ELIGIBILITY-03C.4.
+        # No tokens, emails, API keys, or CAN descriptions are logged.
+        _diag_tenant = (user.get("tenant_id") or "").strip().lower() or None
+        _diag_role = str(user.get("role") or "")
+        _diag_dept_raw = str(user.get("department") or "").strip()
+
         # Narrowly scoped department mapping for the Maintenance register:
         # the shared demo dataset stores "Maintenance & Engineering".
         _DEPT_MAP = {
@@ -579,6 +585,9 @@ class CanCapService:
                 filters = dict(filters or {})
                 filters["department"] = mapped
         eff_dept = (filters or {}).get("department")
+        _diag_dept_norm = (
+            str(eff_dept).strip().casefold() if eff_dept else None
+        )
 
         try:
             limit = min(int((filters or {}).get("limit") or (filters or {}).get("page_size") or 100), 500)
@@ -603,11 +612,19 @@ class CanCapService:
                 ("status", Can.status),
                 ("priority", Can.priority),
                 ("assigned_to", Can.assigned_to),
-                ("department", Can.department),
             ]:
                 val = (filters or {}).get(key)
                 if val:
                     stmt = stmt.where(column == val)
+            # Department filter uses case/whitespace-insensitive comparison so
+            # "maintenance 145", "Maintenance 145 ", and "maintenance_145" all
+            # resolve to the canonical "Maintenance & Engineering" stored value.
+            dept_val = (filters or {}).get("department")
+            if dept_val:
+                stmt = stmt.where(
+                    func.lower(func.trim(Can.department))
+                    == func.lower(func.trim(str(dept_val)))
+                )
             if (filters or {}).get("hazard_id"):
                 stmt = stmt.where(Hazard.hazard_id == str((filters or {})["hazard_id"]))
             if (filters or {}).get("days"):
@@ -628,8 +645,12 @@ class CanCapService:
         results = []
         for row in rows:
             data = _can_to_dict(row, hazard_id_ref=ref_map.get(str(row.hazard_id)))
-            # Defense in depth: department guard uses the mapped value.
-            if eff_dept and (data.get("department") or "") != eff_dept:
+            # Defense in depth: department guard uses case/whitespace-insensitive
+            # comparison so canonicalized department labels match stored values.
+            if eff_dept and (
+                str(data.get("department") or "").strip().casefold()
+                != str(eff_dept).strip().casefold()
+            ):
                 continue
             if (filters or {}).get("search"):
                 s = (filters or {})["search"].lower()
@@ -641,6 +662,23 @@ class CanCapService:
             if shared_demo:
                 data["tenant_id"] = self.tenant_id
             results.append(data)
+
+        # Diagnostics: log CAN list resolution summary (record count only).
+        logger.info(
+            "demo-cans-list",
+            extra={
+                "event": "demo_cans_list",
+                "tenant_slug": _diag_tenant,
+                "role": _diag_role,
+                "department_norm": _diag_dept_norm,
+                "shared_demo": shared_demo,
+                "is_demo_filter": bool(demo_flag),
+                "source_configured": bool(
+                    getattr(settings, "GLOBAL_DEMO_TENANT_ID", None)
+                ),
+                "returned_count": len(results),
+            },
+        )
         return results
 
     def update_can(self, can_id: str, payload: dict, user: dict) -> Optional[dict]:
@@ -1283,11 +1321,37 @@ class CanCapService:
     async def _get_can_stats_async(
         self, user: dict, department: Optional[str] = None
     ) -> Dict[str, Any]:
-        stmt = select(Can).where(Can.is_demo == demo_scope())
-        if user.get("role") not in settings.CROSS_TENANT_ROLES:
-            stmt = stmt.where(Can.tenant_id == register_tenant(self.tenant_id))
+        # Shared-DEMO read scope (DEMO-ELIGIBILITY-02C, Sections A & B).
+        # Mirrors _list_cans_async: demo-eligible tenants read the shared
+        # seeded dataset with is_demo=true; operational tenants keep their
+        # own tenant + demo_scope() behaviour.
+        tid, demo_flag, shared_demo = self._demo_read_scope(user)
+
+        # Narrowly scoped department mapping: the shared demo dataset stores
+        # "Maintenance & Engineering".
+        _DEPT_MAP = {
+            "maintenance": "Maintenance & Engineering",
+            "maintenance 145": "Maintenance & Engineering",
+            "maintenance_145": "Maintenance & Engineering",
+            "maintenance 145 department": "Maintenance & Engineering",
+            "maintenance department": "Maintenance & Engineering",
+            "part-145": "Maintenance & Engineering",
+            "part 145": "Maintenance & Engineering",
+            "145": "Maintenance & Engineering",
+        }
+        if department is not None:
+            mapped = _DEPT_MAP.get(str(department).strip().lower())
+            if mapped is not None:
+                department = mapped
+
+        stmt = select(Can).where(Can.is_demo == demo_flag)
+        if tid is not None:
+            stmt = stmt.where(Can.tenant_id == tid)
         if department:
-            stmt = stmt.where(Can.department == department)
+            stmt = stmt.where(
+                func.lower(func.trim(Can.department))
+                == func.lower(func.trim(str(department)))
+            )
 
         async with session_scope() as session:
             rows = (await session.scalars(stmt)).all()
@@ -1302,6 +1366,23 @@ class CanCapService:
             if pri in priority_counts:
                 priority_counts[pri] += 1
 
+        # Diagnostics: structured, non-sensitive log for CAN stats.
+        logger.info(
+            "demo-cans-stats",
+            extra={
+                "event": "demo_cans_stats",
+                "tenant_slug": (user.get("tenant_id") or "").strip().lower() or None,
+                "role": str(user.get("role") or ""),
+                "department_norm": str(department).strip().casefold() if department else None,
+                "shared_demo": shared_demo,
+                "is_demo_filter": bool(demo_flag),
+                "source_configured": bool(
+                    getattr(settings, "GLOBAL_DEMO_TENANT_ID", None)
+                ),
+                "returned_count": len(rows),
+            },
+        )
+
         return {
             "by_status": stats,
             "by_priority": priority_counts,
@@ -1314,15 +1395,41 @@ class CanCapService:
     async def _get_cap_stats_async(
         self, user: dict, department: Optional[str] = None
     ) -> Dict[str, Any]:
+        # Shared-DEMO read scope (DEMO-ELIGIBILITY-02C, Sections A & B).
+        tid, demo_flag, shared_demo = self._demo_read_scope(user)
+
+        # Narrowly scoped department mapping: the shared demo dataset stores
+        # "Maintenance & Engineering".
+        _DEPT_MAP = {
+            "maintenance": "Maintenance & Engineering",
+            "maintenance 145": "Maintenance & Engineering",
+            "maintenance_145": "Maintenance & Engineering",
+            "maintenance 145 department": "Maintenance & Engineering",
+            "maintenance department": "Maintenance & Engineering",
+            "part-145": "Maintenance & Engineering",
+            "part 145": "Maintenance & Engineering",
+            "145": "Maintenance & Engineering",
+        }
+        if department is not None:
+            mapped = _DEPT_MAP.get(str(department).strip().lower())
+            if mapped is not None:
+                department = mapped
+
         stmt = (
             select(Cap)
             .join(Can, Cap.can_id == Can.id)
-            .where(Cap.is_demo == demo_scope(), Can.is_demo == demo_scope())
+            .where(Cap.is_demo == demo_flag, Can.is_demo == demo_flag)
         )
-        if user.get("role") not in settings.CROSS_TENANT_ROLES:
-            stmt = stmt.where(Cap.tenant_id == register_tenant(self.tenant_id))
+        if tid is not None:
+            stmt = stmt.where(Cap.tenant_id == tid)
         if department:
-            stmt = stmt.where(or_(Cap.department == department, Can.department == department))
+            dept_norm = func.lower(func.trim(str(department)))
+            stmt = stmt.where(
+                or_(
+                    func.lower(func.trim(Cap.department)) == dept_norm,
+                    func.lower(func.trim(Can.department)) == dept_norm,
+                )
+            )
 
         async with session_scope() as session:
             rows = (await session.scalars(stmt)).all()
@@ -1332,6 +1439,23 @@ class CanCapService:
             status = row.status or "In Progress"
             if status in stats:
                 stats[status] += 1
+
+        # Diagnostics: structured, non-sensitive log for CAP stats.
+        logger.info(
+            "demo-caps-stats",
+            extra={
+                "event": "demo_caps_stats",
+                "tenant_slug": (user.get("tenant_id") or "").strip().lower() or None,
+                "role": str(user.get("role") or ""),
+                "department_norm": str(department).strip().casefold() if department else None,
+                "shared_demo": shared_demo,
+                "is_demo_filter": bool(demo_flag),
+                "source_configured": bool(
+                    getattr(settings, "GLOBAL_DEMO_TENANT_ID", None)
+                ),
+                "returned_count": len(rows),
+            },
+        )
 
         return {"by_status": stats, "total": len(rows)}
 

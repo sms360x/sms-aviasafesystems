@@ -1,0 +1,19 @@
+-- Idempotent seed (insert only if not exists)
+INSERT INTO hrc_reference_versions (code, classification, title, source_document_id, source_document_title, source_edition, source_section, source_sha256, jurisdiction, version, approval_status)
+VALUES
+('CFIT','GLOBAL_HRC','Controlled flight into terrain','ICAO-GASP-2026-2028','Global Aviation Safety Plan 2026-2028','2026-2028','Section 3.3 (p.30)','DD52DB115509E9E82238C4E180399C24977F0875C9C2EC92EED94E566BE57D7C',NULL,1,'published'),
+('LOC-I','GLOBAL_HRC','Loss of control in-flight','ICAO-GASP-2026-2028','Global Aviation Safety Plan 2026-2028','2026-2028','Section 3.3 (p.30)','DD52DB115509E9E82238C4E180399C24977F0875C9C2EC92EED94E566BE57D7C',NULL,1,'published'),
+('MAC','GLOBAL_HRC','Mid-air collision','ICAO-GASP-2026-2028','Global Aviation Safety Plan 2026-2028','2026-2028','Section 3.3 (p.30)','DD52DB115509E9E82238C4E180399C24977F0875C9C2EC92EED94E566BE57D7C',NULL,1,'published'),
+('RE','GLOBAL_HRC','Runway excursion','ICAO-GASP-2026-2028','Global Aviation Safety Plan 2026-2028','2026-2028','Section 3.3 (p.30)','DD52DB115509E9E82238C4E180399C24977F0875C9C2EC92EED94E566BE57D7C',NULL,1,'published'),
+('RI','GLOBAL_HRC','Runway incursion','ICAO-GASP-2026-2028','Global Aviation Safety Plan 2026-2028','2026-2028','Section 3.3 (p.30)','DD52DB115509E9E82238C4E180399C24977F0875C9C2EC92EED94E566BE57D7C',NULL,1,'published'),
+('ARC','GLOBAL_OTHER_RISK','Abnormal runway contact','ICAO-GASP-2026-2028','Global Aviation Safety Plan 2026-2028','2026-2028','Section 3.4 (p.30)','DD52DB115509E9E82238C4E180399C24977F0875C9C2EC92EED94E566BE57D7C',NULL,1,'published'),
+('SCF-NP','GLOBAL_OTHER_RISK','System/component failure or malfunction (non-powerplant)','ICAO-GASP-2026-2028','Global Aviation Safety Plan 2026-2028','2026-2028','Section 3.4 (p.30)','DD52DB115509E9E82238C4E180399C24977F0875C9C2EC92EED94E566BE57D7C',NULL,1,'published'),
+('TURB','GLOBAL_OTHER_RISK','Turbulence encounter','ICAO-GASP-2026-2028','Global Aviation Safety Plan 2026-2028','2026-2028','Section 3.4 (p.30)','DD52DB115509E9E82238C4E180399C24977F0875C9C2EC92EED94E566BE57D7C',NULL,1,'published'),
+('CFIT','NATIONAL_HRC','Controlled Flight Into Terrain','CAAN-NASP-2023-2025','National Aviation Safety Plan, Nepal 2023-2025','2023-2025','Section 4 (p.13)','D77B1A4176CEA8260160FD303B08C837612AEADE4448D63E9B3DB0E3D0A97DEC','NP',1,'published'),
+('LOC-I','NATIONAL_HRC','Loss of Control - In flight','CAAN-NASP-2023-2025','National Aviation Safety Plan, Nepal 2023-2025','2023-2025','Section 4 (p.13)','D77B1A4176CEA8260160FD303B08C837612AEADE4448D63E9B3DB0E3D0A97DEC','NP',1,'published'),
+('MAC','NATIONAL_HRC','Mid Air Collision','CAAN-NASP-2023-2025','National Aviation Safety Plan, Nepal 2023-2025','2023-2025','Section 4 (p.13)','D77B1A4176CEA8260160FD303B08C837612AEADE4448D63E9B3DB0E3D0A97DEC','NP',1,'published'),
+('RE','NATIONAL_HRC','Runway Excursion','CAAN-NASP-2023-2025','National Aviation Safety Plan, Nepal 2023-2025','2023-2025','Section 4 (p.13)','D77B1A4176CEA8260160FD303B08C837612AEADE4448D63E9B3DB0E3D0A97DEC','NP',1,'published'),
+('RI','NATIONAL_HRC','Runway Incursion','CAAN-NASP-2023-2025','National Aviation Safety Plan, Nepal 2023-2025','2023-2025','Section 4 (p.13)','D77B1A4176CEA8260160FD303B08C837612AEADE4448D63E9B3DB0E3D0A97DEC','NP',1,'published'),
+('ARC','NATIONAL_HRC','Abnormal Runway Contact','CAAN-NASP-2023-2025','National Aviation Safety Plan, Nepal 2023-2025','2023-2025','Section 4 (p.13)','D77B1A4176CEA8260160FD303B08C837612AEADE4448D63E9B3DB0E3D0A97DEC','NP',1,'published'),
+('WS','NATIONAL_HRC','Wildlife Strike on and in vicinity of Aerodrome','CAAN-NASP-2023-2025','National Aviation Safety Plan, Nepal 2023-2025','2023-2025','Section 4 (p.13)','D77B1A4176CEA8260160FD303B08C837612AEADE4448D63E9B3DB0E3D0A97DEC','NP',1,'published')
+ON CONFLICT DO NOTHING;

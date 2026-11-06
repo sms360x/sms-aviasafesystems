@@ -94,14 +94,12 @@ def is_safety_officer(user: Optional[Dict[str, Any]] = None) -> bool:
     """
     user = user or {}
     role = (user.get("role") or "").strip().upper()
-    if role == SAFETY_OFFICER_ROLE:
-        return True
     if role == "OFFICER":
         return is_safety_department(user.get("department"))
     return False
 
 
-def normalize_legacy_role(legacy_role: str, department: Optional[str] = None) -> str:
+def normalize_legacy_role(legacy_role: str, department: Optional[str] = None):
     """Map legacy roles to new RBAC roles.
 
     ``OFFICER`` is department-scoped: only an officer of the Safety
@@ -109,13 +107,19 @@ def normalize_legacy_role(legacy_role: str, department: Optional[str] = None) ->
     Maintenance, CAMO, ...) falls back to the least-privilege ``employee``
     profile.
     """
+    # Legacy SAFETY_OFFICER is explicitly unsupported and must not be normalized
+    # into any authorized identity or permission profile.
+    if (legacy_role or "").strip().upper() == SAFETY_OFFICER_ROLE:
+        return None
+    # USER and EMPLOYEE are not valid authorization roles.
+    if (legacy_role or "").strip().upper() in ("USER", "EMPLOYEE"):
+        return None
+
     mapping = {
         'TENANT_ADMIN': 'tenant_admin',
         'SUPER_ADMIN': 'tenant_admin',  # super admin has tenant_admin + regulator via separate logic
         'STATE_SMD': 'regulator',
-        'SAFETY_OFFICER': 'safety_manager',
         'DEPT_ADMIN': 'department_head',
-        'USER': 'employee',
         'ACCOUNTABLE_EXECUTIVE': 'accountable_executive',
         'SAG_MEMBER': 'sag_member',
     }

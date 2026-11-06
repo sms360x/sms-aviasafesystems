@@ -13,8 +13,12 @@
 --     shared_demo was previously false or absent).
 --   * Only the three intended tenants are touched.
 --   * Missing backup rows cause a clear failure (RAISE EXCEPTION).
+--   * Refuses to overwrite unrelated permission updates: if module_access has
+--     been changed since the backfill (intervening changes), rollback aborts
+--     and the backup table is preserved (transaction rollback prevents the
+--     DROP TABLE from executing).
 --   * Read-only pre-check and post-check queries are included.
---   * Drops the backup table after a successful restore.
+--   * Drops the backup table only after a successful restore.
 --
 -- DO NOT EXECUTE without separate owner authorization.
 -- ============================================================================
@@ -56,6 +60,32 @@ BEGIN
             RAISE EXCEPTION 'No backup row found for tenant: % (cannot safely roll back)', target_slug;
         END IF;
 
+        -- Safety check: refuse to overwrite unrelated permission updates.
+        -- Compare current module_access against the expected post-backfill
+        -- state (original + shared_demo=true). If they differ, another process
+        -- changed module_access after the backfill; abort to avoid clobbering
+        -- those unrelated updates.
+        DECLARE
+            expected_module_access JSONB;
+            intervening_count INTEGER;
+        BEGIN
+            expected_module_access := jsonb_set(
+                backup_row.original_module_access,
+                '{shared_demo}',
+                'true'::jsonb,
+                true
+            );
+
+            SELECT COUNT(*) INTO intervening_count
+            FROM public.tenants
+            WHERE slug = target_slug
+              AND module_access IS DISTINCT FROM expected_module_access;
+
+            IF intervening_count > 0 THEN
+                RAISE EXCEPTION 'Intervening changes detected on module_access for tenant %; refusing to roll back and overwrite unrelated permission updates.', target_slug;
+            END IF;
+        END;
+
         -- Restore the exact original module_access value.
         UPDATE public.tenants
         SET module_access = backup_row.original_module_access,
@@ -65,7 +95,9 @@ BEGIN
         RAISE NOTICE 'Restored module_access for: %', target_slug;
     END LOOP;
 
-    -- Drop the backup table after successful restore.
+    -- Drop the backup table only after all restores succeeded. If any RAISE
+    -- EXCEPTION above fired, this transaction aborts and the DROP never
+    -- executes, preserving the backup table for inspection.
     DROP TABLE IF EXISTS public.demo_eligibility_backfill_backup;
 END $$;
 

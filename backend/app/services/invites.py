@@ -42,7 +42,6 @@ from app.services.tenant_registration import (
 # Canonical roles + assignable-role matrix for the delegated admin hierarchy.
 ROLE_TENANT_ADMIN = settings.ROLE_TENANT_ADMIN
 ROLE_DEPT_ADMIN = settings.ROLE_DEPT_ADMIN
-ROLE_SAFETY_OFFICER = settings.ROLE_SAFETY_OFFICER
 # Canonical rename (dual-accept shim with ROLE_SAFETY_OFFICER).
 ROLE_OFFICER = settings.ROLE_OFFICER
 ROLE_SAG_MEMBER = settings.ROLE_SAG_MEMBER
@@ -51,7 +50,7 @@ ROLE_SAG_MEMBER = settings.ROLE_SAG_MEMBER
 # Executive is deliberately NOT invite-assignable — one per tenant, provisioned
 # by SUPER_ADMIN / tenant provisioning (RBAC_MODEL.md §1).
 TENANT_ADMIN_ASSIGNABLE_ROLES = frozenset(
-    {ROLE_DEPT_ADMIN, ROLE_SAFETY_OFFICER, ROLE_OFFICER, ROLE_SAG_MEMBER}
+    {ROLE_DEPT_ADMIN, ROLE_OFFICER, ROLE_SAG_MEMBER}
 )
 # Roles a department admin (HOD) may assign via invite.
 DEPT_ADMIN_ASSIGNABLE_ROLES = frozenset({ROLE_OFFICER})
@@ -66,9 +65,7 @@ ROLE_LABELS = {
     "SUPER_ADMIN": "Global Administrator",
     "TENANT_ADMIN": "Safety Manager (Tenant Admin)",
     "DEPT_ADMIN": "Department Admin (HOD)",
-    "SAFETY_OFFICER": "Officer",
     "OFFICER": "Officer",
-    "USER": "Staff / Employee",
     "STATE_SMD": "State Safety Regulator",
     "ACCOUNTABLE_EXECUTIVE": "Accountable Executive",
     "SAG_MEMBER": "Safety Action Group Member",
