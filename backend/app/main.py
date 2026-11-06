@@ -70,7 +70,13 @@ async def lifespan(app: FastAPI):
     _db_url = os.environ.get("DATABASE_URL", "")
     _fb_key = os.environ.get("FIREBASE_PRIVATE_KEY", "")
     logger.info(f"[startup] ENV CHECK: DATABASE_URL present={bool(_db_url)} prefix={_db_url[:20]!r}...")
-    logger.info(f"[startup] ENV CHECK: FIREBASE_PRIVATE_KEY present={bool(_fb_key)} contains_literal_newline={'\\\\n' in _fb_key} length={len(_fb_key)}")
+    _fb_contains_literal_newline = "\\n" in _fb_key
+    logger.info(
+        f"[startup] ENV CHECK: FIREBASE_PRIVATE_KEY "
+        f"present={bool(_fb_key)} "
+        f"contains_literal_newline={_fb_contains_literal_newline} "
+        f"length={len(_fb_key)}"
+    )
     logger.info(f"[startup] ENV CHECK: FIREBASE_PROJECT_ID={os.environ.get('FIREBASE_PROJECT_ID', 'MISSING')}")
     logger.info(f"[startup] ENV CHECK: FIREBASE_CLIENT_EMAIL={os.environ.get('FIREBASE_CLIENT_EMAIL', 'MISSING')}")
     logger.info(f"[startup] ENV CHECK: BETA_ACCESS_KEY present={bool(os.environ.get('BETA_ACCESS_KEY'))}")
