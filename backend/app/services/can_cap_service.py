@@ -556,8 +556,11 @@ class CanCapService:
         _DEPT_MAP = {
             "maintenance": "Maintenance & Engineering",
             "maintenance 145": "Maintenance & Engineering",
+            "maintenance_145": "Maintenance & Engineering",
             "maintenance 145 department": "Maintenance & Engineering",
             "maintenance department": "Maintenance & Engineering",
+            "part-145": "Maintenance & Engineering",
+            "part 145": "Maintenance & Engineering",
             "145": "Maintenance & Engineering",
         }
         raw_dept = filters.get("department") if filters else None
