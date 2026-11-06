@@ -522,21 +522,70 @@ class CanCapService:
 
     async def _list_cans_async(self, user: dict, filters: dict = None) -> List[dict]:
         filters = filters or {}
-        tid = None
-        if user.get("role") not in settings.CROSS_TENANT_ROLES:
-            tid = register_tenant(self.tenant_id)
+        # Shared demonstration CAN reads: authorized demo tenants read the shared
+        # demo dataset (sita-air) with is_demo=true explicitly, regardless of the
+        # running instance's demo_scope() (so production-scoped demo tenants still
+        # see their demonstration CANs). ACTIVE tenants keep their own tenant +
+        # demo_scope() behaviour and never receive shared-demo rows.
+        # TEMPORARY shared-demo CAN read access for owner-authorized testing
+        # airlines only. Configured via settings.SHARED_DEMO_CAN_TENANTS
+        # (comma-separated slugs); empty => fail closed. Remove before
+        # operational onboarding.
+        _raw = (getattr(settings, "SHARED_DEMO_CAN_TENANTS", "") or "").strip()
+        _SHARED_DEMO_CAN_TENANTS = frozenset(
+            s.strip().lower() for s in _raw.split(",") if s.strip()
+        )
+        shared_demo = (
+            (self.tenant_id or "").strip().lower() in _SHARED_DEMO_CAN_TENANTS
+        )
+        if user.get("role") in settings.CROSS_TENANT_ROLES:
+            tid = None
+            shared_demo = False
+        else:
+            if shared_demo:
+                tid = register_tenant(
+                    getattr(settings, "GLOBAL_DEMO_TENANT_ID", None) or "sita-air"
+                )
+                demo_flag = True
+            else:
+                tid = register_tenant(self.tenant_id)
+                demo_flag = demo_scope()
+
+        # Narrowly scoped department mapping for the Maintenance register:
+        # the shared demo dataset stores "Maintenance & Engineering".
+        _DEPT_MAP = {
+            "maintenance": "Maintenance & Engineering",
+            "maintenance 145": "Maintenance & Engineering",
+            "maintenance 145 department": "Maintenance & Engineering",
+            "maintenance department": "Maintenance & Engineering",
+            "145": "Maintenance & Engineering",
+        }
+        raw_dept = filters.get("department") if filters else None
+        if raw_dept is not None:
+            mapped = _DEPT_MAP.get(str(raw_dept).strip().lower())
+            if mapped is not None:
+                filters = dict(filters or {})
+                filters["department"] = mapped
+        eff_dept = (filters or {}).get("department")
 
         try:
-            limit = min(int(filters.get("limit") or filters.get("page_size") or 100), 500)
+            limit = min(int((filters or {}).get("limit") or (filters or {}).get("page_size") or 100), 500)
         except (TypeError, ValueError):
             limit = 100
 
-        stmt = (
-            select(Can)
-            .join(Hazard, Can.hazard_id == Hazard.id)
-            .where(Can.is_demo == demo_scope(), Hazard.is_demo == demo_scope())
-        )
-        if tid:
+        if shared_demo:
+            stmt = (
+                select(Can)
+                .join(Hazard, Can.hazard_id == Hazard.id)
+                .where(Can.is_demo == True, Hazard.is_demo == True)  # noqa: E712
+            )
+        else:
+            stmt = (
+                select(Can)
+                .join(Hazard, Can.hazard_id == Hazard.id)
+                .where(Can.is_demo == demo_scope(), Hazard.is_demo == demo_scope())
+            )
+        if tid is not None:
             stmt = stmt.where(Can.tenant_id == tid)
             for key, column in [
                 ("status", Can.status),
@@ -544,14 +593,14 @@ class CanCapService:
                 ("assigned_to", Can.assigned_to),
                 ("department", Can.department),
             ]:
-                val = filters.get(key)
+                val = (filters or {}).get(key)
                 if val:
                     stmt = stmt.where(column == val)
-            if filters.get("hazard_id"):
-                stmt = stmt.where(Hazard.hazard_id == str(filters["hazard_id"]))
-            if filters.get("days"):
+            if (filters or {}).get("hazard_id"):
+                stmt = stmt.where(Hazard.hazard_id == str((filters or {})["hazard_id"]))
+            if (filters or {}).get("days"):
                 try:
-                    cutoff = datetime.now(timezone.utc) - timedelta(days=int(filters["days"]))
+                    cutoff = datetime.now(timezone.utc) - timedelta(days=int((filters or {})["days"]))
                     stmt = stmt.where(Can.created_at >= cutoff)
                 except (TypeError, ValueError):
                     pass
@@ -567,17 +616,18 @@ class CanCapService:
         results = []
         for row in rows:
             data = _can_to_dict(row, hazard_id_ref=ref_map.get(str(row.hazard_id)))
-            # Defense in depth: the SQL predicate already scopes department, but
-            # keep an in-memory guard so a session that ignores the WHERE clause
-            # (or a future refactor) cannot leak a cross-department CAN.
-            if filters.get("department") and (data.get("department") or "") != filters["department"]:
+            # Defense in depth: department guard uses the mapped value.
+            if eff_dept and (data.get("department") or "") != eff_dept:
                 continue
-            if filters.get("search"):
-                s = filters["search"].lower()
+            if (filters or {}).get("search"):
+                s = (filters or {})["search"].lower()
                 ref = (data.get("can_reference") or "").lower()
                 title = (data.get("title") or "").lower()
                 if s not in ref and s not in title:
                     continue
+            # Do not leak the shared source tenant's identity to callers.
+            if shared_demo:
+                data["tenant_id"] = self.tenant_id
             results.append(data)
         return results
 

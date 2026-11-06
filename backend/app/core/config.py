@@ -157,6 +157,10 @@ class Settings(BaseSettings):
     # Report creation invalidates it immediately; this only bounds staleness for
     # writes made by another process. Set 0 to probe on every empty read.
     GLOBAL_DEMO_FALLBACK_TTL_SECONDS: int = 60
+    # TEMPORARY: comma-separated slugs of airline tenants authorized to read the
+    # shared demonstration CAN dataset. Empty disables shared-demo CAN reads
+    # entirely (fail closed). Remove before operational onboarding.
+    SHARED_DEMO_CAN_TENANTS: str = "saurya-airlines,sita-air,air-dynasty"
 
     # ── Module A — SMS maturity assessment cache (MODULE_A_CONTRACT.md §7) ──
     # TTL for the cached LLM assessment; survey submission / manual refresh
