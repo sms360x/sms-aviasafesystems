@@ -32,6 +32,7 @@ from app.db.ids import register_tenant, tenant_slug
 from app.db.isolation import demo_scope
 from app.db.runner import run
 from app.db.session import session_scope
+from app.services.demo_eligibility import demo_read_tenant, demo_write_blocked
 from app.services.hazard_service import HazardService
 from app.services.repository import coerce_utc_datetime
 from app.services.risk_matrix import (
@@ -203,25 +204,25 @@ def _cap_to_dict(
     return data
 
 
-def _can_lookup_stmt(tid: Optional[str], can_id: str):
+def _can_lookup_stmt(tid: Optional[str], can_id: str, demo_flag: bool) -> select:
     conds = [Can.can_reference == str(can_id)]
     try:
         conds.append(Can.id == uuid.UUID(str(can_id)))
     except (ValueError, TypeError, AttributeError):
         pass
-    scope = [Can.is_demo == demo_scope()]
+    scope = [Can.is_demo == demo_flag]
     if tid:
         return select(Can).where(Can.tenant_id == tid, *scope, or_(*conds)).limit(1)
     return select(Can).where(*scope, or_(*conds)).limit(1)
 
 
-def _cap_lookup_stmt(tid: Optional[str], cap_id: str):
+def _cap_lookup_stmt(tid: Optional[str], cap_id: str, demo_flag: bool) -> select:
     conds = [Cap.cap_reference == str(cap_id)]
     try:
         conds.append(Cap.id == uuid.UUID(str(cap_id)))
     except (ValueError, TypeError, AttributeError):
         pass
-    scope = [Cap.is_demo == demo_scope()]
+    scope = [Cap.is_demo == demo_flag]
     if tid:
         return select(Cap).where(Cap.tenant_id == tid, *scope, or_(*conds)).limit(1)
     return select(Cap).where(*scope, or_(*conds)).limit(1)
@@ -304,6 +305,26 @@ class CanCapService:
             logger.warning(f"Failed to resolve Safety Manager email for {self.tenant_id}: {e}")
             return None
 
+    # ── Shared-DEMO read scope (DEMO-ELIGIBILITY-02C, Sections A & B) ──
+
+    def _demo_read_scope(self, user: dict):
+        """Resolve (tenant_uuid, demo_flag, shared_demo) for a CAN/CAP read.
+
+        A demo-eligible tenant reads the shared seeded dataset
+        (GLOBAL_DEMO_TENANT_ID) with is_demo=true; its own tenant id is never
+        leaked into the shared rows. Operational (non-demo) tenants keep their
+        own tenant + demo_scope() behaviour. Cross-tenant roles are untouched.
+        """
+        read_slug, used_shared_demo, _eligibility = demo_read_tenant(user)
+        if used_shared_demo:
+            return register_tenant(read_slug), True, True
+        tid = (
+            None
+            if user.get("role") in settings.CROSS_TENANT_ROLES
+            else register_tenant(self.tenant_id)
+        )
+        return tid, demo_scope(), False
+
     # ── SRA (Safety Risk Assessment) helpers ──
 
     SEVERITY_LETTERS = ["A", "B", "C", "D", "E"]
@@ -362,6 +383,11 @@ class CanCapService:
         return data
 
     async def _issue_can_async(self, payload: dict, user: dict) -> dict:
+        # DEMO-ELIGIBILITY-02C, Section C: demonstration users may not mutate
+        # records while accessing the shared seeded workflow.
+        blocked = demo_write_blocked(user)
+        if blocked:
+            raise PermissionError(blocked)
         now = datetime.now(timezone.utc)
         tid = register_tenant(self.tenant_id)
         year = now.strftime("%y")
@@ -493,11 +519,10 @@ class CanCapService:
         return run(self._get_can_async(can_id, user))
 
     async def _get_can_async(self, can_id: str, user: dict) -> Optional[dict]:
-        tid = None
-        if user.get("role") not in settings.CROSS_TENANT_ROLES:
-            tid = register_tenant(self.tenant_id)
+        # Shared-DEMO read scope (DEMO-ELIGIBILITY-02C, Sections A & B).
+        tid, demo_flag, shared_demo = self._demo_read_scope(user)
         async with session_scope() as session:
-            row = (await session.execute(_can_lookup_stmt(tid, can_id))).scalars().first()
+            row = (await session.execute(_can_lookup_stmt(tid, can_id, demo_flag))).scalars().first()
             if not row:
                 return None
             cap_row = (
@@ -515,6 +540,13 @@ class CanCapService:
                 data["latest_cap"] = _cap_to_dict(
                     cap_row, can_row=row, hazard_id_ref=hazard_ref
                 )
+            # Do not leak the shared source tenant's identity: overwrite the
+            # source tenant_id (and any nested latest_cap tenant_id) with the
+            # caller's own tenant.
+            if shared_demo:
+                data["tenant_id"] = self.tenant_id
+                if isinstance(data.get("latest_cap"), dict):
+                    data["latest_cap"]["tenant_id"] = self.tenant_id
             return data
 
     def list_cans(self, user: dict, filters: dict = None) -> List[dict]:
@@ -522,34 +554,11 @@ class CanCapService:
 
     async def _list_cans_async(self, user: dict, filters: dict = None) -> List[dict]:
         filters = filters or {}
-        # Shared demonstration CAN reads: authorized demo tenants read the shared
-        # demo dataset (sita-air) with is_demo=true explicitly, regardless of the
-        # running instance's demo_scope() (so production-scoped demo tenants still
-        # see their demonstration CANs). ACTIVE tenants keep their own tenant +
-        # demo_scope() behaviour and never receive shared-demo rows.
-        # TEMPORARY shared-demo CAN read access for owner-authorized testing
-        # airlines only. Configured via settings.SHARED_DEMO_CAN_TENANTS
-        # (comma-separated slugs); empty => fail closed. Remove before
-        # operational onboarding.
-        _raw = (getattr(settings, "SHARED_DEMO_CAN_TENANTS", "") or "").strip()
-        _SHARED_DEMO_CAN_TENANTS = frozenset(
-            s.strip().lower() for s in _raw.split(",") if s.strip()
-        )
-        shared_demo = (
-            (self.tenant_id or "").strip().lower() in _SHARED_DEMO_CAN_TENANTS
-        )
-        if user.get("role") in settings.CROSS_TENANT_ROLES:
-            tid = None
-            shared_demo = False
-        else:
-            if shared_demo:
-                tid = register_tenant(
-                    getattr(settings, "GLOBAL_DEMO_TENANT_ID", None) or "sita-air"
-                )
-                demo_flag = True
-            else:
-                tid = register_tenant(self.tenant_id)
-                demo_flag = demo_scope()
+        # Shared-DEMO read scope (DEMO-ELIGIBILITY-02C, Sections A & B). A
+        # demo-eligible tenant reads the shared seeded dataset
+        # (GLOBAL_DEMO_TENANT_ID) with is_demo=true; operational tenants keep
+        # their own tenant + demo_scope() behaviour.
+        tid, demo_flag, shared_demo = self._demo_read_scope(user)
 
         # Narrowly scoped department mapping for the Maintenance register:
         # the shared demo dataset stores "Maintenance & Engineering".
@@ -638,6 +647,11 @@ class CanCapService:
         return run(self._update_can_async(can_id, payload, user))
 
     async def _update_can_async(self, can_id: str, payload: dict, user: dict) -> Optional[dict]:
+        # DEMO-ELIGIBILITY-02C, Section C: demonstration users may not mutate
+        # records while accessing the shared seeded workflow.
+        blocked = demo_write_blocked(user)
+        if blocked:
+            raise PermissionError(blocked)
         tid = register_tenant(self.tenant_id)
         async with session_scope() as session:
             row = (await session.execute(_can_lookup_stmt(tid, can_id))).scalars().first()
@@ -668,10 +682,19 @@ class CanCapService:
     async def _update_can_status_async(
         self, can_id: str, status: str, user: dict
     ) -> Optional[dict]:
+        # DEMO-ELIGIBILITY-02C, Section C: demonstration users may not mutate
+        # records while accessing the shared seeded workflow.
+        blocked = demo_write_blocked(user)
+        if blocked:
+            raise PermissionError(blocked)
         tid = register_tenant(self.tenant_id)
         now = datetime.now(timezone.utc)
         async with session_scope() as session:
-            row = (await session.execute(_can_lookup_stmt(tid, can_id))).scalars().first()
+            row = (
+                await session.execute(
+                    _can_lookup_stmt(tid, can_id, demo_scope())
+                )
+            ).scalars().first()
             if not row:
                 return None
             row.status = status
@@ -679,13 +702,22 @@ class CanCapService:
             await session.flush()
             return _can_to_dict(row, hazard_id_ref=await _hazard_ref(session, row))
 
-    def delete_can(self, can_id: str) -> bool:
-        return run(self._delete_can_async(can_id))
+    def delete_can(self, can_id: str, user: dict) -> bool:
+        return run(self._delete_can_async(can_id, user))
 
-    async def _delete_can_async(self, can_id: str) -> bool:
+    async def _delete_can_async(self, can_id: str, user: dict) -> bool:
+        # DEMO-ELIGIBILITY-02C, Section C: demonstration users may not mutate
+        # records while accessing the shared seeded workflow.
+        blocked = demo_write_blocked(user)
+        if blocked:
+            raise PermissionError(blocked)
         tid = register_tenant(self.tenant_id)
         async with session_scope() as session:
-            row = (await session.execute(_can_lookup_stmt(tid, can_id))).scalars().first()
+            row = (
+                await session.execute(
+                    _can_lookup_stmt(tid, can_id, demo_scope())
+                )
+            ).scalars().first()
             if not row:
                 return False
             # Bulk delete caps first (no ORM relationship() exists, so the unit
@@ -713,6 +745,11 @@ class CanCapService:
         return data
 
     async def _submit_cap_async(self, can_id: str, payload: dict, user: dict) -> dict:
+        # DEMO-ELIGIBILITY-02C, Section C: demonstration users may not mutate
+        # records while accessing the shared seeded workflow.
+        blocked = demo_write_blocked(user)
+        if blocked:
+            raise PermissionError(blocked)
         now = datetime.now(timezone.utc)
         tid = register_tenant(self.tenant_id)
         year = now.strftime("%y")
@@ -721,7 +758,11 @@ class CanCapService:
         for _attempt in range(3):
             try:
                 async with session_scope() as session:
-                    can_row = (await session.execute(_can_lookup_stmt(tid, can_id))).scalars().first()
+                    can_row = (
+                        await session.execute(
+                            _can_lookup_stmt(tid, can_id, demo_scope())
+                        )
+                    ).scalars().first()
                     if not can_row:
                         raise ValueError("CAN not found")
 
@@ -843,16 +884,18 @@ class CanCapService:
         return run(self._list_caps_async(can_id, user))
 
     async def _list_caps_async(self, can_id: str, user: dict) -> List[dict]:
-        tid = None
-        if user.get("role") not in settings.CROSS_TENANT_ROLES:
-            tid = register_tenant(self.tenant_id)
+        # Shared-DEMO read scope (DEMO-ELIGIBILITY-02C, Sections A & B).
+        tid, demo_flag, shared_demo = self._demo_read_scope(user)
         async with session_scope() as session:
-            can_row = (await session.execute(_can_lookup_stmt(tid, can_id))).scalars().first()
+            can_row = (await session.execute(_can_lookup_stmt(tid, can_id, demo_flag))).scalars().first()
             if not can_row:
                 return []
             rows = (
                 await session.scalars(
-                    select(Cap).where(Cap.can_id == can_row.id).order_by(Cap.created_at.desc())
+                    select(Cap).where(
+                        Cap.can_id == can_row.id,
+                        Cap.is_demo == demo_flag,
+                    ).order_by(Cap.created_at.desc())
                 )
             ).all()
             hazard_ref = await _hazard_ref(session, can_row)
@@ -866,9 +909,8 @@ class CanCapService:
 
     async def _list_all_caps_async(self, user: dict, filters: dict = None) -> List[dict]:
         filters = filters or {}
-        tid = None
-        if user.get("role") not in settings.CROSS_TENANT_ROLES:
-            tid = register_tenant(self.tenant_id)
+        # Shared-DEMO read scope (DEMO-ELIGIBILITY-02C, Sections A & B).
+        tid, demo_flag, shared_demo = self._demo_read_scope(user)
 
         try:
             limit = min(int(filters.get("limit") or filters.get("page_size") or 100), 500)
@@ -880,9 +922,9 @@ class CanCapService:
             .join(Can, Cap.can_id == Can.id)
             .join(Hazard, Can.hazard_id == Hazard.id)
             .where(
-                Cap.is_demo == demo_scope(),
-                Can.is_demo == demo_scope(),
-                Hazard.is_demo == demo_scope(),
+                Cap.is_demo == demo_flag,
+                Can.is_demo == demo_flag,
+                Hazard.is_demo == demo_flag,
             )
         )
         if tid:
@@ -904,7 +946,7 @@ class CanCapService:
             stmt = stmt.where(Cap.can_id.in_(
                 select(Can.id).where(
                     or_(*conds),
-                    Can.is_demo == demo_scope(),
+                    Can.is_demo == demo_flag,
                 )
             ))
         if filters.get("days"):
@@ -950,14 +992,17 @@ class CanCapService:
         return run(self._get_cap_async(cap_id, user))
 
     async def _get_cap_async(self, cap_id: str, user: dict) -> Optional[dict]:
-        tid = None
-        if user.get("role") not in settings.CROSS_TENANT_ROLES:
-            tid = register_tenant(self.tenant_id)
+        # Shared-DEMO read scope (DEMO-ELIGIBILITY-02C, Sections A & B).
+        tid, demo_flag, shared_demo = self._demo_read_scope(user)
         async with session_scope() as session:
-            row = (await session.execute(_cap_lookup_stmt(tid, cap_id))).scalars().first()
+            row = (await session.execute(_cap_lookup_stmt(tid, cap_id, demo_flag))).scalars().first()
             if not row:
                 return None
-            return _cap_to_dict(row)
+            data = _cap_to_dict(row)
+            # Do not leak the shared source tenant's identity.
+            if shared_demo:
+                data["tenant_id"] = self.tenant_id
+            return data
 
     def get_cap_for_decision_record(self, cap_id: str, user: dict) -> Optional[dict]:
         """CAP row for the AE decision PDF: like get_cap but WITHOUT the
@@ -972,11 +1017,10 @@ class CanCapService:
         return run(self._get_cap_for_decision_record_async(cap_id, user))
 
     async def _get_cap_for_decision_record_async(self, cap_id: str, user: dict) -> Optional[dict]:
-        tid = None
-        if user.get("role") not in settings.CROSS_TENANT_ROLES:
-            tid = register_tenant(self.tenant_id)
+        # Shared-DEMO read scope (DEMO-ELIGIBILITY-02C, Sections A & B).
+        tid, demo_flag, shared_demo = self._demo_read_scope(user)
         async with session_scope() as session:
-            row = (await session.execute(_cap_lookup_stmt(tid, cap_id))).scalars().first()
+            row = (await session.execute(_cap_lookup_stmt(tid, cap_id, demo_flag))).scalars().first()
             if not row:
                 return None
             data = {}
@@ -987,15 +1031,27 @@ class CanCapService:
                 data[col.name] = value
             data["tenant_id"] = tenant_slug(row.tenant_id)
             _serialize_timestamps(data)
+            # Do not leak the shared source tenant's identity.
+            if shared_demo:
+                data["tenant_id"] = self.tenant_id
             return data
 
     def update_cap(self, cap_id: str, payload: dict, user: dict) -> Optional[dict]:
         return run(self._update_cap_async(cap_id, payload, user))
 
     async def _update_cap_async(self, cap_id: str, payload: dict, user: dict) -> Optional[dict]:
+        # DEMO-ELIGIBILITY-02C, Section C: demonstration users may not mutate
+        # records while accessing the shared seeded workflow.
+        blocked = demo_write_blocked(user)
+        if blocked:
+            raise PermissionError(blocked)
         tid = register_tenant(self.tenant_id)
         async with session_scope() as session:
-            row = (await session.execute(_cap_lookup_stmt(tid, cap_id))).scalars().first()
+            row = (
+                await session.execute(
+                    _cap_lookup_stmt(tid, cap_id, demo_scope())
+                )
+            ).scalars().first()
             if not row:
                 return None
             for key, value in payload.items():
@@ -1015,11 +1071,20 @@ class CanCapService:
         return run(self._review_cap_async(cap_id, review, user))
 
     async def _review_cap_async(self, cap_id: str, review: dict, user: dict) -> Optional[dict]:
+        # DEMO-ELIGIBILITY-02C, Section C: demonstration users may not mutate
+        # records while accessing the shared seeded workflow.
+        blocked = demo_write_blocked(user)
+        if blocked:
+            raise PermissionError(blocked)
         tid = register_tenant(self.tenant_id)
         now = datetime.now(timezone.utc)
 
         async with session_scope() as session:
-            row = (await session.execute(_cap_lookup_stmt(tid, cap_id))).scalars().first()
+            row = (
+                await session.execute(
+                    _cap_lookup_stmt(tid, cap_id, demo_scope())
+                )
+            ).scalars().first()
             if not row:
                 return None
             can_row = (
@@ -1161,9 +1226,18 @@ class CanCapService:
                 "decision_type must be one of ('acknowledge', 'direct', 'continue')"
             )
         tid = register_tenant(self.tenant_id)
+        # DEMO-ELIGIBILITY-02C, Section C: demonstration users may not mutate
+        # records while accessing the shared seeded workflow.
+        blocked = demo_write_blocked(user)
+        if blocked:
+            raise PermissionError(blocked)
         now = datetime.now(timezone.utc)
         async with session_scope() as session:
-            row = (await session.execute(_cap_lookup_stmt(tid, cap_id))).scalars().first()
+            row = (
+                await session.execute(
+                    _cap_lookup_stmt(tid, cap_id, demo_scope())
+                )
+            ).scalars().first()
             if not row:
                 return None
             # Immutability: the AE decision is terminal (Module B §22).
